@@ -1,12 +1,15 @@
-import { getRandomInt, shuffleArrayWithFisherYates } from '@/shared/helpers.js';
-import { Axis, CellIndex, Layout } from '../Layout/Layout.js';
+import { Axis, CellIndex } from '../Layout/Layout.js';
 import { TileId } from '../Inventory.js';
-import { Placement, TurnInput, TurnManager, TurnStateType } from './Turn.js';
+import { TurnInput, TurnStateType } from './Turn.js';
 import { LayoutCellUsabilityCalculator } from '../Layout/LayoutCellUsabilityCalculator.js';
-import { LayoutSnippetFactory } from '../Layout/LayoutSnippetFactory.js';
 import { TurnStateComputer } from './TurnStateComputer.js';
 
-type InputBuilderConfig = [targetCell: CellIndex, axis: Axis, tileSequence: ReadonlyArray<TileId>];
+type InputBuilderConfig = readonly [
+  targetCell: CellIndex,
+  targetCellPosition: number,
+  axis: Axis,
+  tileSequence: ReadonlyArray<TileId>,
+];
 
 export class TurnInputGenerator {
   constructor(private readonly dependencies: Dependencies) {}
@@ -15,9 +18,15 @@ export class TurnInputGenerator {
     if (playerTiles.length === 0) return null;
     const availableTargetCells = this.getAvailableTargetCells();
     if (availableTargetCells.length === 0) return null;
+    const targetCellPositions = Array.from({ length: playerTiles.length }, (_, i) => i);
     const axes = Object.values(Axis);
     const playerTileCombinations = this.generatePlayerTileCombinations(playerTiles);
-    const indexer = new CartesianProductIndexer([availableTargetCells, axes, playerTileCombinations] as const);
+    const indexer = new CartesianProductIndexer([
+      availableTargetCells,
+      targetCellPositions,
+      axes,
+      playerTileCombinations,
+    ] as const);
     while (true) {
       const config = indexer.nextInto();
       if (config === null) break;
@@ -38,31 +47,41 @@ export class TurnInputGenerator {
   private generatePlayerTileCombinations(playerTiles: ReadonlyArray<TileId>): ReadonlyArray<ReadonlyArray<TileId>> {
     const { dictionary } = this.dependencies;
     const combinations: Array<ReadonlyArray<TileId>> = [];
-    const helper = (start: number, combo: ReadonlyArray<TileId>) => {
-      for (let i = start; i < playerTiles.length; i++) {
-        const newCombo = [...combo, playerTiles[i]];
-        combinations.push(newCombo);
-        helper(i + 1, newCombo);
+    const helper = (current: Array<string>, remaining: ReadonlyArray<TileId>) => {
+      if (current.length > 0 && dictionary.hasSubstring(current.join(''))) {
+        combinations.push([...current]);
+      }
+      for (let i = 0; i < remaining.length; i++) {
+        helper([...current, remaining[i]], [...remaining.slice(0, i), ...remaining.slice(i + 1)]);
       }
     };
-    helper(0, []);
-    return combinations.filter(combo => combo.length === 1 || dictionary.hasSubstring(combo.join('')));
+    helper([], playerTiles);
+    return combinations;
   }
 
   private buildInputFromConfig(config: InputBuilderConfig): TurnInput | null {
-    const [targetCell, axis, tileSequence] = config;
-    const { length } = tileSequence;
     const { layout, turnManager } = this.dependencies;
+    const [targetCell, targetCellPosition, axis, tileSequence] = config;
+    if (targetCellPosition > tileSequence.length) return null;
+    const axisCells = layout.getAxisCells({ axis, targetCell });
     // TODO optimize
-    const snippets = new LayoutSnippetFactory(turnManager).create({
-      cells: layout.getAxisCells({ axis, targetCell }),
-      targetCell,
-      maxLength: length,
-    });
-    if (snippets.length === 0) return null;
-    const cells = snippets[getRandomInt({ to: snippets.length - 1 })];
-    if (cells === null) return null;
-    const initPlacement = cells.map((cell: CellIndex, idx: number) => ({ cell, tile: tileSequence[idx] }));
+    const trimmedAxisCells: Array<CellIndex> = [];
+    let trimmedCellsContainTarget = false;
+    for (const cell of axisCells) {
+      const isEmpty = !turnManager.isCellConnected(cell);
+      if (isEmpty) {
+        trimmedAxisCells.push(cell);
+        if (cell === targetCell) trimmedCellsContainTarget = true;
+        continue;
+      }
+      if (trimmedCellsContainTarget) break;
+      trimmedAxisCells.length = 0;
+      trimmedCellsContainTarget = false;
+    }
+    const trimmedCellsSliceStart = trimmedAxisCells.indexOf(targetCell) - targetCellPosition;
+    const trimmedCellsSliceEnd = trimmedCellsSliceStart + tileSequence.length;
+    const cellSequence = trimmedAxisCells.slice(trimmedCellsSliceStart, trimmedCellsSliceEnd);
+    const initPlacement = tileSequence.map((tile: TileId, index: number) => ({ cell: cellSequence[index], tile }));
     return { initPlacement };
   }
 }
