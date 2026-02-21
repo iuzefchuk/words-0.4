@@ -25,12 +25,10 @@ export type GameState = {
 };
 
 export class Game {
-  private static readonly maxOpponentTurnGenerationAttempts = 1000;
-
   private constructor(private gameDomain: GameDomain) {}
 
   static start(): Game {
-    const gameDomain = GameDomain.create()
+    const gameDomain = GameDomain.create();
     return new Game(gameDomain);
   }
 
@@ -121,19 +119,16 @@ export class Game {
 
   private async processOpponentTurn(): Promise<void> {
     await this.setMinimumExecutionTime(() => {
-      for (let i = 0; i < Game.maxOpponentTurnGenerationAttempts; i++) {
-        const generatedInput = this.gameDomain.generateTurnInput({ player: Player.Opponent });
-        if (generatedInput !== null) {
-          for (const link of generatedInput.initPlacement) {
-            this.gameDomain.connectTileToCell({ cell: link.cell, tile: link.tile });
-            this.gameDomain.computeTurnState();
-          }
-        }
-        if (this.gameDomain.currentTurnIsSavable) break;
+      const generatedInput = this.gameDomain.generateTurnInput({ player: Player.Opponent });
+      if (generatedInput === null) {
+        this.gameDomain.passTurn();
+      } else {
+        const { initPlacement } = generatedInput;
+        for (const link of initPlacement) this.gameDomain.connectTileToCell({ cell: link.cell, tile: link.tile });
+        this.gameDomain.computeTurnState();
+        this.gameDomain.saveTurn();
       }
     });
-    if (this.gameDomain.currentTurnIsSavable) this.gameDomain.saveTurn();
-    else this.gameDomain.passTurn();
   }
 
   private async setMinimumExecutionTime<T>(

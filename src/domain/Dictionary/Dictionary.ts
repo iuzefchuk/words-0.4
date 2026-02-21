@@ -2,7 +2,7 @@ import DATA from './data.js';
 
 type State = { id: number; isFinal: boolean; transitions: { [char: string]: State } };
 
-class FstRootStateCreator {
+class FstRootStateFactory {
   private nextId = 0;
   private unminimizedStates: Array<{ parent: State; char: string; child: State }> = [];
   private minimizedStateRegistry = new Map<string, State>();
@@ -14,7 +14,7 @@ class FstRootStateCreator {
   }
 
   static create(wordsInAlphabeticalOrder: ReadonlyArray<string>): State {
-    const creator = new FstRootStateCreator();
+    const creator = new FstRootStateFactory();
     for (const word of wordsInAlphabeticalOrder) creator.insert(word);
     creator.minimizeStates(0); // finish remaining unminimized states
     return creator.root;
@@ -72,8 +72,22 @@ export class Dictionary {
   private constructor(private readonly rootState: State) {}
 
   static create(): Dictionary {
-    const rootState = FstRootStateCreator.create(DATA);
+    const rootState = FstRootStateFactory.create(DATA);
     return new Dictionary(rootState);
+  }
+
+  hasSubstring(sub: string): boolean {
+    const dfs = (state: State, index: number): boolean => {
+      if (index === sub.length) return true; // matched all chars
+      for (const char in state.transitions) {
+        const nextState = state.transitions[char];
+        if (char === sub[index]) if (dfs(nextState, index + 1)) return true;
+        // also try skipping current char in FST to start matching later in word
+        if (dfs(nextState, index)) return true;
+      }
+      return false;
+    };
+    return dfs(this.rootState, 0);
   }
 
   hasWord(word: string): boolean {

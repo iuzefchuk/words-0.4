@@ -1,7 +1,7 @@
 import { TurnManager } from '../Turn/Turn.js';
 import { CellIndex } from './Layout.js';
 
-export class LayoutSnippetCreator {
+export class LayoutSnippetFactory {
   constructor(private readonly turnManager: TurnManager) {}
 
   create(args: {

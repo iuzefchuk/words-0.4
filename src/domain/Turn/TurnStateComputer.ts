@@ -1,15 +1,12 @@
-import { CellIndex, Axis, Layout } from '../Layout/Layout.js';
+import { CellIndex, Axis } from '../Layout/Layout.js';
 import { Inventory, TileId } from '../Inventory.js';
-import { TurnComputeds, TurnState, TurnStateType, Placement, TurnInput, TurnManager } from './Turn.js';
+import { TurnComputeds, TurnState, TurnStateType, Placement, TurnInput } from './Turn.js';
 import { LayoutCellUsabilityCalculator } from '../Layout/LayoutCellUsabilityCalculator.js';
 import { LayoutAxisCalculator } from '../Layout/LayoutAxisCalculator.js';
-import { Dictionary } from '../Dictionary/Dictionary.js';
-
-type PipelineDependencies = { layout: Layout; dictionary: Dictionary; inventory: Inventory; turnManager: TurnManager };
 
 type PipelineComputeds = Partial<TurnComputeds> & { placements?: ReadonlyArray<Placement> };
 
-type PipelineContext = TurnInput & { dependencies: PipelineDependencies } & PipelineComputeds;
+type PipelineContext = TurnInput & { dependencies: Dependencies } & PipelineComputeds;
 
 type PipelineResult = ValidPipelineResult | InvalidPipelineResult;
 
@@ -24,7 +21,7 @@ enum ValidationErrors {
 }
 
 export class TurnStateComputer {
-  constructor(private readonly dependencies: PipelineDependencies) {}
+  constructor(private readonly dependencies: Dependencies) {}
 
   compute(args: TurnInput): TurnState {
     const { result } = ValidationPipeline.initialize({ ...args, dependencies: this.dependencies } as PipelineContext)
@@ -104,7 +101,7 @@ class PipelinePlacementsComputer {
   private static calculatePlacements(args: {
     primaryAxis: Axis;
     sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> };
-    dependencies: PipelineDependencies;
+    dependencies: Dependencies;
   }): ReadonlyArray<Placement> {
     const { primaryAxis, sequences, dependencies } = args;
     const { cell: cellSequence, tile: tileSequence } = sequences;
@@ -134,7 +131,7 @@ class PipelinePlacementsComputer {
     axis: Axis;
     targetCell: CellIndex;
     tileSequence: ReadonlyArray<TileId>;
-    dependencies: PipelineDependencies;
+    dependencies: Dependencies;
   }): Placement {
     const { axis, targetCell, tileSequence, dependencies } = args;
     const { layout } = dependencies;
@@ -145,7 +142,7 @@ class PipelinePlacementsComputer {
   private static calculatePlacementFromAxisCells(args: {
     axisCells: ReadonlyArray<CellIndex>;
     tileSequence: ReadonlyArray<TileId>;
-    dependencies: PipelineDependencies;
+    dependencies: Dependencies;
   }): Placement {
     const { axisCells, tileSequence, dependencies } = args;
     const { turnManager } = dependencies;
@@ -208,7 +205,7 @@ class PipelineScoreComputer {
     return ValidationPipeline.passStep({ ...ctx, score });
   }
 
-  private static calculatePlacementScore(args: { placement: Placement; dependencies: PipelineDependencies }): number {
+  private static calculatePlacementScore(args: { placement: Placement; dependencies: Dependencies }): number {
     const { placement, dependencies } = args;
     const { layout, inventory } = dependencies;
     const pluralMultipliers: Array<number> = [];

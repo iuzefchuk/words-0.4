@@ -160,7 +160,7 @@ class Rack {
 }
 
 export class Inventory {
-  private static readonly tilesPerRack = 7;
+  static readonly tilesPerRack = 7;
 
   private constructor(
     private unusedBag: Array<Tile>,
