@@ -64,23 +64,10 @@ export class TurnInputGenerator {
     const [targetCell, targetCellPosition, axis, tileSequence] = config;
     if (targetCellPosition > tileSequence.length) return null;
     const axisCells = layout.getAxisCells({ axis, targetCell });
-    // TODO optimize
-    const trimmedAxisCells: Array<CellIndex> = [];
-    let trimmedCellsContainTarget = false;
-    for (const cell of axisCells) {
-      const isEmpty = !turnManager.isCellConnected(cell);
-      if (isEmpty) {
-        trimmedAxisCells.push(cell);
-        if (cell === targetCell) trimmedCellsContainTarget = true;
-        continue;
-      }
-      if (trimmedCellsContainTarget) break;
-      trimmedAxisCells.length = 0;
-      trimmedCellsContainTarget = false;
-    }
-    const trimmedCellsSliceStart = trimmedAxisCells.indexOf(targetCell) - targetCellPosition;
-    const trimmedCellsSliceEnd = trimmedCellsSliceStart + tileSequence.length;
-    const cellSequence = trimmedAxisCells.slice(trimmedCellsSliceStart, trimmedCellsSliceEnd);
+    const cellSequenceFirstIndex = axisCells.indexOf(targetCell) - targetCellPosition;
+    const cellSequence = axisCells.slice(cellSequenceFirstIndex, cellSequenceFirstIndex + tileSequence.length);
+    const cellSequenceHasConnectedCells = cellSequence.some(cell => turnManager.isCellConnected(cell));
+    if (cellSequenceHasConnectedCells) return null;
     const initPlacement = tileSequence.map((tile: TileId, index: number) => ({ cell: cellSequence[index], tile }));
     return { initPlacement };
   }
