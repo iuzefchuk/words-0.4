@@ -1,226 +1,142 @@
-import { CellIndex, Axis } from '../Layout/Layout.js';
-import { Inventory, TileId } from '../Inventory.js';
-import { TurnComputeds, TurnState, TurnStateType, Placement, TurnInput } from './Turn.js';
+import { CellIndex } from '../Layout/Layout.js';
+import { TileId } from '../Inventory.js';
+import { TurnState, TurnStateType, Placement, TurnInput } from './Turn.js';
 import { LayoutCellUsabilityCalculator } from '../Layout/LayoutCellUsabilityCalculator.js';
 import { LayoutAxisCalculator } from '../Layout/LayoutAxisCalculator.js';
+import { TurnPlacementFactory } from './TurnPlacementFactory.js';
 
-type PipelineComputeds = Partial<TurnComputeds> & { placements?: ReadonlyArray<Placement> };
+type BaseContext = TurnInput & { dependencies: Dependencies };
+type SequencesContext = BaseContext & { sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> } };
+type PlacementsContext = SequencesContext & { placements: ReadonlyArray<Placement> };
+type WordsContext = PlacementsContext & { words: ReadonlyArray<string> };
+type ScoreContext = WordsContext & { score: number };
 
-type PipelineContext = TurnInput & { dependencies: Dependencies } & PipelineComputeds;
-
-type PipelineResult = ValidPipelineResult | InvalidPipelineResult;
-
-type ValidPipelineResult = { isValid: true; context: PipelineContext };
-
+type PipelineResult<Context> = ValidPipelineResult<Context> | InvalidPipelineResult;
+type ValidPipelineResult<Context> = { isValid: true; ctx: Context };
 type InvalidPipelineResult = { isValid: false; error: ValidationErrors };
 
-enum ValidationErrors {
+export enum ValidationErrors {
   NoCellsUsableAsFirst = 'error_cell_3',
+  InvalidCellPlacement = '',
   InvalidTilePlacement = 'error_tile_1',
   WordNotInDictionary = 'error_tile_4',
-}
-
-class Pipeline {
-  private constructor(public result: PipelineResult) {}
-
-  static initialize(context: PipelineContext) {
-    return new this(this.passStep(context));
-  }
-
-  static passStep(context: PipelineContext): ValidPipelineResult {
-    return { isValid: true, context };
-  }
-
-  static failStep(error: ValidationErrors): InvalidPipelineResult {
-    return { isValid: false, error };
-  }
-
-  step(processor: (context: PipelineContext) => PipelineResult): this {
-    if (this.result.isValid) this.result = processor(this.result.context);
-    return this;
-  }
 }
 
 export class TurnStateComputer {
   constructor(private readonly dependencies: Dependencies) {}
 
-  compute(args: TurnInput): TurnState {
-    const { result } = Pipeline.initialize({
-      ...args,
-      dependencies: this.dependencies,
-    })
-      .step(TurnStateComputer.Sequences.compute)
-      .step(TurnStateComputer.Placements.compute)
-      .step(TurnStateComputer.Words.compute)
-      .step(TurnStateComputer.Score.compute);
+  compute(input: TurnInput): TurnState {
+    const initialContext = { ...input, dependencies: this.dependencies };
+    const { result } = TurnStateComputer.Pipeline.initialize(initialContext)
+      .addStep(TurnStateComputer.computeSequences)
+      .addStep(TurnStateComputer.computePlacements)
+      .addStep(TurnStateComputer.computeWords)
+      .addStep(TurnStateComputer.computeScore);
     return result.isValid
       ? {
           type: TurnStateType.Valid,
-          sequences: result.context.sequences!,
-          score: result.context.score!,
-          words: result.context.words!,
+          sequences: result.ctx.sequences,
+          score: result.ctx.score,
+          words: result.ctx.words,
         }
-      : { type: TurnStateType.Invalid, error: result.error };
+      : {
+          type: TurnStateType.Invalid,
+          error: result.error,
+        };
   }
 
-  static Sequences = class {
-    static compute(ctx: PipelineContext): PipelineResult {
-      const cellSequence = this.calculateCellSequence({ placement: ctx.initPlacement });
-      const tileSequence = this.calculateTileSequence({ placement: ctx.initPlacement });
-      const cellsHaveUsableFirst = this.doCellsHaveUsableFirst({ cells: cellSequence, dependencies: ctx.dependencies });
-      return cellsHaveUsableFirst
-        ? Pipeline.passStep({ ...ctx, sequences: { cell: cellSequence, tile: tileSequence } })
-        : Pipeline.failStep(ValidationErrors.NoCellsUsableAsFirst);
+  static Pipeline = class Pipeline<Context> {
+    private constructor(public result: PipelineResult<Context>) {}
+
+    static initialize<Context extends BaseContext>(ctx: Context): Pipeline<Context> {
+      return new Pipeline({ isValid: true, ctx });
     }
 
-    private static doCellsHaveUsableFirst({
-      cells,
-      dependencies,
-    }: {
-      cells: ReadonlyArray<CellIndex>;
-      dependencies: Dependencies;
-    }): boolean {
-      const { layout, turnManager } = dependencies;
-      return cells.some(cell => new LayoutCellUsabilityCalculator(layout, turnManager).isUsableAsFirst(cell));
+    static createValidPipelineResult<Ctx>(ctx: Ctx): ValidPipelineResult<Ctx> {
+      return { isValid: true, ctx };
     }
 
-    private static calculateCellSequence({ placement }: { placement: Placement }): ReadonlyArray<CellIndex> {
-      return placement.map(placement => placement.cell);
+    static createInvalidPipelineResult(error: ValidationErrors): InvalidPipelineResult {
+      return { isValid: false, error };
     }
 
-    private static calculateTileSequence({ placement }: { placement: Placement }): ReadonlyArray<TileId> {
-      return placement.map(placement => placement.tile);
+    addStep<NextContext extends Context>(
+      computer: (ctx: Context) => PipelineResult<NextContext>,
+    ): Pipeline<NextContext> {
+      if (this.result.isValid) this.result = computer(this.result.ctx) as PipelineResult<NextContext>;
+      return this as unknown as Pipeline<NextContext>;
     }
   };
 
-  static Placements = class {
-    static compute(ctx: PipelineContext): PipelineResult {
-      if (!ctx.sequences) throw new Error('Sequences need to be computed before placements');
-      const { layout, turnManager } = ctx.dependencies;
-      const primaryAxis = new LayoutAxisCalculator(layout, turnManager).calculatePrimary(ctx.sequences.cell);
-      const placements = this.calculatePlacements({
-        primaryAxis,
-        sequences: ctx.sequences,
-        dependencies: ctx.dependencies,
-      });
-      return placements.length > 0
-        ? Pipeline.passStep({ ...ctx, placements })
-        : Pipeline.failStep(ValidationErrors.InvalidTilePlacement);
-    }
+  static passComputer<OldContext extends object, NextContext extends object>(
+    oldCtx: OldContext,
+    nextCtx: NextContext,
+  ): ValidPipelineResult<OldContext & NextContext> {
+    Object.assign(oldCtx, nextCtx);
+    return TurnStateComputer.Pipeline.createValidPipelineResult(oldCtx as OldContext & NextContext);
+  }
 
-    private static calculatePlacements(args: {
-      primaryAxis: Axis;
-      sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> };
-      dependencies: Dependencies;
-    }): ReadonlyArray<Placement> {
-      const { primaryAxis, sequences, dependencies } = args;
-      const { cell: cellSequence, tile: tileSequence } = sequences;
-      const { layout } = dependencies;
-      const primary = this.buildPlacement({
-        axis: primaryAxis,
-        targetCell: cellSequence[0],
-        tileSequence,
-        dependencies,
-      });
-      if (!this.isPlacementUsable(primary)) return [];
-      const secondaryAxis = layout.getOppositeAxis(primaryAxis);
-      const secondaryPlacements = cellSequence
-        .map(cell =>
-          this.buildPlacement({
-            axis: secondaryAxis,
-            targetCell: cell,
-            tileSequence,
-            dependencies,
-          }),
-        )
-        .filter(this.isPlacementUsable);
-      return [primary, ...secondaryPlacements];
-    }
+  static failComputer(error: ValidationErrors): InvalidPipelineResult {
+    return TurnStateComputer.Pipeline.createInvalidPipelineResult(error);
+  }
 
-    private static buildPlacement(args: {
-      axis: Axis;
-      targetCell: CellIndex;
-      tileSequence: ReadonlyArray<TileId>;
-      dependencies: Dependencies;
-    }): Placement {
-      const { axis, targetCell, tileSequence, dependencies } = args;
-      const { layout } = dependencies;
-      const axisCells = layout.getAxisCells({ axis, targetCell });
-      return this.calculatePlacementFromAxisCells({ axisCells, tileSequence, dependencies });
-    }
+  static computeSequences(ctx: BaseContext): PipelineResult<SequencesContext> {
+    const { layout, turnManager } = ctx.dependencies;
+    const tiles = ctx.initPlacement.map(placement => placement.tile);
+    if (tiles.length === 0) return this.failComputer(ValidationErrors.InvalidTilePlacement);
+    const cells = ctx.initPlacement.map(placement => placement.cell);
+    if (cells.length === 0) return this.failComputer(ValidationErrors.InvalidCellPlacement);
+    const cellUsabilityCalculator = new LayoutCellUsabilityCalculator(layout, turnManager);
+    const noCellsUsableAsFirst = cells.every(cell => !cellUsabilityCalculator.isUsableAsFirst(cell));
+    if (noCellsUsableAsFirst) return this.failComputer(ValidationErrors.NoCellsUsableAsFirst);
+    return this.passComputer(ctx, { sequences: { cell: cells, tile: tiles } });
+  }
 
-    private static calculatePlacementFromAxisCells(args: {
-      axisCells: ReadonlyArray<CellIndex>;
-      tileSequence: ReadonlyArray<TileId>;
-      dependencies: Dependencies;
-    }): Placement {
-      const { axisCells, tileSequence, dependencies } = args;
-      const { turnManager } = dependencies;
-      if (tileSequence.length === 0) return [];
-      const tileSet = new Set(tileSequence);
-      const placement: Placement = [];
-      let segmentHasTurnTile = false;
-      let matchedTurnTiles = 0;
-      for (const cell of axisCells) {
-        const tile = turnManager.findTileByCell(cell);
-        if (!tile) {
-          if (placement.length === 0) continue;
-          if (segmentHasTurnTile) break;
-          placement.length = 0;
-          segmentHasTurnTile = false;
-          matchedTurnTiles = 0;
-          continue;
-        }
-        placement.push({ cell, tile });
-        if (tileSet.has(tile)) {
-          segmentHasTurnTile = true;
-          matchedTurnTiles++;
-        }
+  static computePlacements(ctx: SequencesContext): PipelineResult<PlacementsContext> {
+    const { layout, turnManager } = ctx.dependencies;
+    const tileSequence = ctx.sequences.tile;
+    const axisCalculator = new LayoutAxisCalculator(layout, turnManager);
+    const primaryAxis = axisCalculator.calculatePrimary(ctx.sequences.cell);
+    const factory = new TurnPlacementFactory(layout, turnManager);
+    const primaryPlacement = factory.create({ axis: primaryAxis, targetCell: ctx.sequences.cell[0], tileSequence });
+    const isPlacementUsable = (placement: Placement): boolean => placement.length > 1;
+    if (!isPlacementUsable(primaryPlacement)) return this.failComputer(ValidationErrors.InvalidTilePlacement);
+    const placements: Array<Placement> = [primaryPlacement];
+    for (const cell of ctx.sequences.cell) {
+      const placement = factory.create({ axis: layout.getOppositeAxis(primaryAxis), targetCell: cell, tileSequence });
+      if (isPlacementUsable(placement)) placements.push(placement);
+    }
+    return placements.length > 0
+      ? this.passComputer(ctx, { placements })
+      : this.failComputer(ValidationErrors.InvalidTilePlacement);
+  }
+
+  static computeWords(ctx: PlacementsContext): PipelineResult<WordsContext> {
+    const { dictionary, inventory } = ctx.dependencies;
+    const words: Array<string> = [];
+    for (let i = 0; i < ctx.placements.length; i++) {
+      const placement = ctx.placements[i];
+      let word = '';
+      for (let j = 0; j < placement.length; j++) word += inventory.getTileLetter(placement[j].tile);
+      words[i] = word;
+    }
+    return dictionary.hasWords(words)
+      ? this.passComputer(ctx, { words })
+      : this.failComputer(ValidationErrors.WordNotInDictionary);
+  }
+
+  static computeScore(ctx: WordsContext): PipelineResult<ScoreContext> {
+    const { layout, inventory } = ctx.dependencies;
+    let totalScore = 0;
+    for (const placement of ctx.placements) {
+      let placementScore = 0;
+      let placementMultiplier = 1;
+      for (const { cell, tile } of placement) {
+        placementScore += inventory.getTilePoints(tile) * layout.getLetterMultiplier(cell);
+        placementMultiplier *= layout.getWordMultiplier(cell);
       }
-      const allTurnTilesUsed = matchedTurnTiles === tileSequence.length;
-      return segmentHasTurnTile && allTurnTilesUsed ? placement : [];
+      totalScore += placementScore * placementMultiplier;
     }
-
-    private static isPlacementUsable(placement: Placement): boolean {
-      return placement.length > 1;
-    }
-  };
-
-  static Words = class {
-    static compute(ctx: PipelineContext): PipelineResult {
-      if (!ctx.placements) throw new Error('Placements need to be computed before words');
-      const { dictionary, inventory } = ctx.dependencies;
-      const words = this.calculateWords({ placements: ctx.placements, inventory });
-      return dictionary.hasWords(words)
-        ? Pipeline.passStep({ ...ctx, words })
-        : Pipeline.failStep(ValidationErrors.WordNotInDictionary);
-    }
-
-    private static calculateWords(args: {
-      placements: ReadonlyArray<Placement>;
-      inventory: Inventory;
-    }): ReadonlyArray<string> {
-      const { placements, inventory } = args;
-      return placements.map(placement => placement.map(link => inventory.getTileLetter(link.tile)).join(''));
-    }
-  };
-
-  static Score = class {
-    static compute(ctx: PipelineContext): PipelineResult {
-      if (!ctx.placements) throw new Error('Placements need to be computed before score');
-      const { layout, inventory } = ctx.dependencies;
-      let score = 0;
-      for (const placement of ctx.placements) {
-        let wordMultiplier = 1;
-        let placementScore = 0;
-        for (const { cell, tile } of placement) {
-          const points = inventory.getTilePoints(tile) * layout.getLetterMultiplier(cell);
-          placementScore += points;
-          wordMultiplier *= layout.getWordMultiplier(cell);
-        }
-        score += placementScore * wordMultiplier;
-      }
-      return Pipeline.passStep({ ...ctx, score });
-    }
-  };
+    return this.passComputer(ctx, { score: totalScore });
+  }
 }
