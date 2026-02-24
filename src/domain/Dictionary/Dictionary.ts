@@ -1,110 +1,129 @@
-import { TileId } from '../Inventory.js';
 import DATA from './data.js';
 
-type State = { id: number; isFinal: boolean; transitions: Map<TileId, State> };
+type Node = { id: number; isFinal: boolean; children: Map<string, Node> };
 
-export type FrozenState = {
-  readonly id: number;
-  readonly isFinal: boolean;
-  readonly transitions: ReadonlyArray<readonly [TileId, FrozenState]>;
-};
+type UnminimizedParentChildCouple = { parentNode: Node; childNodeChar: string; childNode: Node };
 
-class DictionaryRootStateFactory {
-  private result = this.createState();
-  private nextId = 0;
-  private unminimizedList: Array<{ parent: State; char: TileId; child: State }> = [];
-  private minimizedMap = new Map<string, State>();
-  private previousWord = '';
-
-  create(sortedWords: ReadonlyArray<string>): State {
-    for (const word of sortedWords) this.insertWordIntoResult(word);
-    this.minimizeUnminimized({ downTo: 0 });
-    return this.result;
-  }
-
-  private createState(): State {
-    return { id: this.nextId++, isFinal: false, transitions: new Map() };
-  }
-
-  private insertWordIntoResult(word: string): void {
-    let commonPrefix = 0;
-    const minLength = Math.min(word.length, this.previousWord.length);
-    while (commonPrefix < minLength && word[commonPrefix] === this.previousWord[commonPrefix]) commonPrefix++;
-    this.minimizeUnminimized({ downTo: commonPrefix });
-    let node = commonPrefix === 0 ? this.result : this.unminimizedList[commonPrefix - 1].child;
-    for (let i = commonPrefix; i < word.length; i++) {
-      const wordChar = word[i] as TileId;
-      const newState = this.createState();
-      node.transitions.set(wordChar, newState);
-      this.unminimizedList.push({ parent: node, char: wordChar, child: newState });
-      node = newState;
-    }
-    node.isFinal = true;
-    this.previousWord = word;
-  }
-
-  private minimizeUnminimized({ downTo }: { downTo: number }): void {
-    for (let i = this.unminimizedList.length - 1; i >= downTo; i--) {
-      const { parent, char, child } = this.unminimizedList[i];
-      const key = this.generateKeyFor(child);
-      const existing = this.minimizedMap.get(key);
-      if (existing) {
-        parent.transitions.set(char, existing);
-      } else {
-        this.minimizedMap.set(key, child);
-      }
-      this.unminimizedList.pop();
-    }
-  }
-
-  private generateKeyFor(state: State): string {
-    let key = state.isFinal ? '1' : '0';
-    for (const [char, child] of state.transitions) key += char + child.id;
-    return key;
-  }
-}
+type NodeGenerator = Generator<Node, Node>;
 
 export class Dictionary {
-  private constructor(public readonly rootState: FrozenState) {}
+  private constructor(public readonly rootNode: Readonly<Node>) {}
 
   static create(): Dictionary {
-    const rootState = new DictionaryRootStateFactory().create(DATA);
-    const frozenRootState = this.freezeState(rootState);
-    return new Dictionary(frozenRootState);
-  }
-
-  private static freezeState(state: State): FrozenState {
-    const cache = new Map<number, FrozenState>();
-    const dfs = (node: State): FrozenState => {
-      const cached = cache.get(node.id);
-      if (cached) return cached;
-      const frozenTransitions: Array<readonly [TileId, FrozenState]> = [];
-      const frozen: FrozenState = { id: node.id, isFinal: node.isFinal, transitions: frozenTransitions };
-      cache.set(node.id, frozen);
-      for (const [char, child] of node.transitions) frozenTransitions.push([char, dfs(child)]);
-      return frozen;
-    };
-    return dfs(state);
-  }
-
-  hasWord(word: string): boolean {
-    let state = this.rootState;
-    for (let i = 0; i < word.length; i++) {
-      const char = word[i] as TileId;
-      let found: FrozenState | null = null;
-      for (const [c, next] of state.transitions) {
-        if (c === char) {
-          found = next;
-          break;
-        }
-      }
-      if (!found) return false;
-      state = found;
-    }
-    return state.isFinal;
+    const rootNode = Dictionary.RootNodeFactory.create(DATA);
+    return new Dictionary(rootNode);
   }
 
   hasWords(words: ReadonlyArray<string>): boolean {
     return words.every(word => this.hasWord(word));
   }
+
+  hasWord(word: string): boolean {
+    let currentNode = this.rootNode;
+    for (let i = 0; i < word.length; i++) {
+      const char = word[i];
+      const nextNode = currentNode.children.get(char);
+      if (!nextNode) return false;
+      currentNode = nextNode;
+    }
+    return currentNode.isFinal;
+  }
+
+  static RootNodeFactory = class {
+    static create(sortedWords: ReadonlyArray<string>): Readonly<Node> {
+      const nodeGenerator = this.nodeGenerator();
+      const rootNode = nodeGenerator.next().value;
+      const minimizer = new this.NodeMinimizer();
+      let previousWord = '';
+      for (const word of sortedWords) {
+        const differenceStartIndex = this.getWordsCommonPrefixLength(word, previousWord);
+        minimizer.minimizeNodes({ downTo: differenceStartIndex });
+        const initialParentNode =
+          differenceStartIndex === 0 ? rootNode : minimizer.getNodeByIndex(differenceStartIndex);
+        for (const unminimizedNode of this.populateNodeFromSubstring(
+          nodeGenerator,
+          initialParentNode,
+          word.substring(differenceStartIndex),
+        )) {
+          minimizer.addNode(unminimizedNode);
+        }
+        previousWord = word;
+      }
+      minimizer.minimizeNodes({ downTo: 0 });
+      return rootNode;
+    }
+
+    private static *nodeGenerator(): NodeGenerator {
+      let id = 0;
+      while (true) yield { id: id++, isFinal: false, children: new Map() };
+    }
+
+    private static *populateNodeFromSubstring(
+      nodeGenerator: NodeGenerator,
+      node: Node,
+      wordSubstring: string,
+    ): Generator<UnminimizedParentChildCouple> {
+      let parentNode = node;
+      for (let i = 0; i < wordSubstring.length; i++) {
+        const childNodeChar = wordSubstring[i];
+        const childNode = nodeGenerator.next().value;
+        parentNode.children.set(childNodeChar, childNode);
+        yield { parentNode, childNodeChar, childNode };
+        parentNode = childNode;
+      }
+      parentNode.isFinal = true;
+    }
+
+    private static getWordsCommonPrefixLength(firstWord: string, secondWord: string): number {
+      let length = 0;
+      const minLength = Math.min(firstWord.length, secondWord.length);
+      while (length < minLength && firstWord[length] === secondWord[length]) length++;
+      return length;
+    }
+
+    static NodeMinimizer = class NodeMinimizer {
+      constructor(
+        private unminimizedNodes: Array<UnminimizedParentChildCouple> = [],
+        private minimizedNodesCache = new Map<string, Node>(),
+      ) {}
+
+      getNodeByIndex(index: number): Node {
+        return this.unminimizedNodes[index - 1].childNode;
+      }
+
+      addNode(node: UnminimizedParentChildCouple): void {
+        this.unminimizedNodes.push(node);
+      }
+
+      minimizeNodes({ downTo }: { downTo: number }): void {
+        for (let i = this.unminimizedNodes.length - 1; i >= downTo; i--) {
+          this.minimizeNode(this.unminimizedNodes[i]);
+          this.unminimizedNodes.pop();
+        }
+      }
+
+      private minimizeNode(node: UnminimizedParentChildCouple): void {
+        const { childNode, childNodeChar, parentNode } = node;
+        const childNodeKey = this.createUniqueKeyForNode(childNode);
+        const minimizedChildNode = this.minimizedNodesCache.get(childNodeKey);
+        if (minimizedChildNode) {
+          parentNode.children.set(childNodeChar, minimizedChildNode);
+        } else {
+          this.minimizedNodesCache.set(childNodeKey, childNode);
+        }
+      }
+
+      private createUniqueKeyForNode(node: Node): string {
+        let key = node.isFinal ? '1' : '0';
+        for (const [char, child] of [...node.children.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+          key += char + child.id;
+        }
+        return key;
+      }
+    };
+  };
 }
+
+// class Node {
+//   // TODO ?
+// }

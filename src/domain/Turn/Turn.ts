@@ -8,12 +8,6 @@ export type Placement = Array<Link>;
 
 export type TurnInput = { initPlacement: Placement };
 
-export type TurnComputeds = {
-  sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> };
-  score: number;
-  words: ReadonlyArray<string>;
-};
-
 export type TurnState =
   | {
       type: TurnStateType.Unvalidated;
@@ -25,6 +19,12 @@ export type TurnState =
   | ({
       type: TurnStateType.Valid;
     } & TurnComputeds);
+
+type TurnComputeds = {
+  sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> };
+  score: number;
+  words: ReadonlyArray<string>;
+};
 
 export enum TurnStateType {
   Unvalidated = 'Unvalidated',
@@ -40,163 +40,6 @@ enum PlayerStates {
   Tied = 'Tied',
 }
 
-class Link {
-  private constructor(
-    readonly cell: CellIndex,
-    readonly tile: TileId,
-  ) {}
-
-  static create(cell: CellIndex, tile: TileId) {
-    return new this(cell, tile);
-  }
-}
-
-class Turn {
-  private constructor(
-    private readonly id: string,
-    readonly player: Player,
-    private initPlacement: Placement,
-    private state: TurnState,
-  ) {}
-
-  static create({ player }: { player: Player }) {
-    return new this(crypto.randomUUID(), player, [], { type: TurnStateType.Unvalidated });
-  }
-
-  get cellSequence(): ReadonlyArray<CellIndex> | undefined {
-    return this.state.type === TurnStateType.Valid ? this.state.sequences.cell : undefined;
-  }
-
-  get tileSequence(): ReadonlyArray<TileId> | undefined {
-    return this.state.type === TurnStateType.Valid ? this.state.sequences.tile : undefined;
-  }
-
-  get error(): string | undefined {
-    return this.state.type === TurnStateType.Invalid ? this.state.error : undefined;
-  }
-
-  get score(): number | undefined {
-    return this.state.type === TurnStateType.Valid ? this.state.score : undefined;
-  }
-
-  get words(): ReadonlyArray<string> | undefined {
-    return this.state.type === TurnStateType.Valid ? this.state.words : undefined;
-  }
-
-  get isValid(): boolean {
-    return this.state.type === TurnStateType.Valid;
-  }
-
-  computeState(dependencies: {
-    layout: Layout;
-    dictionary: Dictionary;
-    inventory: Inventory;
-    turnManager: TurnManager;
-  }): void {
-    this.state = new TurnStateComputer(dependencies).compute({ initPlacement: this.initPlacement });
-  }
-
-  getConnectedTile(cell: CellIndex): TileId | undefined {
-    return this.initPlacement.find(link => link.cell === cell)?.tile;
-  }
-
-  getConnectedCell(tile: TileId): CellIndex | undefined {
-    return this.initPlacement.find(link => link.tile === tile)?.cell;
-  }
-
-  connectTileToCell({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
-    this.validateCellAndTileAbsence(cell, tile);
-    this.initPlacement.push(Link.create(cell, tile));
-    this.initPlacement.sort((a, b) => a.cell - b.cell);
-  }
-
-  disconnectTileFromCell({ tile }: { tile: TileId }): void {
-    const index = this.initPlacement.findIndex(link => link.tile === tile);
-    if (index === -1) throw new Error(`Tile ${tile} not found`);
-    this.initPlacement.splice(index, 1);
-  }
-
-  reset(): void {
-    this.initPlacement.length = 0;
-  }
-
-  private validateCellAndTileAbsence(cell: CellIndex, tile: TileId): void {
-    if (this.initPlacement.some(link => link.cell === cell)) throw new Error(`Cell ${cell} already connected`);
-    if (this.initPlacement.some(link => link.tile === tile)) throw new Error(`Tile ${tile} already connected`);
-  }
-}
-
-class TurnHistory {
-  private static readonly startingPlayer: Player = Player.User;
-
-  private constructor(private turns: Array<Turn>) {}
-
-  static create() {
-    return new this([]);
-  }
-
-  get isEmpty(): boolean {
-    return this.turns.length === 0;
-  }
-
-  get currentPlayer(): Player {
-    return this.currentTurn.player;
-  }
-
-  get nextPlayer(): Player {
-    if (this.turns.length === 0) return TurnHistory.startingPlayer;
-    return this.currentPlayer === Player.User ? Player.Opponent : Player.User;
-  }
-
-  get currentTurn(): Turn {
-    const last = this.turns.at(-1);
-    if (!last) throw new Error('No current turn exists');
-    return last;
-  }
-
-  get currentTurnCellSequence(): ReadonlyArray<CellIndex> | undefined {
-    return this.currentTurn.cellSequence;
-  }
-
-  get currentTurnTileSequence(): ReadonlyArray<TileId> | undefined {
-    return this.currentTurn.tileSequence;
-  }
-
-  get previousTurnTileSequence(): ReadonlyArray<TileId> | undefined {
-    return this.previousTurn?.tileSequence;
-  }
-
-  getScoreFor(player: Player): number {
-    return this.getTurnsFor(player).reduce((sum, t) => sum + (t.score ?? 0), 0);
-  }
-
-  findTileByCell(cell: CellIndex): TileId | undefined {
-    for (const turn of this.turns) {
-      const tile = turn.getConnectedTile(cell);
-      if (tile) return tile;
-    }
-  }
-
-  findCellByTile(tile: TileId): CellIndex | undefined {
-    for (const turn of this.turns) {
-      const cell = turn.getConnectedCell(tile);
-      if (cell) return cell;
-    }
-  }
-
-  createNewTurnFor(player: Player): void {
-    this.turns.push(Turn.create({ player }));
-  }
-
-  private get previousTurn(): Turn | undefined {
-    return this.turns.at(-2) ?? undefined;
-  }
-
-  private getTurnsFor(player: Player): Array<Turn> {
-    return this.turns.filter(t => t.player === player);
-  }
-}
-
 export class TurnManager {
   private static readonly finalPlayerStates = [PlayerStates.Won, PlayerStates.Tied];
 
@@ -205,10 +48,10 @@ export class TurnManager {
     private playerStates: Map<Player, PlayerStates>,
   ) {}
 
-  static create({ players }: { players: Array<Player> }) {
+  static create({ players }: { players: Array<Player> }): TurnManager {
     const playerStates = new Map(players.map(p => [p, PlayerStates.Started]));
     const history = TurnHistory.create();
-    const manager = new this(history, playerStates);
+    const manager = new TurnManager(history, playerStates);
     manager.startTurnForNextPlayer();
     return manager;
   }
@@ -317,5 +160,162 @@ export class TurnManager {
 
   private setPlayerState(player: Player, state: PlayerStates): void {
     this.playerStates.set(player, state);
+  }
+}
+
+class TurnHistory {
+  private static readonly startingPlayer: Player = Player.User;
+
+  private constructor(private turns: Array<Turn>) {}
+
+  static create(): TurnHistory {
+    return new TurnHistory([]);
+  }
+
+  get isEmpty(): boolean {
+    return this.turns.length === 0;
+  }
+
+  get currentPlayer(): Player {
+    return this.currentTurn.player;
+  }
+
+  get nextPlayer(): Player {
+    if (this.turns.length === 0) return TurnHistory.startingPlayer;
+    return this.currentPlayer === Player.User ? Player.Opponent : Player.User;
+  }
+
+  get currentTurn(): Turn {
+    const last = this.turns.at(-1);
+    if (!last) throw new Error('No current turn exists');
+    return last;
+  }
+
+  get currentTurnCellSequence(): ReadonlyArray<CellIndex> | undefined {
+    return this.currentTurn.cellSequence;
+  }
+
+  get currentTurnTileSequence(): ReadonlyArray<TileId> | undefined {
+    return this.currentTurn.tileSequence;
+  }
+
+  get previousTurnTileSequence(): ReadonlyArray<TileId> | undefined {
+    return this.previousTurn?.tileSequence;
+  }
+
+  getScoreFor(player: Player): number {
+    return this.getTurnsFor(player).reduce((sum, t) => sum + (t.score ?? 0), 0);
+  }
+
+  findTileByCell(cell: CellIndex): TileId | undefined {
+    for (const turn of this.turns) {
+      const tile = turn.getConnectedTile(cell);
+      if (tile) return tile;
+    }
+  }
+
+  findCellByTile(tile: TileId): CellIndex | undefined {
+    for (const turn of this.turns) {
+      const cell = turn.getConnectedCell(tile);
+      if (cell) return cell;
+    }
+  }
+
+  createNewTurnFor(player: Player): void {
+    this.turns.push(Turn.create({ player }));
+  }
+
+  private get previousTurn(): Turn | undefined {
+    return this.turns.at(-2) ?? undefined;
+  }
+
+  private getTurnsFor(player: Player): Array<Turn> {
+    return this.turns.filter(t => t.player === player);
+  }
+}
+
+class Turn {
+  private constructor(
+    private readonly id: string,
+    readonly player: Player,
+    private initPlacement: Placement,
+    private state: TurnState,
+  ) {}
+
+  static create({ player }: { player: Player }): Turn {
+    return new Turn(crypto.randomUUID(), player, [], { type: TurnStateType.Unvalidated });
+  }
+
+  get cellSequence(): ReadonlyArray<CellIndex> | undefined {
+    return this.state.type === TurnStateType.Valid ? this.state.sequences.cell : undefined;
+  }
+
+  get tileSequence(): ReadonlyArray<TileId> | undefined {
+    return this.state.type === TurnStateType.Valid ? this.state.sequences.tile : undefined;
+  }
+
+  get error(): string | undefined {
+    return this.state.type === TurnStateType.Invalid ? this.state.error : undefined;
+  }
+
+  get score(): number | undefined {
+    return this.state.type === TurnStateType.Valid ? this.state.score : undefined;
+  }
+
+  get words(): ReadonlyArray<string> | undefined {
+    return this.state.type === TurnStateType.Valid ? this.state.words : undefined;
+  }
+
+  get isValid(): boolean {
+    return this.state.type === TurnStateType.Valid;
+  }
+
+  computeState(dependencies: {
+    layout: Layout;
+    dictionary: Dictionary;
+    inventory: Inventory;
+    turnManager: TurnManager;
+  }): void {
+    this.state = TurnStateComputer.compute({ initPlacement: this.initPlacement }, dependencies);
+  }
+
+  getConnectedTile(cell: CellIndex): TileId | undefined {
+    return this.initPlacement.find(link => link.cell === cell)?.tile;
+  }
+
+  getConnectedCell(tile: TileId): CellIndex | undefined {
+    return this.initPlacement.find(link => link.tile === tile)?.cell;
+  }
+
+  connectTileToCell({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
+    this.validateCellAndTileAbsence(cell, tile);
+    this.initPlacement.push(Link.create(cell, tile));
+    this.initPlacement.sort((a, b) => a.cell - b.cell);
+  }
+
+  disconnectTileFromCell({ tile }: { tile: TileId }): void {
+    const index = this.initPlacement.findIndex(link => link.tile === tile);
+    if (index === -1) throw new Error(`Tile ${tile} not found`);
+    this.initPlacement.splice(index, 1);
+  }
+
+  reset(): void {
+    this.initPlacement.length = 0;
+  }
+
+  private validateCellAndTileAbsence(cell: CellIndex, tile: TileId): void {
+    if (this.initPlacement.some(link => link.cell === cell)) throw new Error(`Cell ${cell} already connected`);
+    if (this.initPlacement.some(link => link.tile === tile)) throw new Error(`Tile ${tile} already connected`);
+  }
+}
+
+class Link {
+  private constructor(
+    readonly cell: CellIndex,
+    readonly tile: TileId,
+  ) {}
+
+  static create(cell: CellIndex, tile: TileId): Link {
+    return new Link(cell, tile);
   }
 }

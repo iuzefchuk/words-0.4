@@ -16,22 +16,20 @@ type ValidPipelineResult<Context> = { isValid: true; ctx: Context };
 type InvalidPipelineResult = { isValid: false; error: ValidationErrors };
 
 export enum ValidationErrors {
-  NoCellsUsableAsFirst = 'error_cell_3',
-  InvalidCellPlacement = '',
   InvalidTilePlacement = 'error_tile_1',
+  InvalidCellPlacement = 'error_cell_2',
+  NoCellsUsableAsFirst = 'error_cell_3',
   WordNotInDictionary = 'error_tile_4',
 }
 
 export class TurnStateComputer {
-  constructor(private readonly dependencies: Dependencies) {}
-
-  compute(input: TurnInput): TurnState {
-    const initialContext = { ...input, dependencies: this.dependencies };
-    const { result } = TurnStateComputer.Pipeline.initialize(initialContext)
-      .addStep(TurnStateComputer.computeSequences)
-      .addStep(TurnStateComputer.computePlacements)
-      .addStep(TurnStateComputer.computeWords)
-      .addStep(TurnStateComputer.computeScore);
+  static compute(input: TurnInput, dependencies: Dependencies): TurnState {
+    const initialContext = { ...input, dependencies };
+    const { result } = this.Pipeline.initialize(initialContext)
+      .addStep(this.computeSequences)
+      .addStep(this.computePlacements)
+      .addStep(this.computeWords)
+      .addStep(this.computeScore);
     return result.isValid
       ? {
           type: TurnStateType.Valid,
@@ -73,11 +71,11 @@ export class TurnStateComputer {
     nextCtx: NextContext,
   ): ValidPipelineResult<OldContext & NextContext> {
     Object.assign(oldCtx, nextCtx);
-    return TurnStateComputer.Pipeline.createValidPipelineResult(oldCtx as OldContext & NextContext);
+    return this.Pipeline.createValidPipelineResult(oldCtx as OldContext & NextContext);
   }
 
   static failComputer(error: ValidationErrors): InvalidPipelineResult {
-    return TurnStateComputer.Pipeline.createInvalidPipelineResult(error);
+    return this.Pipeline.createInvalidPipelineResult(error);
   }
 
   static computeSequences(ctx: BaseContext): PipelineResult<SequencesContext> {
