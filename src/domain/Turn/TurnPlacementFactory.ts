@@ -9,7 +9,7 @@ export class TurnPlacementFactory {
     private readonly turnManager: TurnManager,
   ) {}
 
-  create({
+  execute({
     axis,
     targetCell,
     tileSequence,

@@ -28,6 +28,14 @@ export class Layout {
     return Layout._cells;
   }
 
+  isCellPositionOnLeftEdge(cellPosition: number): boolean {
+    return cellPosition === 0;
+  }
+
+  isCellPositionOnRightEdge(cellPosition: number): boolean {
+    return cellPosition === Layout.cellsPerAxis - 1;
+  }
+
   isCellCenter(cellIndex: CellIndex): boolean {
     this.validateCellIndex(cellIndex);
     return cellIndex === this.centerIndex;

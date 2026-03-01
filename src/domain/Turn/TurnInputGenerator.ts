@@ -1,38 +1,76 @@
-import { Axis, CellIndex, Layout } from '../Layout/Layout.js';
-import { LettersCount, TileId } from '../Inventory.js';
-import { Placement, TurnInput, TurnManager, TurnStateType } from './Turn.js';
+import { Axis, CellIndex } from '../Layout/Layout.js';
+import { Letter, LetterTiles, TileId } from '../Inventory/Inventory.js';
+import { Placement, TurnInput, TurnStateType } from './Turn.js';
 import { LayoutCellUsabilityCalculator } from '../Layout/LayoutCellUsabilityCalculator.js';
 import { TurnStateComputer } from './TurnStateComputer.js';
-import { Dictionary, FrozenState } from '../Dictionary/Dictionary.js';
+import { FrozenNode } from '../Dictionary/Dictionary.js';
+import { Player } from '../Player.js';
 
-type ComputerConfig = {
-  playerLettersCount: LettersCount;
-  cell: CellIndex;
-  axis: Axis;
+type InputComputerConfig = { axis: Axis; targetCell: CellIndex };
+
+type EnterFrame = {
+  stage: Stage.Enter;
+  phase: Phase;
+  node: FrozenNode;
+  position: number;
 };
 
-type ComputerIterationConfig = {
-  axis: Axis;
-  axisCells: ReadonlyArray<CellIndex>;
-  cellAxisPosition: number;
-  lettersCount: LettersCount;
-  placement?: Placement;
-  state: FrozenState;
+type AdvanceFrame = {
+  stage: Stage.Advance;
+  phase: Phase;
+  node: FrozenNode;
+  position: number;
+  step: -1 | 1;
 };
+
+type ExpandFrame = {
+  stage: Stage.Expand;
+  phase: Phase;
+  node: FrozenNode;
+  position: number;
+  step: -1 | 1;
+  nextPosition: number;
+  nextCell: CellIndex;
+  iterator: Iterator<[Letter, FrozenNode]>;
+  usableLetters: ReadonlySet<Letter>;
+};
+
+type BacktrackFrame = {
+  stage: Stage.Backtrack;
+  letter: Letter;
+  placedTile: TileId;
+};
+
+type Frame = EnterFrame | AdvanceFrame | ExpandFrame | BacktrackFrame;
+
+type CalculatorArgs = { axis: Axis; cell: CellIndex };
+
+enum Phase {
+  Left = 'Left',
+  Right = 'Right',
+}
+
+enum Stage {
+  Enter = 'Enter',
+  Advance = 'Advance',
+  Expand = 'Expand',
+  Backtrack = 'Backtrack',
+}
 
 export class TurnInputGenerator {
-  constructor(private readonly dependencies: Dependencies) {}
-
-  generate({ playerLettersCount }: { playerLettersCount: LettersCount }): TurnInput | null {
-    if (playerLettersCount.size === 0) return null;
-    const targetCells = this.getAvailableTargetCells();
-    if (targetCells.length === 0) return null;
-    for (const cell of targetCells) {
+  static execute(player: Player, dependencies: Dependencies): TurnInput | null {
+    const { layout, inventory, turnManager } = dependencies;
+    const playerLetterTiles = inventory.getletterTilesFor(player);
+    if (playerLetterTiles.size === 0) return null;
+    const availableTargetCells = new LayoutCellUsabilityCalculator(layout, turnManager).getAllUsableAsFirst();
+    if (availableTargetCells.length === 0) return null;
+    const calculator = new UsableLettersCalculator(dependencies);
+    for (const targetCell of availableTargetCells) {
       for (const axis of Object.values(Axis)) {
-        const input = new TurnInputGenerator.InputComputer(this.dependencies).compute({
-          playerLettersCount,
-          cell,
-          axis,
+        const config: InputComputerConfig = { targetCell, axis };
+        const input = new TurnInputGenerator.InputComputer(dependencies, calculator).execute({
+          playerLetterTiles,
+          config,
         });
         if (input) return input;
       }
@@ -40,132 +78,188 @@ export class TurnInputGenerator {
     return null;
   }
 
-  private getAvailableTargetCells(): ReadonlyArray<CellIndex> {
-    const { layout, turnManager } = this.dependencies;
-    return new LayoutCellUsabilityCalculator(layout, turnManager).getAllUsableAsFirst();
-  }
-
   static InputComputer = class {
-    private readonly crossCheckCache: CrossCheckCache;
+    constructor(
+      private readonly dependencies: Dependencies,
+      private readonly calculator: UsableLettersCalculator,
+    ) {}
 
-    constructor(private readonly dependencies: Dependencies) {
-      const { layout, dictionary, turnManager } = this.dependencies;
-      this.crossCheckCache = new CrossCheckCache(layout, dictionary, turnManager);
+    private get layout() {
+      return this.dependencies.layout;
+    }
+    private get dictionary() {
+      return this.dependencies.dictionary;
+    }
+    private get inventory() {
+      return this.dependencies.inventory;
+    }
+    private get turnManager() {
+      return this.dependencies.turnManager;
     }
 
-    compute({ playerLettersCount, cell, axis }: ComputerConfig): TurnInput | null {
-      const { layout, dictionary } = this.dependencies;
-      const axisCells = layout.getAxisCells({ axis, targetCell: cell });
-      const cellAxisPosition = axisCells.indexOf(cell);
-      const state = dictionary.rootState;
-      const firstIterationConfig = { axis, axisCells, cellAxisPosition, lettersCount: playerLettersCount, state };
-      return this.computeIteration(firstIterationConfig);
-    }
-
-    private computeIteration({
-      axis,
-      axisCells,
-      cellAxisPosition,
-      lettersCount,
-      placement = [],
-      state,
-    }: ComputerIterationConfig): TurnInput | null {
-      const { turnManager, inventory } = this.dependencies;
-      const placementIsWord = placement.length > 0 && state.isFinal;
-      if (placementIsWord) {
-        const input: TurnInput = { initPlacement: [...placement] };
-        const turnState = new TurnStateComputer(this.dependencies).compute(input);
-        if (turnState.type === TurnStateType.Valid) return input;
+    execute({
+      playerLetterTiles,
+      config,
+    }: {
+      playerLetterTiles: LetterTiles;
+      config: InputComputerConfig;
+    }): TurnInput | null {
+      const tiles = playerLetterTiles;
+      const axisCells = this.layout.getAxisCells(config);
+      const oppositeAxis = this.layout.getOppositeAxis(config.axis);
+      const startPosition = axisCells.indexOf(config.targetCell);
+      if (startPosition === -1) return null;
+      const placement: Placement = [];
+      const stack: Array<Frame> = [
+        { stage: Stage.Enter, phase: Phase.Left, node: this.dictionary.rootNode, position: startPosition },
+      ];
+      while (stack.length > 0) {
+        const frame = stack.pop()!;
+        if (frame.stage === Stage.Enter) {
+          const validResultIsPossible = placement.length > 0 && frame.node.isFinal;
+          if (frame.phase === Phase.Right && validResultIsPossible) {
+            const input: TurnInput = { initPlacement: [...placement] };
+            const inputState = TurnStateComputer.execute(input, this.dependencies);
+            if (inputState.type === TurnStateType.Valid) return input;
+          }
+        }
+        if (frame.stage === Stage.Enter) this.enter(stack, frame);
+        if (frame.stage === Stage.Advance) this.advance(stack, frame, axisCells, oppositeAxis);
+        if (frame.stage === Stage.Expand) this.expand(stack, frame, tiles, placement);
+        if (frame.stage === Stage.Backtrack) this.backtrack(frame, tiles, placement);
       }
-
-      if (cellAxisPosition >= axisCells.length) return null;
-      const cell = axisCells[cellAxisPosition];
-      if (turnManager.isCellConnected(cell)) return null;
-      const allowedTiles = this.crossCheckCache.getAllowedTiles(cell, axis);
-
-      for (const [tile, nextState] of state.transitions) {
-        if (!allowedTiles.has(tile)) continue;
-        const letter = inventory.getTileLetter(tile);
-        const lettersRemaining = lettersCount.get(letter) ?? 0;
-        if (lettersRemaining === 0) continue;
-
-        // apply tile
-        lettersCount.set(letter, lettersRemaining - 1);
-        placement.push({ cell, tile });
-
-        //check for results
-        const result = this.computeIteration({
-          axis,
-          axisCells,
-          cellAxisPosition: cellAxisPosition + 1,
-          lettersCount,
-          placement,
-          state: nextState,
-        });
-        if (result) return result;
-
-        //reverse tile application
-        placement.pop();
-        lettersCount.set(letter, lettersRemaining);
-      }
-
       return null;
     }
 
-    CrossCheckCache = class CrossCheckCache {
-      private readonly cache = new Map<CellIndex, Set<TileId>>();
-
-      constructor(
-        private readonly layout: Layout,
-        private readonly dictionary: Dictionary,
-        private readonly turnManager: TurnManager,
-      ) {}
-
-      getAllowedTiles(cell: CellIndex, axis: Axis): ReadonlySet<TileId> {
-        const cached = this.cache.get(cell);
-        if (cached) return cached;
-        const allowed = this.computeAllowedTiles(cell, axis);
-        this.cache.set(cell, allowed);
-        return allowed;
+    enter(stack: Array<Frame>, frame: EnterFrame): void {
+      const { phase } = frame;
+      if (phase === Phase.Left) {
+        stack.push({ ...frame, stage: Stage.Enter, phase: Phase.Right });
+        stack.push({ ...frame, stage: Stage.Advance, phase: Phase.Left, step: -1 });
+      } else if (phase === Phase.Right) {
+        stack.push({ ...frame, stage: Stage.Advance, phase: Phase.Right, step: 1 });
       }
+    }
 
-      private computeAllowedTiles(cell: CellIndex, axis: Axis): Set<TileId> {
-        const crossAxis = axis === Axis.X ? Axis.Y : Axis.X;
-        const axisCells = this.layout.getAxisCells({ axis: crossAxis, targetCell: cell });
-        const index = axisCells.indexOf(cell);
-        let prefix = '';
-        for (let i = index - 1; i >= 0; i--) {
-          const tile = this.turnManager.findTileByCell(axisCells[i]);
-          if (!tile) break;
-          prefix = tile + prefix;
-        }
-        let suffix = '';
-        for (let i = index + 1; i < axisCells.length; i++) {
-          const tile = this.turnManager.findTileByCell(axisCells[i]);
-          if (!tile) break;
-          suffix += tile;
-        }
-        if (prefix === '' && suffix === '') {
-          const all = new Set<TileId>();
-          this.collectTiles(this.dictionary.rootState, all);
-          return all;
-        }
-        const allowed = new Set<TileId>();
-        const all = new Set<TileId>();
-        this.collectTiles(this.dictionary.rootState, all);
-        for (const letter of all) {
-          const word = prefix + letter + suffix;
-          if (this.dictionary.hasWord(word)) allowed.add(letter);
-        }
-        return allowed;
+    advance(stack: Array<Frame>, frame: AdvanceFrame, axisCells: ReadonlyArray<CellIndex>, oppositeAxis: Axis): void {
+      const { node, position, step } = frame;
+      const isEdge =
+        step === -1 ? this.layout.isCellPositionOnLeftEdge(position) : this.layout.isCellPositionOnRightEdge(position);
+      if (isEdge) return;
+      const nextPosition = position + step;
+      if (nextPosition < 0 || nextPosition >= axisCells.length) return;
+      const nextCell = axisCells[nextPosition];
+      const connectedTile = this.turnManager.findTileByCell(nextCell);
+      if (connectedTile) {
+        const letter = this.inventory.getTileLetter(connectedTile);
+        const nextNode = node.children.get(letter);
+        if (!nextNode) return;
+        stack.push({ ...frame, stage: Stage.Enter, node: nextNode, position: nextPosition });
+      } else {
+        stack.push({
+          ...frame,
+          stage: Stage.Expand,
+          nextPosition,
+          nextCell,
+          iterator: node.children.entries(),
+          usableLetters: this.calculator.getFor({ axis: oppositeAxis, cell: nextCell }),
+        });
       }
+    }
 
-      private collectTiles(state: FrozenState, set: Set<TileId>) {
-        for (const [char, child] of state.transitions) {
-          if (!set.has(char)) set.add(char);
-          this.collectTiles(child, set);
-        }
-      }
-    };
+    expand(stack: Array<Frame>, frame: ExpandFrame, tiles: LetterTiles, placement: Placement): void {
+      const { phase, nextPosition, nextCell, iterator, usableLetters } = frame;
+      const next = iterator.next();
+      if (next.done) return;
+      const [letter, nextNode] = next.value;
+      stack.push(frame);
+      if (!usableLetters.has(letter)) return;
+      const tilesWithLetter = tiles.get(letter);
+      if (!tilesWithLetter || tilesWithLetter.length === 0) return;
+      const tile = tilesWithLetter.pop();
+      if (!tile) throw new Error('Tile has to exist');
+      placement.push({ cell: nextCell, tile });
+      stack.push({ stage: Stage.Backtrack, letter, placedTile: tile });
+      stack.push({ stage: Stage.Enter, phase, node: nextNode, position: nextPosition });
+    }
+
+    backtrack(frame: BacktrackFrame, tiles: LetterTiles, placement: Placement): void {
+      const { letter, placedTile } = frame;
+      const tilesWithLetter = tiles.get(letter);
+      if (!tilesWithLetter) throw new Error('Backtracked letter has to exist');
+      tilesWithLetter.push(placedTile);
+      placement.pop();
+    }
   };
+}
+
+class UsableLettersCalculator {
+  private cache = new Map<Axis, Map<CellIndex, ReadonlySet<Letter>>>(
+    Object.values(Axis).map(axis => [axis, new Map()]),
+  );
+
+  constructor(private readonly dependencies: Dependencies) {}
+
+  private get layout() {
+    return this.dependencies.layout;
+  }
+  private get dictionary() {
+    return this.dependencies.dictionary;
+  }
+  private get inventory() {
+    return this.dependencies.inventory;
+  }
+  private get turnManager() {
+    return this.dependencies.turnManager;
+  }
+
+  getFor({ axis, cell }: CalculatorArgs): ReadonlySet<Letter> {
+    const axisCache = this.cache.get(axis)!;
+    const cachedResult = axisCache.get(cell);
+    if (cachedResult) return cachedResult;
+    const newResult = this.calculateFor({ axis, cell });
+    axisCache.set(cell, newResult);
+    return newResult;
+  }
+
+  // TODO to service ?
+  private calculateFor({ axis, cell }: CalculatorArgs): ReadonlySet<Letter> {
+    const axisCells = this.layout.getAxisCells({ axis, targetCell: cell });
+    const cellAxisPosition = axisCells.indexOf(cell);
+    const prefix = this.getPrefix(axisCells, cellAxisPosition);
+    const suffix = this.getSuffix(axisCells, cellAxisPosition);
+    if (!prefix && !suffix) return this.dictionary.allLetters;
+    const prefixNode = prefix ? this.dictionary.getNodeFor(prefix) : this.dictionary.rootNode;
+    if (!prefixNode) return new Set();
+    const usableLetters = new Set<Letter>();
+    for (const [letter, childNode] of prefixNode.children) {
+      if (!suffix) {
+        usableLetters.add(letter);
+        continue;
+      }
+      const suffixNode = this.dictionary.getNodeFor(suffix, childNode);
+      if (suffixNode && suffixNode.isFinal) usableLetters.add(letter);
+    }
+    return usableLetters;
+  }
+
+  private getPrefix(axisCells: ReadonlyArray<CellIndex>, cellAxisPosition: number): string {
+    let prefix = '';
+    for (let i = cellAxisPosition - 1; i >= 0; i--) {
+      const tile = this.turnManager.findTileByCell(axisCells[i]);
+      if (!tile) break;
+      prefix = this.inventory.getTileLetter(tile) + prefix;
+    }
+    return prefix;
+  }
+
+  private getSuffix(axisCells: ReadonlyArray<CellIndex>, cellAxisPosition: number): string {
+    let suffix = '';
+    for (let i = cellAxisPosition + 1; i < axisCells.length; i++) {
+      const tile = this.turnManager.findTileByCell(axisCells[i]);
+      if (!tile) break;
+      suffix += this.inventory.getTileLetter(tile);
+    }
+    return suffix;
+  }
 }

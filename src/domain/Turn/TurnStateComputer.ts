@@ -23,7 +23,7 @@ export enum ValidationErrors {
 }
 
 export class TurnStateComputer {
-  static compute(input: TurnInput, dependencies: Dependencies): TurnState {
+  static execute(input: TurnInput, dependencies: Dependencies): TurnState {
     const initialContext = { ...input, dependencies };
     const { result } = this.Pipeline.initialize(initialContext)
       .addStep(this.computeSequences)
@@ -96,12 +96,12 @@ export class TurnStateComputer {
     const axisCalculator = new LayoutAxisCalculator(layout, turnManager);
     const primaryAxis = axisCalculator.calculatePrimary(ctx.sequences.cell);
     const factory = new TurnPlacementFactory(layout, turnManager);
-    const primaryPlacement = factory.create({ axis: primaryAxis, targetCell: ctx.sequences.cell[0], tileSequence });
+    const primaryPlacement = factory.execute({ axis: primaryAxis, targetCell: ctx.sequences.cell[0], tileSequence });
     const isPlacementUsable = (placement: Placement): boolean => placement.length > 1;
     if (!isPlacementUsable(primaryPlacement)) return this.failComputer(ValidationErrors.InvalidTilePlacement);
     const placements: Array<Placement> = [primaryPlacement];
     for (const cell of ctx.sequences.cell) {
-      const placement = factory.create({ axis: layout.getOppositeAxis(primaryAxis), targetCell: cell, tileSequence });
+      const placement = factory.execute({ axis: layout.getOppositeAxis(primaryAxis), targetCell: cell, tileSequence });
       if (isPlacementUsable(placement)) placements.push(placement);
     }
     return placements.length > 0

@@ -20,14 +20,14 @@ export class Dictionary {
   ) {}
 
   static create(): Dictionary {
-    const rootNode = Dictionary.RootNodeFactory.create(DATA);
+    const rootNode = Dictionary.RootNodeFactory.execute(DATA);
     const allLetters = new Set<Letter>();
     this.populateLetterSetFromNode(allLetters, rootNode);
     return new Dictionary(rootNode, allLetters);
   }
 
   static RootNodeFactory = class {
-    static create(sortedWords: ReadonlyArray<string>): Readonly<FrozenNode> {
+    static execute(sortedWords: ReadonlyArray<string>): Readonly<FrozenNode> {
       const generator = this.nodeGenerator();
       const rootNode = generator.next().value;
       const minimizer = new this.TransitionToNodeMinimizer();
