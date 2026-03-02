@@ -1,8 +1,8 @@
-import { TurnManager } from '../Turn/Turn.js';
+import { TurnManager } from '../Turn/_Turn.js';
 import { CellIndex, Axis, Layout } from './Layout.js';
 
 // TODO optimize
-export class LayoutAxisCalculator {
+export class AxisCalculator {
   private static readonly defaultAxis = Axis.X;
 
   constructor(
@@ -13,7 +13,7 @@ export class LayoutAxisCalculator {
   calculatePrimary(cellSequence: ReadonlyArray<CellIndex>): Axis {
     const normalizedSequence =
       cellSequence.length === 1 ? this.createCellSequenceFromAdjacents({ cellIndex: cellSequence[0] }) : cellSequence;
-    if (normalizedSequence.length === 0) return LayoutAxisCalculator.defaultAxis;
+    if (normalizedSequence.length === 0) return AxisCalculator.defaultAxis;
     const [firstIndex] = normalizedSequence;
     const firstColumn = this.layout.getColumnIndex(firstIndex);
     const isVertical = normalizedSequence.every(cell => this.layout.getColumnIndex(cell) === firstColumn);

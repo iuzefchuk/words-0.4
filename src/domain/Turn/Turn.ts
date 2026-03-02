@@ -6,19 +6,10 @@ import { Dictionary } from '../Dictionary/Dictionary.js';
 
 export type Placement = Array<Link>;
 
-export type TurnInput = { initPlacement: Placement };
-
-export type TurnState =
-  | {
-      type: TurnStateType.Unvalidated;
-    }
-  | {
-      type: TurnStateType.Invalid;
-      error: string;
-    }
-  | ({
-      type: TurnStateType.Valid;
-    } & TurnComputeds);
+type TurnStateUnvalidated = { type: TurnStateType.Unvalidated };
+type TurnStateInvalid = { type: TurnStateType.Invalid; error: string };
+type TurnStateValid = { type: TurnStateType.Valid } & TurnComputeds;
+export type TurnState = TurnStateUnvalidated | TurnStateInvalid | TurnStateValid;
 
 type TurnComputeds = {
   sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> };
@@ -49,8 +40,8 @@ export class TurnManager {
   ) {}
 
   static create({ players }: { players: Array<Player> }): TurnManager {
-    const playerStates = new Map(players.map(p => [p, PlayerStates.Started]));
     const history = TurnHistory.create();
+    const playerStates = new Map(players.map(p => [p, PlayerStates.Started]));
     const manager = new TurnManager(history, playerStates);
     manager.startTurnForNextPlayer();
     return manager;
@@ -163,7 +154,8 @@ class TurnHistory {
   private constructor(private turns: Array<Turn>) {}
 
   static create(): TurnHistory {
-    return new TurnHistory([]);
+    const turns: Array<Turn> = [];
+    return new TurnHistory(turns);
   }
 
   get isEmpty(): boolean {
@@ -223,14 +215,15 @@ class TurnHistory {
 
 class Turn {
   private constructor(
-    private readonly id: string,
     readonly player: Player,
     private initPlacement: Placement,
     private state: TurnState,
   ) {}
 
   static create({ player }: { player: Player }): Turn {
-    return new Turn(crypto.randomUUID(), player, [], { type: TurnStateType.Unvalidated });
+    const initPlacement: Placement = [];
+    const state: TurnStateUnvalidated = { type: TurnStateType.Unvalidated };
+    return new Turn(player, initPlacement, state);
   }
 
   get cellSequence(): ReadonlyArray<CellIndex> | undefined {
@@ -258,7 +251,7 @@ class Turn {
     inventory: Inventory;
     turnManager: TurnManager;
   }): void {
-    this.state = TurnStateComputer.compute({ initPlacement: this.initPlacement }, dependencies);
+    this.state = TurnStateComputer.execute(this.initPlacement, dependencies);
   }
 
   getConnectedTile(cell: CellIndex): TileId | undefined {

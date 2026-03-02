@@ -119,12 +119,11 @@ export class Game {
 
   private async processOpponentTurn(): Promise<void> {
     await this.setMinimumExecutionTime(() => {
-      const generatedInput = this.gameDomain.generateTurnInput({ player: Player.Opponent });
-      if (generatedInput === null) {
+      const generatedPlacement = this.gameDomain.generatePlacement({ player: Player.Opponent });
+      if (generatedPlacement === null) {
         this.gameDomain.passTurn();
       } else {
-        const { initPlacement } = generatedInput;
-        for (const link of initPlacement) this.gameDomain.connectTileToCell({ cell: link.cell, tile: link.tile });
+        for (const link of generatedPlacement) this.gameDomain.connectTileToCell({ cell: link.cell, tile: link.tile });
         this.gameDomain.computeTurnState();
         this.gameDomain.saveTurn();
       }

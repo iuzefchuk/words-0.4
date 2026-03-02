@@ -1,7 +1,7 @@
-import { TurnManager } from '../Turn/Turn.js';
+import { TurnManager } from '../Turn/_Turn.js';
 import { CellIndex, Layout } from './Layout.js';
 
-export class LayoutCellUsabilityCalculator {
+export class CellUsabilityCalculator {
   constructor(
     private readonly layout: Layout,
     private readonly turnManager: TurnManager,

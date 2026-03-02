@@ -50,7 +50,8 @@ export class Inventory {
       Object.values(Letter).flatMap(type => Array(LETTER_DISTRIBUTION[type]).fill(type)),
     );
     const racks = new Map(players.map(player => [player, Rack.create({ maxLimit: this.tilesPerRack })]));
-    return new Inventory(unusedBag, racks, []);
+    const discardedBag: Array<Tile> = [];
+    return new Inventory(unusedBag, racks, discardedBag);
   }
 
   get unusedTilesCount(): number {
@@ -129,7 +130,8 @@ class Rack {
   ) {}
 
   static create({ maxLimit }: { maxLimit: number }): Rack {
-    return new Rack(maxLimit, []);
+    const tiles: Array<Tile> = [];
+    return new Rack(maxLimit, tiles);
   }
 
   get tileCount(): number {
@@ -187,7 +189,8 @@ class Tile {
   ) {}
 
   static create({ letter }: { letter: Letter }): Tile {
-    return new Tile(crypto.randomUUID(), letter);
+    const id = crypto.randomUUID();
+    return new Tile(id, letter);
   }
 
   get points(): number {

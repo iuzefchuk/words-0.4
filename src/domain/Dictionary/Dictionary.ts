@@ -15,18 +15,22 @@ type NodeGenerator = Generator<Node, Node>;
 
 export class Dictionary {
   private constructor(
-    public readonly rootNode: Readonly<FrozenNode>,
+    public readonly tree: Readonly<FrozenNode>,
     public readonly allLetters: ReadonlySet<Letter>,
   ) {}
 
-  static create(): Dictionary {
-    const rootNode = Dictionary.RootNodeFactory.execute(DATA);
-    const allLetters = new Set<Letter>();
-    this.populateLetterSetFromNode(allLetters, rootNode);
-    return new Dictionary(rootNode, allLetters);
+  get rootNode() {
+    return this.tree;
   }
 
-  static RootNodeFactory = class {
+  static create(): Dictionary {
+    const tree = Dictionary.TreeCreator.execute(DATA);
+    const allLetters = new Set<Letter>();
+    this.populateLetterSetFromNode(allLetters, tree);
+    return new Dictionary(tree, allLetters);
+  }
+
+  static TreeCreator = class {
     static execute(sortedWords: ReadonlyArray<string>): Readonly<FrozenNode> {
       const generator = this.nodeGenerator();
       const rootNode = generator.next().value;

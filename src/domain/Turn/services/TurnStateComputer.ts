@@ -1,11 +1,12 @@
-import { CellIndex } from '../Layout/Layout.js';
-import { TileId } from '../Inventory/Inventory.js';
-import { TurnState, TurnStateType, Placement, TurnInput } from './Turn.js';
-import { LayoutCellUsabilityCalculator } from '../Layout/LayoutCellUsabilityCalculator.js';
-import { LayoutAxisCalculator } from '../Layout/LayoutAxisCalculator.js';
-import { TurnPlacementFactory } from './TurnPlacementFactory.js';
+import { CellIndex, Layout } from '../Layout/Layout.js';
+import { Inventory, TileId } from '../Inventory/Inventory.js';
+import { TurnState, TurnStateType, Placement, TurnManager } from './_Turn.js';
+import { CellUsabilityCalculator } from '../Layout/CellUsabilityCalculator.js';
+import { AxisCalculator } from '../Layout/AxisCalculator.js';
+import { PlacementCreator } from './PlacementCreator.js';
+import { Dictionary } from '../Dictionary/Dictionary.js';
 
-type BaseContext = TurnInput & { dependencies: Dependencies };
+type BaseContext = { initPlacement: Placement; dependencies: Dependencies };
 type SequencesContext = BaseContext & { sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> } };
 type PlacementsContext = SequencesContext & { placements: ReadonlyArray<Placement> };
 type WordsContext = PlacementsContext & { words: ReadonlyArray<string> };
@@ -23,8 +24,14 @@ export enum ValidationErrors {
 }
 
 export class TurnStateComputer {
-  static execute(input: TurnInput, dependencies: Dependencies): TurnState {
-    const initialContext = { ...input, dependencies };
+  static execute(
+    initPlacement: Placement,
+    layout: Layout,
+    dictionary: Dictionary,
+    inventory: Inventory,
+    turnManager: TurnManager,
+  ): TurnState {
+    const initialContext = { initPlacement, dependencies: { layout, dictionary, inventory, turnManager } };
     const { result } = this.Pipeline.initialize(initialContext)
       .addStep(this.computeSequences)
       .addStep(this.computePlacements)
@@ -84,7 +91,7 @@ export class TurnStateComputer {
     if (tiles.length === 0) return this.failComputer(ValidationErrors.InvalidTilePlacement);
     const cells = ctx.initPlacement.map(placement => placement.cell);
     if (cells.length === 0) return this.failComputer(ValidationErrors.InvalidCellPlacement);
-    const cellUsabilityCalculator = new LayoutCellUsabilityCalculator(layout, turnManager);
+    const cellUsabilityCalculator = new CellUsabilityCalculator(layout, turnManager);
     const noCellsUsableAsFirst = cells.every(cell => !cellUsabilityCalculator.isUsableAsFirst(cell));
     if (noCellsUsableAsFirst) return this.failComputer(ValidationErrors.NoCellsUsableAsFirst);
     return this.passComputer(ctx, { sequences: { cell: cells, tile: tiles } });
@@ -93,15 +100,21 @@ export class TurnStateComputer {
   static computePlacements(ctx: SequencesContext): PipelineResult<PlacementsContext> {
     const { layout, turnManager } = ctx.dependencies;
     const tileSequence = ctx.sequences.tile;
-    const axisCalculator = new LayoutAxisCalculator(layout, turnManager);
+    const axisCalculator = new AxisCalculator(layout, turnManager);
     const primaryAxis = axisCalculator.calculatePrimary(ctx.sequences.cell);
-    const factory = new TurnPlacementFactory(layout, turnManager);
-    const primaryPlacement = factory.execute({ axis: primaryAxis, targetCell: ctx.sequences.cell[0], tileSequence });
+    const placementCreator = new PlacementCreator(layout, turnManager);
+    const primaryPlacement = placementCreator.execute({
+      coords: { axis: primaryAxis, cell: ctx.sequences.cell[0] },
+      tileSequence,
+    });
     const isPlacementUsable = (placement: Placement): boolean => placement.length > 1;
     if (!isPlacementUsable(primaryPlacement)) return this.failComputer(ValidationErrors.InvalidTilePlacement);
     const placements: Array<Placement> = [primaryPlacement];
     for (const cell of ctx.sequences.cell) {
-      const placement = factory.execute({ axis: layout.getOppositeAxis(primaryAxis), targetCell: cell, tileSequence });
+      const placement = placementCreator.execute({
+        coords: { axis: layout.getOppositeAxis(primaryAxis), cell },
+        tileSequence,
+      });
       if (isPlacementUsable(placement)) placements.push(placement);
     }
     return placements.length > 0

@@ -1,24 +1,16 @@
 import { TileId } from '../Inventory/Inventory.js';
-import { Layout, Axis, CellIndex } from '../Layout/Layout.js';
-import { TurnManager, Placement } from './Turn.js';
+import { Coordinates, Layout } from '../Layout/Layout.js';
+import { Placement, TurnManager } from './_Turn.js';
 
 // TODO optimize
-export class TurnPlacementFactory {
+export class PlacementCreator {
   constructor(
     private readonly layout: Layout,
     private readonly turnManager: TurnManager,
   ) {}
 
-  execute({
-    axis,
-    targetCell,
-    tileSequence,
-  }: {
-    axis: Axis;
-    targetCell: CellIndex;
-    tileSequence: ReadonlyArray<TileId>;
-  }): Placement {
-    const axisCells = this.layout.getAxisCells({ axis, targetCell });
+  execute({ coords, tileSequence }: { coords: Coordinates; tileSequence: ReadonlyArray<TileId> }): Placement {
+    const axisCells = this.layout.getAxisCells(coords);
     if (tileSequence.length === 0) return [];
     const tileSet = new Set(tileSequence);
     const placement: Placement = [];

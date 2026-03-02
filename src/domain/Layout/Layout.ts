@@ -1,5 +1,7 @@
 export type CellIndex = number;
 
+export type Coordinates = { axis: Axis; cell: CellIndex };
+
 export enum Bonus {
   DoubleWord = 'DoubleWord',
   TripleWord = 'TripleWord',
@@ -74,7 +76,7 @@ export class Layout {
     return result;
   }
 
-  getAxisCells({ axis, targetCell }: { axis: Axis; targetCell: CellIndex }): ReadonlyArray<CellIndex> {
+  getAxisCells({ axis, cell: targetCell }: Coordinates): ReadonlyArray<CellIndex> {
     this.validateCellIndex(targetCell);
     return Array.from({ length: Layout.cellsPerAxis }, (_, i) =>
       axis === Axis.X

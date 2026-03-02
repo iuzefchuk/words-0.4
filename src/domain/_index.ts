@@ -1,8 +1,8 @@
 import { Layout, CellIndex, Bonus } from './Layout/Layout.js';
 import { Inventory, TileId, Letter } from './Inventory/Inventory.js';
 import { Player } from './Player.js';
-import { TurnInput, TurnManager } from './Turn/Turn.js';
-import { TurnInputGenerator } from './Turn/TurnInputGenerator.js';
+import { Placement, TurnManager } from './Turn/Turn.js';
+import { PlacementGenerator } from './Turn/PlacementGenerator.js';
 import { Dictionary } from './Dictionary/Dictionary.js';
 
 export class GameDomain {
@@ -11,17 +11,15 @@ export class GameDomain {
   private static readonly dictionary = Dictionary.create();
 
   private constructor(
-    private readonly id: string,
     private inventory: Inventory,
     private turnManager: TurnManager,
   ) {}
 
   static create(): GameDomain {
-    const id = crypto.randomUUID();
     const players = Object.values(Player);
     const inventory = Inventory.create({ players });
     const turnManager = TurnManager.create({ players });
-    return new GameDomain(id, inventory, turnManager);
+    return new GameDomain(inventory, turnManager);
   }
 
   get isFinished(): boolean {
@@ -150,8 +148,8 @@ export class GameDomain {
     this.finishGame();
   }
 
-  generateTurnInput({ player }: { player: Player }): TurnInput | null {
-    return new TurnInputGenerator({
+  generatePlacement({ player }: { player: Player }): Placement | null {
+    return new PlacementGenerator({
       layout: GameDomain.layout,
       dictionary: GameDomain.dictionary,
       inventory: this.inventory,
