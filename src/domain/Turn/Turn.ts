@@ -2,7 +2,7 @@ import { Dictionary } from '../Dictionary/Dictionary.js';
 import { TileId, Inventory } from '../Inventory/Inventory.js';
 import { CellIndex, Layout } from '../Layout/Layout.js';
 import { Player } from '../Player.js';
-import { StateComputer } from './services/StateComputer.js';
+import { StateChecker } from './services/StateChecker.js';
 
 export type Placement = Array<Link>;
 
@@ -102,9 +102,9 @@ export class TurnManager {
     this.history.currentTurn.disconnectTileFromCell({ tile });
   }
 
-  computeCurrentTurnState(layout: Layout, dictionary: Dictionary, inventory: Inventory): void {
+  checkCurrentTurnState(layout: Layout, dictionary: Dictionary, inventory: Inventory): void {
     this.checkMutability();
-    this.history.currentTurn.computeState(layout, dictionary, inventory, this);
+    this.history.currentTurn.checkState(layout, dictionary, inventory, this);
   }
 
   resetCurrentTurn(): void {
@@ -244,8 +244,8 @@ class Turn {
     return this.state.type === StateType.Valid;
   }
 
-  computeState(layout: Layout, dictionary: Dictionary, inventory: Inventory, turnManager: TurnManager): void {
-    this.state = StateComputer.execute(this.initialPlacement, layout, dictionary, inventory, turnManager);
+  checkState(layout: Layout, dictionary: Dictionary, inventory: Inventory, turnManager: TurnManager): void {
+    this.state = StateChecker.execute(this.initialPlacement, layout, dictionary, inventory, turnManager);
   }
 
   getConnectedTile(cell: CellIndex): TileId | undefined {

@@ -23,7 +23,7 @@ export enum ValidationErrors {
   WordNotInDictionary = 'error_tile_4',
 }
 
-export class StateComputer {
+export class StateChecker {
   static execute(
     initialPlacement: Placement,
     layout: Layout,
@@ -50,7 +50,7 @@ export class StateComputer {
         };
   }
 
-  static Pipeline = class Pipeline<Context> {
+  private static Pipeline = class Pipeline<Context> {
     private constructor(public result: PipelineResult<Context>) {}
 
     static initialize<Context extends BaseContext>(ctx: Context): Pipeline<Context> {
@@ -73,7 +73,7 @@ export class StateComputer {
     }
   };
 
-  static passComputer<OldContext extends object, NextContext extends object>(
+  private static passComputer<OldContext extends object, NextContext extends object>(
     oldCtx: OldContext,
     nextCtx: NextContext,
   ): ValidPipelineResult<OldContext & NextContext> {
@@ -81,11 +81,11 @@ export class StateComputer {
     return this.Pipeline.createValidPipelineResult(oldCtx as OldContext & NextContext);
   }
 
-  static failComputer(error: ValidationErrors): InvalidPipelineResult {
+  private static failComputer(error: ValidationErrors): InvalidPipelineResult {
     return this.Pipeline.createInvalidPipelineResult(error);
   }
 
-  static computeSequences(ctx: BaseContext): PipelineResult<SequencesContext> {
+  private static computeSequences(ctx: BaseContext): PipelineResult<SequencesContext> {
     const { layout, turnManager } = ctx.dependencies;
     const tiles = ctx.initialPlacement.map(placement => placement.tile);
     if (tiles.length === 0) return this.failComputer(ValidationErrors.InvalidTilePlacement);
@@ -97,7 +97,7 @@ export class StateComputer {
     return this.passComputer(ctx, { sequences: { cell: cells, tile: tiles } });
   }
 
-  static computePlacements(ctx: SequencesContext): PipelineResult<PlacementsContext> {
+  private static computePlacements(ctx: SequencesContext): PipelineResult<PlacementsContext> {
     const { layout, turnManager } = ctx.dependencies;
     const tileSequence = ctx.sequences.tile;
     const axisCalculator = new AxisCalculator(layout, turnManager);
@@ -122,7 +122,7 @@ export class StateComputer {
       : this.failComputer(ValidationErrors.InvalidTilePlacement);
   }
 
-  static computeWords(ctx: PlacementsContext): PipelineResult<WordsContext> {
+  private static computeWords(ctx: PlacementsContext): PipelineResult<WordsContext> {
     const { dictionary, inventory } = ctx.dependencies;
     const words: Array<string> = [];
     for (let i = 0; i < ctx.placements.length; i++) {
@@ -136,7 +136,7 @@ export class StateComputer {
       : this.failComputer(ValidationErrors.WordNotInDictionary);
   }
 
-  static computeScore(ctx: WordsContext): PipelineResult<ScoreContext> {
+  private static computeScore(ctx: WordsContext): PipelineResult<ScoreContext> {
     const { layout, inventory } = ctx.dependencies;
     let totalScore = 0;
     for (const placement of ctx.placements) {

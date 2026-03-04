@@ -4,7 +4,7 @@ import { Layout, Axis, CellIndex, Coordinates } from '@/domain/Layout/Layout.js'
 import { CellUsabilityCalculator } from '@/domain/Layout/services/CellUsabilityCalculator.js';
 import { Player } from '@/domain/Player.js';
 import { TurnManager, Placement } from '../Turn.js';
-import { PlacementComputer } from './PlacementComputer.js';
+import { PlacementFinder } from './PlacementFinder.js';
 import { UsableLettersComputer, CachedUsableLettersComputer } from './UsableLettersComputer.js';
 
 export class InitialPlacementGenerator {
@@ -24,14 +24,15 @@ export class InitialPlacementGenerator {
     const cachedLettersComputer = new InitialPlacementGenerator.CachedUsableLettersComputer(lettersComputer);
     for (const cell of availableTargetCells) {
       for (const axis of Object.values(Axis)) {
-        const input = new PlacementComputer(
+        const finder = new PlacementFinder(
           this.layout,
           this.dictionary,
           this.inventory,
           this.turnManager,
           cachedLettersComputer,
-        ).execute({ playerTileCollection, coords: { axis, cell } });
-        if (input) return input;
+        );
+        const placement = finder.execute({ playerTileCollection, coords: { axis, cell } });
+        if (placement) return placement;
       }
     }
     return null;

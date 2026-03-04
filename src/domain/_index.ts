@@ -113,7 +113,7 @@ export class GameDomain {
 
   computeTurnState(): void {
     this.checkMutability();
-    this.turnManager.computeCurrentTurnState(GameDomain.layout, GameDomain.dictionary, this.inventory);
+    this.turnManager.checkCurrentTurnState(GameDomain.layout, GameDomain.dictionary, this.inventory);
   }
 
   resetTurn(): void {
