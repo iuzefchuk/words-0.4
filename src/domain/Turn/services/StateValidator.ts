@@ -23,7 +23,7 @@ export enum ValidationErrors {
   WordNotInDictionary = 'error_tile_4',
 }
 
-export class StateChecker {
+export class StateValidator {
   static execute(
     initialPlacement: Placement,
     layout: Layout,

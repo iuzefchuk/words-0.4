@@ -2,11 +2,12 @@ import { Dictionary } from '../Dictionary/Dictionary.js';
 import { TileId, Inventory } from '../Inventory/Inventory.js';
 import { CellIndex, Layout } from '../Layout/Layout.js';
 import { Player } from '../Player.js';
-import { StateChecker } from './services/StateChecker.js';
+import { StateValidator } from './services/StateValidator.js';
 
 export type Placement = Array<Link>;
 
 export type State = StateUnvalidated | StateInvalid | StateValid;
+
 type StateUnvalidated = { type: StateType.Unvalidated };
 type StateInvalid = { type: StateType.Invalid; error: string };
 type StateValid = { type: StateType.Valid } & StateComputeds;
@@ -102,9 +103,9 @@ export class TurnManager {
     this.history.currentTurn.disconnectTileFromCell({ tile });
   }
 
-  checkCurrentTurnState(layout: Layout, dictionary: Dictionary, inventory: Inventory): void {
+  validateCurrentTurnState(layout: Layout, dictionary: Dictionary, inventory: Inventory): void {
     this.checkMutability();
-    this.history.currentTurn.checkState(layout, dictionary, inventory, this);
+    this.history.currentTurn.validateState(layout, dictionary, inventory, this);
   }
 
   resetCurrentTurn(): void {
@@ -244,8 +245,8 @@ class Turn {
     return this.state.type === StateType.Valid;
   }
 
-  checkState(layout: Layout, dictionary: Dictionary, inventory: Inventory, turnManager: TurnManager): void {
-    this.state = StateChecker.execute(this.initialPlacement, layout, dictionary, inventory, turnManager);
+  validateState(layout: Layout, dictionary: Dictionary, inventory: Inventory, turnManager: TurnManager): void {
+    this.state = StateValidator.execute(this.initialPlacement, layout, dictionary, inventory, turnManager);
   }
 
   getConnectedTile(cell: CellIndex): TileId | undefined {

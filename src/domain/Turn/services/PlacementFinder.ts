@@ -2,7 +2,7 @@ import { Dictionary, Entry, NextEntryGenerator } from '@/domain/Dictionary/Dicti
 import { Letter, TileId, Inventory, TileCollection } from '@/domain/Inventory/Inventory.js';
 import { CellIndex, Layout, Coordinates, Axis } from '@/domain/Layout/Layout.js';
 import { TurnManager, Placement, StateType } from '../Turn.js';
-import { StateChecker } from './StateChecker.js';
+import { StateValidator } from './StateValidator.js';
 import { CachedUsableLettersComputer } from './UsableLettersComputer.js';
 
 type Cursor = { index: number; direction: Direction; entry: Entry };
@@ -140,7 +140,7 @@ export class PlacementFinder {
     const { cursor } = frame;
     const placementIsUsable = context.placement.length > 0 && this.dictionary.isEntryPlayable(cursor.entry);
     if (cursor.direction === Direction.Right && placementIsUsable) {
-      const result = StateChecker.execute(
+      const result = StateValidator.execute(
         context.placement,
         this.layout,
         this.dictionary,
