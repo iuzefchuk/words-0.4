@@ -1,13 +1,10 @@
-import { Dictionary } from '@/domain/Dictionary/Dictionary.js';
-import { Letter, Inventory } from '@/domain/Inventory/Inventory.js';
-import { Coordinates, Layout, CellIndex } from '@/domain/Layout/Layout.js';
-import { TurnManager } from '../Turn.js';
+import { Letter } from '@/domain/enums.js';
 
-export type CachedUsableLettersComputer = {
-  getFor(coords: Coordinates): ReadonlySet<Letter>;
+export type CachedAnchorLettersComputer = {
+  find(coords: AnchorCoordinates): ReadonlySet<Letter>;
 };
 
-export class UsableLettersComputer {
+export class AnchorLettersComputer {
   constructor(
     private readonly layout: Layout,
     private readonly dictionary: Dictionary,
@@ -15,25 +12,25 @@ export class UsableLettersComputer {
     private readonly turnManager: TurnManager,
   ) {}
 
-  execute(coords: Coordinates): ReadonlySet<Letter> {
+  execute(coords: AnchorCoordinates): ReadonlySet<Letter> {
     const axisCells = this.layout.getAxisCells(coords);
-    const cellAxisPosition = axisCells.indexOf(coords.cell);
+    const cellAxisPosition = axisCells.indexOf(coords.index);
     const prefix = this.getPrefix(axisCells, cellAxisPosition);
     const suffix = this.getSuffix(axisCells, cellAxisPosition);
     if (!prefix && !suffix) return this.dictionary.allLetters;
     const prefixEntry = prefix ? this.dictionary.findEntryForWord({ word: prefix }) : this.dictionary.firstEntry;
     if (!prefixEntry) return new Set();
-    const usableLetters = new Set<Letter>();
+    const anchorLetters = new Set<Letter>();
     const generator = this.dictionary.createNextEntryGenerator({ startEntry: prefixEntry });
     for (const [possibleNextLetter, entryWithPossibleNextLetter] of generator) {
       if (!suffix) {
-        usableLetters.add(possibleNextLetter);
+        anchorLetters.add(possibleNextLetter);
         continue;
       }
       const suffixEntry = this.dictionary.findEntryForWord({ word: suffix, startEntry: entryWithPossibleNextLetter });
-      if (suffixEntry && this.dictionary.isEntryPlayable(suffixEntry)) usableLetters.add(possibleNextLetter);
+      if (suffixEntry && this.dictionary.isEntryPlayable(suffixEntry)) anchorLetters.add(possibleNextLetter);
     }
-    return usableLetters;
+    return anchorLetters;
   }
 
   private getPrefix(axisCells: ReadonlyArray<CellIndex>, cellAxisPosition: number): string {

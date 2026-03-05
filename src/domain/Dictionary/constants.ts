@@ -1,4 +1,5 @@
-export default [
+/* eslint-disable */
+export const SORTED_WORDS = [
   'AA',
   'AAH',
   'AAHED',

@@ -1,37 +1,10 @@
-import { Dictionary } from '../Dictionary/Dictionary.js';
-import { TileId, Inventory } from '../Inventory/Inventory.js';
-import { CellIndex, Layout } from '../Layout/Layout.js';
-import { Player } from '../Player.js';
-import { StateValidator } from './services/StateValidator.js';
-
-export type Placement = Array<Link>;
-
-export type State = StateUnvalidated | StateInvalid | StateValid;
-
-type StateUnvalidated = { type: StateType.Unvalidated };
-type StateInvalid = { type: StateType.Invalid; error: string };
-type StateValid = { type: StateType.Valid } & StateComputeds;
-type StateComputeds = {
-  sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> };
-  score: number;
-  words: ReadonlyArray<string>;
-};
-
-export enum StateType {
-  Unvalidated = 'Unvalidated',
-  Invalid = 'Invalid',
-  Valid = 'Valid',
-}
-
-enum PlayerMove {
-  StartedGame = 'StartedGame',
-  PlayedBySave = 'PlayedBySave',
-  PlayedByPass = 'PlayedByPass',
-  Won = 'Won',
-  Tied = 'Tied',
-}
+import type { Locals as T } from '@/domain/Turn/types.d.ts';
+import { Player } from '@/domain/enums.js';
+import { TurnValidator } from '@/domain/Turn/engines/TurnValidator.js';
+import { PlayerMove, ValidationType } from '@/domain/Turn/enums.js';
 
 export class TurnManager {
+  // TODO rename to single word + file structure rename
   private static readonly finalMoves = [PlayerMove.Won, PlayerMove.Tied];
 
   private constructor(
@@ -103,9 +76,9 @@ export class TurnManager {
     this.history.currentTurn.disconnectTileFromCell({ tile });
   }
 
-  validateCurrentTurnState(layout: Layout, dictionary: Dictionary, inventory: Inventory): void {
+  validateCurrentTurn(layout: Layout, dictionary: Dictionary, inventory: Inventory): void {
     this.checkMutability();
-    this.history.currentTurn.validateState(layout, dictionary, inventory, this);
+    this.history.currentTurn.validate(layout, dictionary, inventory, this);
   }
 
   resetCurrentTurn(): void {
@@ -217,36 +190,36 @@ class Turn {
   private constructor(
     readonly player: Player,
     private initialPlacement: Placement,
-    private state: State,
+    private validationResult: T.ValidationResult,
   ) {}
 
   static create({ player }: { player: Player }): Turn {
     const initialPlacement: Placement = [];
-    const state: StateUnvalidated = { type: StateType.Unvalidated };
-    return new Turn(player, initialPlacement, state);
+    const validationResult: T.UnvalidatedValidationResult = { type: ValidationType.Unvalidated };
+    return new Turn(player, initialPlacement, validationResult);
   }
 
   get cellSequence(): ReadonlyArray<CellIndex> | undefined {
-    return this.state.type === StateType.Valid ? this.state.sequences.cell : undefined;
+    return this.validationResult.type === ValidationType.Valid ? this.validationResult.sequences.cell : undefined;
   }
   get tileSequence(): ReadonlyArray<TileId> | undefined {
-    return this.state.type === StateType.Valid ? this.state.sequences.tile : undefined;
+    return this.validationResult.type === ValidationType.Valid ? this.validationResult.sequences.tile : undefined;
   }
   get error(): string | undefined {
-    return this.state.type === StateType.Invalid ? this.state.error : undefined;
+    return this.validationResult.type === ValidationType.Invalid ? this.validationResult.error : undefined;
   }
   get score(): number | undefined {
-    return this.state.type === StateType.Valid ? this.state.score : undefined;
+    return this.validationResult.type === ValidationType.Valid ? this.validationResult.score : undefined;
   }
   get words(): ReadonlyArray<string> | undefined {
-    return this.state.type === StateType.Valid ? this.state.words : undefined;
+    return this.validationResult.type === ValidationType.Valid ? this.validationResult.words : undefined;
   }
   get isValid(): boolean {
-    return this.state.type === StateType.Valid;
+    return this.validationResult.type === ValidationType.Valid;
   }
 
-  validateState(layout: Layout, dictionary: Dictionary, inventory: Inventory, turnManager: TurnManager): void {
-    this.state = StateValidator.execute(this.initialPlacement, layout, dictionary, inventory, turnManager);
+  validate(layout: Layout, dictionary: Dictionary, inventory: Inventory, turnManager: TurnManager): void {
+    this.validationResult = TurnValidator.execute(this.initialPlacement, layout, dictionary, inventory, turnManager);
   }
 
   getConnectedTile(cell: CellIndex): TileId | undefined {
@@ -259,7 +232,7 @@ class Turn {
 
   connectTileToCell({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
     this.validateCellAndTileAbsence(cell, tile);
-    this.initialPlacement.push(Link.create(cell, tile));
+    this.initialPlacement.push({ cell, tile } as T.Link);
     this.initialPlacement.sort((a, b) => a.cell - b.cell);
   }
 
@@ -276,16 +249,5 @@ class Turn {
   private validateCellAndTileAbsence(cell: CellIndex, tile: TileId): void {
     if (this.initialPlacement.some(link => link.cell === cell)) throw new Error(`Cell ${cell} already connected`);
     if (this.initialPlacement.some(link => link.tile === tile)) throw new Error(`Tile ${tile} already connected`);
-  }
-}
-
-class Link {
-  private constructor(
-    readonly cell: CellIndex,
-    readonly tile: TileId,
-  ) {}
-
-  static create(cell: CellIndex, tile: TileId): Link {
-    return new Link(cell, tile);
   }
 }

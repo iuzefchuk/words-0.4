@@ -1,17 +1,5 @@
-export type CellIndex = number;
-
-export type Coordinates = { axis: Axis; cell: CellIndex };
-
-export enum Bonus {
-  DoubleWord = 'DoubleWord',
-  TripleWord = 'TripleWord',
-  DoubleLetter = 'DoubleLetter',
-  TripleLetter = 'TripleLetter',
-}
-export enum Axis {
-  X = 'X',
-  Y = 'Y',
-}
+import { Bonus, Axis } from '@/domain/enums.js';
+import { BONUS_CELL_INDEXES } from '@/domain/Layout/constants.js';
 
 export class Layout {
   private static readonly cellsPerAxis = 15;
@@ -74,12 +62,10 @@ export class Layout {
     return result;
   }
 
-  getAxisCells({ axis, cell: targetCell }: Coordinates): ReadonlyArray<CellIndex> {
-    this.validateCellIndex(targetCell);
+  getAxisCells({ axis, index }: AnchorCoordinates): ReadonlyArray<CellIndex> {
+    this.validateCellIndex(index);
     return Array.from({ length: Layout.cellsPerAxis }, (_, i) =>
-      axis === Axis.X
-        ? targetCell - this.getColumnIndex(targetCell) + i
-        : this.getColumnIndex(targetCell) + i * Layout.cellsPerAxis,
+      axis === Axis.X ? index - this.getColumnIndex(index) + i : this.getColumnIndex(index) + i * Layout.cellsPerAxis,
     );
   }
 
@@ -104,12 +90,3 @@ export class Layout {
     if (cellIndex < 0 || cellIndex >= Layout._cells.length) throw new Error('Cell index out of bounds');
   }
 }
-
-const BONUS_CELL_INDEXES: Record<Bonus, ReadonlyArray<CellIndex>> = {
-  [Bonus.DoubleLetter]: [
-    7, 16, 28, 36, 38, 66, 68, 92, 94, 100, 102, 105, 119, 122, 124, 130, 132, 156, 158, 186, 188, 196, 208, 217,
-  ],
-  [Bonus.TripleLetter]: [0, 14, 20, 24, 48, 56, 76, 80, 84, 88, 136, 140, 144, 148, 168, 176, 200, 204, 210, 224],
-  [Bonus.DoubleWord]: [32, 42, 52, 64, 70, 108, 116, 154, 160, 172, 182, 192],
-  [Bonus.TripleWord]: [4, 10, 60, 74, 150, 164, 214, 220],
-} as const;

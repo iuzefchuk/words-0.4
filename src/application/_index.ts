@@ -1,8 +1,6 @@
-import { GameDomain } from '../domain/_index.js';
-import { CellIndex, Bonus } from '@/domain/Layout/Layout.js';
-import { TileId, Letter } from '../domain/Inventory.js';
+import { GameDomain } from '@/domain/_index.js';
 import { TIME } from '@/shared/consts.js';
-import { Player } from '@/domain/Player.js';
+import { Bonus, Letter, Player } from '@/domain/enums.js';
 import { wait } from '@/shared/helpers.js';
 
 export const GAME_BONUSES = Bonus;
@@ -91,12 +89,12 @@ export class Game {
 
   connectTileToCell({ cell, tile }: { cell: GameCell; tile: GameTile }): void {
     this.gameDomain.connectTileToCell({ cell, tile });
-    this.gameDomain.computeTurnState();
+    this.gameDomain.validateTurn();
   }
 
   disconnectTileFromCell(tile: GameTile): void {
     this.gameDomain.disconnectTileFromCell(tile);
-    this.gameDomain.computeTurnState();
+    this.gameDomain.validateTurn();
   }
 
   resetTurn(): void {
@@ -124,7 +122,7 @@ export class Game {
         this.gameDomain.passTurn();
       } else {
         for (const link of generatedPlacement) this.gameDomain.connectTileToCell({ cell: link.cell, tile: link.tile });
-        this.gameDomain.computeTurnState();
+        this.gameDomain.validateTurn();
         this.gameDomain.saveTurn();
       }
     });

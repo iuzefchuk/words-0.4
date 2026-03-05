@@ -1,14 +1,10 @@
-import { TileId } from '@/domain/Inventory/Inventory.js';
-import { Layout, Coordinates } from '@/domain/Layout/Layout.js';
-import { TurnManager, Placement } from '../Turn.js';
-
-export class PlacementCreator {
+export class PlacementBuilder {
   constructor(
     private readonly layout: Layout,
     private readonly turnManager: TurnManager,
   ) {}
 
-  execute({ coords, tileSequence }: { coords: Coordinates; tileSequence: ReadonlyArray<TileId> }): Placement {
+  execute({ coords, tileSequence }: { coords: AnchorCoordinates; tileSequence: ReadonlyArray<TileId> }): Placement {
     if (tileSequence.length === 0) throw new Error('Tile sequence can`t be empty');
     const axisCells = this.layout.getAxisCells(coords);
     const tileSet = new Set(tileSequence);

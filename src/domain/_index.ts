@@ -1,14 +1,14 @@
-import { Layout, CellIndex, Bonus } from './Layout/Layout.js';
-import { Inventory, TileId, Letter } from './Inventory/Inventory.js';
-import { Player } from './Player.js';
-import { Placement, TurnManager } from './Turn/Turn.js';
-import { Dictionary } from './Dictionary/Dictionary.js';
-import { InitialPlacementGenerator } from './Turn/services/InitialPlacementGenerator.js';
+import { Dictionary } from '@/domain/Dictionary/_index.js';
+import { Player, Bonus, Letter } from '@/domain/enums.js';
+import { Inventory } from '@/domain/Inventory/_index.js';
+import { Layout } from '@/domain/Layout/_index.js';
+import { TurnManager } from '@/domain/Turn/_index.js';
+import { TurnGenerator } from '@/domain/Turn/engines/TurnGenerator.js';
 
 export class GameDomain {
-  private isMutable: boolean = true;
   private static readonly layout = Layout.create();
   private static readonly dictionary = Dictionary.create();
+  private isMutable: boolean = true;
 
   private constructor(
     private inventory: Inventory,
@@ -111,9 +111,9 @@ export class GameDomain {
     this.turnManager.disconnectTileFromCell({ tile });
   }
 
-  computeTurnState(): void {
+  validateTurn(): void {
     this.checkMutability();
-    this.turnManager.validateCurrentTurnState(GameDomain.layout, GameDomain.dictionary, this.inventory);
+    this.turnManager.validateCurrentTurn(GameDomain.layout, GameDomain.dictionary, this.inventory);
   }
 
   resetTurn(): void {
@@ -145,12 +145,9 @@ export class GameDomain {
   }
 
   generatePlacement({ player }: { player: Player }): Placement | null {
-    return new InitialPlacementGenerator(
-      GameDomain.layout,
-      GameDomain.dictionary,
-      this.inventory,
-      this.turnManager,
-    ).execute(player);
+    const generator = new TurnGenerator(GameDomain.layout, GameDomain.dictionary, this.inventory, this.turnManager);
+    for (const placement of generator.execute(player)) return placement;
+    return null;
   }
 
   private finishGame(): void {

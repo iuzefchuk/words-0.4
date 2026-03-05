@@ -1,5 +1,4 @@
-import { TurnManager } from '@/domain/Turn/Turn.js';
-import { Axis, Layout, CellIndex } from '../Layout.js';
+import { Axis } from '@/domain/enums.js';
 
 export class AxisCalculator {
   private static readonly defaultAxis = Axis.X;
