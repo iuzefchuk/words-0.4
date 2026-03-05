@@ -1,12 +1,18 @@
 import { Letter } from '../Inventory/Inventory.js';
 import DATA from './data.js';
 
+export type Entry = NodeId;
+
+export type NextEntryGenerator = Generator<[Letter, Entry]>;
+
 type Transition = { parentNode: Node; childLetter: Letter; childNode: Node };
 
-type Node = { id: number; isFinal: boolean; children: Map<Letter, Node> };
+type NodeId = number;
 
-export type FrozenNode = {
-  readonly id: number;
+type Node = { id: NodeId; isFinal: boolean; children: Map<Letter, Node> };
+
+type FrozenNode = {
+  readonly id: NodeId;
   readonly isFinal: boolean;
   readonly children: ReadonlyMap<Letter, FrozenNode>;
 };
@@ -15,23 +21,27 @@ type NodeGenerator = Generator<Node, Node>;
 
 export class Dictionary {
   private constructor(
-    public readonly tree: Readonly<FrozenNode>,
+    private readonly nodeTree: FrozenNode,
     public readonly allLetters: ReadonlySet<Letter>,
   ) {}
 
-  get rootNode() {
-    return this.tree;
+  private get rootNode(): FrozenNode {
+    return this.nodeTree;
+  }
+
+  get firstEntry(): Entry {
+    return this.rootNode.id;
   }
 
   static create(): Dictionary {
-    const tree = Dictionary.TreeCreator.execute(DATA);
+    const nodeTree = Dictionary.NodeTreeCreator.execute(DATA);
     const allLetters = new Set<Letter>();
-    this.populateLetterSetFromNode(allLetters, tree);
-    return new Dictionary(tree, allLetters);
+    this.populateLetterSetFromNode(allLetters, nodeTree);
+    return new Dictionary(nodeTree, allLetters);
   }
 
-  static TreeCreator = class {
-    static execute(sortedWords: ReadonlyArray<string>): Readonly<FrozenNode> {
+  static NodeTreeCreator = class {
+    static execute(sortedWords: ReadonlyArray<string>): FrozenNode {
       const generator = this.nodeGenerator();
       const rootNode = generator.next().value;
       const minimizer = new this.TransitionToNodeMinimizer();
@@ -61,7 +71,7 @@ export class Dictionary {
     }
 
     private static *nodeGenerator(): NodeGenerator {
-      let id = 0;
+      let id: Entry = 0;
       while (true) yield { id: id++, isFinal: false, children: new Map() };
     }
 
@@ -142,18 +152,50 @@ export class Dictionary {
   }
 
   hasWord(word: string): boolean {
-    const node = this.getNodeFor(word);
+    const node = this.findNodeForWord(word);
     return node?.isFinal || false;
   }
 
-  getNodeFor(word: string, startNode: FrozenNode = this.rootNode): FrozenNode | null {
-    let currentNode = startNode;
+  findEntryForWord({ word, startEntry = this.firstEntry }: { word: string; startEntry?: Entry }): Entry | null {
+    const node = this.findNodeForWord(word, startEntry);
+    return node ? node.id : null;
+  }
+
+  createNextEntryGenerator({ startEntry }: { startEntry: Entry }): NextEntryGenerator {
+    const parentNode = this.findNodeById(startEntry);
+    function* generator(node: FrozenNode): Generator<[Letter, Entry]> {
+      for (const [possibleNextLetter, nodeForPossibleNextLetter] of node.children) {
+        yield [possibleNextLetter, nodeForPossibleNextLetter.id] as [Letter, Entry];
+      }
+    }
+    return generator(parentNode);
+  }
+
+  isEntryPlayable(entry: Entry): boolean {
+    return this.findNodeById(entry).isFinal;
+  }
+
+  private findNodeForWord(word: string, parentNodeId: NodeId = this.rootNode.id): FrozenNode | null {
+    let currentNode = this.findNodeById(parentNodeId);
     for (let i = 0; i < word.length; i++) {
       const letter = word[i] as Letter;
+      if (!currentNode) return null;
       const nextNode = currentNode.children.get(letter);
       if (!nextNode) return null;
       currentNode = nextNode;
     }
     return currentNode;
+  }
+
+  private findNodeById(nodeId: NodeId): FrozenNode {
+    const search = (node: FrozenNode): FrozenNode => {
+      if (node.id === nodeId) return node;
+      for (const childNode of node.children.values()) {
+        const found = search(childNode);
+        if (found) return found;
+      }
+      throw new Error('Node not found');
+    };
+    return search(this.rootNode);
   }
 }

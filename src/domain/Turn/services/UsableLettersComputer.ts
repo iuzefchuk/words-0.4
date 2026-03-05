@@ -21,16 +21,17 @@ export class UsableLettersComputer {
     const prefix = this.getPrefix(axisCells, cellAxisPosition);
     const suffix = this.getSuffix(axisCells, cellAxisPosition);
     if (!prefix && !suffix) return this.dictionary.allLetters;
-    const prefixNode = prefix ? this.dictionary.getNodeFor(prefix) : this.dictionary.rootNode;
-    if (!prefixNode) return new Set();
+    const prefixEntry = prefix ? this.dictionary.findEntryForWord({ word: prefix }) : this.dictionary.firstEntry;
+    if (!prefixEntry) return new Set();
     const usableLetters = new Set<Letter>();
-    for (const [letter, childNode] of prefixNode.children) {
+    const generator = this.dictionary.createNextEntryGenerator({ startEntry: prefixEntry });
+    for (const [possibleNextLetter, entryWithPossibleNextLetter] of generator) {
       if (!suffix) {
-        usableLetters.add(letter);
+        usableLetters.add(possibleNextLetter);
         continue;
       }
-      const suffixNode = this.dictionary.getNodeFor(suffix, childNode);
-      if (suffixNode && suffixNode.isFinal) usableLetters.add(letter);
+      const suffixEntry = this.dictionary.findEntryForWord({ word: suffix, startEntry: entryWithPossibleNextLetter });
+      if (suffixEntry && this.dictionary.isEntryPlayable(suffixEntry)) usableLetters.add(possibleNextLetter);
     }
     return usableLetters;
   }

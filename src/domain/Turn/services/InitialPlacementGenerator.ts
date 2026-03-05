@@ -31,8 +31,7 @@ export class InitialPlacementGenerator {
           this.turnManager,
           cachedLettersComputer,
         );
-        const placement = finder.execute({ playerTileCollection, coords: { axis, cell } });
-        if (placement) return placement;
+        for (const placement of finder.search({ playerTileCollection, coords: { axis, cell } })) return placement;
       }
     }
     return null;

@@ -1,31 +1,50 @@
-import { FrozenNode, Dictionary } from '@/domain/Dictionary/Dictionary.js';
+import { Dictionary, Entry, NextEntryGenerator } from '@/domain/Dictionary/Dictionary.js';
 import { Letter, TileId, Inventory, TileCollection } from '@/domain/Inventory/Inventory.js';
 import { CellIndex, Layout, Coordinates, Axis } from '@/domain/Layout/Layout.js';
 import { TurnManager, Placement, StateType } from '../Turn.js';
 import { StateChecker } from './StateChecker.js';
 import { CachedUsableLettersComputer } from './UsableLettersComputer.js';
 
-// naming
-// nodes to dictionary ?
+type Cursor = { index: number; direction: Direction; entry: Entry };
+type Target = { index: number; meta: { cell: CellIndex; tile?: TileId } };
+type TargetGenerator = { value: NextEntryGenerator; meta: { usableLetters: ReadonlySet<Letter> } };
+type ResolveResults = { letter: Letter; tile: TileId };
 
-type Cursor = { index: number; direction: Direction; node: FrozenNode };
-type Target = { index: number; cell: CellIndex; tile?: TileId };
-type Branch = { iterator: Iterator<[Letter, FrozenNode]>; usableLetters: ReadonlySet<Letter> };
-type Placed = { letter: Letter; tile: TileId };
-
-type ExploreFrame = { phase: SearchPhase.Explore; cursor: Cursor };
-type ValidateBoundsFrame = { phase: SearchPhase.ValidateBounds; cursor: Cursor };
-type CalculateTargetFrame = { phase: SearchPhase.CalculateTarget; cursor: Cursor };
-type ResolveTargetFrame = { phase: SearchPhase.ResolveTarget; cursor: Cursor; target: Target };
-type BranchFrame = { phase: SearchPhase.Branch; cursor: Cursor; target: Target; branch: Branch };
-type BacktrackFrame = { phase: SearchPhase.Backtrack; cursor: Cursor; placed: Placed };
+type ExploreFrame = {
+  phase: SearchPhase.Explore;
+  cursor: Cursor;
+};
+type ValidateBoundsFrame = {
+  phase: SearchPhase.ValidateBounds;
+  cursor: Cursor;
+};
+type CalculateTargetFrame = {
+  phase: SearchPhase.CalculateTarget;
+  cursor: Cursor;
+};
+type ResolveTargetFrame = {
+  phase: SearchPhase.ResolveTarget;
+  cursor: Cursor;
+  target: Target;
+};
+type IterativelyResolveTargetFrame = {
+  phase: SearchPhase.IterativelyResolveTarget;
+  cursor: Cursor;
+  target: Target;
+  generator: TargetGenerator;
+};
+type UndoResolveTargetFrame = {
+  phase: SearchPhase.UndoResolveTarget;
+  cursor: Cursor;
+  resolveResults: ResolveResults;
+};
 type SearchFrame =
   | ExploreFrame
   | ValidateBoundsFrame
   | CalculateTargetFrame
   | ResolveTargetFrame
-  | BranchFrame
-  | BacktrackFrame;
+  | IterativelyResolveTargetFrame
+  | UndoResolveTargetFrame;
 
 type SearchContext = { tiles: TileCollection; placement: Placement };
 
@@ -39,8 +58,8 @@ enum SearchPhase {
   ValidateBounds = 'ValidateBounds',
   CalculateTarget = 'CalculateTarget',
   ResolveTarget = 'ResolveTarget',
-  Branch = 'Branch',
-  Backtrack = 'Backtrack',
+  IterativelyResolveTarget = 'IterativelyResolveTarget',
+  UndoResolveTarget = 'UndoResolveTarget',
 }
 
 enum Direction {
@@ -80,7 +99,7 @@ export class PlacementFinder {
     const stack: Array<SearchFrame> = [
       {
         phase: SearchPhase.Explore,
-        cursor: { index: startIndex, direction: Direction.Left, node: this.dictionary.rootNode },
+        cursor: { index: startIndex, direction: Direction.Left, entry: this.dictionary.firstEntry },
       },
     ];
     while (stack.length > 0) {
@@ -110,18 +129,17 @@ export class PlacementFinder {
         return this.calculateTarget(frame, computeds.axisCells);
       case SearchPhase.ResolveTarget:
         return this.resolveTarget(frame, computeds.oppositeAxis);
-      case SearchPhase.Branch:
-        return this.branch(frame, context);
-      case SearchPhase.Backtrack:
-        return this.backtrack(frame, context);
+      case SearchPhase.IterativelyResolveTarget:
+        return this.iterativelyResolveTarget(frame, context);
+      case SearchPhase.UndoResolveTarget:
+        return this.undoResolveTarget(frame, context);
     }
   }
 
   private explore(frame: ExploreFrame, context: SearchContext): TransitionResult {
     const { cursor } = frame;
-    const { direction, node } = cursor;
-    const placementIsUsable = context.placement.length > 0 && node.isFinal;
-    if (direction === Direction.Right && placementIsUsable) {
+    const placementIsUsable = context.placement.length > 0 && this.dictionary.isEntryPlayable(cursor.entry);
+    if (cursor.direction === Direction.Right && placementIsUsable) {
       const result = StateChecker.execute(
         context.placement,
         this.layout,
@@ -132,74 +150,82 @@ export class PlacementFinder {
       if (result.type === StateType.Valid) return PlacementFinder.succeedTransition(context.placement);
     }
     const frames: Array<SearchFrame> = [];
-    if (direction === Direction.Left) {
+    if (cursor.direction === Direction.Left) {
       frames.push({ phase: SearchPhase.Explore, cursor: { ...cursor, direction: Direction.Right } });
     }
-    frames.push({ phase: SearchPhase.ValidateBounds, cursor });
+    frames.push({ ...frame, phase: SearchPhase.ValidateBounds });
     return PlacementFinder.passTransition(frames);
   }
 
   private validateBounds(frame: ValidateBoundsFrame): TransitionResult {
-    const { index, direction } = frame.cursor;
+    const { cursor } = frame;
     const isEdge =
-      direction === Direction.Left
-        ? this.layout.isCellPositionOnLeftEdge(index)
-        : this.layout.isCellPositionOnRightEdge(index);
+      cursor.direction === Direction.Left
+        ? this.layout.isCellPositionOnLeftEdge(cursor.index)
+        : this.layout.isCellPositionOnRightEdge(cursor.index);
     if (isEdge) return PlacementFinder.failTransition();
-    return PlacementFinder.passTransition([{ phase: SearchPhase.CalculateTarget, cursor: frame.cursor }]);
+    return PlacementFinder.passTransition([{ ...frame, phase: SearchPhase.CalculateTarget }]);
   }
 
   private calculateTarget(frame: CalculateTargetFrame, axisCells: ReadonlyArray<CellIndex>): TransitionResult {
-    const { index, direction } = frame.cursor;
-    const nextIndex = index + direction;
-    const cell = axisCells[nextIndex];
+    const { cursor } = frame;
+    const targetIndex = cursor.index + cursor.direction;
+    const cell = axisCells[targetIndex];
     const tile = this.turnManager.findTileByCell(cell);
     return PlacementFinder.passTransition([
-      { phase: SearchPhase.ResolveTarget, cursor: frame.cursor, target: { index: nextIndex, cell, tile } },
+      {
+        ...frame,
+        phase: SearchPhase.ResolveTarget,
+        target: { index: targetIndex, meta: { cell, tile } },
+      },
     ]);
   }
 
   private resolveTarget(frame: ResolveTargetFrame, oppositeAxis: Axis): TransitionResult {
     const { cursor, target } = frame;
-    const { node } = cursor;
-    const { index, cell, tile } = target;
-    if (tile) {
-      const letter = this.inventory.getTileLetter(tile);
-      const nextNode = node.children.get(letter);
-      if (!nextNode) return PlacementFinder.failTransition();
+    if (target.meta.tile) {
+      const letter = this.inventory.getTileLetter(target.meta.tile);
+      const nextEntry = this.dictionary.findEntryForWord({ word: letter, startEntry: cursor.entry });
+      if (!nextEntry) return PlacementFinder.failTransition();
       return PlacementFinder.passTransition([
-        { phase: SearchPhase.Explore, cursor: { ...cursor, index, node: nextNode } },
+        { phase: SearchPhase.Explore, cursor: { ...cursor, index: target.index, entry: nextEntry } },
       ]);
     }
-    const iterator = node.children.entries();
-    const usableLetters = this.cachedUsableLettersComputer.getFor({ axis: oppositeAxis, cell });
     return PlacementFinder.passTransition([
-      { phase: SearchPhase.Branch, cursor, target, branch: { iterator, usableLetters } },
+      {
+        phase: SearchPhase.IterativelyResolveTarget,
+        cursor,
+        target,
+        generator: {
+          value: this.dictionary.createNextEntryGenerator({ startEntry: cursor.entry }),
+          meta: {
+            usableLetters: this.cachedUsableLettersComputer.getFor({ axis: oppositeAxis, cell: target.meta.cell }),
+          },
+        },
+      },
     ]);
   }
 
-  private branch(frame: BranchFrame, context: SearchContext): TransitionResult {
-    const { cursor, target, branch } = frame;
-    const { index, cell } = target;
-    const { iterator, usableLetters } = branch;
-    const next = iterator.next();
+  private iterativelyResolveTarget(frame: IterativelyResolveTargetFrame, context: SearchContext): TransitionResult {
+    const { cursor, target, generator } = frame;
+    const next = generator.value.next();
     if (next.done) return PlacementFinder.failTransition();
-    const [letter, nextNode] = next.value;
-    const letterTiles = context.tiles.get(letter);
-    if (!usableLetters.has(letter) || !letterTiles || letterTiles.length === 0) {
-      return PlacementFinder.passTransition([frame]); // continue iterator
+    const [possibleNextLetter, entryWithPossibleNextLetter] = next.value;
+    const letterTiles = context.tiles.get(possibleNextLetter);
+    if (!generator.meta.usableLetters.has(possibleNextLetter) || !letterTiles || letterTiles.length === 0) {
+      return PlacementFinder.passTransition([frame]); // continue to next iteration
     }
     const tile = letterTiles.pop()!;
-    context.placement.push({ cell, tile });
+    context.placement.push({ cell: target.meta.cell, tile });
     return PlacementFinder.passTransition([
-      frame, // continue iterator
-      { phase: SearchPhase.Backtrack, cursor, placed: { letter, tile } },
-      { phase: SearchPhase.Explore, cursor: { ...cursor, index, node: nextNode } },
+      frame, // continue to next iteration
+      { phase: SearchPhase.UndoResolveTarget, cursor, resolveResults: { letter: possibleNextLetter, tile } },
+      { phase: SearchPhase.Explore, cursor: { ...cursor, index: target.index, entry: entryWithPossibleNextLetter } },
     ]);
   }
 
-  private backtrack(frame: BacktrackFrame, context: SearchContext): TransitionResult {
-    const { letter, tile } = frame.placed;
+  private undoResolveTarget(frame: UndoResolveTargetFrame, context: SearchContext): TransitionResult {
+    const { letter, tile } = frame.resolveResults;
     context.tiles.get(letter)!.push(tile);
     context.placement.pop();
     return PlacementFinder.passTransition([]);
