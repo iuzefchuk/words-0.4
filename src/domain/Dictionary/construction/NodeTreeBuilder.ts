@@ -1,12 +1,12 @@
-import type { Locals as T } from '@/domain/Dictionary/types.d.ts';
+import type { Common as C } from '@/domain/Dictionary/types.d.ts';
 import { Letter } from '@/domain/enums.js';
 
-type Node = { id: T.NodeId; isFinal: boolean; children: Map<Letter, Node> };
+type Node = { id: C.NodeId; isFinal: boolean; children: Map<Letter, Node> };
 type NodeGenerator = Generator<Node, Node>;
 type Transition = { parentNode: Node; childLetter: Letter; childNode: Node };
 
 export class NodeTreeBuilder {
-  static execute(sortedWords: ReadonlyArray<string>): T.FrozenNode {
+  static execute(sortedWords: ReadonlyArray<string>): C.FrozenNode {
     const generator = this.nodeGenerator();
     const rootNode = generator.next().value;
     const minimizer = new this.TransitionToNodeMinimizer();
@@ -29,10 +29,10 @@ export class NodeTreeBuilder {
     return this.freezeNode(rootNode);
   }
 
-  private static freezeNode(node: Node): T.FrozenNode {
+  private static freezeNode(node: Node): C.FrozenNode {
     for (const child of node.children.values()) this.freezeNode(child);
     Object.freeze(node.children);
-    return Object.freeze(node) as T.FrozenNode;
+    return Object.freeze(node) as C.FrozenNode;
   }
 
   private static *nodeGenerator(): NodeGenerator {

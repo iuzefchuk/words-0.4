@@ -1,83 +1,15 @@
-import { Letter, Axis } from '@/domain/enums.js';
-import { CachedAnchorLettersComputer } from '@/domain/Turn/computation/AnchorLettersComputer.js';
-import { TurnValidator } from '@/domain/Turn/engines/TurnValidator.js';
-import { ValidationType } from '@/domain/Turn/enums.js';
-
-type Cursor = { index: number; direction: Direction; entry: Entry };
-type Target = { index: number; meta: { cell: CellIndex; tile?: TileId } };
-type TargetGenerator = { value: NextEntryGenerator; meta: { anchorLetters: ReadonlySet<Letter> } };
-type ResolveResults = { letter: Letter; tile: TileId };
-
-type ExploreFrame = {
-  phase: SearchPhase.Explore;
-  cursor: Cursor;
-};
-type ValidateBoundsFrame = {
-  phase: SearchPhase.ValidateBounds;
-  cursor: Cursor;
-};
-type CalculateTargetFrame = {
-  phase: SearchPhase.CalculateTarget;
-  cursor: Cursor;
-};
-type ResolveTargetFrame = {
-  phase: SearchPhase.ResolveTarget;
-  cursor: Cursor;
-  target: Target;
-};
-type IterativelyResolveTargetFrame = {
-  phase: SearchPhase.IterativelyResolveTarget;
-  cursor: Cursor;
-  target: Target;
-  generator: TargetGenerator;
-};
-type UndoResolveTargetFrame = {
-  phase: SearchPhase.UndoResolveTarget;
-  cursor: Cursor;
-  resolveResults: ResolveResults;
-};
-type SearchFrame =
-  | ExploreFrame
-  | ValidateBoundsFrame
-  | CalculateTargetFrame
-  | ResolveTargetFrame
-  | IterativelyResolveTargetFrame
-  | UndoResolveTargetFrame;
-
-type SearchContext = { tiles: TileCollection; placement: Placement };
-
-type PassTransitionResult = { type: TransitionResultType.Continue; frames: Array<SearchFrame> };
-type SucceedTransitionResult = { type: TransitionResultType.Success; placement: Placement };
-type FailTransitionResult = { type: TransitionResultType.Fail };
-type TransitionResult = PassTransitionResult | SucceedTransitionResult | FailTransitionResult;
-
-enum SearchPhase {
-  Explore = 'Explore',
-  ValidateBounds = 'ValidateBounds',
-  CalculateTarget = 'CalculateTarget',
-  ResolveTarget = 'ResolveTarget',
-  IterativelyResolveTarget = 'IterativelyResolveTarget',
-  UndoResolveTarget = 'UndoResolveTarget',
-}
-
-enum Direction {
-  Left = -1,
-  Right = 1,
-}
-
-enum TransitionResultType {
-  Continue = 'Continue',
-  Success = 'Success',
-  Fail = 'Fail',
-}
+import type { Computation as C, Generation as G } from '@/domain/Turnkeeper/types.js';
+import { Axis } from '@/domain/enums.js';
+import { TurnValidator } from '@/domain/Turnkeeper/validation/InitialPlacementValidator.js';
+import { Direction, SearchPhase, TransitionResultType, ValidationResultType } from '@/domain/Turnkeeper/enums.js';
 
 export class PlacementGenerator {
   constructor(
     private readonly layout: Layout,
     private readonly dictionary: Dictionary,
     private readonly inventory: Inventory,
-    private readonly turnManager: TurnManager,
-    private readonly cachedAnchorLettersComputer: CachedAnchorLettersComputer,
+    private readonly turnkeeper: Turnkeeper,
+    private readonly cachedAnchorLettersComputer: C.CachedAnchorLettersComputer,
   ) {}
 
   *execute({
@@ -93,8 +25,8 @@ export class PlacementGenerator {
     };
     const startIndex = computeds.axisCells.indexOf(coords.index);
     if (startIndex === -1) return;
-    const context: SearchContext = { tiles: new Map(playerTileCollection), placement: [] };
-    const stack: Array<SearchFrame> = [
+    const context: G.SearchContext = { tiles: new Map(playerTileCollection), placement: [] };
+    const stack: Array<G.SearchFrame> = [
       {
         phase: SearchPhase.Explore,
         cursor: { index: startIndex, direction: Direction.Left, entry: this.dictionary.firstEntry },
@@ -114,10 +46,10 @@ export class PlacementGenerator {
   }
 
   private transitionFrame(
-    frame: SearchFrame,
-    context: SearchContext,
+    frame: G.SearchFrame,
+    context: G.SearchContext,
     computeds: { axisCells: ReadonlyArray<CellIndex>; oppositeAxis: Axis },
-  ): TransitionResult {
+  ): G.TransitionResult {
     switch (frame.phase) {
       case SearchPhase.Explore:
         return this.explore(frame, context);
@@ -134,7 +66,7 @@ export class PlacementGenerator {
     }
   }
 
-  private explore(frame: ExploreFrame, context: SearchContext): TransitionResult {
+  private explore(frame: G.ExploreFrame, context: G.SearchContext): G.TransitionResult {
     const { cursor } = frame;
     const placementIsUsable = context.placement.length > 0 && this.dictionary.isEntryPlayable(cursor.entry);
     if (cursor.direction === Direction.Right && placementIsUsable) {
@@ -143,11 +75,11 @@ export class PlacementGenerator {
         this.layout,
         this.dictionary,
         this.inventory,
-        this.turnManager,
+        this.turnkeeper,
       );
-      if (result.type === ValidationType.Valid) return PlacementGenerator.succeedTransition(context.placement);
+      if (result.type === ValidationResultType.Valid) return PlacementGenerator.succeedTransition(context.placement);
     }
-    const frames: Array<SearchFrame> = [];
+    const frames: Array<G.SearchFrame> = [];
     if (cursor.direction === Direction.Left) {
       frames.push({ phase: SearchPhase.Explore, cursor: { ...cursor, direction: Direction.Right } });
     }
@@ -155,7 +87,7 @@ export class PlacementGenerator {
     return PlacementGenerator.passTransition(frames);
   }
 
-  private validateBounds(frame: ValidateBoundsFrame): TransitionResult {
+  private validateBounds(frame: G.ValidateBoundsFrame): G.TransitionResult {
     const { cursor } = frame;
     const isEdge =
       cursor.direction === Direction.Left
@@ -165,11 +97,11 @@ export class PlacementGenerator {
     return PlacementGenerator.passTransition([{ ...frame, phase: SearchPhase.CalculateTarget }]);
   }
 
-  private calculateTarget(frame: CalculateTargetFrame, axisCells: ReadonlyArray<CellIndex>): TransitionResult {
+  private calculateTarget(frame: G.CalculateTargetFrame, axisCells: ReadonlyArray<CellIndex>): G.TransitionResult {
     const { cursor } = frame;
     const targetIndex = cursor.index + cursor.direction;
     const cell = axisCells[targetIndex];
-    const tile = this.turnManager.findTileByCell(cell);
+    const tile = this.turnkeeper.findTileByCell(cell);
     return PlacementGenerator.passTransition([
       {
         ...frame,
@@ -179,7 +111,7 @@ export class PlacementGenerator {
     ]);
   }
 
-  private resolveTarget(frame: ResolveTargetFrame, oppositeAxis: Axis): TransitionResult {
+  private resolveTarget(frame: G.ResolveTargetFrame, oppositeAxis: Axis): G.TransitionResult {
     const { cursor, target } = frame;
     if (target.meta.tile) {
       const letter = this.inventory.getTileLetter(target.meta.tile);
@@ -204,7 +136,10 @@ export class PlacementGenerator {
     ]);
   }
 
-  private iterativelyResolveTarget(frame: IterativelyResolveTargetFrame, context: SearchContext): TransitionResult {
+  private iterativelyResolveTarget(
+    frame: G.IterativelyResolveTargetFrame,
+    context: G.SearchContext,
+  ): G.TransitionResult {
     const { cursor, target, generator } = frame;
     const next = generator.value.next();
     if (next.done) return PlacementGenerator.failTransition();
@@ -222,22 +157,22 @@ export class PlacementGenerator {
     ]);
   }
 
-  private undoResolveTarget(frame: UndoResolveTargetFrame, context: SearchContext): TransitionResult {
+  private undoResolveTarget(frame: G.UndoResolveTargetFrame, context: G.SearchContext): G.TransitionResult {
     const { letter, tile } = frame.resolveResults;
     context.tiles.get(letter)!.push(tile);
     context.placement.pop();
     return PlacementGenerator.passTransition([]);
   }
 
-  private static passTransition(frames: Array<SearchFrame>): PassTransitionResult {
+  private static passTransition(frames: Array<G.SearchFrame>): G.PassTransitionResult {
     return { type: TransitionResultType.Continue, frames };
   }
 
-  private static succeedTransition(placement: Placement): SucceedTransitionResult {
+  private static succeedTransition(placement: Placement): G.SucceedTransitionResult {
     return { type: TransitionResultType.Success, placement };
   }
 
-  private static failTransition(): FailTransitionResult {
+  private static failTransition(): G.FailTransitionResult {
     return { type: TransitionResultType.Fail };
   }
 }

@@ -1,36 +1,18 @@
-import type { Locals as T } from '@/domain/Turn/types.d.ts';
+import type { Common as C, Validation as V } from '@/domain/Turnkeeper/types.d.ts';
 import { AxisCalculator } from '@/domain/Layout/calculation/AxisCalculator.js';
-import { PlacementBuilder } from '@/domain/Turn/construction/PlacementBuilder.js';
-import { ValidationType } from '@/domain/Turn/enums.js';
-import { AnchorCellFinder } from '@/domain/Turn/search/AnchorCellFinder.js';
+import { PlacementBuilder } from '@/domain/Turnkeeper/construction/PlacementBuilder.js';
+import { ValidationErrors, ValidationResultType } from '@/domain/Turnkeeper/enums.js';
+import { AnchorCellFinder } from '@/domain/Turnkeeper/search/AnchorCellFinder.js';
 
-type Dependencies = { layout: Layout; dictionary: Dictionary; inventory: Inventory; turnManager: TurnManager };
-type BaseContext = { initialPlacement: Placement; dependencies: Dependencies };
-type SequencesContext = BaseContext & { sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> } };
-type PlacementsContext = SequencesContext & { placements: ReadonlyArray<Placement> };
-type WordsContext = PlacementsContext & { words: ReadonlyArray<string> };
-type ScoreContext = WordsContext & { score: number };
-
-type PipelineResult<Context> = ValidPipelineResult<Context> | InvalidPipelineResult;
-type ValidPipelineResult<Context> = { isValid: true; ctx: Context };
-type InvalidPipelineResult = { isValid: false; error: ValidationErrors };
-
-export enum ValidationErrors {
-  InvalidTilePlacement = 'error_tile_1',
-  InvalidCellPlacement = 'error_cell_2',
-  NoCellsUsableAsFirst = 'error_cell_3',
-  WordNotInDictionary = 'error_tile_4',
-}
-
-export class TurnValidator {
+export class InitialPlacementValidator {
   static execute(
     initialPlacement: Placement,
     layout: Layout,
     dictionary: Dictionary,
     inventory: Inventory,
-    turnManager: TurnManager,
-  ): T.ValidationResult {
-    const initialContext = { initialPlacement, dependencies: { layout, dictionary, inventory, turnManager } };
+    turnkeeper: Turnkeeper,
+  ): C.ValidationResult {
+    const initialContext = { initialPlacement, dependencies: { layout, dictionary, inventory, turnkeeper } };
     const { result } = this.Pipeline.initialize(initialContext)
       .addStep(this.computeSequences)
       .addStep(this.computePlacements)
@@ -38,36 +20,36 @@ export class TurnValidator {
       .addStep(this.computeScore);
     return result.isValid
       ? {
-          type: ValidationType.Valid,
+          type: ValidationResultType.Valid,
           sequences: result.ctx.sequences,
           score: result.ctx.score,
           words: result.ctx.words,
         }
       : {
-          type: ValidationType.Invalid,
+          type: ValidationResultType.Invalid,
           error: result.error,
         };
   }
 
   private static Pipeline = class Pipeline<Context> {
-    private constructor(public result: PipelineResult<Context>) {}
+    private constructor(public result: V.PipelineResult<Context>) {}
 
-    static initialize<Context extends BaseContext>(ctx: Context): Pipeline<Context> {
+    static initialize<Context extends V.BaseContext>(ctx: Context): Pipeline<Context> {
       return new Pipeline({ isValid: true, ctx });
     }
 
-    static createValidPipelineResult<Ctx>(ctx: Ctx): ValidPipelineResult<Ctx> {
+    static createValidPipelineResult<Ctx>(ctx: Ctx): V.ValidPipelineResult<Ctx> {
       return { isValid: true, ctx };
     }
 
-    static createInvalidPipelineResult(error: ValidationErrors): InvalidPipelineResult {
+    static createInvalidPipelineResult(error: ValidationErrors): V.InvalidPipelineResult {
       return { isValid: false, error };
     }
 
     addStep<NextContext extends Context>(
-      computer: (ctx: Context) => PipelineResult<NextContext>,
+      computer: (ctx: Context) => V.PipelineResult<NextContext>,
     ): Pipeline<NextContext> {
-      if (this.result.isValid) this.result = computer(this.result.ctx) as PipelineResult<NextContext>;
+      if (this.result.isValid) this.result = computer(this.result.ctx) as V.PipelineResult<NextContext>;
       return this as unknown as Pipeline<NextContext>;
     }
   };
@@ -75,33 +57,33 @@ export class TurnValidator {
   private static passComputer<OldContext extends object, NextContext extends object>(
     oldCtx: OldContext,
     nextCtx: NextContext,
-  ): ValidPipelineResult<OldContext & NextContext> {
+  ): V.ValidPipelineResult<OldContext & NextContext> {
     Object.assign(oldCtx, nextCtx);
     return this.Pipeline.createValidPipelineResult(oldCtx as OldContext & NextContext);
   }
 
-  private static failComputer(error: ValidationErrors): InvalidPipelineResult {
+  private static failComputer(error: ValidationErrors): V.InvalidPipelineResult {
     return this.Pipeline.createInvalidPipelineResult(error);
   }
 
-  private static computeSequences(ctx: BaseContext): PipelineResult<SequencesContext> {
-    const { layout, turnManager } = ctx.dependencies;
+  private static computeSequences(ctx: V.BaseContext): V.PipelineResult<V.SequencesContext> {
+    const { layout, turnkeeper } = ctx.dependencies;
     const tiles = ctx.initialPlacement.map(placement => placement.tile);
     if (tiles.length === 0) return this.failComputer(ValidationErrors.InvalidTilePlacement);
     const cells = ctx.initialPlacement.map(placement => placement.cell);
     if (cells.length === 0) return this.failComputer(ValidationErrors.InvalidCellPlacement);
-    const anchorCells = new Set(new AnchorCellFinder(layout, turnManager).execute());
+    const anchorCells = new AnchorCellFinder(layout, turnkeeper).execute();
     const someCellsAreAnchor = cells.filter(item => anchorCells.has(item));
     if (!someCellsAreAnchor) return this.failComputer(ValidationErrors.NoCellsUsableAsFirst);
     return this.passComputer(ctx, { sequences: { cell: cells, tile: tiles } });
   }
 
-  private static computePlacements(ctx: SequencesContext): PipelineResult<PlacementsContext> {
-    const { layout, turnManager } = ctx.dependencies;
+  private static computePlacements(ctx: V.SequencesContext): V.PipelineResult<V.PlacementsContext> {
+    const { layout, turnkeeper } = ctx.dependencies;
     const tileSequence = ctx.sequences.tile;
-    const axisCalculator = new AxisCalculator(layout, turnManager);
+    const axisCalculator = new AxisCalculator(layout, turnkeeper);
     const primaryAxis = axisCalculator.execute(ctx.sequences.cell);
-    const placementBuilder = new PlacementBuilder(layout, turnManager);
+    const placementBuilder = new PlacementBuilder(layout, turnkeeper);
     const primaryPlacement = placementBuilder.execute({
       coords: { axis: primaryAxis, index: ctx.sequences.cell[0] },
       tileSequence,
@@ -121,7 +103,7 @@ export class TurnValidator {
       : this.failComputer(ValidationErrors.InvalidTilePlacement);
   }
 
-  private static computeWords(ctx: PlacementsContext): PipelineResult<WordsContext> {
+  private static computeWords(ctx: V.PlacementsContext): V.PipelineResult<V.WordsContext> {
     const { dictionary, inventory } = ctx.dependencies;
     const words: Array<string> = [];
     for (let i = 0; i < ctx.placements.length; i++) {
@@ -135,7 +117,7 @@ export class TurnValidator {
       : this.failComputer(ValidationErrors.WordNotInDictionary);
   }
 
-  private static computeScore(ctx: WordsContext): PipelineResult<ScoreContext> {
+  private static computeScore(ctx: V.WordsContext): V.PipelineResult<V.ScoreContext> {
     const { layout, inventory } = ctx.dependencies;
     let totalScore = 0;
     for (const placement of ctx.placements) {

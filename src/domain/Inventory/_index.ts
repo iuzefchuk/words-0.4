@@ -1,4 +1,4 @@
-import { shuffleArrayWithFisherYates } from '@/shared/helpers.js'; //TODO delete dependency
+import { shuffleArrayWithFisherYates } from '@/shared/helpers.js';
 import { Player, Letter } from '@/domain/enums.js';
 import { LETTER_DISTRIBUTION, LETTER_POINTS } from '@/domain/Inventory/constants.js';
 

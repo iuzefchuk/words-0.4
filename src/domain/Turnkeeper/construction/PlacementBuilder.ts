@@ -1,7 +1,7 @@
 export class PlacementBuilder {
   constructor(
     private readonly layout: Layout,
-    private readonly turnManager: TurnManager,
+    private readonly turnkeeper: Turnkeeper,
   ) {}
 
   execute({ coords, tileSequence }: { coords: AnchorCoordinates; tileSequence: ReadonlyArray<TileId> }): Placement {
@@ -12,7 +12,7 @@ export class PlacementBuilder {
     let segmentHasTile = false;
     let usedTilesCount = 0;
     for (const cell of axisCells) {
-      const tile = this.turnManager.findTileByCell(cell);
+      const tile = this.turnkeeper.findTileByCell(cell);
       if (!tile) {
         if (placement.length === 0) continue;
         if (segmentHasTile) break;

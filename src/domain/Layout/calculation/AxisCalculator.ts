@@ -5,7 +5,7 @@ export class AxisCalculator {
 
   constructor(
     private readonly layout: Layout,
-    private readonly turnManager: TurnManager,
+    private readonly turnkeeper: Turnkeeper,
   ) {}
 
   execute(cellSequence: ReadonlyArray<CellIndex>): Axis {
@@ -21,7 +21,7 @@ export class AxisCalculator {
   private createCellSequenceFromAdjacents({ cellIndex }: { cellIndex: CellIndex }): ReadonlyArray<CellIndex> {
     const connectedAdjacents = this.layout
       .findAdjacentCells(cellIndex)
-      .filter(cell => this.turnManager.isCellConnected(cell));
+      .filter(cell => this.turnkeeper.isCellConnected(cell));
     return connectedAdjacents.length === 0 ? [] : [connectedAdjacents[0], cellIndex];
   }
 }

@@ -1,10 +1,9 @@
-import type { Locals as T } from '@/domain/Turn/types.d.ts';
+import type { Common as C } from '@/domain/Turnkeeper/types.d.ts';
 import { Player } from '@/domain/enums.js';
-import { TurnValidator } from '@/domain/Turn/engines/TurnValidator.js';
-import { PlayerMove, ValidationType } from '@/domain/Turn/enums.js';
+import { TurnValidator } from '@/domain/Turnkeeper/engines/TurnValidator.js';
+import { PlayerMove, ValidationResultType } from '@/domain/Turnkeeper/enums.js';
 
-export class TurnManager {
-  // TODO rename to single word + file structure rename
+export class Turnkeeper {
   private static readonly finalMoves = [PlayerMove.Won, PlayerMove.Tied];
 
   private constructor(
@@ -12,10 +11,10 @@ export class TurnManager {
     private lastMoves: Map<Player, PlayerMove>,
   ) {}
 
-  static create({ players }: { players: Array<Player> }): TurnManager {
+  static create({ players }: { players: Array<Player> }): Turnkeeper {
     const history = TurnHistory.create();
     const lastMoves = new Map(players.map(player => [player, PlayerMove.StartedGame]));
-    const manager = new TurnManager(history, lastMoves);
+    const manager = new Turnkeeper(history, lastMoves);
     manager.startTurnForNextPlayer();
     return manager;
   }
@@ -112,7 +111,7 @@ export class TurnManager {
 
   private checkMutability(): void {
     for (const move of this.lastMoves.values()) {
-      if (TurnManager.finalMoves.includes(move)) throw new Error('Turns are immutable because game is ended');
+      if (Turnkeeper.finalMoves.includes(move)) throw new Error('Turns are immutable because game is ended');
     }
   }
 
@@ -190,36 +189,36 @@ class Turn {
   private constructor(
     readonly player: Player,
     private initialPlacement: Placement,
-    private validationResult: T.ValidationResult,
+    private validationResult: C.ValidationResult,
   ) {}
 
   static create({ player }: { player: Player }): Turn {
     const initialPlacement: Placement = [];
-    const validationResult: T.UnvalidatedValidationResult = { type: ValidationType.Unvalidated };
+    const validationResult: C.UnvalidatedValidationResult = { type: ValidationResultType.Unvalidated };
     return new Turn(player, initialPlacement, validationResult);
   }
 
   get cellSequence(): ReadonlyArray<CellIndex> | undefined {
-    return this.validationResult.type === ValidationType.Valid ? this.validationResult.sequences.cell : undefined;
+    return this.validationResult.type === ValidationResultType.Valid ? this.validationResult.sequences.cell : undefined;
   }
   get tileSequence(): ReadonlyArray<TileId> | undefined {
-    return this.validationResult.type === ValidationType.Valid ? this.validationResult.sequences.tile : undefined;
+    return this.validationResult.type === ValidationResultType.Valid ? this.validationResult.sequences.tile : undefined;
   }
   get error(): string | undefined {
-    return this.validationResult.type === ValidationType.Invalid ? this.validationResult.error : undefined;
+    return this.validationResult.type === ValidationResultType.Invalid ? this.validationResult.error : undefined;
   }
   get score(): number | undefined {
-    return this.validationResult.type === ValidationType.Valid ? this.validationResult.score : undefined;
+    return this.validationResult.type === ValidationResultType.Valid ? this.validationResult.score : undefined;
   }
   get words(): ReadonlyArray<string> | undefined {
-    return this.validationResult.type === ValidationType.Valid ? this.validationResult.words : undefined;
+    return this.validationResult.type === ValidationResultType.Valid ? this.validationResult.words : undefined;
   }
   get isValid(): boolean {
-    return this.validationResult.type === ValidationType.Valid;
+    return this.validationResult.type === ValidationResultType.Valid;
   }
 
-  validate(layout: Layout, dictionary: Dictionary, inventory: Inventory, turnManager: TurnManager): void {
-    this.validationResult = TurnValidator.execute(this.initialPlacement, layout, dictionary, inventory, turnManager);
+  validate(layout: Layout, dictionary: Dictionary, inventory: Inventory, turnkeeper: Turnkeeper): void {
+    this.validationResult = TurnValidator.execute(this.initialPlacement, layout, dictionary, inventory, turnkeeper);
   }
 
   getConnectedTile(cell: CellIndex): TileId | undefined {
@@ -232,7 +231,7 @@ class Turn {
 
   connectTileToCell({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
     this.validateCellAndTileAbsence(cell, tile);
-    this.initialPlacement.push({ cell, tile } as T.Link);
+    this.initialPlacement.push({ cell, tile } as C.Link);
     this.initialPlacement.sort((a, b) => a.cell - b.cell);
   }
 

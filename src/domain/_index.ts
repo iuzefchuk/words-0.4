@@ -2,8 +2,8 @@ import { Dictionary } from '@/domain/Dictionary/_index.js';
 import { Player, Bonus, Letter } from '@/domain/enums.js';
 import { Inventory } from '@/domain/Inventory/_index.js';
 import { Layout } from '@/domain/Layout/_index.js';
-import { TurnManager } from '@/domain/Turn/_index.js';
-import { TurnGenerator } from '@/domain/Turn/engines/TurnGenerator.js';
+import { Turnkeeper } from '@/domain/Turnkeeper/_index.js';
+import { TurnGenerator } from '@/domain/Turnkeeper/engines/TurnGenerator.js';
 
 export class GameDomain {
   private static readonly layout = Layout.create();
@@ -12,14 +12,14 @@ export class GameDomain {
 
   private constructor(
     private inventory: Inventory,
-    private turnManager: TurnManager,
+    private turnkeeper: Turnkeeper,
   ) {}
 
   static create(): GameDomain {
     const players = Object.values(Player);
     const inventory = Inventory.create({ players });
-    const turnManager = TurnManager.create({ players });
-    return new GameDomain(inventory, turnManager);
+    const turnkeeper = Turnkeeper.create({ players });
+    return new GameDomain(inventory, turnkeeper);
   }
 
   get isFinished(): boolean {
@@ -39,19 +39,19 @@ export class GameDomain {
   }
 
   get currentTurnScore(): number | undefined {
-    return this.turnManager.currentTurnScore;
+    return this.turnkeeper.currentTurnScore;
   }
 
   get currentTurnIsSavable() {
-    return this.turnManager.currentTurnIsSavable;
+    return this.turnkeeper.currentTurnIsSavable;
   }
 
   get currentPlayerIsUser(): boolean {
-    return this.turnManager.currentPlayer === Player.User;
+    return this.turnkeeper.currentPlayer === Player.User;
   }
 
   get userPassWillBeResign(): boolean {
-    return this.turnManager.hasPlayerPassed(Player.User);
+    return this.turnkeeper.hasPlayerPassed(Player.User);
   }
 
   isCellInCenterOfLayout(cell: CellIndex): boolean {
@@ -63,19 +63,19 @@ export class GameDomain {
   }
 
   getScoreFor(player: Player): number {
-    return this.turnManager.getScoreFor(player);
+    return this.turnkeeper.getScoreFor(player);
   }
 
   findTileByCell(cell: CellIndex): TileId | undefined {
-    return this.turnManager.findTileByCell(cell);
+    return this.turnkeeper.findTileByCell(cell);
   }
 
   findCellByTile(tile: TileId): CellIndex | undefined {
-    return this.turnManager.findCellByTile(tile);
+    return this.turnkeeper.findCellByTile(tile);
   }
 
   isTileConnected(tile: TileId): boolean {
-    return this.turnManager.isTileConnected(tile);
+    return this.turnkeeper.isTileConnected(tile);
   }
 
   areTilesSame(firstTile: TileId, secondTile: TileId): boolean {
@@ -87,11 +87,11 @@ export class GameDomain {
   }
 
   isCellLastConnectionInTurn(cell: CellIndex): boolean {
-    return this.turnManager.currentTurnCellSequence?.at(-1) === cell;
+    return this.turnkeeper.currentTurnCellSequence?.at(-1) === cell;
   }
 
   wasTileUsedInPreviousTurn(tile: TileId): boolean {
-    const { previousTurnTileSequence } = this.turnManager;
+    const { previousTurnTileSequence } = this.turnkeeper;
     if (!previousTurnTileSequence) return false;
     return previousTurnTileSequence.includes(tile);
   }
@@ -103,49 +103,49 @@ export class GameDomain {
 
   connectTileToCell({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
     this.checkMutability();
-    this.turnManager.connectTileToCell({ cell, tile });
+    this.turnkeeper.connectTileToCell({ cell, tile });
   }
 
   disconnectTileFromCell(tile: TileId): void {
     this.checkMutability();
-    this.turnManager.disconnectTileFromCell({ tile });
+    this.turnkeeper.disconnectTileFromCell({ tile });
   }
 
   validateTurn(): void {
     this.checkMutability();
-    this.turnManager.validateCurrentTurn(GameDomain.layout, GameDomain.dictionary, this.inventory);
+    this.turnkeeper.validateCurrentTurn(GameDomain.layout, GameDomain.dictionary, this.inventory);
   }
 
   resetTurn(): void {
     this.checkMutability();
-    this.turnManager.resetCurrentTurn();
+    this.turnkeeper.resetCurrentTurn();
   }
 
   saveTurn(): void {
     this.checkMutability();
-    this.turnManager.saveCurrentTurn();
-    const { currentTurnTileSequence } = this.turnManager;
+    this.turnkeeper.saveCurrentTurn();
+    const { currentTurnTileSequence } = this.turnkeeper;
     if (!currentTurnTileSequence) throw new Error('Current turn must be computed before save');
-    this.removeTiles({ player: this.turnManager.currentPlayer, tiles: currentTurnTileSequence });
-    this.inventory.replenishTilesFor(this.turnManager.currentPlayer);
-    this.turnManager.startTurnForNextPlayer();
+    this.removeTiles({ player: this.turnkeeper.currentPlayer, tiles: currentTurnTileSequence });
+    this.inventory.replenishTilesFor(this.turnkeeper.currentPlayer);
+    this.turnkeeper.startTurnForNextPlayer();
   }
 
   passTurn(): void {
     this.checkMutability();
-    this.turnManager.passCurrentTurn();
-    this.inventory.replenishTilesFor(this.turnManager.currentPlayer);
-    this.turnManager.startTurnForNextPlayer();
+    this.turnkeeper.passCurrentTurn();
+    this.inventory.replenishTilesFor(this.turnkeeper.currentPlayer);
+    this.turnkeeper.startTurnForNextPlayer();
   }
 
   resignGame(): void {
     this.checkMutability();
-    this.turnManager.resignCurrentTurn();
+    this.turnkeeper.resignCurrentTurn();
     this.finishGame();
   }
 
   generatePlacement({ player }: { player: Player }): Placement | null {
-    const generator = new TurnGenerator(GameDomain.layout, GameDomain.dictionary, this.inventory, this.turnManager);
+    const generator = new TurnGenerator(GameDomain.layout, GameDomain.dictionary, this.inventory, this.turnkeeper);
     for (const placement of generator.execute(player)) return placement;
     return null;
   }
