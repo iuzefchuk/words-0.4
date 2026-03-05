@@ -2,7 +2,7 @@ import { Dictionary } from '@/domain/Dictionary/Dictionary.js';
 import { TileId, Inventory } from '@/domain/Inventory/Inventory.js';
 import { CellIndex, Layout } from '@/domain/Layout/Layout.js';
 import { AxisCalculator } from '@/domain/Layout/services/AxisCalculator.js';
-import { CellUsabilityCalculator } from '@/domain/Layout/services/CellUsabilityCalculator.js';
+import { CellUsabilityRules } from '@/domain/Layout/rules/CellUsabilityRules.js';
 import { Placement, TurnManager, State, StateType } from '../Turn.js';
 import { PlacementCreator } from './PlacementCreator.js';
 
@@ -91,8 +91,8 @@ export class StateValidator {
     if (tiles.length === 0) return this.failComputer(ValidationErrors.InvalidTilePlacement);
     const cells = ctx.initialPlacement.map(placement => placement.cell);
     if (cells.length === 0) return this.failComputer(ValidationErrors.InvalidCellPlacement);
-    const cellUsabilityCalculator = new CellUsabilityCalculator(layout, turnManager);
-    const noCellsUsableAsFirst = cells.every(cell => !cellUsabilityCalculator.isUsableAsFirst(cell));
+    const cellUsabilityRules = new CellUsabilityRules(layout, turnManager);
+    const noCellsUsableAsFirst = cells.every(cell => !cellUsabilityRules.isUsableAsFirst(cell));
     if (noCellsUsableAsFirst) return this.failComputer(ValidationErrors.NoCellsUsableAsFirst);
     return this.passComputer(ctx, { sequences: { cell: cells, tile: tiles } });
   }
@@ -101,7 +101,7 @@ export class StateValidator {
     const { layout, turnManager } = ctx.dependencies;
     const tileSequence = ctx.sequences.tile;
     const axisCalculator = new AxisCalculator(layout, turnManager);
-    const primaryAxis = axisCalculator.calculatePrimary(ctx.sequences.cell);
+    const primaryAxis = axisCalculator.execute(ctx.sequences.cell);
     const placementCreator = new PlacementCreator(layout, turnManager);
     const primaryPlacement = placementCreator.execute({
       coords: { axis: primaryAxis, cell: ctx.sequences.cell[0] },

@@ -1,7 +1,7 @@
 import { Dictionary } from '@/domain/Dictionary/Dictionary.js';
 import { Inventory, Letter } from '@/domain/Inventory/Inventory.js';
 import { Layout, Axis, CellIndex, Coordinates } from '@/domain/Layout/Layout.js';
-import { CellUsabilityCalculator } from '@/domain/Layout/services/CellUsabilityCalculator.js';
+import { CellUsabilityRules } from '@/domain/Layout/rules/CellUsabilityRules.js';
 import { Player } from '@/domain/Player.js';
 import { TurnManager, Placement } from '../Turn.js';
 import { PlacementFinder } from './PlacementFinder.js';
@@ -18,7 +18,8 @@ export class InitialPlacementGenerator {
   execute(player: Player): Placement | null {
     const playerTileCollection = this.inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return null;
-    const availableTargetCells = new CellUsabilityCalculator(this.layout, this.turnManager).getAllUsableAsFirst();
+    const cellUsabilityRules = new CellUsabilityRules(this.layout, this.turnManager);
+    const availableTargetCells = cellUsabilityRules.getAllUsableAsFirst();
     if (availableTargetCells.length === 0) return null;
     const lettersComputer = new UsableLettersComputer(this.layout, this.dictionary, this.inventory, this.turnManager);
     const cachedLettersComputer = new InitialPlacementGenerator.CachedUsableLettersComputer(lettersComputer);

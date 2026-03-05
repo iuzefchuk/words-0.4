@@ -20,8 +20,6 @@ export class Layout {
     Object.values(Bonus).flatMap(bonus => BONUS_CELL_INDEXES[bonus].map(cellIndex => [cellIndex, bonus] as const)),
   );
 
-  private constructor() {}
-
   static create(): Layout {
     return new Layout();
   }
