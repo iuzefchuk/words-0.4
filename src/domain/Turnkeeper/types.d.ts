@@ -1,9 +1,9 @@
-import { Letter } from '@/domain/enums.ts';
-import { Turnkeeper as TurnkeeperClass } from '@/domain/Turnkeeper/_index.ts';
+import { Axis, Letter } from '@/domain/enums.ts';
+import TurnkeeperClass from '@/domain/Turnkeeper/_index.ts';
 import {
-  Direction,
-  SearchPhase,
-  TransitionResultType,
+  GenerationDirection,
+  GenerationPhase,
+  GenerationTransitionResultType,
   ValidationErrors,
   ValidationResultType,
 } from '@/domain/Turnkeeper/enums.ts';
@@ -32,49 +32,23 @@ declare namespace Computation {
 
 declare namespace Generation {
   // TODO revisit naming
-  type Cursor = { index: number; direction: Direction; entry: Entry };
+
+  type Computeds = { axisCells: ReadonlyArray<CellIndex>; oppositeAxis: Axis };
+  type Context = { tiles: TileCollection; placement: Placement };
+  type Cursor = { index: number; direction: GenerationDirection; entry: Entry };
   type Target = { index: number; meta: { cell: CellIndex; tile?: TileId } };
-  type TargetGenerator = { value: NextEntryGenerator; meta: { anchorLetters: ReadonlySet<Letter> } };
   type ResolveResults = { letter: Letter; tile: TileId };
-  type ExploreFrame = {
-    phase: SearchPhase.Explore;
-    cursor: Cursor;
-  };
-  type ValidateBoundsFrame = {
-    phase: SearchPhase.ValidateBounds;
-    cursor: Cursor;
-  };
-  type CalculateTargetFrame = {
-    phase: SearchPhase.CalculateTarget;
-    cursor: Cursor;
-  };
-  type ResolveTargetFrame = {
-    phase: SearchPhase.ResolveTarget;
-    cursor: Cursor;
-    target: Target;
-  };
-  type IterativelyResolveTargetFrame = {
-    phase: SearchPhase.IterativelyResolveTarget;
-    cursor: Cursor;
-    target: Target;
-    generator: TargetGenerator;
-  };
-  type UndoResolveTargetFrame = {
-    phase: SearchPhase.UndoResolveTarget;
-    cursor: Cursor;
-    resolveResults: ResolveResults;
-  };
-  type SearchFrame =
-    | ExploreFrame
-    | ValidateBoundsFrame
-    | CalculateTargetFrame
-    | ResolveTargetFrame
-    | IterativelyResolveTargetFrame
-    | UndoResolveTargetFrame;
-  type SearchContext = { tiles: TileCollection; placement: Placement };
-  type PassTransitionResult = { type: TransitionResultType.Continue; frames: Array<SearchFrame> };
-  type SucceedTransitionResult = { type: TransitionResultType.Success; placement: Placement };
-  type FailTransitionResult = { type: TransitionResultType.Fail };
+
+  type ExploreFrame = { phase: GenerationPhase.Explore; cursor: Cursor };
+  type ValidateBoundsFrame = { phase: GenerationPhase.ValidateBounds; cursor: Cursor };
+  type CalculateTargetFrame = { phase: GenerationPhase.CalculateTarget; cursor: Cursor };
+  type ResolveTargetFrame = { phase: GenerationPhase.ResolveTarget; cursor: Cursor; target: Target };
+  type UndoResolveTargetFrame = { phase: GenerationPhase.UndoResolveTarget; cursor: Cursor; results: ResolveResults };
+  type Frame = ExploreFrame | ValidateBoundsFrame | CalculateTargetFrame | ResolveTargetFrame | UndoResolveTargetFrame;
+
+  type PassTransitionResult = { type: GenerationTransitionResultType.Continue; frames: Array<Frame> };
+  type SucceedTransitionResult = { type: GenerationTransitionResultType.Success; placement: Placement };
+  type FailTransitionResult = { type: GenerationTransitionResultType.Fail };
   type TransitionResult = PassTransitionResult | SucceedTransitionResult | FailTransitionResult;
 }
 

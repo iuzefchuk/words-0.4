@@ -1,5 +1,5 @@
 import { Letter } from '@/domain/enums.ts';
-import { Dictionary as DictionaryClass } from '@/domain/Dictionary/_index.ts';
+import DictionaryClass from '@/domain/Dictionary/_index.ts';
 
 declare global {
   type Dictionary = DictionaryClass;

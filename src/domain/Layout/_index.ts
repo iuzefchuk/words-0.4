@@ -1,7 +1,7 @@
 import { Bonus, Axis } from '@/domain/enums.js';
 import { BONUS_CELL_INDEXES } from '@/domain/Layout/constants.js';
 
-export class Layout {
+export default class Layout {
   private static readonly cellsPerAxis = 15;
   private static readonly _cells: ReadonlyArray<CellIndex> = Array.from({ length: Layout.cellsPerAxis ** 2 });
   private static readonly bonusCellMap: ReadonlyMap<CellIndex, Bonus> = new Map(

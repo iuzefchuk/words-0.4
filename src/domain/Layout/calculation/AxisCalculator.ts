@@ -1,6 +1,6 @@
 import { Axis } from '@/domain/enums.js';
 
-export class AxisCalculator {
+export default class AxisCalculator {
   private static readonly defaultAxis = Axis.X;
 
   constructor(

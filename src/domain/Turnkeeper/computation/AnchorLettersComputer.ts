@@ -1,6 +1,6 @@
 import { Letter } from '@/domain/enums.js';
 
-export class AnchorLettersComputer {
+export default class AnchorLettersComputer {
   constructor(
     private readonly layout: Layout,
     private readonly dictionary: Dictionary,

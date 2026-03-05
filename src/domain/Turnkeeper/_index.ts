@@ -1,9 +1,9 @@
 import type { Common as C } from '@/domain/Turnkeeper/types.d.ts';
 import { Player } from '@/domain/enums.js';
-import { TurnValidator } from '@/domain/Turnkeeper/engines/TurnValidator.js';
+import TurnValidator from '@/domain/Turnkeeper/TurnValidator.js';
 import { PlayerMove, ValidationResultType } from '@/domain/Turnkeeper/enums.js';
 
-export class Turnkeeper {
+export default class Turnkeeper {
   private static readonly finalMoves = [PlayerMove.Won, PlayerMove.Tied];
 
   private constructor(
@@ -218,7 +218,7 @@ class Turn {
   }
 
   validate(layout: Layout, dictionary: Dictionary, inventory: Inventory, turnkeeper: Turnkeeper): void {
-    this.validationResult = TurnValidator.execute(this.initialPlacement, layout, dictionary, inventory, turnkeeper);
+    this.validationResult = new TurnValidator(layout, dictionary, inventory, turnkeeper).execute(this.initialPlacement);
   }
 
   getConnectedTile(cell: CellIndex): TileId | undefined {

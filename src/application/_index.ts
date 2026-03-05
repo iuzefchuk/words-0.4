@@ -1,7 +1,7 @@
-import { GameDomain } from '@/domain/_index.js';
 import { TIME } from '@/shared/consts.js';
-import { Bonus, Letter, Player } from '@/domain/enums.js';
 import { wait } from '@/shared/helpers.js';
+import GameDomain from '@/domain/_index.js';
+import { Bonus, Letter, Player } from '@/domain/enums.js';
 
 export const GAME_BONUSES = Bonus;
 
@@ -22,7 +22,7 @@ export type GameState = {
   userPassWillBeResign: boolean;
 };
 
-export class Game {
+export default class Game {
   private constructor(private gameDomain: GameDomain) {}
 
   static start(): Game {

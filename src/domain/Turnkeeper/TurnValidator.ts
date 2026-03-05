@@ -1,7 +1,7 @@
 import type { Common as C } from '@/domain/Turnkeeper/types.d.ts';
-import { InitialPlacementValidator } from '@/domain/Turnkeeper/validation/InitialPlacementValidator.js';
+import InitialPlacementValidator from '@/domain/Turnkeeper/validation/InitialPlacementValidator.js';
 
-export class TurnValidator {
+export default class TurnValidator {
   constructor(
     private readonly layout: Layout,
     private readonly dictionary: Dictionary,

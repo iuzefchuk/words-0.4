@@ -1,4 +1,4 @@
-export class AnchorCellFinder {
+export default class AnchorCellFinder {
   constructor(
     private readonly layout: Layout,
     private readonly turnkeeper: Turnkeeper,

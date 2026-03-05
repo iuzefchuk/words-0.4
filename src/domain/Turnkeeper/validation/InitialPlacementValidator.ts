@@ -1,10 +1,10 @@
 import type { Common as C, Validation as V } from '@/domain/Turnkeeper/types.d.ts';
-import { AxisCalculator } from '@/domain/Layout/calculation/AxisCalculator.js';
-import { PlacementBuilder } from '@/domain/Turnkeeper/construction/PlacementBuilder.js';
-import { ValidationErrors, ValidationResultType } from '@/domain/Turnkeeper/enums.js';
-import { AnchorCellFinder } from '@/domain/Turnkeeper/search/AnchorCellFinder.js';
+import AxisCalculator from '@/domain/Layout/calculation/AxisCalculator.js';
+import PlacementBuilder from '@/domain/Turnkeeper/construction/PlacementBuilder.js';
+import { ValidationErrors as Errors, ValidationResultType as ResultType } from '@/domain/Turnkeeper/enums.js';
+import AnchorCellFinder from '@/domain/Turnkeeper/search/AnchorCellFinder.js';
 
-export class InitialPlacementValidator {
+export default class InitialPlacementValidator {
   static execute(
     initialPlacement: Placement,
     layout: Layout,
@@ -20,13 +20,13 @@ export class InitialPlacementValidator {
       .addStep(this.computeScore);
     return result.isValid
       ? {
-          type: ValidationResultType.Valid,
+          type: ResultType.Valid,
           sequences: result.ctx.sequences,
           score: result.ctx.score,
           words: result.ctx.words,
         }
       : {
-          type: ValidationResultType.Invalid,
+          type: ResultType.Invalid,
           error: result.error,
         };
   }
@@ -42,7 +42,7 @@ export class InitialPlacementValidator {
       return { isValid: true, ctx };
     }
 
-    static createInvalidPipelineResult(error: ValidationErrors): V.InvalidPipelineResult {
+    static createInvalidPipelineResult(error: Errors): V.InvalidPipelineResult {
       return { isValid: false, error };
     }
 
@@ -62,19 +62,19 @@ export class InitialPlacementValidator {
     return this.Pipeline.createValidPipelineResult(oldCtx as OldContext & NextContext);
   }
 
-  private static failComputer(error: ValidationErrors): V.InvalidPipelineResult {
+  private static failComputer(error: Errors): V.InvalidPipelineResult {
     return this.Pipeline.createInvalidPipelineResult(error);
   }
 
   private static computeSequences(ctx: V.BaseContext): V.PipelineResult<V.SequencesContext> {
     const { layout, turnkeeper } = ctx.dependencies;
     const tiles = ctx.initialPlacement.map(placement => placement.tile);
-    if (tiles.length === 0) return this.failComputer(ValidationErrors.InvalidTilePlacement);
+    if (tiles.length === 0) return this.failComputer(Errors.InvalidTilePlacement);
     const cells = ctx.initialPlacement.map(placement => placement.cell);
-    if (cells.length === 0) return this.failComputer(ValidationErrors.InvalidCellPlacement);
+    if (cells.length === 0) return this.failComputer(Errors.InvalidCellPlacement);
     const anchorCells = new AnchorCellFinder(layout, turnkeeper).execute();
     const someCellsAreAnchor = cells.filter(item => anchorCells.has(item));
-    if (!someCellsAreAnchor) return this.failComputer(ValidationErrors.NoCellsUsableAsFirst);
+    if (!someCellsAreAnchor) return this.failComputer(Errors.NoCellsUsableAsFirst);
     return this.passComputer(ctx, { sequences: { cell: cells, tile: tiles } });
   }
 
@@ -89,7 +89,7 @@ export class InitialPlacementValidator {
       tileSequence,
     });
     const isPlacementUsable = (placement: Placement): boolean => placement.length > 1;
-    if (!isPlacementUsable(primaryPlacement)) return this.failComputer(ValidationErrors.InvalidTilePlacement);
+    if (!isPlacementUsable(primaryPlacement)) return this.failComputer(Errors.InvalidTilePlacement);
     const placements: Array<Placement> = [primaryPlacement];
     for (const cell of ctx.sequences.cell) {
       const placement = placementBuilder.execute({
@@ -100,7 +100,7 @@ export class InitialPlacementValidator {
     }
     return placements.length > 0
       ? this.passComputer(ctx, { placements })
-      : this.failComputer(ValidationErrors.InvalidTilePlacement);
+      : this.failComputer(Errors.InvalidTilePlacement);
   }
 
   private static computeWords(ctx: V.PlacementsContext): V.PipelineResult<V.WordsContext> {
@@ -114,7 +114,7 @@ export class InitialPlacementValidator {
     }
     return dictionary.hasWords(words)
       ? this.passComputer(ctx, { words })
-      : this.failComputer(ValidationErrors.WordNotInDictionary);
+      : this.failComputer(Errors.WordNotInDictionary);
   }
 
   private static computeScore(ctx: V.WordsContext): V.PipelineResult<V.ScoreContext> {

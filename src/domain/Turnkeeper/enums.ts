@@ -19,7 +19,7 @@ export enum ValidationErrors {
   WordNotInDictionary = 'error_tile_4',
 }
 
-export enum SearchPhase {
+export enum GenerationPhase {
   Explore = 'Explore',
   ValidateBounds = 'ValidateBounds',
   CalculateTarget = 'CalculateTarget',
@@ -28,12 +28,12 @@ export enum SearchPhase {
   UndoResolveTarget = 'UndoResolveTarget',
 }
 
-export enum Direction {
+export enum GenerationDirection {
   Left = -1,
   Right = 1,
 }
 
-export enum TransitionResultType {
+export enum GenerationTransitionResultType {
   Continue = 'Continue',
   Success = 'Success',
   Fail = 'Fail',

@@ -1,9 +1,9 @@
-import type { Common as C } from '@/domain/Dictionary/types.d.ts';
 import { Letter } from '@/domain/enums.js';
+import type { Common as C } from '@/domain/Dictionary/types.d.ts';
 import { SORTED_WORDS } from '@/domain/Dictionary/constants.js';
-import { NodeTreeBuilder } from '@/domain/Dictionary/construction/NodeTreeBuilder.js';
+import NodeTreeBuilder from '@/domain/Dictionary/construction/NodeTreeBuilder.js';
 
-export class Dictionary {
+export default class Dictionary {
   private constructor(
     private readonly nodeTree: C.FrozenNode,
     public readonly allLetters: ReadonlySet<Letter>,

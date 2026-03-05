@@ -1,11 +1,11 @@
-import type { Common as C } from '@/domain/Dictionary/types.d.ts';
 import { Letter } from '@/domain/enums.js';
+import type { Common as C } from '@/domain/Dictionary/types.d.ts';
 
 type Node = { id: C.NodeId; isFinal: boolean; children: Map<Letter, Node> };
 type NodeGenerator = Generator<Node, Node>;
 type Transition = { parentNode: Node; childLetter: Letter; childNode: Node };
 
-export class NodeTreeBuilder {
+export default class NodeTreeBuilder {
   static execute(sortedWords: ReadonlyArray<string>): C.FrozenNode {
     const generator = this.nodeGenerator();
     const rootNode = generator.next().value;

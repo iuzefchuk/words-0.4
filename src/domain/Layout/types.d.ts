@@ -1,5 +1,5 @@
 import { Axis } from '@/domain/enums.ts';
-import { Layout as LayoutClass } from '@/domain/Layout/_index.ts';
+import LayoutClass from '@/domain/Layout/_index.ts';
 
 declare global {
   type Layout = LayoutClass;

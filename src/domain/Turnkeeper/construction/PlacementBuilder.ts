@@ -1,4 +1,4 @@
-export class PlacementBuilder {
+export default class PlacementBuilder {
   constructor(
     private readonly layout: Layout,
     private readonly turnkeeper: Turnkeeper,

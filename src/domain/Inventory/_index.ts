@@ -2,7 +2,7 @@ import { shuffleArrayWithFisherYates } from '@/shared/helpers.js';
 import { Player, Letter } from '@/domain/enums.js';
 import { LETTER_DISTRIBUTION, LETTER_POINTS } from '@/domain/Inventory/constants.js';
 
-export class Inventory {
+export default class Inventory {
   static readonly tilesPerRack = 7;
 
   private constructor(

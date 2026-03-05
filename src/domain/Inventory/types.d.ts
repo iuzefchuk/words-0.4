@@ -1,5 +1,5 @@
 import { Letter } from '@/domain/enums.ts';
-import { Inventory as InventoryClass } from '@/domain/Inventory/_index.ts';
+import InventoryClass from '@/domain/Inventory/_index.ts';
 
 declare global {
   type Inventory = InventoryClass;

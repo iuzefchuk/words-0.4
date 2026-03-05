@@ -1,11 +1,11 @@
-import { Dictionary } from '@/domain/Dictionary/_index.js';
 import { Player, Bonus, Letter } from '@/domain/enums.js';
-import { Inventory } from '@/domain/Inventory/_index.js';
-import { Layout } from '@/domain/Layout/_index.js';
-import { Turnkeeper } from '@/domain/Turnkeeper/_index.js';
-import { TurnGenerator } from '@/domain/Turnkeeper/engines/TurnGenerator.js';
+import Dictionary from '@/domain/Dictionary/_index.js';
+import Inventory from '@/domain/Inventory/_index.js';
+import Layout from '@/domain/Layout/_index.js';
+import Turnkeeper from '@/domain/Turnkeeper/_index.js';
+import TurnGenerator from '@/domain/Turnkeeper/TurnGenerator.js';
 
-export class GameDomain {
+export default class GameDomain {
   private static readonly layout = Layout.create();
   private static readonly dictionary = Dictionary.create();
   private isMutable: boolean = true;

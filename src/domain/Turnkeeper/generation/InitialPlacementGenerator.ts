@@ -1,10 +1,10 @@
 import type { Computation as C } from '@/domain/Turnkeeper/types.js';
 import { Player, Axis, Letter } from '@/domain/enums.js';
-import { AnchorLettersComputer } from '@/domain/Turnkeeper/computation/AnchorLettersComputer.js';
-import { AnchorCellFinder } from '@/domain/Turnkeeper/search/AnchorCellFinder.js';
-import { PlacementGenerator } from '@/domain/Turnkeeper/generation/PlacementGenerator.js';
+import AnchorLettersComputer from '@/domain/Turnkeeper/computation/AnchorLettersComputer.js';
+import AnchorCellFinder from '@/domain/Turnkeeper/search/AnchorCellFinder.js';
+import PlacementGenerator from '@/domain/Turnkeeper/generation/PlacementGenerator.js';
 
-export class InitialPlacementGenerator {
+export default class InitialPlacementGenerator {
   constructor(
     private readonly layout: Layout,
     private readonly dictionary: Dictionary,
