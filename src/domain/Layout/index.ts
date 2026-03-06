@@ -4,7 +4,10 @@ import { CellIndex, AnchorCoordinates } from '@/domain/Layout/types/shared.ts';
 
 export default class Layout {
   private static readonly cellsPerAxis = 15;
-  private static readonly _cells: ReadonlyArray<CellIndex> = Array.from({ length: Layout.cellsPerAxis ** 2 });
+  private static readonly _cells: ReadonlyArray<CellIndex> = Array.from(
+    { length: Layout.cellsPerAxis ** 2 },
+    (_, i) => i,
+  );
   private static readonly bonusCellMap: ReadonlyMap<CellIndex, Bonus> = new Map(
     Object.values(Bonus).flatMap(bonus => BONUS_CELL_INDEXES[bonus].map(cellIndex => [cellIndex, bonus] as const)),
   );

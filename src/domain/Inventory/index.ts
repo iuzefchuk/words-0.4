@@ -10,17 +10,21 @@ export default class Inventory {
     private unusedBag: Array<Tile>,
     private racks: Map<Player, Rack>,
     private discardedBag: Array<Tile>,
+    private readonly tileIndex: Map<TileId, Tile>,
   ) {
     this.initializeRacks();
   }
 
   static create({ players }: { players: Array<Player> }): Inventory {
     const unusedBag = shuffleArrayWithFisherYates(
-      Object.values(Letter).flatMap(type => Array(LETTER_DISTRIBUTION[type]).fill(type)),
+      Object.values(Letter).flatMap(type =>
+        Array.from({ length: LETTER_DISTRIBUTION[type] }, () => Tile.create({ letter: type })),
+      ),
     );
     const racks = new Map(players.map(player => [player, Rack.create({ maxLimit: this.tilesPerRack })]));
     const discardedBag: Array<Tile> = [];
-    return new Inventory(unusedBag, racks, discardedBag);
+    const tileIndex = new Map<TileId, Tile>(unusedBag.map(tile => [tile.id, tile]));
+    return new Inventory(unusedBag, racks, discardedBag, tileIndex);
   }
 
   get unusedTilesCount(): number {
@@ -61,7 +65,7 @@ export default class Inventory {
     this.getRackFor(player).shuffle();
   }
 
-  private initializeRacks() {
+  private initializeRacks(): void {
     this.racks.forEach(rack => this.replenishRack(rack));
   }
 
@@ -81,14 +85,9 @@ export default class Inventory {
   }
 
   private findTileById(tileId: TileId): Tile {
-    const resultInBags = [...this.unusedBag, ...this.discardedBag].find(tile => tile.id === tileId);
-    if (resultInBags) return resultInBags;
-    for (const player of Object.values(Player)) {
-      const rack = this.getRackFor(player);
-      const resultInRack = rack.findTileById(tileId);
-      if (resultInRack) return resultInRack;
-    }
-    throw new Error(`Can't find tile ${tileId}`);
+    const tile = this.tileIndex.get(tileId);
+    if (!tile) throw new Error(`Can't find tile ${tileId}`);
+    return tile;
   }
 }
 

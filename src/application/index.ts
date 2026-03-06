@@ -65,7 +65,7 @@ export default class Game {
     return this.gameDomain.findCellByTile(tile);
   }
 
-  isTileConnected(tile: GameTile) {
+  isTileConnected(tile: GameTile): boolean {
     return this.gameDomain.isTileConnected(tile);
   }
 

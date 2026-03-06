@@ -65,7 +65,7 @@ export const useStoreInventory = defineStore('inventory', () => {
   function handleClickLayoutCell(cell: GameCell): void {
     if (!selectedTile.value) return;
     const tile = storeGame.findTileConnectedToCell(cell);
-    if (tile !== null) return;
+    if (tile) return;
     if (selectedTileIsConnected.value) {
       storeGame.disconnectTileFromCell(selectedTile.value);
       storeGame.connectTileToCell({ tile: selectedTile.value, cell });

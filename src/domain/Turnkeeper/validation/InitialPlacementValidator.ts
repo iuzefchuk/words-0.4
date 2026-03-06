@@ -79,9 +79,10 @@ export default class InitialPlacementValidator {
     const cells = ctx.initialPlacement.map(placement => placement.cell);
     if (cells.length === 0) return this.failComputer(Errors.InvalidCellPlacement);
     const anchorCells = new AnchorCellFinder(layout, turnkeeper).execute();
-    const someCellsAreAnchor = cells.filter(item => anchorCells.has(item));
-    if (!someCellsAreAnchor) return this.failComputer(Errors.NoCellsUsableAsFirst);
-    return this.passComputer(ctx, { sequences: { cell: cells, tile: tiles } });
+    const someCellsAreAnchor = cells.some(cell => anchorCells.has(cell));
+    return someCellsAreAnchor
+      ? this.passComputer(ctx, { sequences: { cell: cells, tile: tiles } })
+      : this.failComputer(Errors.NoCellsUsableAsFirst);
   }
 
   private static computePlacements(ctx: SequencesContext): PipelineResult<PlacementsContext> {

@@ -7,6 +7,7 @@ import NodeTreeBuilder from '@/domain/Dictionary/construction/NodeTreeBuilder.js
 export default class Dictionary {
   private constructor(
     private readonly nodeTree: FrozenNode,
+    private readonly nodeIndex: ReadonlyMap<NodeId, FrozenNode>,
     public readonly allLetters: ReadonlySet<Letter>,
   ) {}
 
@@ -20,15 +21,17 @@ export default class Dictionary {
 
   static create(): Dictionary {
     const nodeTree = NodeTreeBuilder.execute(SORTED_WORDS);
+    const nodeIndex = new Map<NodeId, FrozenNode>();
     const allLetters = new Set<Letter>();
-    this.populateLetterSetFromNode(allLetters, nodeTree);
-    return new Dictionary(nodeTree, allLetters);
+    this.traverseNode(nodeIndex, allLetters, nodeTree);
+    return new Dictionary(nodeTree, nodeIndex, allLetters);
   }
 
-  private static populateLetterSetFromNode(set: Set<Letter>, node: FrozenNode): void {
+  private static traverseNode(nodeIndex: Map<NodeId, FrozenNode>, allLetters: Set<Letter>, node: FrozenNode): void {
+    nodeIndex.set(node.id, node);
     for (const [childLetter, childNode] of node.children) {
-      if (!set.has(childLetter)) set.add(childLetter);
-      this.populateLetterSetFromNode(set, childNode);
+      if (!allLetters.has(childLetter)) allLetters.add(childLetter);
+      this.traverseNode(nodeIndex, allLetters, childNode);
     }
   }
 
@@ -73,14 +76,8 @@ export default class Dictionary {
   }
 
   private findNodeById(nodeId: NodeId): FrozenNode {
-    const search = (node: FrozenNode): FrozenNode => {
-      if (node.id === nodeId) return node;
-      for (const childNode of node.children.values()) {
-        const found = search(childNode);
-        if (found) return found;
-      }
-      throw new Error('Node not found');
-    };
-    return search(this.rootNode);
+    const node = this.nodeIndex.get(nodeId);
+    if (!node) throw new Error(`Node not found: ${nodeId}`);
+    return node;
   }
 }

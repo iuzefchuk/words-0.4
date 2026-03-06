@@ -136,18 +136,19 @@ export default class GameDomain {
 
   saveTurn(): void {
     this.checkMutability();
-    this.turnkeeper.saveCurrentTurn();
-    const { currentTurnTileSequence } = this.turnkeeper;
+    const { currentPlayer, currentTurnTileSequence } = this.turnkeeper;
     if (!currentTurnTileSequence) throw new Error('Current turn must be computed before save');
-    this.removeTiles({ player: this.turnkeeper.currentPlayer, tiles: currentTurnTileSequence });
-    this.inventory.replenishTilesFor(this.turnkeeper.currentPlayer);
+    this.turnkeeper.saveCurrentTurn();
+    this.removeTiles({ player: currentPlayer, tiles: currentTurnTileSequence });
+    this.inventory.replenishTilesFor(currentPlayer);
     this.turnkeeper.startTurnForNextPlayer();
   }
 
   passTurn(): void {
     this.checkMutability();
+    const { currentPlayer } = this.turnkeeper;
     this.turnkeeper.passCurrentTurn();
-    this.inventory.replenishTilesFor(this.turnkeeper.currentPlayer);
+    this.inventory.replenishTilesFor(currentPlayer);
     this.turnkeeper.startTurnForNextPlayer();
   }
 

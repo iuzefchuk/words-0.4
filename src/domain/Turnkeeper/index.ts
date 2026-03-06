@@ -12,12 +12,12 @@ export default class Turnkeeper {
   private static readonly finalMoves = [PlayerMove.Won, PlayerMove.Tied];
 
   private constructor(
-    private readonly history: TurnHistory,
+    private readonly history: History,
     private lastMoves: Map<Player, PlayerMove>,
   ) {}
 
   static create({ players }: { players: Array<Player> }): Turnkeeper {
-    const history = TurnHistory.create();
+    const history = History.create();
     const lastMoves = new Map(players.map(player => [player, PlayerMove.StartedGame]));
     const manager = new Turnkeeper(history, lastMoves);
     manager.startTurnForNextPlayer();
@@ -72,12 +72,12 @@ export default class Turnkeeper {
 
   connectTileToCell({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
     this.checkMutability();
-    this.history.currentTurn.connectTileToCell({ cell, tile });
+    this.history.connectTileToCell({ cell, tile });
   }
 
   disconnectTileFromCell({ tile }: { tile: TileId }): void {
     this.checkMutability();
-    this.history.currentTurn.disconnectTileFromCell({ tile });
+    this.history.disconnectTileFromCell({ tile });
   }
 
   validateCurrentTurn(context: GameContext): void {
@@ -87,20 +87,18 @@ export default class Turnkeeper {
 
   resetCurrentTurn(): void {
     this.checkMutability();
-    this.history.currentTurn.reset();
+    this.history.resetCurrentTurn();
   }
 
   saveCurrentTurn(): void {
     this.checkMutability();
     if (!this.currentTurnIsSavable) throw new Error('Turn is not saveable');
     this.logPlayerLastMove(this.history.currentPlayer, PlayerMove.PlayedBySave);
-    this.startTurnForNextPlayer();
   }
 
   passCurrentTurn(): void {
     this.checkMutability();
     this.logPlayerLastMove(this.history.currentPlayer, PlayerMove.PlayedByPass);
-    this.startTurnForNextPlayer();
   }
 
   resignCurrentTurn(): void {
@@ -125,14 +123,17 @@ export default class Turnkeeper {
   }
 }
 
-class TurnHistory {
+class History {
   private static readonly startingPlayer: Player = Player.User;
 
-  private constructor(private turns: Array<Turn>) {}
+  private constructor(
+    private turns: Array<Turn>,
+    private readonly cellToTile: Map<CellIndex, TileId>,
+    private readonly tileToCell: Map<TileId, CellIndex>,
+  ) {}
 
-  static create(): TurnHistory {
-    const turns: Array<Turn> = [];
-    return new TurnHistory(turns);
+  static create(): History {
+    return new History([], new Map(), new Map());
   }
 
   get isEmpty(): boolean {
@@ -142,7 +143,7 @@ class TurnHistory {
     return this.currentTurn.player;
   }
   get nextPlayer(): Player {
-    if (this.turns.length === 0) return TurnHistory.startingPlayer;
+    if (this.turns.length === 0) return History.startingPlayer;
     return this.currentPlayer === Player.User ? Player.Opponent : Player.User;
   }
   get currentTurn(): Turn {
@@ -157,36 +158,46 @@ class TurnHistory {
     return this.currentTurn.tileSequence;
   }
   get previousTurnTileSequence(): ReadonlyArray<TileId> | undefined {
-    return this.previousTurn?.tileSequence;
-  }
-  private get previousTurn(): Turn | undefined {
-    return this.turns.at(-2) ?? undefined;
+    return this.turns.at(-2)?.tileSequence;
   }
 
   getScoreFor(player: Player): number {
-    return this.getTurnsFor(player).reduce((sum, t) => sum + (t.score ?? 0), 0);
+    return this.turns.filter(t => t.player === player).reduce((sum, t) => sum + (t.score ?? 0), 0);
   }
 
   findTileByCell(cell: CellIndex): TileId | undefined {
-    for (const turn of this.turns) {
-      const tile = turn.getConnectedTile(cell);
-      if (tile) return tile;
-    }
+    return this.cellToTile.get(cell);
   }
 
   findCellByTile(tile: TileId): CellIndex | undefined {
-    for (const turn of this.turns) {
-      const cell = turn.getConnectedCell(tile);
-      if (cell) return cell;
+    return this.tileToCell.get(tile);
+  }
+
+  connectTileToCell({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
+    this.currentTurn.connectTileToCell({ cell, tile });
+    this.cellToTile.set(cell, tile);
+    this.tileToCell.set(tile, cell);
+  }
+
+  disconnectTileFromCell({ tile }: { tile: TileId }): void {
+    const cell = this.tileToCell.get(tile);
+    this.currentTurn.disconnectTileFromCell({ tile });
+    if (cell !== undefined) {
+      this.cellToTile.delete(cell);
+      this.tileToCell.delete(tile);
     }
+  }
+
+  resetCurrentTurn(): void {
+    for (const { cell, tile } of this.currentTurn.links) {
+      this.cellToTile.delete(cell);
+      this.tileToCell.delete(tile);
+    }
+    this.currentTurn.reset();
   }
 
   createNewTurnFor(player: Player): void {
     this.turns.push(Turn.create({ player }));
-  }
-
-  private getTurnsFor(player: Player): Array<Turn> {
-    return this.turns.filter(t => t.player === player);
   }
 }
 
@@ -220,6 +231,9 @@ class Turn {
   }
   get isValid(): boolean {
     return this.validationResult.type === ValidationResultType.Valid;
+  }
+  get links(): ReadonlyArray<{ cell: CellIndex; tile: TileId }> {
+    return this.initialPlacement;
   }
 
   validate(context: GameContext): void {
