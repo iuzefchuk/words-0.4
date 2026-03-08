@@ -12,9 +12,8 @@ const directive: ObjectDirective<ClickOutsideHtmlElement, BindingValue> = {
   beforeMount(el, binding) {
     const { callback } = binding.value || {};
     el._clickOutside = (event: Event): void => {
-      event.stopPropagation();
       const target = event.target as Node;
-      if (!el.isEqualNode(target) && !el.contains(target)) callback();
+      if (el !== target && !el.contains(target)) callback();
     };
     window.requestAnimationFrame(() => {
       document.addEventListener('click', el._clickOutside);

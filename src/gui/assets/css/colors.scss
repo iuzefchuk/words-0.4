@@ -35,9 +35,7 @@ $colors: (
 
 @mixin setColors($is-wide-gamut: false) {
   @each $color, $value in $colors {
-    $final: if(
-      sass($is-wide-gamut): getWideGamutColor($value) ; else: $value,
-    );
+    $final: if($is-wide-gamut, getWideGamutColor($value), $value);
     --color-#{$color}: #{$final};
   }
 }

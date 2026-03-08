@@ -126,13 +126,15 @@ export default class InitialPlacementValidator {
 
   private static computeScore(ctx: WordsContext): PipelineResult<ScoreContext> {
     const { layout, inventory } = ctx.gameContext;
+    const newCells = new Set(ctx.initialPlacement.map(link => link.cell));
     let totalScore = 0;
     for (const placement of ctx.placements) {
       let placementScore = 0;
       let placementMultiplier = 1;
       for (const { cell, tile } of placement) {
-        placementScore += inventory.getTilePoints(tile) * layout.getLetterMultiplier(cell);
-        placementMultiplier *= layout.getWordMultiplier(cell);
+        const tileIsNew = newCells.has(cell);
+        placementScore += inventory.getTilePoints(tile) * (tileIsNew ? layout.getLetterMultiplier(cell) : 1);
+        placementMultiplier *= tileIsNew ? layout.getWordMultiplier(cell) : 1;
       }
       totalScore += placementScore * placementMultiplier;
     }

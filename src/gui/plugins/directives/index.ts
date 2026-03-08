@@ -1,6 +1,6 @@
 import { App } from 'vue';
-import animateNumber from './animateNumber.js';
-import clickOutside from './clickOutside.js';
+import animateNumber from './animateNumber.ts';
+import clickOutside from './clickOutside.ts';
 
 export default {
   install(app: App) {
