@@ -31,7 +31,7 @@ export default class InitialPlacementGenerator {
     const cachedComputer = new InitialPlacementGenerator.CachedAnchorLettersComputer(computer);
     for (const cell of anchorCells) {
       for (const axis of Object.values(Axis)) {
-        const coords: AnchorCoordinates = { axis, index: cell };
+        const coords: AnchorCoordinates = { axis, cellIndex: cell };
         const generator = new PlacementGenerator(this.context, cachedComputer);
         for (const placement of generator.execute({ playerTileCollection, coords })) yield placement;
       }
@@ -47,10 +47,10 @@ export default class InitialPlacementGenerator {
 
     find(coords: AnchorCoordinates): ReadonlySet<Letter> {
       const axisCache = this.cache.get(coords.axis)!;
-      const cachedResult = axisCache.get(coords.index);
+      const cachedResult = axisCache.get(coords.cellIndex);
       if (cachedResult) return cachedResult;
       const newResult = this.computer.execute(coords);
-      axisCache.set(coords.index, newResult);
+      axisCache.set(coords.cellIndex, newResult);
       return newResult;
     }
   };

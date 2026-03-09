@@ -6,7 +6,7 @@ import { TileId } from '@/domain/Inventory/types/shared.ts';
 import { CellIndex } from '@/domain/Layout/types/shared.ts';
 import { Placement } from '@/domain/Turnkeeper/types/shared.ts';
 import { Link } from '@/domain/Turnkeeper/types/local/index.ts';
-import { ValidationResult, UnvalidatedResult } from '@/domain/Turnkeeper/types/local/validation.ts';
+import { Result as ValidationResult, UnvalidatedResult } from '@/domain/Turnkeeper/types/local/validation.ts';
 
 export default class Turnkeeper {
   private static readonly finalMoves = [PlayerMove.Won, PlayerMove.Tied];

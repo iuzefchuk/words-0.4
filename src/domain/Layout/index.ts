@@ -66,10 +66,13 @@ export default class Layout {
     return result;
   }
 
-  getAxisCells({ axis, index }: AnchorCoordinates): ReadonlyArray<CellIndex> {
-    this.validateCellIndex(index);
+  getAxisCells(coords: AnchorCoordinates): ReadonlyArray<CellIndex> {
+    const { axis, cellIndex } = coords;
+    this.validateCellIndex(cellIndex);
     return Array.from({ length: Layout.cellsPerAxis }, (_, i) =>
-      axis === Axis.X ? index - this.getColumnIndex(index) + i : this.getColumnIndex(index) + i * Layout.cellsPerAxis,
+      axis === Axis.X
+        ? cellIndex - this.getColumnIndex(cellIndex) + i
+        : this.getColumnIndex(cellIndex) + i * Layout.cellsPerAxis,
     );
   }
 

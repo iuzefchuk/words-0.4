@@ -3,118 +3,124 @@ import PlacementBuilder from '@/domain/Turnkeeper/construction/PlacementBuilder.
 import AnchorCellFinder from '@/domain/Turnkeeper/search/AnchorCellFinder.ts';
 import { ValidationErrors, ValidationStatus } from '@/domain/Turnkeeper/enums.ts';
 import {
-  FinalResult,
-  StepResult,
+  ComputedValue,
   PendingResult,
   InvalidResult,
-  PipelineContext,
-  InitialContext,
-  SequencesContext,
-  PlacementsContext,
-  WordsContext,
-  ScoreContext,
+  ValidResult,
+  PipelineInput,
+  PipelineState,
+  PipelineThroughput,
+  PipelineOutput,
+  SequencesOutput,
+  PlacementsOutput,
+  WordsOutput,
+  ScoreOutput,
 } from '@/domain/Turnkeeper/types/local/validation.ts';
 import { Placement } from '@/domain/Turnkeeper/types/shared.ts';
 
 export default class InitialPlacementValidator {
-  static execute(ctx: InitialContext): FinalResult {
-    return this.Pipeline.initialize(ctx)
-      .addStep(this.computeSequences)
-      .addStep(this.computePlacements)
-      .addStep(this.computeWords)
-      .addStep(this.computeScore)
-      .getFinalResult();
+  static execute(input: PipelineInput): PipelineOutput {
+    return this.Pipeline.start(input)
+      .continue(state => this.computeAndValidateSequences(state))
+      .continue(state => this.computeAndValidatePlacements(state))
+      .continue(state => this.computeAndValidateWords(state))
+      .continue(state => this.computeAndValidateScore(state))
+      .end();
   }
 
-  private static Pipeline = class Pipeline<Context extends PipelineContext> {
-    private constructor(private result: StepResult<Context>) {}
+  private static Pipeline = class Pipeline<State extends PipelineInput> {
+    private constructor(private throughput: PipelineThroughput<State>) {}
 
-    static initialize(ctx: InitialContext): Pipeline<InitialContext> {
-      return new Pipeline({ status: ValidationStatus.Pending, ctx });
+    static start(input: PipelineInput): Pipeline<PipelineInput> {
+      return new Pipeline({ status: ValidationStatus.Pending, state: input });
     }
 
-    static continue<CurrentContext extends PipelineContext, NextContext extends object>(
-      ctx: CurrentContext,
-      newCtxValues: NextContext,
-    ): PendingResult<CurrentContext & NextContext> {
-      Object.assign(ctx, newCtxValues);
-      return { status: ValidationStatus.Pending, ctx: ctx as CurrentContext & NextContext };
+    static pass<State extends PipelineInput, NewValue extends ComputedValue>(
+      state: State,
+      newValue: NewValue,
+    ): PendingResult<State & NewValue> {
+      Object.assign(state, newValue);
+      return { status: ValidationStatus.Pending, state: state as State & NewValue };
     }
 
     static fail(error: ValidationErrors): InvalidResult {
       return { status: ValidationStatus.Invalid, error };
     }
 
-    addStep<NextContext extends Context>(computer: (ctx: Context) => StepResult<NextContext>): Pipeline<NextContext> {
-      if (this.result.status === ValidationStatus.Pending) {
-        this.result = computer(this.result.ctx) as StepResult<NextContext>;
-      }
-      return this as unknown as Pipeline<NextContext>;
+    continue<NextState extends State>(callback: (state: State) => PipelineThroughput<NextState>): Pipeline<NextState> {
+      if (this.throughput.status === ValidationStatus.Pending) this.throughput = callback(this.throughput.state);
+      return this as unknown as Pipeline<NextState>;
     }
 
-    getFinalResult(): FinalResult {
-      if (this.result.status === ValidationStatus.Invalid) return this.result;
-      const { sequences, placements, words, score } = this.result.ctx as ScoreContext;
+    end(): PipelineOutput {
+      if (this.throughput.status === ValidationStatus.Invalid) return this.throughput;
+      const { sequences, placements, words, score } = this.throughput.state as unknown as PipelineState<ScoreOutput>;
       if (score === undefined) throw new Error('Can`t show end result when pipeline wasn`t completed');
-      return { status: ValidationStatus.Valid, sequences, placements, words, score };
+      return { status: ValidationStatus.Valid, sequences, placements, words, score } as ValidResult;
     }
   };
 
-  private static computeSequences(ctx: InitialContext): StepResult<SequencesContext> {
-    const { layout, turnkeeper } = ctx.gameContext;
-    const tiles = ctx.initialPlacement.map(placement => placement.tile);
+  private static computeAndValidateSequences(state: PipelineInput): PipelineThroughput<PipelineState<SequencesOutput>> {
+    const { layout, turnkeeper } = state.context;
+    const tiles = state.initialPlacement.map(placement => placement.tile);
     if (tiles.length === 0) return this.Pipeline.fail(ValidationErrors.InvalidTilePlacement);
-    const cells = ctx.initialPlacement.map(placement => placement.cell);
+    const cells = state.initialPlacement.map(placement => placement.cell);
     if (cells.length === 0) return this.Pipeline.fail(ValidationErrors.InvalidCellPlacement);
     const anchorCells = new AnchorCellFinder(layout, turnkeeper).execute();
     const someCellsAreAnchor = cells.some(cell => anchorCells.has(cell));
     return someCellsAreAnchor
-      ? this.Pipeline.continue(ctx, { sequences: { cell: cells, tile: tiles } })
+      ? this.Pipeline.pass(state, { sequences: { cell: cells, tile: tiles } })
       : this.Pipeline.fail(ValidationErrors.NoCellsUsableAsFirst);
   }
 
-  private static computePlacements(ctx: SequencesContext): StepResult<PlacementsContext> {
-    const { layout, turnkeeper } = ctx.gameContext;
-    const tileSequence = ctx.sequences.tile;
+  private static computeAndValidatePlacements(
+    state: PipelineState<SequencesOutput>,
+  ): PipelineThroughput<PipelineState<PlacementsOutput>> {
+    const { layout, turnkeeper } = state.context;
+    const tileSequence = state.sequences.tile;
     const axisCalculator = new AxisCalculator(layout, turnkeeper);
-    const primaryAxis = axisCalculator.execute(ctx.sequences.cell);
+    const primaryAxis = axisCalculator.execute(state.sequences.cell);
     const placementBuilder = new PlacementBuilder(layout, turnkeeper);
     const primaryPlacement = placementBuilder.execute({
-      coords: { axis: primaryAxis, index: ctx.sequences.cell[0] },
+      coords: { axis: primaryAxis, cellIndex: state.sequences.cell[0] },
       tileSequence,
     });
     const isPlacementUsable = (placement: Placement): boolean => placement.length > 1;
     if (!isPlacementUsable(primaryPlacement)) return this.Pipeline.fail(ValidationErrors.InvalidTilePlacement);
     const placements: Array<Placement> = [primaryPlacement];
-    for (const cell of ctx.sequences.cell) {
+    for (const cell of state.sequences.cell) {
       const placement = placementBuilder.execute({
-        coords: { axis: layout.getOppositeAxis(primaryAxis), index: cell },
+        coords: { axis: layout.getOppositeAxis(primaryAxis), cellIndex: cell },
         tileSequence,
       });
       if (isPlacementUsable(placement)) placements.push(placement);
     }
-    return this.Pipeline.continue(ctx, { placements });
+    return this.Pipeline.pass(state, { placements });
   }
 
-  private static computeWords(ctx: PlacementsContext): StepResult<WordsContext> {
-    const { dictionary, inventory } = ctx.gameContext;
+  private static computeAndValidateWords(
+    state: PipelineState<PlacementsOutput>,
+  ): PipelineThroughput<PipelineState<WordsOutput>> {
+    const { dictionary, inventory } = state.context;
     const words: Array<string> = [];
-    for (let i = 0; i < ctx.placements.length; i++) {
-      const placement = ctx.placements[i];
+    for (let i = 0; i < state.placements.length; i++) {
+      const placement = state.placements[i];
       let word = '';
       for (let j = 0; j < placement.length; j++) word += inventory.getTileLetter(placement[j].tile);
       words[i] = word;
     }
     return dictionary.hasWords(words)
-      ? this.Pipeline.continue(ctx, { words })
+      ? this.Pipeline.pass(state, { words })
       : this.Pipeline.fail(ValidationErrors.WordNotInDictionary);
   }
 
-  private static computeScore(ctx: WordsContext): StepResult<ScoreContext> {
-    const { layout, inventory } = ctx.gameContext;
-    const newCells = new Set(ctx.sequences.cell);
+  private static computeAndValidateScore(
+    state: PipelineState<WordsOutput>,
+  ): PipelineThroughput<PipelineState<ScoreOutput>> {
+    const { layout, inventory } = state.context;
+    const newCells = new Set(state.sequences.cell);
     let totalScore = 0;
-    for (const placement of ctx.placements) {
+    for (const placement of state.placements) {
       let placementScore = 0;
       let placementMultiplier = 1;
       for (const { cell, tile } of placement) {
@@ -124,6 +130,6 @@ export default class InitialPlacementValidator {
       }
       totalScore += placementScore * placementMultiplier;
     }
-    return this.Pipeline.continue(ctx, { score: totalScore });
+    return this.Pipeline.pass(state, { score: totalScore });
   }
 }

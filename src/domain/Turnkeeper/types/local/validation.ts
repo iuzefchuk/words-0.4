@@ -4,23 +4,25 @@ import { TileId } from '@/domain/Inventory/types/shared.ts';
 import { CellIndex } from '@/domain/Layout/types/shared.ts';
 import { Placement } from '@/domain/Turnkeeper/types/shared.ts';
 
-export type UnvalidatedResult = { status: ValidationStatus.Unvalidated };
-export type PendingResult<Context> = { status: ValidationStatus.Pending; ctx: Context };
-export type InvalidResult = { status: ValidationStatus.Invalid; error: ValidationErrors };
-export type ValidResult = { status: ValidationStatus.Valid } & Computeds;
-export type StepResult<Context> = PendingResult<Context> | InvalidResult;
-export type FinalResult = InvalidResult | ValidResult;
-export type ValidationResult = UnvalidatedResult | InvalidResult | ValidResult;
-
-export type InitialContext = { initialPlacement: Placement; gameContext: GameContext };
-export type SequencesContext = InitialContext & ComputedSequences;
-export type PlacementsContext = SequencesContext & ComputedPlacements;
-export type WordsContext = PlacementsContext & ComputedWords;
-export type ScoreContext = WordsContext & ComputedScore;
-export type PipelineContext = InitialContext | SequencesContext | PlacementsContext | WordsContext | ScoreContext;
-
 type ComputedSequences = { sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> } };
 type ComputedPlacements = { placements: ReadonlyArray<Placement> };
 type ComputedWords = { words: ReadonlyArray<string> };
 type ComputedScore = { score: number };
 type Computeds = ComputedSequences & ComputedPlacements & ComputedWords & ComputedScore;
+export type ComputedValue = ComputedSequences | ComputedPlacements | ComputedWords | ComputedScore;
+
+export type UnvalidatedResult = { status: ValidationStatus.Unvalidated };
+export type PendingResult<State> = { status: ValidationStatus.Pending; state: State };
+export type InvalidResult = { status: ValidationStatus.Invalid; error: ValidationErrors };
+export type ValidResult = { status: ValidationStatus.Valid } & Computeds;
+export type Result = UnvalidatedResult | InvalidResult | ValidResult;
+
+export type PipelineInput = { initialPlacement: Placement; context: GameContext };
+export type PipelineThroughput<State> = PendingResult<State> | InvalidResult;
+export type PipelineState<Output extends ComputedValue> = PipelineInput & Output;
+export type PipelineOutput = InvalidResult | ValidResult;
+
+export type SequencesOutput = ComputedSequences;
+export type PlacementsOutput = SequencesOutput & ComputedPlacements;
+export type WordsOutput = PlacementsOutput & ComputedWords;
+export type ScoreOutput = WordsOutput & ComputedScore;

@@ -33,7 +33,7 @@ export enum GenerationDirection {
   Right = 1,
 }
 
-export enum GenerationTransitionResultType {
+export enum GenerationTransitionStatus {
   Continue = 'Continue',
   Success = 'Success',
   Fail = 'Fail',
