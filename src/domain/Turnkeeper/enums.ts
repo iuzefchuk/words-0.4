@@ -20,20 +20,21 @@ export enum ValidationErrors {
   WordNotInDictionary = 'error_tile_4',
 }
 
-export enum GenerationPhase {
-  Explore = 'Explore',
-  ValidateBounds = 'ValidateBounds',
-  CalculateTarget = 'CalculateTarget',
-  ResolveTarget = 'ResolveTarget',
-  UndoResolveTarget = 'UndoResolveTarget',
-}
-
 export enum GenerationDirection {
   Left = -1,
   Right = 1,
 }
 
-export enum GenerationTransitionStatus {
+export enum GenerationTask {
+  EvaluateTraversal = 'EvaluateTraversal',
+  ValidateTraversal = 'ValidateTraversal',
+  CalculateCandidate = 'CalculateCandidate',
+  ResolveCandidate = 'ResolveCandidate',
+  DoResolve = 'DoResolve',
+  UndoResolve = 'UndoResolve',
+}
+
+export enum GenerationTaskResult {
   Continue = 'Continue',
   Success = 'Success',
   Fail = 'Fail',

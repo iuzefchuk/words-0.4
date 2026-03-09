@@ -2,90 +2,33 @@ import { GameContext } from '@/domain/types.ts';
 import Dictionary from '@/domain/Dictionary/index.ts';
 import Inventory from '@/domain/Inventory/index.ts';
 import { TileCollection, TileId } from '@/domain/Inventory/types/shared.ts';
-import { Layout, AnchorCoordinates, CellIndex } from '@/domain/Layout/types/shared.ts';
+import { Layout, AnchorCoordinates } from '@/domain/Layout/types/shared.ts';
 import TurnValidator from '@/domain/Turnkeeper/TurnValidator.ts';
-// import {
-//   GenerationDirection,
-//   GenerationPhase,
-//   GenerationTransitionStatus,
-//   ValidationStatus,
-// } from '@/domain/Turnkeeper/enums.ts';
-// import {
-//   Computeds,
-//   Context,
-//   Frame,
-//   TransitionResult,
-//   ExploreFrame,
-//   ValidateBoundsFrame,
-//   CalculateTargetFrame,
-//   ResolveTargetFrame,
-//   UndoResolveTargetFrame,
-//   ContinueTransitionResult,
-//   SucceedTransitionResult,
-//   FailTransitionResult,
-// } from '@/domain/Turnkeeper/types/local/generation.ts';
+import {
+  GenerationDirection,
+  GenerationTask,
+  GenerationTaskResult,
+  ValidationStatus,
+} from '@/domain/Turnkeeper/enums.ts';
+import {
+  State,
+  Computeds,
+  Traversal,
+  Candidate,
+  EvaluateTask,
+  ValidateTask,
+  CalculateTask,
+  ResolveTask,
+  DoResolveTask,
+  UndoResolveTask,
+  Task,
+  ContinueResult,
+  SuccessResult,
+  FailResult,
+  TaskResult,
+} from '@/domain/Turnkeeper/types/local/generation.ts';
 import { CachedAnchorLettersComputer } from '@/domain/Turnkeeper/types/local/index.ts';
 import { Turnkeeper, Placement } from '@/domain/Turnkeeper/types/shared.ts';
-//del
-import { Entry } from '@/domain/Dictionary/types/shared.ts';
-import { Axis, Letter } from '@/domain/enums.ts';
-import { ValidationStatus } from '../enums.ts';
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-enum GenerationPhase {
-  Explore = 'Explore',
-  ValidateBounds = 'ValidateBounds',
-  CalculateTarget = 'CalculateTarget',
-  ResolveTarget = 'ResolveTarget',
-  DoResolveTarget = 'DoResolveTarget',
-  UndoResolveTarget = 'UndoResolveTarget',
-}
-
-enum GenerationDirection {
-  Left = -1,
-  Right = 1,
-}
-
-enum GenerationTransitionStatus {
-  Continue = 'Continue',
-  Success = 'Success',
-  Fail = 'Fail',
-}
-
-export type Computeds = { axisCells: ReadonlyArray<CellIndex>; oppositeAxis: Axis };
-export type Context = { tiles: TileCollection; placement: Placement };
-export type Cursor = { index: number; direction: GenerationDirection; entry: Entry };
-export type Target = { index: number; meta: { cell: CellIndex; tile?: TileId } };
-export type ResolveResults = { letter: Letter; tile: TileId };
-
-export type ExploreFrame = { phase: GenerationPhase.Explore; cursor: Cursor };
-export type ValidateBoundsFrame = { phase: GenerationPhase.ValidateBounds; cursor: Cursor };
-export type CalculateTargetFrame = { phase: GenerationPhase.CalculateTarget; cursor: Cursor };
-export type ResolveTargetFrame = { phase: GenerationPhase.ResolveTarget; cursor: Cursor; target: Target };
-export type DoResolveTargetFrame = {
-  phase: GenerationPhase.DoResolveTarget;
-  cursor: Cursor;
-  target: Target;
-  results: ResolveResults;
-};
-export type UndoResolveTargetFrame = {
-  phase: GenerationPhase.UndoResolveTarget;
-  cursor: Cursor;
-  results: ResolveResults;
-};
-export type Frame =
-  | ExploreFrame
-  | ValidateBoundsFrame
-  | CalculateTargetFrame
-  | ResolveTargetFrame
-  | DoResolveTargetFrame
-  | UndoResolveTargetFrame;
-
-export type ContinueTransitionResult = { type: GenerationTransitionStatus.Continue; frames: Array<Frame> };
-export type SucceedTransitionResult = { type: GenerationTransitionStatus.Success; placement: Placement };
-export type FailTransitionResult = { type: GenerationTransitionStatus.Fail };
-export type TransitionResult = ContinueTransitionResult | SucceedTransitionResult | FailTransitionResult;
 
 export default class PlacementGenerator {
   constructor(
@@ -113,163 +56,176 @@ export default class PlacementGenerator {
     playerTileCollection: TileCollection;
     coords: AnchorCoordinates;
   }): Generator<Placement> {
-    const context: Context = { tiles: new Map(playerTileCollection), placement: [] };
+    const state: State = { tiles: new Map(playerTileCollection), placement: [] };
     const computeds: Computeds = {
       axisCells: this.layout.getAxisCells(coords),
       oppositeAxis: this.layout.getOppositeAxis(coords.axis),
     };
     const startIndex = computeds.axisCells.indexOf(coords.cellIndex);
     if (startIndex === -1) throw new Error('Start index has to exist');
-    const pendingTasks: Array<Frame> = [
+    const taskStack: Array<Task> = [
       {
-        phase: GenerationPhase.Explore,
-        cursor: { index: startIndex, direction: GenerationDirection.Left, entry: this.dictionary.firstEntry },
+        type: GenerationTask.EvaluateTraversal,
+        traversal: { index: startIndex, direction: GenerationDirection.Left, entry: this.dictionary.firstEntry },
       },
     ];
-    while (pendingTasks.length > 0) {
-      const task = pendingTasks.pop()!; // todo rename rest
-      const result = this.transition(task, context, computeds);
-      if (result.type === GenerationTransitionStatus.Success) {
+    while (taskStack.length > 0) {
+      const task = taskStack.pop()!;
+      const result = this.perform(task, state, computeds);
+      if (result.type === GenerationTaskResult.Success) {
         yield [...result.placement];
         continue;
       }
-      if (result.type === GenerationTransitionStatus.Continue) {
-        for (let i = result.frames.length - 1; i >= 0; i--) pendingTasks.push(result.frames[i]);
+      if (result.type === GenerationTaskResult.Continue) {
+        for (let i = result.tasks.length - 1; i >= 0; i--) taskStack.push(result.tasks[i]);
       }
     }
   }
 
-  private transition(frame: Frame, context: Context, computeds: Computeds): TransitionResult {
-    switch (frame.phase) {
-      case GenerationPhase.Explore:
-        return this.explore(frame, context);
-      case GenerationPhase.ValidateBounds:
-        return this.validateBounds(frame);
-      case GenerationPhase.CalculateTarget:
-        return this.calculateTarget(frame, computeds);
-      case GenerationPhase.ResolveTarget:
-        return this.resolveTarget(frame, context, computeds);
-      case GenerationPhase.DoResolveTarget:
-        return this.doResolveTarget(frame, context);
-      case GenerationPhase.UndoResolveTarget:
-        return this.undoResolveTarget(frame, context);
+  private perform(task: Task, state: State, computeds: Computeds): TaskResult {
+    switch (task.type) {
+      case GenerationTask.EvaluateTraversal:
+        return this.evaluateTraversal(task, state);
+      case GenerationTask.ValidateTraversal:
+        return this.validateTraversal(task);
+      case GenerationTask.CalculateCandidate:
+        return this.calculateCandidate(task, computeds);
+      case GenerationTask.ResolveCandidate:
+        return this.resolveCandidate(task, state, computeds);
+      case GenerationTask.DoResolve:
+        return this.doResolve(task, state);
+      case GenerationTask.UndoResolve:
+        return this.undoResolve(task, state);
     }
   }
 
-  private explore(frame: ExploreFrame, context: Context): TransitionResult {
-    const { cursor } = frame;
-    const placementIsUsable = context.placement.length > 0 && this.dictionary.isEntryPlayable(cursor.entry);
-    if (cursor.direction === GenerationDirection.Right && placementIsUsable) {
-      const ValidationResult = new TurnValidator(this.context).execute(context.placement);
-      if (ValidationResult.status === ValidationStatus.Valid) {
-        return PlacementGenerator.succeedTransition(context.placement);
+  private static continue(tasks: Array<Task>): ContinueResult {
+    return { type: GenerationTaskResult.Continue, tasks };
+  }
+
+  private static pass(placement: Placement): SuccessResult {
+    return { type: GenerationTaskResult.Success, placement };
+  }
+
+  private static fail(): FailResult {
+    return { type: GenerationTaskResult.Fail };
+  }
+
+  private evaluateTraversal(task: EvaluateTask, state: State): TaskResult {
+    const { traversal } = task;
+    const placementIsUsable = state.placement.length > 0 && this.dictionary.isEntryPlayable(traversal.entry);
+    if (traversal.direction === GenerationDirection.Right && placementIsUsable) {
+      const validationResult = new TurnValidator(this.context).execute(state.placement);
+      if (validationResult.status === ValidationStatus.Valid) {
+        return PlacementGenerator.pass(state.placement);
       }
     }
-    const frames: Array<Frame> = [];
-    if (cursor.direction === GenerationDirection.Left) {
-      frames.push({
-        phase: GenerationPhase.Explore,
-        cursor: { ...cursor, direction: GenerationDirection.Right },
+    const tasks: Array<Task> = [];
+    if (traversal.direction === GenerationDirection.Left) {
+      tasks.push({
+        type: GenerationTask.EvaluateTraversal,
+        traversal: { ...traversal, direction: GenerationDirection.Right },
       });
     }
-    frames.push({ ...frame, phase: GenerationPhase.ValidateBounds });
-    return PlacementGenerator.continueTransition(frames);
+    tasks.push({ ...task, type: GenerationTask.ValidateTraversal });
+    return PlacementGenerator.continue(tasks);
   }
 
-  private validateBounds(frame: ValidateBoundsFrame): TransitionResult {
-    const { cursor } = frame;
+  private validateTraversal(task: ValidateTask): TaskResult {
+    const { traversal } = task;
     const isEdge =
-      cursor.direction === GenerationDirection.Left
-        ? this.layout.isCellPositionOnLeftEdge(cursor.index)
-        : this.layout.isCellPositionOnRightEdge(cursor.index);
-    if (isEdge) return PlacementGenerator.failTransition();
-    return PlacementGenerator.continueTransition([{ ...frame, phase: GenerationPhase.CalculateTarget }]);
+      traversal.direction === GenerationDirection.Left
+        ? this.layout.isCellPositionOnLeftEdge(traversal.index)
+        : this.layout.isCellPositionOnRightEdge(traversal.index);
+    if (isEdge) return PlacementGenerator.fail();
+    return PlacementGenerator.continue([{ ...task, type: GenerationTask.CalculateCandidate }]);
   }
 
-  private calculateTarget(frame: CalculateTargetFrame, computeds: Computeds): TransitionResult {
-    const { cursor } = frame;
-    const targetIndex = cursor.index + cursor.direction;
+  private calculateCandidate(task: CalculateTask, computeds: Computeds): TaskResult {
+    const { traversal } = task;
+    const targetIndex = traversal.index + traversal.direction;
     const cell = computeds.axisCells[targetIndex];
     const tile = this.turnkeeper.findTileByCell(cell);
-    return PlacementGenerator.continueTransition([
+    return PlacementGenerator.continue([
       {
-        ...frame,
-        phase: GenerationPhase.ResolveTarget,
-        target: { index: targetIndex, meta: { cell, tile } },
+        ...task,
+        type: GenerationTask.ResolveCandidate,
+        candidate: { index: targetIndex, cell, connectedTile: tile },
       },
     ]);
   }
 
-  private resolveTarget(frame: ResolveTargetFrame, context: Context, computeds: Computeds): TransitionResult {
-    const { cursor, target } = frame;
-    if (target.meta.tile) {
-      const letter = this.inventory.getTileLetter(target.meta.tile);
-      const nextEntry = this.dictionary.findEntryForWord({ word: letter, startEntry: cursor.entry });
-      if (!nextEntry) return PlacementGenerator.failTransition();
-      return PlacementGenerator.continueTransition([
-        { phase: GenerationPhase.Explore, cursor: { ...cursor, index: target.index, entry: nextEntry } },
-      ]);
-    }
-    const generator = this.dictionary.createNextEntryGenerator({ startEntry: cursor.entry });
+  private resolveCandidate(task: ResolveTask, state: State, computeds: Computeds): TaskResult {
+    const { traversal, candidate } = task;
+    if (candidate.connectedTile) return this.followConnectedTile(traversal, candidate, candidate.connectedTile);
+    return this.branchOverLetters(traversal, candidate, state, computeds);
+  }
+
+  private followConnectedTile(traversal: Traversal, candidate: Candidate, connectedTile: TileId): TaskResult {
+    const letter = this.inventory.getTileLetter(connectedTile);
+    const nextEntry = this.dictionary.findEntryForWord({ word: letter, startEntry: traversal.entry });
+    if (!nextEntry) return PlacementGenerator.fail();
+    return PlacementGenerator.continue([
+      {
+        type: GenerationTask.EvaluateTraversal,
+        traversal: { ...traversal, index: candidate.index, entry: nextEntry },
+      },
+    ]);
+  }
+
+  private branchOverLetters(
+    traversal: Traversal,
+    candidate: Candidate,
+    state: State,
+    computeds: Computeds,
+  ): TaskResult {
+    const generator = this.dictionary.createNextEntryGenerator({ startEntry: traversal.entry });
     const anchorLetters = this.cachedAnchorLettersComputer.find({
       axis: computeds.oppositeAxis,
-      cellIndex: target.meta.cell,
+      cellIndex: candidate.cell,
     });
-    const branchFrames: Array<Frame> = [];
+    const branchTasks: Array<Task> = [];
     for (const [possibleNextLetter, entryWithPossibleNextLetter] of generator) {
-      const letterTiles = context.tiles.get(possibleNextLetter);
+      const letterTiles = state.tiles.get(possibleNextLetter);
       if (!anchorLetters.has(possibleNextLetter) || !letterTiles || letterTiles.length === 0) {
         continue;
       }
       const tile = letterTiles[letterTiles.length - 1];
-      branchFrames.push(
+      branchTasks.push(
         {
-          phase: GenerationPhase.DoResolveTarget,
-          cursor,
-          target,
-          results: { letter: possibleNextLetter, tile },
+          type: GenerationTask.DoResolve,
+          traversal,
+          candidate,
+          resolution: { letter: possibleNextLetter, tile },
         },
         {
-          phase: GenerationPhase.Explore,
-          cursor: { ...cursor, index: target.index, entry: entryWithPossibleNextLetter },
+          type: GenerationTask.EvaluateTraversal,
+          traversal: { ...traversal, index: candidate.index, entry: entryWithPossibleNextLetter },
         },
         {
-          phase: GenerationPhase.UndoResolveTarget,
-          cursor,
-          results: { letter: possibleNextLetter, tile },
+          type: GenerationTask.UndoResolve,
+          traversal,
+          resolution: { letter: possibleNextLetter, tile },
         },
       );
     }
-
-    if (branchFrames.length === 0) return PlacementGenerator.failTransition();
-    return PlacementGenerator.continueTransition(branchFrames);
+    if (branchTasks.length === 0) return PlacementGenerator.fail();
+    return PlacementGenerator.continue(branchTasks);
   }
 
-  private doResolveTarget(frame: DoResolveTargetFrame, context: Context): TransitionResult {
-    const { target, results } = frame;
-    const letterTiles = context.tiles.get(results.letter)!;
-    const tileIndex = letterTiles.indexOf(results.tile);
+  private doResolve(task: DoResolveTask, state: State): TaskResult {
+    const { candidate, resolution } = task;
+    const letterTiles = state.tiles.get(resolution.letter)!;
+    const tileIndex = letterTiles.indexOf(resolution.tile);
     if (tileIndex !== -1) letterTiles.splice(tileIndex, 1);
-    context.placement.push({ cell: target.meta.cell, tile: results.tile });
-    return PlacementGenerator.continueTransition([]);
+    state.placement.push({ cell: candidate.cell, tile: resolution.tile });
+    return PlacementGenerator.continue([]);
   }
 
-  private undoResolveTarget(frame: UndoResolveTargetFrame, context: Context): TransitionResult {
-    const { letter, tile } = frame.results;
-    context.tiles.get(letter)!.push(tile);
-    context.placement.pop();
-    return PlacementGenerator.continueTransition([]);
-  }
-
-  private static continueTransition(frames: Array<Frame>): ContinueTransitionResult {
-    return { type: GenerationTransitionStatus.Continue, frames };
-  }
-
-  private static succeedTransition(placement: Placement): SucceedTransitionResult {
-    return { type: GenerationTransitionStatus.Success, placement };
-  }
-
-  private static failTransition(): FailTransitionResult {
-    return { type: GenerationTransitionStatus.Fail };
+  private undoResolve(task: UndoResolveTask, state: State): TaskResult {
+    const { letter, tile } = task.resolution;
+    state.tiles.get(letter)!.push(tile);
+    state.placement.pop();
+    return PlacementGenerator.continue([]);
   }
 }

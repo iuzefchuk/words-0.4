@@ -1,39 +1,31 @@
 import { Axis, Letter } from '@/domain/enums.ts';
-import {
-  GenerationDirection as Direction,
-  GenerationPhase as Phase,
-  GenerationTransitionResultType as TransitionResultType,
-} from '@/domain/Turnkeeper/enums.ts';
+import { GenerationDirection, GenerationTask, GenerationTaskResult } from '@/domain/Turnkeeper/enums.ts';
 import { Placement } from '@/domain/Turnkeeper/types/shared.ts';
 import { Entry } from '@/domain/Dictionary/types/shared.ts';
 import { TileCollection, TileId } from '@/domain/Inventory/types/shared.ts';
 import { CellIndex } from '@/domain/Layout/types/shared.ts';
 
-// TODO revisit naming
-
+export type State = { tiles: TileCollection; placement: Placement };
 export type Computeds = { axisCells: ReadonlyArray<CellIndex>; oppositeAxis: Axis };
-export type Context = { tiles: TileCollection; placement: Placement };
-export type Cursor = { index: number; direction: Direction; entry: Entry };
-export type Target = { index: number; meta: { cell: CellIndex; tile?: TileId } };
-export type ResolveResults = { letter: Letter; tile: TileId };
 
-export type ExploreFrame = { phase: Phase.Explore; cursor: Cursor };
-export type ValidateBoundsFrame = { phase: Phase.ValidateBounds; cursor: Cursor };
-export type CalculateTargetFrame = { phase: Phase.CalculateTarget; cursor: Cursor };
-export type ResolveTargetFrame = { phase: Phase.ResolveTarget; cursor: Cursor; target: Target };
-export type UndoResolveTargetFrame = {
-  phase: Phase.UndoResolveTarget;
-  cursor: Cursor;
-  results: ResolveResults;
+export type Traversal = { index: number; direction: GenerationDirection; entry: Entry };
+export type Candidate = { index: number; cell: CellIndex; connectedTile?: TileId };
+export type Resolution = { letter: Letter; tile: TileId };
+
+export type EvaluateTask = { type: GenerationTask.EvaluateTraversal; traversal: Traversal };
+export type ValidateTask = { type: GenerationTask.ValidateTraversal; traversal: Traversal };
+export type CalculateTask = { type: GenerationTask.CalculateCandidate; traversal: Traversal };
+export type ResolveTask = { type: GenerationTask.ResolveCandidate; traversal: Traversal; candidate: Candidate };
+export type DoResolveTask = {
+  type: GenerationTask.DoResolve;
+  traversal: Traversal;
+  candidate: Candidate;
+  resolution: Resolution;
 };
-export type Frame =
-  | ExploreFrame
-  | ValidateBoundsFrame
-  | CalculateTargetFrame
-  | ResolveTargetFrame
-  | UndoResolveTargetFrame;
+export type UndoResolveTask = { type: GenerationTask.UndoResolve; traversal: Traversal; resolution: Resolution };
+export type Task = EvaluateTask | ValidateTask | CalculateTask | ResolveTask | DoResolveTask | UndoResolveTask;
 
-export type ContinueTransitionResult = { type: TransitionResultType.Continue; frames: Array<Frame> };
-export type SucceedTransitionResult = { type: TransitionResultType.Success; placement: Placement };
-export type FailTransitionResult = { type: TransitionResultType.Fail };
-export type TransitionResult = ContinueTransitionResult | SucceedTransitionResult | FailTransitionResult;
+export type ContinueResult = { type: GenerationTaskResult.Continue; tasks: Array<Task> };
+export type SuccessResult = { type: GenerationTaskResult.Success; placement: Placement };
+export type FailResult = { type: GenerationTaskResult.Fail };
+export type TaskResult = ContinueResult | SuccessResult | FailResult;
