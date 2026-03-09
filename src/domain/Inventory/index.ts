@@ -4,7 +4,7 @@ import { LETTER_DISTRIBUTION, LETTER_POINTS } from '@/domain/Inventory/constants
 import { TileId, TileCollection } from '@/domain/Inventory/types/shared.ts';
 
 export default class Inventory {
-  static readonly tilesPerRack = 7;
+  private static readonly tilesPerRack = 7;
 
   private constructor(
     private unusedBag: Array<Tile>,
@@ -136,10 +136,6 @@ class Rack {
     if (index === -1) throw new Error('Tile absent');
     const [removedTile] = this.tiles.splice(index, 1);
     return removedTile;
-  }
-
-  findTileById(tileId: TileId): Tile | undefined {
-    return this.tiles.find(tile => tile.id === tileId);
   }
 
   private validateRackLimit({ newTilesLength }: { newTilesLength: number }): void {

@@ -240,14 +240,6 @@ class Turn {
     this.validationResult = new TurnValidator(context).execute(this.initialPlacement);
   }
 
-  getConnectedTile(cell: CellIndex): TileId | undefined {
-    return this.initialPlacement.find(link => link.cell === cell)?.tile;
-  }
-
-  getConnectedCell(tile: TileId): CellIndex | undefined {
-    return this.initialPlacement.find(link => link.tile === tile)?.cell;
-  }
-
   connectTileToCell({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
     this.validateCellAndTileAbsence(cell, tile);
     this.initialPlacement.push({ cell, tile } as Link);

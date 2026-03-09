@@ -126,7 +126,7 @@ export default class InitialPlacementValidator {
 
   private static computeScore(ctx: WordsContext): PipelineResult<ScoreContext> {
     const { layout, inventory } = ctx.gameContext;
-    const newCells = new Set(ctx.initialPlacement.map(link => link.cell));
+    const newCells = new Set(ctx.sequences.cell);
     let totalScore = 0;
     for (const placement of ctx.placements) {
       let placementScore = 0;

@@ -26,7 +26,7 @@ export default class GameDomain {
     return new GameDomain(inventory, turnkeeper);
   }
 
-  get context(): GameContext {
+  private get context(): GameContext {
     return {
       layout: GameDomain.layout,
       dictionary: GameDomain.dictionary,

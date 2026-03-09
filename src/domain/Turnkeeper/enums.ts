@@ -24,7 +24,6 @@ export enum GenerationPhase {
   ValidateBounds = 'ValidateBounds',
   CalculateTarget = 'CalculateTarget',
   ResolveTarget = 'ResolveTarget',
-  IterativelyResolveTarget = 'IterativelyResolveTarget',
   UndoResolveTarget = 'UndoResolveTarget',
 }
 

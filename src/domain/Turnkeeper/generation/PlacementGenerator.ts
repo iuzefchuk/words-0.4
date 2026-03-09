@@ -179,7 +179,7 @@ export default class PlacementGenerator {
     return PlacementGenerator.continueTransition([]);
   }
 
-  private static continueTransition(frames: Array<Frame>): PassTransitionResult {
+  private static continueTransition(frames: Array<Frame>): ContinueTransitionResult {
     return { type: TransitionResultType.Continue, frames };
   }
 
