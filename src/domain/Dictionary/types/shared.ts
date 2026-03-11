@@ -1,9 +1,8 @@
 import { Letter } from '@/domain/enums.ts';
 import DictionaryClass from '@/domain/Dictionary/index.ts';
-import { NodeId } from '@/domain/Dictionary/types/local.ts';
 
 export type Dictionary = DictionaryClass;
 
-export type Entry = NodeId;
+export type NodeId = number;
 
-export type NextEntryGenerator = Generator<[Letter, Entry]>;
+export type NextNodeGenerator = Generator<[Letter, NodeId]>;

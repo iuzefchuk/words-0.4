@@ -23,21 +23,21 @@ export default class AnchorLettersComputer {
 
   execute(coords: AnchorCoordinates): ReadonlySet<Letter> {
     const axisCells = this.layout.getAxisCells(coords);
-    const cellAxisPosition = axisCells.indexOf(coords.index);
+    const cellAxisPosition = axisCells.indexOf(coords.cellIndex);
     const prefix = this.getPrefix(axisCells, cellAxisPosition);
     const suffix = this.getSuffix(axisCells, cellAxisPosition);
     if (!prefix && !suffix) return this.dictionary.allLetters;
-    const prefixEntry = prefix ? this.dictionary.findEntryForWord({ word: prefix }) : this.dictionary.firstEntry;
-    if (!prefixEntry) return new Set();
+    const prefixNode = prefix ? this.dictionary.getNode({ word: prefix }) : this.dictionary.firstNode;
+    if (!prefixNode) return new Set();
     const anchorLetters = new Set<Letter>();
-    const generator = this.dictionary.createNextEntryGenerator({ startEntry: prefixEntry });
-    for (const [possibleNextLetter, entryWithPossibleNextLetter] of generator) {
+    const generator = this.dictionary.createNextNodeGenerator({ startNode: prefixNode });
+    for (const [possibleNextLetter, nodeWithPossibleNextLetter] of generator) {
       if (!suffix) {
         anchorLetters.add(possibleNextLetter);
         continue;
       }
-      const suffixEntry = this.dictionary.findEntryForWord({ word: suffix, startEntry: entryWithPossibleNextLetter });
-      if (suffixEntry && this.dictionary.isEntryPlayable(suffixEntry)) anchorLetters.add(possibleNextLetter);
+      const suffixNode = this.dictionary.getNode({ word: suffix, startNode: nodeWithPossibleNextLetter });
+      if (suffixNode && this.dictionary.isNodePlayable(suffixNode)) anchorLetters.add(possibleNextLetter);
     }
     return anchorLetters;
   }

@@ -1,6 +1,5 @@
 import { Letter } from '@/domain/enums.ts';
-
-export type NodeId = number;
+import { NodeId } from '@/domain/Dictionary/types/shared.ts';
 
 export type FrozenNode = {
   readonly id: NodeId;

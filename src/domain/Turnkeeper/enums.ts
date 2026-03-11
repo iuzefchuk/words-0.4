@@ -30,11 +30,11 @@ export enum GenerationTask {
   ValidateTraversal = 'ValidateTraversal',
   CalculateCandidate = 'CalculateCandidate',
   ResolveCandidate = 'ResolveCandidate',
-  DoResolve = 'DoResolve',
-  UndoResolve = 'UndoResolve',
+  ApplyChanges = 'ApplyChanges',
+  ReverseChanges = 'ReverseChanges',
 }
 
-export enum TaskCommandType {
+export enum GenerationCommandType {
   ContinueExecute = 'ContinueExecute',
   StopExecute = 'StopExecute',
   ReturnResult = 'ReturnResult',

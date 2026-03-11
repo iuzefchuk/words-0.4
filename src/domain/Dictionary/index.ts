@@ -1,7 +1,7 @@
 import { Letter } from '@/domain/enums.ts';
 import { SORTED_WORDS } from '@/domain/Dictionary/constants.ts';
-import { FrozenNode, NodeId } from '@/domain/Dictionary/types/local.ts';
-import { Entry, NextEntryGenerator } from '@/domain/Dictionary/types/shared.ts';
+import { FrozenNode } from '@/domain/Dictionary/types/local.ts';
+import { NodeId, NextNodeGenerator } from '@/domain/Dictionary/types/shared.ts';
 import NodeTreeBuilder from '@/domain/Dictionary/construction/NodeTreeBuilder.ts';
 
 export default class Dictionary {
@@ -15,7 +15,7 @@ export default class Dictionary {
     return this.nodeTree;
   }
 
-  get firstEntry(): Entry {
+  get firstNode(): NodeId {
     return this.rootNode.id;
   }
 
@@ -44,23 +44,23 @@ export default class Dictionary {
     return node?.isFinal || false;
   }
 
-  findEntryForWord({ word, startEntry = this.firstEntry }: { word: string; startEntry?: Entry }): Entry | null {
-    const node = this.findNodeForWord(word, startEntry);
+  getNode({ word, startNode = this.firstNode }: { word: string; startNode?: NodeId }): NodeId | null {
+    const node = this.findNodeForWord(word, startNode);
     return node ? node.id : null;
   }
 
-  createNextEntryGenerator({ startEntry }: { startEntry: Entry }): NextEntryGenerator {
-    const parentNode = this.findNodeById(startEntry);
-    function* generator(node: FrozenNode): Generator<[Letter, Entry]> {
+  createNextNodeGenerator({ startNode }: { startNode: NodeId }): NextNodeGenerator {
+    const parentNode = this.findNodeById(startNode);
+    function* generator(node: FrozenNode): Generator<[Letter, NodeId]> {
       for (const [possibleNextLetter, nodeForPossibleNextLetter] of node.children) {
-        yield [possibleNextLetter, nodeForPossibleNextLetter.id] as [Letter, Entry];
+        yield [possibleNextLetter, nodeForPossibleNextLetter.id] as [Letter, NodeId];
       }
     }
     return generator(parentNode);
   }
 
-  isEntryPlayable(entry: Entry): boolean {
-    return this.findNodeById(entry).isFinal;
+  isNodePlayable(node: NodeId): boolean {
+    return this.findNodeById(node).isFinal;
   }
 
   private findNodeForWord(word: string, parentNodeId: NodeId = this.rootNode.id): FrozenNode | null {

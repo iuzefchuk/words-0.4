@@ -1,6 +1,6 @@
 import { Letter } from '@/domain/enums.ts';
-import { NodeId, FrozenNode } from '@/domain/Dictionary/types/local.ts';
-import { Entry } from '@/domain/Dictionary/types/shared.ts';
+import { FrozenNode } from '@/domain/Dictionary/types/local.ts';
+import { NodeId } from '@/domain/Dictionary/types/shared.ts';
 
 type Node = { id: NodeId; isFinal: boolean; children: Map<Letter, Node> };
 type NodeGenerator = Generator<Node, Node>;
@@ -37,7 +37,7 @@ export default class NodeTreeBuilder {
   }
 
   private static *nodeGenerator(): NodeGenerator {
-    let id: Entry = 0;
+    let id: NodeId = 0;
     while (true) yield { id: id++, isFinal: false, children: new Map() };
   }
 
