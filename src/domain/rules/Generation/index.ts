@@ -1,10 +1,9 @@
 import { Player, Axis } from '@/domain/enums.ts';
-import { GameContext } from '@/domain/types.ts';
-import { AnchorCoordinates } from '@/domain/Layout/types.ts';
-import { Placement } from '@/domain/Turnkeeper/types.ts';
-import AnchorLettersComputer from '@/domain/Turnkeeper/AnchorLettersComputer.ts';
-import AnchorCellFinder from '@/domain/Turnkeeper/AnchorCellFinder.ts';
-import PlacementGenerator from '@/domain/Turnkeeper/PlacementGenerator.ts';
+import { GameContext, Placement } from '@/domain/types.ts';
+import { AnchorCoordinates } from '@/domain/foundation/Layout/types.ts';
+import AnchorLettersComputer from '@/domain/rules/Generation/AnchorLettersComputer.ts';
+import AnchorCellFinder from '@/domain/rules/AnchorCellFinder.ts';
+import PlacementGenerator from '@/domain/rules/Generation/PlacementGenerator.ts';
 
 export default class TurnGenerator {
   static *execute(context: GameContext, player: Player): Generator<Placement> {

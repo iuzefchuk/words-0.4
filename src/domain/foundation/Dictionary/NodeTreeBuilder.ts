@@ -1,5 +1,5 @@
 import { Letter } from '@/domain/enums.ts';
-import { Transition, Node, FrozenNode, NodeGenerator, NodeId } from '@/domain/Dictionary/types.ts';
+import { Transition, Node, FrozenNode, NodeGenerator, NodeId } from '@/domain/foundation/Dictionary/types.ts';
 
 export default class NodeTreeBuilder {
   private currentId: NodeId = 0;
@@ -20,7 +20,11 @@ export default class NodeTreeBuilder {
       if (finishedNode) this.freezeNode(finishedNode);
       for (let i = commonPrefixLength; i < word.length; i++) {
         const childNode = this.createNode();
-        const transition: Transition = { parentNode: generator.next().value, childLetter: word[i] as Letter, childNode };
+        const transition: Transition = {
+          parentNode: generator.next().value,
+          childLetter: word[i] as Letter,
+          childNode,
+        };
         generator.next(transition);
       }
       previousWord = word;

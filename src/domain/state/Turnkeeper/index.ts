@@ -1,10 +1,8 @@
-import { Player } from '@/domain/enums.ts';
-import { GameContext } from '@/domain/types.ts';
-import TurnValidator from '@/domain/Turnkeeper/TurnValidator.ts';
-import { PlayerAction, ValidationStatus } from '@/domain/Turnkeeper/enums.ts';
-import { TileId } from '@/domain/Inventory/types.ts';
-import { CellIndex } from '@/domain/Layout/types.ts';
-import { Placement, Link, ValidationResult, UnvalidatedResult } from '@/domain/Turnkeeper/types.ts';
+import { Player, ValidationStatus } from '@/domain/enums.ts';
+import { PlayerAction } from '@/domain/state/Turnkeeper/enums.ts';
+import { TileId } from '@/domain/state/Inventory/types.ts';
+import { CellIndex } from '@/domain/foundation/Layout/types.ts';
+import { Placement, Link, ValidationResult, UnvalidatedResult } from '@/domain/types.ts';
 
 export default class Turnkeeper {
   private static readonly finalActions = [PlayerAction.Won, PlayerAction.Tied];
@@ -41,6 +39,10 @@ export default class Turnkeeper {
 
   get currentTurnIsValid(): boolean {
     return this.history.currentTurn.isValid;
+  }
+
+  get currentTurnPlacement(): Placement {
+    return this.history.currentTurn.placement;
   }
 
   get previousTurnTileSequence(): ReadonlyArray<TileId> | undefined {
@@ -85,9 +87,9 @@ export default class Turnkeeper {
     this.history.removeTile({ tile });
   }
 
-  validateCurrentTurn(context: GameContext): void {
+  setCurrentTurnValidation(result: ValidationResult): void {
     this.ensureMutability();
-    this.history.currentTurn.validate(context);
+    this.history.currentTurn.setValidation(result);
   }
 
   resetCurrentTurn(): void {
@@ -250,12 +252,16 @@ class Turn {
     return this.validationResult.status === ValidationStatus.Valid;
   }
 
+  get placement(): Placement {
+    return this.initialPlacement;
+  }
+
   get links(): ReadonlyArray<{ cell: CellIndex; tile: TileId }> {
     return this.initialPlacement;
   }
 
-  validate(context: GameContext): void {
-    this.validationResult = TurnValidator.execute(context, this.initialPlacement);
+  setValidation(result: ValidationResult): void {
+    this.validationResult = result;
   }
 
   placeTile({ cell, tile }: { cell: CellIndex; tile: TileId }): void {

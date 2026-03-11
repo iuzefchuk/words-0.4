@@ -1,14 +1,11 @@
-import { GameContext } from '@/domain/types.ts';
-import AxisCalculator from '@/domain/Layout/AxisCalculator.ts';
-import PlacementBuilder from '@/domain/Turnkeeper/PlacementBuilder.ts';
-import AnchorCellFinder from '@/domain/Turnkeeper/AnchorCellFinder.ts';
-import { ValidationErrors, ValidationStatus } from '@/domain/Turnkeeper/enums.ts';
+import { GameContext, Placement, ComputedValue, ValidationResult, ValidResult, InvalidResult } from '@/domain/types.ts';
+import { ValidationErrors, ValidationStatus } from '@/domain/enums.ts';
+import AxisCalculator from '@/domain/rules/Validation/AxisCalculator.ts';
+import PlacementBuilder from '@/domain/rules/Validation/PlacementBuilder.ts';
+import AnchorCellFinder from '@/domain/rules/AnchorCellFinder.ts';
 import {
   ValidatorArguments,
-  ComputedValue,
   PendingResult,
-  InvalidResult,
-  ValidResult,
   PipelineInput,
   PipelineState,
   PipelineThroughput,
@@ -17,10 +14,8 @@ import {
   PlacementsOutput,
   WordsOutput,
   ScoreOutput,
-  Placement,
-  ValidationResult,
-} from '@/domain/Turnkeeper/types.ts';
-import { AnchorCoordinates } from '@/domain/Layout/types.ts';
+} from '@/domain/rules/Validation/types.ts';
+import { AnchorCoordinates } from '@/domain/foundation/Layout/types.ts';
 
 export default class TurnValidator {
   static execute(context: GameContext, initialPlacement: Placement): ValidationResult {

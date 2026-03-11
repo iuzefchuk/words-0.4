@@ -1,13 +1,13 @@
 import { Player, Bonus, Letter } from '@/domain/enums.ts';
-import { GameContext } from '@/domain/types.ts';
-import Dictionary from '@/domain/Dictionary/index.ts';
-import Inventory from '@/domain/Inventory/index.ts';
-import Layout from '@/domain/Layout/index.ts';
-import Turnkeeper from '@/domain/Turnkeeper/index.ts';
-import TurnGenerator from '@/domain/Turnkeeper/TurnGenerator.ts';
-import { TileId } from '@/domain/Inventory/types.ts';
-import { CellIndex } from '@/domain/Layout/types.ts';
-import { Placement } from '@/domain/Turnkeeper/types.ts';
+import { GameContext, Placement } from '@/domain/types.ts';
+import Dictionary from '@/domain/foundation/Dictionary/index.ts';
+import Inventory from '@/domain/state/Inventory/index.ts';
+import Layout from '@/domain/foundation/Layout/index.ts';
+import Turnkeeper from '@/domain/state/Turnkeeper/index.ts';
+import TurnValidator from '@/domain/rules/Validation/index.ts';
+import TurnGenerator from '@/domain/rules/Generation/index.ts';
+import { TileId } from '@/domain/state/Inventory/types.ts';
+import { CellIndex } from '@/domain/foundation/Layout/types.ts';
 
 export default class GameDomain {
   private static readonly layout = Layout.create();
@@ -126,7 +126,8 @@ export default class GameDomain {
 
   validateTurn(): void {
     this.ensureMutability();
-    this.turnkeeper.validateCurrentTurn(this.context);
+    const result = TurnValidator.execute(this.context, this.turnkeeper.currentTurnPlacement);
+    this.turnkeeper.setCurrentTurnValidation(result);
   }
 
   resetTurn(): void {

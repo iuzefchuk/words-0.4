@@ -1,5 +1,5 @@
 import { Axis } from '@/domain/enums.ts';
-import LayoutClass from '@/domain/Layout/index.ts';
+import LayoutClass from '@/domain/foundation/Layout/index.ts';
 
 export type Layout = LayoutClass;
 

@@ -1,9 +1,9 @@
 import { GameContext } from '@/domain/types.ts';
 import { Axis, Letter } from '@/domain/enums.ts';
-import { Dictionary } from '@/domain/Dictionary/types.ts';
-import { Inventory } from '@/domain/Inventory/types.ts';
-import { AnchorCoordinates, CellIndex, Layout } from '@/domain/Layout/types.ts';
-import { Turnkeeper } from '@/domain/Turnkeeper/types.ts';
+import { Dictionary } from '@/domain/foundation/Dictionary/types.ts';
+import { Inventory } from '@/domain/state/Inventory/types.ts';
+import { AnchorCoordinates, CellIndex, Layout } from '@/domain/foundation/Layout/types.ts';
+import { Turnkeeper } from '@/domain/state/Turnkeeper/types.ts';
 
 export default class AnchorLettersComputer {
   private cache = new Map<Axis, Map<CellIndex, ReadonlySet<Letter>>>(

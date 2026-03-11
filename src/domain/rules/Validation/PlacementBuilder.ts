@@ -1,7 +1,6 @@
-import { GameContext } from '@/domain/types.ts';
-import { TileId } from '@/domain/Inventory/types.ts';
-import { AnchorCoordinates } from '@/domain/Layout/types.ts';
-import { Placement } from '@/domain/Turnkeeper/types.ts';
+import { GameContext, Placement } from '@/domain/types.ts';
+import { TileId } from '@/domain/state/Inventory/types.ts';
+import { AnchorCoordinates } from '@/domain/foundation/Layout/types.ts';
 
 export default class PlacementBuilder {
   static execute(

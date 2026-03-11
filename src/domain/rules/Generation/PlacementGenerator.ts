@@ -1,15 +1,11 @@
-import { GameContext } from '@/domain/types.ts';
-import Dictionary from '@/domain/Dictionary/index.ts';
-import Inventory from '@/domain/Inventory/index.ts';
-import { TileCollection } from '@/domain/Inventory/types.ts';
-import { Layout } from '@/domain/Layout/types.ts';
-import TurnValidator from '@/domain/Turnkeeper/TurnValidator.ts';
-import {
-  GenerationDirection,
-  GenerationTask,
-  GenerationCommandType,
-  ValidationStatus,
-} from '@/domain/Turnkeeper/enums.ts';
+import { GameContext, Placement } from '@/domain/types.ts';
+import { ValidationStatus } from '@/domain/enums.ts';
+import Dictionary from '@/domain/foundation/Dictionary/index.ts';
+import Inventory from '@/domain/state/Inventory/index.ts';
+import { TileCollection } from '@/domain/state/Inventory/types.ts';
+import { Layout } from '@/domain/foundation/Layout/types.ts';
+import TurnValidator from '@/domain/rules/Validation/index.ts';
+import { GenerationDirection, GenerationTask, GenerationCommandType } from '@/domain/rules/Generation/enums.ts';
 import {
   GeneratorArguments,
   Traversal,
@@ -30,10 +26,9 @@ import {
   DispatcherState,
   DispatcherComputeds,
   GenerationResult,
-  Placement,
-  Turnkeeper,
-} from '@/domain/Turnkeeper/types.ts';
-import AnchorLettersComputer from '@/domain/Turnkeeper/AnchorLettersComputer.ts';
+} from '@/domain/rules/Generation/types.ts';
+import { Turnkeeper } from '@/domain/state/Turnkeeper/types.ts';
+import AnchorLettersComputer from '@/domain/rules/Generation/AnchorLettersComputer.ts';
 
 export default class PlacementGenerator {
   static *execute(args: GeneratorArguments): Generator<GenerationResult> {
