@@ -4,7 +4,7 @@ import { Board } from '@/domain/model/Board/types.ts';
 import Dictionary from '@/domain/reference/Dictionary/index.ts';
 import Inventory from '@/domain/model/Inventory/index.ts';
 import { TileCollection } from '@/domain/model/Inventory/types.ts';
-import TurnValidator from '@/domain/model/Turn/Validation/index.ts';
+import TurnValidator from '@/domain/services/Validation/index.ts';
 import { GenerationDirection, GenerationTask, GenerationCommandType } from '@/domain/services/Generation/enums.ts';
 import {
   GeneratorArguments,

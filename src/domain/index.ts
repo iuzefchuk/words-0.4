@@ -5,8 +5,9 @@ import Dictionary from '@/domain/reference/Dictionary/index.ts';
 import Layout from '@/domain/reference/Layout/index.ts';
 import Inventory from '@/domain/model/Inventory/index.ts';
 import Turnkeeper from '@/domain/model/Turn/index.ts';
-import TurnValidator from '@/domain/model/Turn/Validation/index.ts';
+import TurnValidator from '@/domain/services/Validation/index.ts';
 import TurnGenerator from '@/domain/services/Generation/index.ts';
+import TurnCompletion from '@/domain/services/TurnCompletion/index.ts';
 import { TileId } from '@/domain/model/Inventory/types.ts';
 import { CellIndex } from '@/domain/reference/Layout/types.ts';
 
@@ -140,11 +141,7 @@ export default class GameDomain {
 
   saveTurn(): void {
     this.ensureMutability();
-    const { currentPlayer, currentTurnTileSequence } = this.turnkeeper;
-    if (!currentTurnTileSequence) throw new Error('Current turn tile sequence does not exist');
-    this.turnkeeper.saveCurrentTurn();
-    this.discardTiles({ player: currentPlayer, tiles: currentTurnTileSequence });
-    this.inventory.replenishTilesFor(currentPlayer);
+    TurnCompletion.execute(this.context, this.turnkeeper.currentPlayer);
   }
 
   passTurn(): void {
@@ -165,10 +162,6 @@ export default class GameDomain {
 
   private finishGame(): void {
     this.isMutable = false;
-  }
-
-  private discardTiles({ player, tiles }: { player: Player; tiles: ReadonlyArray<TileId> }): void {
-    tiles.forEach((tile: TileId) => this.inventory.discardTile({ player, tileId: tile }));
   }
 
   private ensureMutability(): void {

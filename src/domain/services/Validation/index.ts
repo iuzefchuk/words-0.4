@@ -1,7 +1,7 @@
 import { GameContext, Placement, ComputedValue, ValidationResult, ValidResult, InvalidResult } from '@/domain/types.ts';
 import { ValidationErrors, ValidationStatus } from '@/domain/enums.ts';
-import AxisCalculator from '@/domain/model/Turn/Validation/AxisCalculator.ts';
-import PlacementBuilder from '@/domain/model/Turn/Validation/PlacementBuilder.ts';
+import AxisCalculator from '@/domain/services/Validation/AxisCalculator.ts';
+import PlacementBuilder from '@/domain/services/Validation/PlacementBuilder.ts';
 import {
   ValidatorArguments,
   PendingResult,
@@ -13,7 +13,7 @@ import {
   PlacementsOutput,
   WordsOutput,
   ScoreOutput,
-} from '@/domain/model/Turn/Validation/types.ts';
+} from '@/domain/services/Validation/types.ts';
 import { AnchorCoordinates } from '@/domain/reference/Layout/types.ts';
 
 export default class TurnValidator {
