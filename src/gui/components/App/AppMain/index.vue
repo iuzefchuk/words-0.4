@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import GameMainHeader from '@/gui/components/Game/GameMain/GameMainHeader.vue';
-import GameMainBoard from '@/gui/components/Game/GameMain/GameMainBoard/GameMainBoard.vue';
-import GameMainFooter from '@/gui/components/Game/GameMain/GameMainFooter/GameMainFooter.vue';
+import AppMainHeader from '@/gui/components/App/AppMain/AppMainHeader.vue';
+import AppMainGrid from '@/gui/components/App/AppMain/AppMainGrid/index.vue';
+import AppMainFooter from '@/gui/components/App/AppMain/AppMainFooter/index.vue';
 import { ref } from 'vue';
 const isBlurred = ref(false);
 </script>
@@ -9,11 +9,11 @@ const isBlurred = ref(false);
 <template>
   <main :class="{ main: true, 'main--blurred': isBlurred }">
     <Transition name="fade-down-up" appear>
-      <GameMainHeader />
+      <AppMainHeader />
     </Transition>
-    <GameMainBoard />
+    <AppMainGrid />
     <Transition name="fade-up-down" appear>
-      <GameMainFooter />
+      <AppMainFooter />
     </Transition>
   </main>
 </template>

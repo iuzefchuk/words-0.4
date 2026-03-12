@@ -6,11 +6,11 @@ const { unsavedTurnScore } = storeToRefs(storeGame);
 </script>
 
 <template>
-  <div v-if="unsavedTurnScore" class="score">{{ unsavedTurnScore }}</div>
+  <div v-if="unsavedTurnScore" class="tooltip">{{ unsavedTurnScore }}</div>
 </template>
 
 <style lang="scss" scoped>
-.score {
+.tooltip {
   position: absolute;
   inset: auto;
   bottom: -2px;

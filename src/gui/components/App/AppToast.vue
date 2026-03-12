@@ -9,7 +9,7 @@ const { removeMessage } = storeToast;
 <template>
   <Transition name="fade">
     <div v-if="messages.length > 0" class="toast">
-      <TransitionGroup class="toast__list game__width-content" tag="ul" name="fade-down" appear>
+      <TransitionGroup class="toast__list app__width-content" tag="ul" name="fade-down" appear>
         <li
           v-for="{ html, timestamp } in messages"
           :key="timestamp"

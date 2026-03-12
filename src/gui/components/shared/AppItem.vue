@@ -1,43 +1,42 @@
 <script lang="ts" setup>
 import { watch, ref, inject } from 'vue';
-import { getLetterSvgHtml } from '@/gui/mappings.ts';
 import { transitionDurationMsKey } from '@/gui/plugins/provides/index.ts';
 const transitionDurationMs = inject(transitionDurationMsKey);
-const props = defineProps({
-  letter: { type: String, required: true },
+const transitionIsDisabled = ref(false);
+defineProps({
+  svgHtml: { type: String, required: true },
   isInverted: { type: Boolean, default: false },
   isHighlighted: { type: Boolean, default: false },
   isElevated: { type: Boolean, default: false },
 });
-const transitionIsDisabled = ref(false);
-watch(
-  () => props.letter,
-  newValue => {
-    if (newValue) transitionIsDisabled.value = true; // TODO test
-    setTimeout(() => {
-      transitionIsDisabled.value = false;
-    }, transitionDurationMs);
-  },
-);
+// watch(
+//   () => props.letter,
+//   newValue => {
+//     if (newValue) transitionIsDisabled.value = true; // TODO test
+//     setTimeout(() => {
+//       transitionIsDisabled.value = false;
+//     }, transitionDurationMs);
+//   },
+// );
 // TODO test
 </script>
 
 <template>
   <svg
     :class="{
-      tile: true,
-      'tile--inverted': isInverted,
-      'tile--highlighted': isHighlighted,
-      'tile--elevated': isElevated,
-      'tile--transition-is-disabled': transitionIsDisabled,
+      item: true,
+      'item--inverted': isInverted,
+      'item--highlighted': isHighlighted,
+      'item--elevated': isElevated,
+      'item--transition-is-disabled': transitionIsDisabled,
     }"
     viewBox="0 0 21 21"
-    v-html="getLetterSvgHtml(letter)"
+    v-html="svgHtml"
   ></svg>
 </template>
 
 <style lang="scss">
-.tile {
+.item {
   cursor: pointer;
   fill: currentColor;
   aspect-ratio: 1 / 1;

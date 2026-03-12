@@ -1,30 +1,25 @@
 <script lang="ts" setup>
 import GameStore from '@/gui/stores/GameStore.ts';
-import InventoryStore from '@/gui/stores/InventoryStore.ts';
+import ItemsStore from '@/gui/stores/ItemsStore.ts';
 import { storeToRefs } from 'pinia';
 const storeGame = GameStore.getInstance();
-const storeInventory = InventoryStore.getInstance();
+const storeItems = ItemsStore.getInstance();
 const { tilesRemaining } = storeToRefs(storeGame);
-const { tiles } = storeToRefs(storeInventory);
+const { tiles } = storeToRefs(storeItems);
 </script>
 
 <template>
-  <ul class="game__width-content game__grid--footer">
+  <ul class="app__width-content app__grid--footer">
     <li class="inventory__count">
       <span v-animate-number="{ number: tilesRemaining }" class="inventory__count-item" />
       <span class="inventory__count-item">{{ t('game.unassigned_count') }}</span>
     </li>
-    <li
-      v-for="(tile, idx) in tiles"
-      :key="idx"
-      class="inventory__cell"
-      @click="storeInventory.handleClickRackCell(idx)"
-    >
+    <li v-for="(tile, idx) in tiles" :key="idx" class="inventory__cell" @click="storeItems.handleClickRackCell(idx)">
       <TileId
-        v-if="storeInventory.isTileVisible(tile)"
+        v-if="storeItems.isTileVisible(tile)"
         :tile="tile"
-        :is-inverted="storeInventory.isTileSelected(tile)"
-        @click.stop="storeInventory.handleClickRackTile(tile)"
+        :is-inverted="storeItems.isTileSelected(tile)"
+        @click.stop="storeItems.handleClickRackTile(tile)"
       />
     </li>
   </ul>

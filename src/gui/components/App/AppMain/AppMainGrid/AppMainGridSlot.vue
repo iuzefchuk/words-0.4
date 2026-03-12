@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import GameTile from '@/gui/components/Game/GameTile.vue';
+import AppItem from '@/gui/components/shared/AppItem.vue';
 import { GameCell } from '@/application/types.ts';
 import { PropType, computed } from 'vue';
 import { useStoreGame } from '@/gui/stores/GameStore.ts';
-import { useStoreInventory } from '@/gui/stores/InventoryStore.ts';
+import { useStoreInventory } from '@/gui/stores/ItemsStore.ts';
 import { getBonusName } from '@/gui/mappings.ts';
 
 // TODO
@@ -11,7 +11,7 @@ const props = defineProps({
   cell: { type: Object as PropType<GameCell>, required: true },
 });
 const storeGame = useStoreGame();
-const storeInventory = useStoreInventory();
+const storeItems = useStoreInventory();
 const bonus = computed(() => {
   return storeGame.getCellBonus(props.cell);
 });
@@ -29,7 +29,7 @@ const tileLetter = computed(() => {
 <template>
   <li
     :class="{ cell: true, 'cell--center': storeGame.isCellInCenterOfLayout(cell), 'cell--has-tile': tile }"
-    @click="storeInventory.handleClickBoardCell(cell)"
+    @click="storeItems.handleClickBoardCell(cell)"
   >
     <Transition name="fade" appear>
       <svg
@@ -50,14 +50,14 @@ const tileLetter = computed(() => {
       </svg>
     </Transition>
     <Transition name="fade" appear>
-      <GameTile
+      <AppItem
         v-if="tile && tileLetter"
         class="cell__tile"
         :letter="tileLetter"
-        :is-inverted="storeInventory.isTileSelected(tile)"
+        :is-inverted="storeItems.isTileSelected(tile)"
         :is-highlighted="storeGame.wasTileUsedInLastTurn(tile)"
-        :is-elevated="storeInventory.isTileInInventory(tile)"
-        @click.stop="storeInventory.handleClickBoardTile(tile)"
+        :is-elevated="storeItems.isTileInInventory(tile)"
+        @click.stop="storeItems.handleClickBoardTile(tile)"
       />
     </Transition>
     <slot />

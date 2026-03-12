@@ -1,17 +1,17 @@
 <script lang="ts" setup>
 import DialogStore from '@/gui/stores/DialogStore.ts';
 import GameStore from '@/gui/stores/GameStore.ts';
-import InventoryStore from '@/gui/stores/InventoryStore.ts';
+import ItemsStore from '@/gui/stores/ItemsStore.ts';
 import ToastStore from '@/gui/stores/ToastStore.ts';
 import { storeToRefs } from 'pinia';
 
 // TODO
 const storeDialog = DialogStore.getInstance();
 const storeGame = GameStore.getInstance();
-const storeInventory = InventoryStore.getInstance();
+const storeItems = ItemsStore.getInstance();
 const storeToast = ToastStore.getInstance();
 const { actionsAreDisabled } = storeToRefs(storeGame);
-const { isInventoryFull } = storeToRefs(storeInventory);
+const { isInventoryFull } = storeToRefs(storeItems);
 const { willUserPassBeResign, shuffleUserTiles, passTurn, resignGame } = storeGame;
 
 async function triggerResignDialog() {
@@ -35,7 +35,7 @@ async function handlePass(): Promise<void> {
 }
 
 function handleClear(): void {
-  storeInventory.init();
+  storeItems.init();
   storeGame.resetTurn();
 }
 
@@ -47,13 +47,13 @@ async function handlePlay() {
     },
   });
   if (error) storeToast.addToast({ html: error });
-  storeInventory.init();
+  storeItems.init();
 }
 </script>
 
 <template>
-  <div class="actions__wrapper">
-    <ul class="actions__list game__width-content">
+  <div class="actions">
+    <ul class="actions__list app__width-content">
       <li class="actions__list-item">
         <button class="actions__btn" :disabled="actionsAreDisabled" @click="handleResign()">
           {{ t('game.action_resign') }}
@@ -85,12 +85,10 @@ async function handlePlay() {
 
 <style lang="scss" scoped>
 .actions {
-  &__wrapper {
-    height: calc(var(--cell-tile-width) * 1.5);
-    width: 100%;
-    display: grid;
-    place-items: center;
-  }
+  height: calc(var(--cell-tile-width) * 1.5);
+  width: 100%;
+  display: grid;
+  place-items: center;
   &__list {
     display: flex;
     flex-direction: row;

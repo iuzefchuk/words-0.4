@@ -3,10 +3,10 @@ import { defineStore } from 'pinia';
 import { shallowRef, ref, computed, triggerRef } from 'vue';
 import GameStore from '@/gui/stores/GameStore.ts';
 
-export default class InventoryStore {
+export default class ItemsStore {
   static readonly getInstance = defineStore('inventory', () => {
     const storeGame = GameStore.getInstance();
-    const store = new InventoryStore(storeGame);
+    const store = new ItemsStore(storeGame);
     return {
       tiles: store.tilesRef,
       selectedTile: store.selectedTileRef,
@@ -22,7 +22,7 @@ export default class InventoryStore {
   });
 
   private constructor(
-    private gameStore: ReturnType<typeof GameStore.getInstance>,
+    private storeGame: ReturnType<typeof GameStore.getInstance>,
     private tilesRef = shallowRef<Array<GameTile>>([]),
     private selectedTileRef = ref<GameTile | null>(null),
   ) {}
@@ -44,11 +44,11 @@ export default class InventoryStore {
   }
 
   private get inventoryIsFull(): boolean {
-    return this.tiles.every(tile => !this.gameStore.isTileConnected(tile));
+    return this.tiles.every(tile => !this.storeGame.isTileConnected(tile));
   }
 
   private get selectedTileIsConnected(): boolean {
-    return this.selectedTile !== null && this.gameStore.isTileConnected(this.selectedTile);
+    return this.selectedTile !== null && this.storeGame.isTileConnected(this.selectedTile);
   }
 
   private init(userTiles: ReadonlyArray<GameTile>): void {
@@ -61,7 +61,7 @@ export default class InventoryStore {
   }
 
   private getTileIdx(tile: GameTile): number {
-    return this.tiles.findIndex(item => this.gameStore.areTilesSame(item, tile));
+    return this.tiles.findIndex(item => this.storeGame.areTilesSame(item, tile));
   }
 
   private isTileInInventory(tile: GameTile): boolean {
@@ -69,11 +69,11 @@ export default class InventoryStore {
   }
 
   private isTileSelected(tile: GameTile): boolean {
-    return this.selectedTile !== null && this.gameStore.areTilesSame(this.selectedTile, tile);
+    return this.selectedTile !== null && this.storeGame.areTilesSame(this.selectedTile, tile);
   }
 
   private isTileVisible(tile: GameTile): boolean {
-    return this.isTileInInventory(tile) && !this.gameStore.isTileConnected(tile);
+    return this.isTileInInventory(tile) && !this.storeGame.isTileConnected(tile);
   }
 
   private switchTiles(firstTile: GameTile, secondTile: GameTile): void {
@@ -86,7 +86,7 @@ export default class InventoryStore {
 
   private handleClickRackCell(idx: number): void {
     if (!this.selectedTile) return;
-    if (this.selectedTileIsConnected) this.gameStore.removeTile(this.selectedTile);
+    if (this.selectedTileIsConnected) this.storeGame.removeTile(this.selectedTile);
     this.switchTiles(this.selectedTile, this.tiles[idx]);
     this.deselectTile();
   }
@@ -97,10 +97,10 @@ export default class InventoryStore {
       return;
     }
     if (!this.isTileSelected(tile)) {
-      const selectedCell = this.gameStore.findCellConnectedToTile(this.selectedTile);
+      const selectedCell = this.storeGame.findCellConnectedToTile(this.selectedTile);
       if (selectedCell) {
-        this.gameStore.removeTile(this.selectedTile);
-        this.gameStore.placeTile({ tile, cell: selectedCell });
+        this.storeGame.removeTile(this.selectedTile);
+        this.storeGame.placeTile({ tile, cell: selectedCell });
       }
       this.switchTiles(this.selectedTile, tile);
     }
@@ -109,10 +109,10 @@ export default class InventoryStore {
 
   private handleClickBoardCell(cell: GameCell): void {
     if (!this.selectedTile) return;
-    const existingTile = this.gameStore.findTileConnectedToCell(cell);
+    const existingTile = this.storeGame.findTileConnectedToCell(cell);
     if (existingTile) return;
-    if (this.selectedTileIsConnected) this.gameStore.removeTile(this.selectedTile);
-    this.gameStore.placeTile({ tile: this.selectedTile, cell });
+    if (this.selectedTileIsConnected) this.storeGame.removeTile(this.selectedTile);
+    this.storeGame.placeTile({ tile: this.selectedTile, cell });
     this.deselectTile();
   }
 
@@ -126,17 +126,17 @@ export default class InventoryStore {
       this.selectedTile = tile;
       return;
     }
-    const connectedCell = this.gameStore.findCellConnectedToTile(tile);
+    const connectedCell = this.storeGame.findCellConnectedToTile(tile);
     if (!connectedCell) return;
-    const selectedCell = this.gameStore.findCellConnectedToTile(this.selectedTile);
+    const selectedCell = this.storeGame.findCellConnectedToTile(this.selectedTile);
     if (selectedCell) {
-      this.gameStore.removeTile(this.selectedTile);
-      this.gameStore.removeTile(tile);
-      this.gameStore.placeTile({ tile, cell: selectedCell });
-      this.gameStore.placeTile({ tile: this.selectedTile, cell: connectedCell });
+      this.storeGame.removeTile(this.selectedTile);
+      this.storeGame.removeTile(tile);
+      this.storeGame.placeTile({ tile, cell: selectedCell });
+      this.storeGame.placeTile({ tile: this.selectedTile, cell: connectedCell });
     } else {
-      this.gameStore.removeTile(tile);
-      this.gameStore.placeTile({ tile: this.selectedTile, cell: connectedCell });
+      this.storeGame.removeTile(tile);
+      this.storeGame.placeTile({ tile: this.selectedTile, cell: connectedCell });
       this.switchTiles(this.selectedTile, tile);
     }
     this.deselectTile();

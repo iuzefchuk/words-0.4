@@ -1,9 +1,9 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import App from './App.vue';
-import directives from './plugins/directives/index.ts';
-import provides from './plugins/provides/index.ts';
-import LocalesPlugin from './plugins/locales/index.ts';
+import App from '@/gui/components/App/index.vue';
+import directives from '@/gui/plugins/directives/index.ts';
+import provides from '@/gui/plugins/provides/index.ts';
+import LocalesPlugin from '@/gui/plugins/locales/index.ts';
 
 class Application {
   private app = createApp(App);

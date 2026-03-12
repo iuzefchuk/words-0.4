@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import GameMainFooterRack from '@/gui/components/Game/GameMain/GameMainFooter/GameMainFooterRack.vue';
-import GameMainFooterButtons from '@/gui/components/Game/GameMain/GameMainFooter/GameMainFooterButtons.vue';
+import AppMainFooterGrid from '@/gui/components/App/AppMain/AppMainFooter/AppMainFooterGrid.vue';
+import AppMainFooterButtons from '@/gui/components/App/AppMain/AppMainFooter/AppMainFooterButtons.vue';
 </script>
 
 <template>
   <footer class="footer">
-    <GameMainFooterRack />
-    <GameMainFooterButtons />
+    <AppMainFooterGrid />
+    <AppMainFooterButtons />
   </footer>
 </template>
 

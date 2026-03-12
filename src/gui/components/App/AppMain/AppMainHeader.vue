@@ -7,7 +7,7 @@ const storeGame = GameStore.getInstance();
 
 <template>
   <header class="header">
-    <div class="header__wrapper game__width-content">
+    <div class="header__wrapper app__width-content">
       <!-- <div v-for="player in Object.values(gamePlayers)" :key="player" class="header__player">
         <div class="header__player-info">
           <p class="header__player-name">{{ getPlayerName(player) }}</p>

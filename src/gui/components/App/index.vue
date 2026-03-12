@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import GameMain from '@/gui/components/Game/GameMain/GameMain.vue';
-import GameDialog from '@/gui/components/Game/GameDialog.vue';
-import GameEndscreen from '@/gui/components/Game/GameEndscreen.vue';
-import GameLoader from '@/gui/components/Game/GameLoader.vue';
-import GameToast from '@/gui/components/Game/GameToast.vue';
+import AppMain from '@/gui/components/App/AppMain/index.vue';
+import AppDialog from '@/gui/components/App/AppDialog.vue';
+import AppEndscreen from '@/gui/components/App/AppEndscreen.vue';
+import AppLoader from '@/gui/components/App/AppLoader.vue';
+import AppToast from '@/gui/components/App/AppToast.vue';
 import { onMounted, ref, inject } from 'vue';
 import GameStore from '@/gui/stores/GameStore.ts';
 import { storeToRefs } from 'pinia';
@@ -21,21 +21,26 @@ onMounted(() => {
 
 <template>
   <div
-    :class="{ game: true, 'game--blurred': gameIsFinished }"
+    :class="{ app: true, 'app--blurred': gameIsFinished }"
     :style="{
       '--transition-duration': `${transitionDurationMs}ms`,
       '--cell-count-per-axis': Math.sqrt(storeGame.layoutCells.length),
     }"
   >
-    <GameLoader :is-active="loaderIsActive" @derendered="mainIsRendered = true" />
-    <GameMain v-if="mainIsRendered" />
-    <GameDialog />
-    <GameToast />
+    <AppLoader :is-active="loaderIsActive" @derendered="mainIsRendered = true" />
+    <AppMain v-if="mainIsRendered" />
+    <AppDialog />
+    <AppToast />
   </div>
-  <GameEndscreen v-if="gameIsFinished" />
+  <AppEndscreen v-if="gameIsFinished" />
 </template>
 
 <style lang="scss">
+@use '@/gui/assets/css/adjustments.scss';
+@use '@/gui/assets/css/colors.scss';
+@use '@/gui/assets/css/transitions.scss';
+@use '@/gui/assets/css/variables.scss';
+
 :root {
   --primary-color: var(--color-gray-darkest);
   --primary-bg: var(--color-gray-fainter);
@@ -62,7 +67,7 @@ onMounted(() => {
   --score-color: var(--color-white);
   --score-bg: var(--color-purple-darker);
 }
-.game {
+.app {
   color: var(--primary-color);
   background: var(--primary-bg);
   font-size: var(--font-size);

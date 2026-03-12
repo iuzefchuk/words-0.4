@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch, inject } from 'vue';
 import { useCounter } from '@/gui/composables/counter.ts';
-import GameTile from './GameTile.vue';
+import AppItem from '@/gui/components/shared/AppItem.vue';
 import { transitionDurationMsKey } from '@/gui/plugins/provides/index.ts';
 // TODO
 const transitionDurationMs = inject(transitionDurationMsKey, 0);
@@ -51,7 +51,7 @@ watch(
   <Transition name="fade">
     <div v-if="isRendered" class="loader">
       <div class="loader__logo">
-        <GameTile
+        <AppItem
           v-for="(letter, idx) in DUMMY_LETTERS"
           :key="idx"
           class="loader__tile"
