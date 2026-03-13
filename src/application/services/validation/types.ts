@@ -1,8 +1,7 @@
-import { Placement, ComputedValue } from '@/domain/types.ts';
+import { Placement, ComputedValue, ValidationStatus, ValidationErrors } from '@/domain/turn/types.ts';
 import { GameContext } from '@/application/types.ts';
-import { ValidationStatus, ValidationErrors } from '@/domain/enums.ts';
-import { TileId } from '@/domain/model/Inventory/types.ts';
-import { CellIndex } from '@/domain/reference/Layout/types.ts';
+import { TileId } from '@/domain/tiles/types.ts';
+import { CellIndex } from '@/domain/board/types.ts';
 
 export type ValidatorArguments = { initialPlacement: Placement };
 

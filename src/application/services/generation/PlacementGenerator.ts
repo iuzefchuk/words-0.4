@@ -1,9 +1,8 @@
-import { Placement } from '@/domain/types.ts';
-import { ValidationStatus } from '@/domain/enums.ts';
-import { Board } from '@/domain/model/Board/types.ts';
-import Dictionary from '@/domain/reference/Dictionary/Dictionary.ts';
-import Inventory from '@/domain/model/Inventory/Inventory.ts';
-import { TileCollection } from '@/domain/model/Inventory/types.ts';
+import { Placement, ValidationStatus } from '@/domain/turn/types.ts';
+import { Board } from '@/domain/board/types.ts';
+import Dictionary from '@/domain/services/Dictionary.ts';
+import TilePool from '@/domain/tiles/TilePool.ts';
+import { TileCollection } from '@/domain/tiles/types.ts';
 import { GameContext } from '@/application/types.ts';
 import TurnValidator from '@/application/services/validation/TurnValidator.ts';
 import { GenerationDirection, GenerationTask, GenerationCommandType } from '@/application/services/generation/enums.ts';
@@ -28,7 +27,7 @@ import {
   DispatcherComputeds,
   GenerationResult,
 } from '@/application/services/generation/types.ts';
-import AnchorLettersComputer from '@/domain/rules/AnchorLettersComputer.ts';
+import CrossCheckComputer from '@/domain/services/CrossCheckComputer.ts';
 
 export default class PlacementGenerator {
   static *execute(args: GeneratorArguments): Generator<GenerationResult> {
@@ -90,7 +89,7 @@ export default class PlacementGenerator {
   private static TaskDispatcher = class TaskDispatcher {
     private constructor(
       private readonly context: GameContext,
-      private readonly lettersComputer: AnchorLettersComputer,
+      private readonly lettersComputer: CrossCheckComputer,
       private state: DispatcherState,
       public computeds: DispatcherComputeds,
     ) {}
@@ -101,8 +100,8 @@ export default class PlacementGenerator {
     private get dictionary(): Dictionary {
       return this.context.dictionary;
     }
-    private get inventory(): Inventory {
-      return this.context.inventory;
+    private get tilePool(): TilePool {
+      return this.context.tilePool;
     }
 
     private get placement(): Placement {
@@ -205,7 +204,7 @@ export default class PlacementGenerator {
     ): StopTaskCommand | ContinueTaskCommand {
       const { position, resolution } = candidate;
       if (!resolution) throw new Error('Resolution has to exist');
-      const nextNode = this.dictionary.getNode(this.inventory.getTileLetter(resolution.tile), traversal.node);
+      const nextNode = this.dictionary.getNode(this.tilePool.getTileLetter(resolution.tile), traversal.node);
       if (!nextNode) return this.emitStop();
       const traversalFromCandidate: Traversal = { ...traversal, position, node: nextNode };
       return this.emitContinue([{ type: GenerationTask.EvaluateTraversal, traversal: traversalFromCandidate }]);

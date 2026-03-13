@@ -1,9 +1,16 @@
-import { Placement, ComputedValue, ValidationResult, ValidResult, InvalidResult } from '@/domain/types.ts';
-import { ValidationErrors, ValidationStatus } from '@/domain/enums.ts';
+import {
+  Placement,
+  ComputedValue,
+  ValidationResult,
+  ValidResult,
+  InvalidResult,
+  ValidationErrors,
+  ValidationStatus,
+} from '@/domain/turn/types.ts';
 import { GameContext } from '@/application/types.ts';
-import AxisCalculator from '@/domain/rules/AxisCalculator.ts';
-import PlacementBuilder from '@/domain/rules/PlacementBuilder.ts';
-import ScoreComputer from '@/domain/rules/ScoreComputer.ts';
+import AxisResolver from '@/domain/board/AxisResolver.ts';
+import PlacementBuilder from '@/domain/turn/PlacementBuilder.ts';
+import ScoreCalculator from '@/domain/services/ScoreCalculator.ts';
 import {
   ValidatorArguments,
   PendingResult,
@@ -16,7 +23,7 @@ import {
   WordsOutput,
   ScoreOutput,
 } from '@/application/services/validation/types.ts';
-import { AnchorCoordinates } from '@/domain/reference/Layout/types.ts';
+import { AnchorCoordinates } from '@/domain/board/types.ts';
 
 export default class TurnValidator {
   static execute(context: GameContext, initialPlacement: Placement): ValidationResult {
@@ -66,8 +73,8 @@ export default class TurnValidator {
     if (tiles.length === 0) return this.Pipeline.fail(ValidationErrors.InvalidTilePlacement);
     const cells = state.initialPlacement.cellSequence;
     if (cells.length === 0) return this.Pipeline.fail(ValidationErrors.InvalidCellPlacement);
-    const { board, turnkeeper } = state.context;
-    const anchorCells = board.getAnchorCells(turnkeeper.historyIsEmpty);
+    const { board, turnDirector } = state.context;
+    const anchorCells = board.getAnchorCells(turnDirector.historyIsEmpty);
     const someCellsAreAnchor = cells.some(cell => anchorCells.has(cell));
     return someCellsAreAnchor
       ? this.Pipeline.pass(state, { sequences: { cell: cells, tile: tiles } })
@@ -79,7 +86,7 @@ export default class TurnValidator {
   ): PipelineThroughput<PipelineState<PlacementsOutput>> {
     const { board } = state.context;
     const tileSequence = state.sequences.tile;
-    const primaryAxis = AxisCalculator.execute(board, { cellSequence: state.sequences.cell });
+    const primaryAxis = AxisResolver.execute(board, { cellSequence: state.sequences.cell });
     const coords = { axis: primaryAxis, cell: state.sequences.cell[0] };
     const primaryPlacement = PlacementBuilder.execute(board, { coords, tileSequence });
     const isPlacementUsable = (placement: Placement): boolean => placement.length > 1;
@@ -96,12 +103,12 @@ export default class TurnValidator {
   private static computeAndValidateWords(
     state: PipelineState<PlacementsOutput>,
   ): PipelineThroughput<PipelineState<WordsOutput>> {
-    const { dictionary, inventory } = state.context;
+    const { dictionary, tilePool } = state.context;
     const words: Array<string> = [];
     for (let i = 0; i < state.placements.length; i++) {
       const placement = state.placements[i];
       let word = '';
-      for (const { tile } of placement) word += inventory.getTileLetter(tile);
+      for (const { tile } of placement) word += tilePool.getTileLetter(tile);
       words[i] = word;
     }
     return dictionary.containsWords(words)
@@ -112,12 +119,12 @@ export default class TurnValidator {
   private static computeAndValidateScore(
     state: PipelineState<WordsOutput>,
   ): PipelineThroughput<PipelineState<ScoreOutput>> {
-    const { board, inventory } = state.context;
+    const { board, tilePool } = state.context;
     const newCells = new Set(state.sequences.cell);
-    const score = ScoreComputer.execute(
+    const score = ScoreCalculator.execute(
       state.placements,
       newCells,
-      tile => inventory.getTilePoints(tile),
+      tile => tilePool.getTilePoints(tile),
       cell => board.getLetterMultiplier(cell),
       cell => board.getWordMultiplier(cell),
     );
