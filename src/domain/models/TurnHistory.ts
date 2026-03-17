@@ -1,6 +1,7 @@
 import { Player } from '@/domain/enums.ts';
 import { CellIndex } from '@/domain/models/Board.ts';
 import { TileId } from '@/domain/models/Inventory.ts';
+import { IdGenerator } from '@/shared/ports.ts';
 
 export type Link = { readonly cell: CellIndex; readonly tile: TileId };
 
@@ -38,10 +39,13 @@ export type ValidationResult = UnvalidatedResult | InvalidResult | ValidResult;
 export default class TurnHistory {
   private static readonly firstPlayer: Player = Player.User;
 
-  private constructor(private turns: Array<Turn>) {}
+  private constructor(
+    private turns: Array<Turn>,
+    private readonly idGenerator: IdGenerator,
+  ) {}
 
-  static create(): TurnHistory {
-    return new TurnHistory([]);
+  static create({ idGenerator }: { idGenerator: IdGenerator }): TurnHistory {
+    return new TurnHistory([], idGenerator);
   }
 
   get hasOpponentTurns(): boolean {
@@ -72,8 +76,7 @@ export default class TurnHistory {
   }
 
   get previousTurnTileSequence(): ReadonlyArray<TileId> | undefined {
-    // TODO rename
-    return this.turns.at(-3)?.tileSequence;
+    return this.turns.at(-2)?.tileSequence;
   }
 
   getScoreFor(player: Player): number {
@@ -88,7 +91,7 @@ export default class TurnHistory {
 
   createNewTurnFor(player: Player): void {
     if (player !== this.nextPlayer) throw new Error(`Expected next player to be ${this.nextPlayer}, but got ${player}`);
-    this.turns.push(Turn.create({ player }));
+    this.turns.push(Turn.create({ player, idGenerator: this.idGenerator }));
   }
 }
 
@@ -100,8 +103,8 @@ class Turn {
     private validationResult: ValidationResult,
   ) {}
 
-  static create({ player }: { player: Player }): Turn {
-    const id = crypto.randomUUID();
+  static create({ player, idGenerator }: { player: Player; idGenerator: IdGenerator }): Turn {
+    const id = idGenerator.generate();
     const initialPlacement = Placement.create();
     const validationResult: UnvalidatedResult = { status: ValidationStatus.Unvalidated };
     return new Turn(id, player, initialPlacement, validationResult);

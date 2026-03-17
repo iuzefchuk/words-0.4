@@ -5,6 +5,12 @@ export type NodeId = number;
 
 export type NextNodeGenerator = Generator<[Letter, NodeId]>;
 
+export type DictionaryCache = {
+  rootNode: FrozenNode;
+  nodeById: ReadonlyMap<NodeId, FrozenNode>;
+  allLetters: ReadonlySet<Letter>;
+};
+
 type Transition = { parentNode: Node; childLetter: Letter; childNode: Node };
 
 type Node = { id: NodeId; isFinal: boolean; children: Map<Letter, Node> };
@@ -20,24 +26,40 @@ type NodeGenerator = Generator<Node, Node>;
 export default class Dictionary {
   private constructor(
     private readonly rootNode: FrozenNode,
-    private readonly nodeIndex: ReadonlyMap<NodeId, FrozenNode>,
+    private readonly nodeById: ReadonlyMap<NodeId, FrozenNode>,
     public readonly allLetters: ReadonlySet<Letter>,
   ) {}
 
   static create(): Dictionary {
     const rootNode = DictionaryTreeBuilder.execute(DICTIONARY_DATA);
-    const nodeIndex = new Map<NodeId, FrozenNode>();
+    const nodeById = new Map<NodeId, FrozenNode>();
     const allLetters = new Set<Letter>();
-    this.traverseNode(nodeIndex, allLetters, rootNode);
-    return new Dictionary(rootNode, nodeIndex, allLetters);
+    this.freezeTree(rootNode);
+    this.traverseNode(nodeById, allLetters, rootNode);
+    return new Dictionary(rootNode, nodeById, allLetters);
   }
 
-  private static traverseNode(nodeIndex: Map<NodeId, FrozenNode>, allLetters: Set<Letter>, node: FrozenNode): void {
-    nodeIndex.set(node.id, node);
+  static createFromCache(cache: DictionaryCache): Dictionary {
+    this.freezeTree(cache.rootNode);
+    return new Dictionary(cache.rootNode, cache.nodeById, cache.allLetters);
+  }
+
+  private static freezeTree(node: FrozenNode): void {
+    for (const child of node.children.values()) this.freezeTree(child);
+    Object.freeze(node.children);
+    Object.freeze(node);
+  }
+
+  private static traverseNode(nodeById: Map<NodeId, FrozenNode>, allLetters: Set<Letter>, node: FrozenNode): void {
+    nodeById.set(node.id, node);
     for (const [childLetter, childNode] of node.children) {
       allLetters.add(childLetter);
-      this.traverseNode(nodeIndex, allLetters, childNode);
+      this.traverseNode(nodeById, allLetters, childNode);
     }
+  }
+
+  get cache(): DictionaryCache {
+    return { rootNode: this.rootNode, nodeById: this.nodeById, allLetters: this.allLetters };
   }
 
   get firstNode(): NodeId {
@@ -84,7 +106,7 @@ export default class Dictionary {
   }
 
   private findNodeById(nodeId: NodeId): FrozenNode {
-    const node = this.nodeIndex.get(nodeId);
+    const node = this.nodeById.get(nodeId);
     if (!node) throw new Error(`Node not found: ${nodeId}`);
     return node;
   }
@@ -93,10 +115,9 @@ export default class Dictionary {
 class DictionaryTreeBuilder {
   private currentId: NodeId = 0;
 
-  static execute(sortedWords: ReadonlyArray<string>): FrozenNode {
+  static execute(sortedWords: ReadonlyArray<string>): Node {
     const builder = new DictionaryTreeBuilder();
-    const root = builder.build(sortedWords);
-    return builder.freezeTree(root);
+    return builder.build(sortedWords);
   }
 
   private build(sortedWords: ReadonlyArray<string>): Node {
@@ -147,13 +168,6 @@ class DictionaryTreeBuilder {
 
   private createNode(): Node {
     return { id: this.currentId++, isFinal: false, children: new Map() };
-  }
-
-  private freezeTree(node: Node): FrozenNode {
-    for (const child of node.children.values()) this.freezeTree(child);
-    Object.freeze(node.children);
-    Object.freeze(node);
-    return node as FrozenNode;
   }
 
   private getCommonPrefixLength(a: string, b: string): number {

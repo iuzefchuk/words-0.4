@@ -4,9 +4,7 @@ import { Letter, Player } from '@/domain/enums.ts';
 import Inventory, { TileId } from '@/domain/models/Inventory.ts';
 import { PlacementLinks, ValidationError } from '@/domain/models/TurnHistory.ts';
 import { TIME } from '@/shared/constants.ts';
-import { wait } from '@/shared/helpers.ts';
 import GameStateQuery from '@/application/queries/GameState.ts';
-import PlacementLinksGenerator from '@/application/services/PlacementLinksGenerator.ts';
 import TurnValidator from '@/application/services/TurnValidator.ts';
 import TurnDirector from '@/application/TurnDirector.ts';
 import PassTurnCommand from '@/application/commands/PassTurn.ts';
@@ -14,6 +12,10 @@ import PlaceTileCommand from '@/application/commands/PlaceTile.ts';
 import ResignGameCommand from '@/application/commands/ResignGame.ts';
 import SaveTurnCommand from '@/application/commands/SaveTurn.ts';
 import UndoPlaceTileCommand from '@/application/commands/UndoPlaceTile.ts';
+import PlacementLinksGeneratorWorker from '@/infrastructure/PlacementLinksGeneratorWorker/index.ts';
+import IndexedDbDictionaryFactory from '@/infrastructure/IndexedDbDictionaryFactory.ts';
+import IdGenerator from '@/infrastructure/CryptoIdGenerator.ts';
+import Clock from '@/infrastructure/DateApiClock.ts';
 
 export type GameContext = {
   board: Board;
@@ -38,10 +40,11 @@ export type GameState = {
 };
 
 export default class Game {
-  private static readonly dictionary = Dictionary.create();
+  private static readonly clock = new Clock();
   static readonly bonuses = Bonus;
   static readonly letters = Letter;
-
+  private readonly placementLinksGeneratorWorker = new PlacementLinksGeneratorWorker();
+  private static dictionary: Dictionary;
   private isMutable: boolean = true;
 
   private constructor(
@@ -50,11 +53,13 @@ export default class Game {
     private turnDirector: TurnDirector,
   ) {}
 
-  static start(): Game {
+  static async start(): Promise<Game> {
+    if (!Game.dictionary) Game.dictionary = await IndexedDbDictionaryFactory.create();
+    const idGenerator = new IdGenerator();
     const players = Object.values(Player);
     const board = Board.create();
-    const inventory = Inventory.create({ players });
-    const turnDirector = TurnDirector.create({ players, board });
+    const inventory = Inventory.create({ players, idGenerator });
+    const turnDirector = TurnDirector.create({ players, board, idGenerator });
     return new Game(board, inventory, turnDirector);
   }
 
@@ -133,34 +138,21 @@ export default class Game {
     this.turnDirector.resetCurrentTurn();
   }
 
-  async saveTurn(): Promise<ValidationError | null> {
+  saveTurn(): ValidationError | null {
     this.ensureMutability();
     const error = SaveTurnCommand.execute(this.context);
     if (error) return error;
-    if (this.turnDirector.currentPlayer !== Player.User) await this.processOpponentTurn();
     return null;
   }
 
-  async passTurn(): Promise<void> {
+  passTurn(): void {
     this.ensureMutability();
     PassTurnCommand.execute(this.context);
-    if (this.turnDirector.currentPlayer !== Player.User) await this.processOpponentTurn();
   }
 
-  resignGame(): void {
-    this.ensureMutability();
-    ResignGameCommand.execute(this.context);
-    this.isMutable = false;
-  }
-
-  private generatePlacementLinks(player: Player): PlacementLinks | null {
-    for (const placementLinks of PlacementLinksGenerator.execute(this.context, player)) return placementLinks;
-    return null;
-  }
-
-  private async processOpponentTurn(): Promise<void> {
+  async createOpponentTurn(): Promise<void> {
     const generatedPlacementLinks = await this.setMinimumExecutionTime(() =>
-      this.generatePlacementLinks(Player.Opponent),
+      this.placementLinksGeneratorWorker.execute({ context: this.context, player: Player.Opponent }),
     );
     if (generatedPlacementLinks === null) return PassTurnCommand.execute(this.context);
     for (const link of generatedPlacementLinks) this.turnDirector.placeTile({ cell: link.cell, tile: link.tile });
@@ -169,15 +161,22 @@ export default class Game {
     SaveTurnCommand.execute(this.context);
   }
 
+  resignGame(): void {
+    this.ensureMutability();
+    ResignGameCommand.execute(this.context);
+    this.placementLinksGeneratorWorker.terminate();
+    this.isMutable = false;
+  }
+
   private async setMinimumExecutionTime<T>(
     callback: () => Promise<T> | T,
     delayTimeMs = TIME.ms_in_second,
   ): Promise<T> {
-    const startTime = Date.now();
+    const startTime = Game.clock.now();
     const result = await callback();
-    const elapsed = Date.now() - startTime;
+    const elapsed = Game.clock.now() - startTime;
     const delay = delayTimeMs - elapsed;
-    if (delay > 0) await wait(delay);
+    if (delay > 0) await Game.clock.wait(delay);
     return result;
   }
 

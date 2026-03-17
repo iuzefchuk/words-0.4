@@ -3,6 +3,7 @@ import Board, { CellIndex } from '@/domain/models/Board.ts';
 import { Player } from '@/domain/enums.ts';
 import { TileId } from '@/domain/models/Inventory.ts';
 import TurnHistory, { PlacementLinks, ValidationError, ValidationResult } from '@/domain/models/TurnHistory.ts';
+import { IdGenerator } from '@/domain/ports/IdGenerator.ts';
 
 export default class TurnDirector {
   private constructor(
@@ -11,8 +12,16 @@ export default class TurnDirector {
     private readonly actionTracker: ActionTracker,
   ) {}
 
-  static create({ players, board }: { players: Array<Player>; board: Board }): TurnDirector {
-    const history = TurnHistory.create();
+  static create({
+    players,
+    board,
+    idGenerator,
+  }: {
+    players: Array<Player>;
+    board: Board;
+    idGenerator: IdGenerator;
+  }): TurnDirector {
+    const history = TurnHistory.create({ idGenerator });
     const actionTracker = ActionTracker.create(players);
     const director = new TurnDirector(board, history, actionTracker);
     director.startTurnForNextPlayer();

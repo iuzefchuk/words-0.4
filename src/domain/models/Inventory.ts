@@ -1,5 +1,6 @@
 import { shuffleArrayWithFisherYates } from '@/shared/helpers.ts';
 import { Letter, Player } from '@/domain/enums.ts';
+import { IdGenerator } from '@/shared/ports.ts';
 
 export type TileId = string;
 
@@ -17,10 +18,10 @@ export default class Inventory {
     this.initializeRacks();
   }
 
-  static create({ players }: { players: Array<Player> }): Inventory {
+  static create({ players, idGenerator }: { players: Array<Player>; idGenerator: IdGenerator }): Inventory {
     const drawPool = shuffleArrayWithFisherYates(
       Object.values(Letter).flatMap(letter =>
-        Array.from({ length: LETTER_DISTRIBUTION[letter] }, () => Tile.create({ letter })),
+        Array.from({ length: LETTER_DISTRIBUTION[letter] }, () => Tile.create({ letter, idGenerator })),
       ),
     );
     const racks = new Map(players.map(player => [player, Rack.create({ maxLimit: this.rackCapacity })]));
@@ -159,8 +160,8 @@ class Tile {
     readonly letter: Letter,
   ) {}
 
-  static create({ letter }: { letter: Letter }): Tile {
-    const id = crypto.randomUUID();
+  static create({ letter, idGenerator }: { letter: Letter; idGenerator: IdGenerator }): Tile {
+    const id = idGenerator.generate();
     return new Tile(id, letter);
   }
 

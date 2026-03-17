@@ -1,10 +1,18 @@
-import Game, { GameCell, GameState, GameTile } from '@/application/Game.ts';
+import Game, { GameCell, GameState, GameTile } from '@/application/index.ts';
 import { defineStore } from 'pinia';
 import { computed, Ref, shallowRef } from 'vue';
+import SoundPlayer, { Sound } from '@/infrastructure/SoundPlayer.ts';
+
+let game: Game;
+
+export async function startGame(): Promise<void> {
+  game = await Game.start();
+}
 
 export default class GameStore {
+  private static readonly soundPlayer = new SoundPlayer();
+
   static readonly getInstance = defineStore('game', () => {
-    const game = Game.start();
     const state = new GameStore.ReactiveState(game);
     return {
       bonuses: Game.bonuses,
@@ -27,13 +35,32 @@ export default class GameStore {
       getTileLetter: (tile: GameTile) => game.getTileLetter(tile),
       isCellLastConnectionInTurn: (cell: GameCell) => state.voidRefBefore(() => game.isCellLastConnectionInTurn(cell)),
       wasTileUsedInPreviousTurn: (tile: GameTile) => state.voidRefBefore(() => game.wasTileUsedInPreviousTurn(tile)),
-      shuffleUserTiles: () => state.triggerRefAfter(() => game.shuffleUserTiles()),
-      placeTile: (args: { cell: GameCell; tile: GameTile }) => state.triggerRefAfter(() => game.placeTile(args)),
-      undoPlaceTile: (tile: GameTile) => state.triggerRefAfter(() => game.undoPlaceTile(tile)),
+      shuffleUserTiles: () => {
+        state.triggerRefAfter(() => game.shuffleUserTiles());
+        this.soundPlayer.play(Sound.TilesShuffled);
+      },
+      placeTile: (args: { cell: GameCell; tile: GameTile }) => {
+        state.triggerRefAfter(() => game.placeTile(args));
+        this.soundPlayer.play(Sound.TilePlaced);
+      },
+      undoPlaceTile: (tile: GameTile) => {
+        state.triggerRefAfter(() => game.undoPlaceTile(tile));
+        this.soundPlayer.play(Sound.TileReturned);
+      },
       resetTurn: () => state.triggerRefAfter(() => game.resetTurn()),
-      saveTurn: () => state.triggerRefAfter(() => game.saveTurn()),
-      passTurn: () => state.triggerRefAfter(() => game.passTurn()),
-      resignGame: () => state.triggerRefAfter(() => game.resignGame()),
+      saveTurn: () => {
+        const result = state.triggerRefAfterWithOpponentTurn(() => game.saveTurn(), game);
+        this.soundPlayer.play(Sound.TurnSaved);
+        return result;
+      },
+      passTurn: () => {
+        state.triggerRefAfterWithOpponentTurn(() => game.passTurn(), game);
+        this.soundPlayer.play(Sound.TurnPassed);
+      },
+      resignGame: () => {
+        state.triggerRefAfter(() => game.resignGame());
+        this.soundPlayer.play(Sound.GameFinished);
+      },
     };
   });
 
@@ -69,6 +96,12 @@ export default class GameStore {
         result.then(() => this.refreshState());
       }
       return result;
+    }
+
+    triggerRefAfterWithOpponentTurn(callback: () => void, game: Game): void {
+      callback();
+      this.refreshState();
+      if (!this.currentPlayerIsUser) game.createOpponentTurn().then(() => this.refreshState());
     }
 
     private refreshState(): void {

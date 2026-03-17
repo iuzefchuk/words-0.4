@@ -1,4 +1,4 @@
-import { GameContext } from '@/application/Game.ts';
+import { GenerationContext } from '@/application/services/GenerationContext.ts';
 import { CellIndex, AnchorCoordinates } from '@/domain/models/Board.ts';
 import { TileId } from '@/domain/models/Inventory.ts';
 import PlacementLinksBuilder from '@/domain/services/PlacementBuilder.ts';

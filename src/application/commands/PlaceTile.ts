@@ -1,4 +1,4 @@
-import { GameContext } from '@/application/Game.ts';
+import { GameContext } from '@/application/index.ts';
 import TurnValidator from '@/application/services/TurnValidator.ts';
 import { CellIndex } from '@/domain/models/Board.ts';
 import { TileId } from '@/domain/models/Inventory.ts';

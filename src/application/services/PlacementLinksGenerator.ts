@@ -5,7 +5,7 @@ import CrossCheckComputer from '@/domain/services/CrossCheckComputer.ts';
 import { PlacementLinks, Link, ValidationStatus } from '@/domain/models/TurnHistory.ts';
 import TurnValidator from '@/application/services/TurnValidator.ts';
 import { Player } from '@/domain/enums.ts';
-import { GameContext } from '@/application/Game.ts';
+import { GameContext } from '@/application/index.ts';
 
 export type GeneratorArguments = {
   context: GameContext;
