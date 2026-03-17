@@ -1,4 +1,4 @@
-import Game, { GameCell, GameState, GameTile } from '@/application/index.ts';
+import Game, { GameCell, GameState, GameTile, SaveTurnResult } from '@/application/index.ts';
 import { DomainEvent } from '@/domain/events.ts';
 import { defineStore } from 'pinia';
 import { computed, Ref, shallowRef } from 'vue';
@@ -23,9 +23,7 @@ export default class GameStore {
   private static readonly soundPlayer = new SoundPlayer();
 
   private static handleEvents(): void {
-    for (const event of game.drainEvents()) {
-      this.soundPlayer.play(EVENT_SOUNDS[event]);
-    }
+    for (const event of game.drainEvents()) this.soundPlayer.play(EVENT_SOUNDS[event]);
   }
 
   static readonly getInstance = defineStore('game', () => {
@@ -64,13 +62,23 @@ export default class GameStore {
         GameStore.handleEvents();
       },
       resetTurn: () => state.triggerRefAfter(() => game.resetTurn()),
-      saveTurn: () => {
-        state.triggerRefAfter(() => game.saveTurn());
+      saveTurn: (): SaveTurnResult & { opponentTurn?: Promise<SaveTurnResult> } => {
+        const { opponentTurn, ...result } = state.triggerRefAfter(() => game.saveTurn());
         GameStore.handleEvents();
+        const resolved = opponentTurn?.then(opponentResult => {
+          state.refreshState();
+          return opponentResult;
+        });
+        return { ...result, opponentTurn: resolved };
       },
-      passTurn: () => {
-        state.triggerRefAfter(() => game.passTurn());
+      passTurn: (): { opponentTurn?: Promise<SaveTurnResult> } => {
+        const { opponentTurn } = state.triggerRefAfter(() => game.passTurn());
         GameStore.handleEvents();
+        const resolved = opponentTurn?.then(opponentResult => {
+          state.refreshState();
+          return opponentResult;
+        });
+        return { opponentTurn: resolved };
       },
       resignGame: () => {
         state.triggerRefAfter(() => game.resignGame());
@@ -113,7 +121,7 @@ export default class GameStore {
       return result;
     }
 
-    private refreshState(): void {
+    refreshState(): void {
       this.stateRef.value = this.game.state;
     }
   };

@@ -11,9 +11,8 @@ class Application {
 
   async start(): Promise<void> {
     try {
-      await this.installAsyncPlugins();
+      await Promise.allSettled([this.installAsyncPlugins(), startGame()]);
       this.installPlugins();
-      await startGame();
       this.mount();
     } catch (error) {
       console.error(error);

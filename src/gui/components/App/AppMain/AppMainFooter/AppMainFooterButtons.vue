@@ -1,85 +1,58 @@
 <script lang="ts" setup>
-import DialogStore from '@/gui/stores/DialogStore.ts';
-import GameStore from '@/gui/stores/GameStore.ts';
-import ItemsStore from '@/gui/stores/ItemsStore.ts';
-import ToastStore from '@/gui/stores/ToastStore.ts';
-import { storeToRefs } from 'pinia';
+import ButtonsController from '@/gui/controllers/ButtonsController.ts';
+import { reactive } from 'vue';
 
-// TODO
-const storeDialog = DialogStore.getInstance();
-const storeGame = GameStore.getInstance();
-const storeItems = ItemsStore.getInstance();
-const storeToast = ToastStore.getInstance();
-const { currentPlayerIsUser } = storeToRefs(storeGame);
-const { allItemsAreConnected } = storeToRefs(storeItems);
-// const { shuffleUserTiles } = storeGame;
-
-async function triggerResignDialog() {
-  // return await storeDialog.triggerDialog({ html: 'resigning', title: 'u sure?' });
-}
-
-async function handleResign(): Promise<void> {
-  storeToast.addMessage('Testing');
-  // const { isConfirmed } = await triggerResignDialog();
-  // if (!isConfirmed) return;
-  // resignGame();
-}
-
-async function handlePass(): Promise<void> {
-  storeDialog.trigger({ html: 'Testing', title: 'Test' });
-  // if (willUserPassBeResign) {
-  //   const { isConfirmed } = await triggerResignDialog();
-  //   if (!isConfirmed) return;
-  // } else {
-  //   storeToast.addToast({ html: 'you passed' });
-  // }
-  // passTurn();
-}
-
-function handleClear(): void {
-  // storeItems.initialize();
-  // storeGame.resetTurn();
-}
-
-async function handlePlay() {
-  const error = await storeGame.saveTurn();
-  if (error) storeToast.addMessage(error);
-  storeItems.initialize();
-
-  // afterSaveCallback: (words: Array<string>) => {
-  //   storeToast.addMessage(words.join(','));
-  // },;
-}
+const controller = new ButtonsController();
+const { allItemsAreConnected, isDisabled } = controller;
+const actions = reactive([
+  {
+    name: window.t('game.action_resign'),
+    action: controller.handleResign.bind(controller),
+    get isRendered() {
+      return true;
+    },
+  },
+  {
+    name: window.t('game.action_pass'),
+    action: controller.handlePass.bind(controller),
+    get isRendered() {
+      return true;
+    },
+  },
+  {
+    name: window.t('game.action_shuffle'),
+    action: controller.handleShuffle.bind(controller),
+    get isRendered() {
+      return allItemsAreConnected.value;
+    },
+  },
+  {
+    name: window.t('game.action_clear'),
+    action: controller.handleClear.bind(controller),
+    get isRendered() {
+      return !allItemsAreConnected.value;
+    },
+  },
+  {
+    name: window.t('game.action_play'),
+    action: controller.handlePlay.bind(controller),
+    get isRendered() {
+      return true;
+    },
+  },
+]);
 </script>
 
 <template>
   <div class="actions">
     <ul class="actions__list app__width-content">
-      <li class="actions__list-item">
-        <button class="actions__btn" :disabled="!currentPlayerIsUser" @click="handleResign()">
-          {{ t('game.action_resign') }}
-        </button>
-      </li>
-      <li class="actions__list-item">
-        <button class="actions__btn" :disabled="!currentPlayerIsUser" @click="handlePass()">
-          {{ t('game.action_pass') }}
-        </button>
-      </li>
-      <li v-if="allItemsAreConnected" class="actions__list-item">
-        <button class="actions__btn" :disabled="!currentPlayerIsUser">
-          {{ t('game.action_shuffle') }}
-        </button>
-      </li>
-      <li v-else class="actions__list-item">
-        <button class="actions__btn" :disabled="!currentPlayerIsUser" @click="handleClear()">
-          {{ t('game.action_clear') }}
-        </button>
-      </li>
-      <li class="actions__list-item">
-        <button class="actions__btn" :disabled="!currentPlayerIsUser" @click="handlePlay()">
-          {{ t('game.action_play') }}
-        </button>
-      </li>
+      <template v-for="{ name, action, isRendered } in actions" :key="name">
+        <li v-if="isRendered" class="actions__list-item">
+          <button class="actions__btn" :disabled="isDisabled" @click="action()">
+            {{ name }}
+          </button>
+        </li>
+      </template>
     </ul>
   </div>
 </template>

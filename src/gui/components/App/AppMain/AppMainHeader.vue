@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 import GameStore from '@/gui/stores/GameStore.ts';
-import { PLAYER_AVATAR_SVG_HTML } from '@/gui/constants.ts';
 const storeGame = GameStore.getInstance();
 const players = reactive([
   {
@@ -9,20 +8,12 @@ const players = reactive([
     get score() {
       return storeGame.userScore;
     },
-    get isPendingMove() {
-      return storeGame.currentPlayerIsUser;
-    },
-    avatarSvgHtml: PLAYER_AVATAR_SVG_HTML[0],
   },
   {
     name: window.t('game.player_opponent'),
     get score() {
       return storeGame.opponentScore;
     },
-    get isPendingMove() {
-      return !storeGame.currentPlayerIsUser;
-    },
-    avatarSvgHtml: PLAYER_AVATAR_SVG_HTML[1],
   },
 ]);
 </script>

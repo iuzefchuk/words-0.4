@@ -54,6 +54,10 @@ export default class TurnDirector {
     return this.history.currentTurnScore;
   }
 
+  get currentTurnWords(): ReadonlyArray<string> | undefined {
+    return this.history.currentTurnWords;
+  }
+
   get currentTurnIsValid(): boolean {
     return this.history.currentTurnIsValid;
   }
@@ -111,8 +115,23 @@ export default class TurnDirector {
   }
 
   resignCurrentTurn(): void {
+    const loser = this.history.currentPlayer;
     const winner = this.history.nextPlayer;
+    this.actionTracker.record(loser, PlayerAction.Lost);
     this.actionTracker.record(winner, PlayerAction.Won);
+  }
+
+  endGameByTileDepletion(players: ReadonlyArray<Player>): void {
+    const scores = players.map(player => ({ player, score: this.getScoreFor(player) }));
+    const maxScore = Math.max(...scores.map(s => s.score));
+    const allTied = scores.every(s => s.score === maxScore);
+    if (allTied) {
+      for (const { player } of scores) this.actionTracker.record(player, PlayerAction.Tied);
+    } else {
+      for (const { player, score } of scores) {
+        this.actionTracker.record(player, score === maxScore ? PlayerAction.Won : PlayerAction.Lost);
+      }
+    }
   }
 
   private startTurnForNextPlayer(): void {

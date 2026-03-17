@@ -47,6 +47,10 @@ export default class Inventory {
     return this.getRackFor(player).tileIds;
   }
 
+  hasTilesFor(player: Player): boolean {
+    return this.getRackFor(player).tileCount > 0;
+  }
+
   getTileCollectionFor(player: Player): TileCollection {
     return this.getRackFor(player).tileCollection;
   }

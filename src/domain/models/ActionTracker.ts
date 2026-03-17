@@ -5,6 +5,7 @@ export enum PlayerAction {
   Saved = 'Saved',
   Passed = 'Passed',
   Won = 'Won',
+  Lost = 'Lost',
   Tied = 'Tied',
 }
 

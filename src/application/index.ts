@@ -3,7 +3,6 @@ import Dictionary from '@/domain/models/Dictionary.ts';
 import { Letter, Player } from '@/domain/enums.ts';
 import { DomainEvent, EventCollector } from '@/domain/events.ts';
 import Inventory from '@/domain/models/Inventory.ts';
-import { ValidationError } from '@/domain/models/TurnHistory.ts';
 import { TIME } from '@/shared/constants.ts';
 import { GameContext, GameCell, GameTile, GameState } from '@/application/types.ts';
 import GameStateQuery from '@/application/queries/GameState.ts';
@@ -12,7 +11,7 @@ import TurnDirector from '@/application/TurnDirector.ts';
 import PassTurnCommand from '@/application/commands/PassTurn.ts';
 import PlaceTileCommand from '@/application/commands/PlaceTile.ts';
 import ResignGameCommand from '@/application/commands/ResignGame.ts';
-import SaveTurnCommand from '@/application/commands/SaveTurn.ts';
+import SaveTurnCommand, { SaveTurnResult } from '@/application/commands/SaveTurn.ts';
 import UndoPlaceTileCommand from '@/application/commands/UndoPlaceTile.ts';
 import PlacementLinksGeneratorWorker from '@/infrastructure/PlacementLinksGeneratorWorker/index.ts';
 import IndexedDbDictionaryFactory from '@/infrastructure/IndexedDbDictionaryFactory.ts';
@@ -20,8 +19,10 @@ import IdGenerator from '@/infrastructure/CryptoIdGenerator.ts';
 import Clock from '@/infrastructure/DateApiClock.ts';
 
 export type { GameCell, GameTile, GameState } from '@/application/types.ts';
+export type { SaveTurnResult } from '@/application/commands/SaveTurn.ts';
 
 export default class Game {
+  private static readonly opponentResponseMinTime = TIME.ms_in_second * 2;
   private static readonly clock = new Clock();
   static readonly bonuses = Bonus;
   static readonly letters = Letter;
@@ -128,49 +129,72 @@ export default class Game {
     this.turnDirector.resetCurrentTurn();
   }
 
-  async saveTurn(): Promise<ValidationError | null> {
+  saveTurn(): SaveTurnResult & { opponentTurn?: Promise<SaveTurnResult> } {
     this.ensureMutability();
-    const error = SaveTurnCommand.execute(this.context);
-    if (error) return error;
+    const player = this.turnDirector.currentPlayer;
+    const result = SaveTurnCommand.execute(this.context);
+    if ('error' in result) return result;
     this.events.raise(DomainEvent.TurnSaved);
-    if (this.turnDirector.currentPlayer !== Player.User) await this.createOpponentTurn();
-    return null;
+    if (this.checkTileDepletion(player)) return result;
+    const opponentTurn = this.turnDirector.currentPlayer !== Player.User ? this.createOpponentTurn() : undefined;
+    return { ...result, opponentTurn };
   }
 
-  async passTurn(): Promise<void> {
+  passTurn(): { opponentTurn?: Promise<SaveTurnResult> } {
     this.ensureMutability();
     PassTurnCommand.execute(this.context);
     this.events.raise(DomainEvent.TurnPassed);
-    if (this.turnDirector.currentPlayer !== Player.User) await this.createOpponentTurn();
+    const opponentTurn = this.turnDirector.currentPlayer !== Player.User ? this.createOpponentTurn() : undefined;
+    return { opponentTurn };
   }
 
-  private async createOpponentTurn(): Promise<void> {
+  private async createOpponentTurn(): Promise<SaveTurnResult> {
     const generatedPlacementLinks = await this.setMinimumExecutionTime(() =>
       this.placementLinksGeneratorWorker.execute({ context: this.context, player: Player.Opponent }),
     );
-    if (generatedPlacementLinks === null) return PassTurnCommand.execute(this.context);
+    if (generatedPlacementLinks === null) {
+      if (this.turnDirector.hasPlayerPassed(Player.Opponent)) {
+        ResignGameCommand.execute(this.context);
+        this.endGame();
+      } else {
+        PassTurnCommand.execute(this.context);
+        this.events.raise(DomainEvent.TurnPassed);
+      }
+      return { words: [] };
+    }
+    const player = this.turnDirector.currentPlayer;
     for (const link of generatedPlacementLinks) this.turnDirector.placeTile({ cell: link.cell, tile: link.tile });
     const result = TurnValidator.execute(this.context, this.turnDirector.currentTurnPlacementLinks);
     this.turnDirector.setCurrentTurnValidation(result);
-    SaveTurnCommand.execute(this.context);
+    const saveResult = SaveTurnCommand.execute(this.context);
+    this.checkTileDepletion(player);
+    return saveResult;
   }
 
   resignGame(): void {
     this.ensureMutability();
     ResignGameCommand.execute(this.context);
+    this.endGame();
+  }
+
+  private checkTileDepletion(player: Player): boolean {
+    if (this.inventory.hasTilesFor(player)) return false;
+    this.turnDirector.endGameByTileDepletion(Object.values(Player));
+    this.endGame();
+    return true;
+  }
+
+  private endGame(): void {
     this.placementLinksGeneratorWorker.terminate();
     this.isMutable = false;
     this.events.raise(DomainEvent.GameResigned);
   }
 
-  private async setMinimumExecutionTime<T>(
-    callback: () => Promise<T> | T,
-    delayTimeMs = TIME.ms_in_second,
-  ): Promise<T> {
+  private async setMinimumExecutionTime<T>(callback: () => Promise<T> | T): Promise<T> {
     const startTime = Game.clock.now();
     const result = await callback();
     const elapsed = Game.clock.now() - startTime;
-    const delay = delayTimeMs - elapsed;
+    const delay = Game.opponentResponseMinTime - elapsed;
     if (delay > 0) await Game.clock.wait(delay);
     return result;
   }

@@ -97,6 +97,10 @@ export default class TurnHistory {
     return this.currentTurn.score;
   }
 
+  get currentTurnWords(): ReadonlyArray<string> | undefined {
+    return this.currentTurn.words;
+  }
+
   get currentTurnIsValid(): boolean {
     return this.currentTurn.isValid;
   }

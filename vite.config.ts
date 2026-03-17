@@ -3,6 +3,8 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
+  root: 'src/gui',
+  publicDir: fileURLToPath(new URL('./public', import.meta.url)),
   plugins: [vue()],
   resolve: {
     alias: {
