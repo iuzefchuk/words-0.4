@@ -10,12 +10,7 @@ const { removeMessage } = storeToast;
   <Transition name="fade">
     <div v-if="messages.length > 0" class="toast">
       <TransitionGroup class="toast__list app__width-content" tag="ul" name="fade-down" appear>
-        <li
-          v-for="{ html, timestamp } in messages"
-          :key="timestamp"
-          class="toast__item"
-          @click="removeMessage(timestamp)"
-        >
+        <li v-for="{ html, id } in messages" :key="id" class="toast__item" @click="removeMessage(id)">
           <p v-html="html" />
         </li>
       </TransitionGroup>

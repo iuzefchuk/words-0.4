@@ -39,7 +39,12 @@ export default class Dictionary {
     return new Dictionary(rootNode, nodeById, allLetters);
   }
 
-  static createFromCache(cache: DictionaryCache): Dictionary {
+  static hydrate(data: unknown): Dictionary {
+    return Object.setPrototypeOf(data, Dictionary.prototype);
+  }
+
+  static createFromCache(cache: DictionaryCache): Dictionary | null {
+    if (!(cache.nodeById instanceof Map) || !(cache.allLetters instanceof Set)) return null;
     this.freezeTree(cache.rootNode);
     return new Dictionary(cache.rootNode, cache.nodeById, cache.allLetters);
   }

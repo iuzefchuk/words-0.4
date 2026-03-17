@@ -3,7 +3,7 @@ import Board, { CellIndex } from '@/domain/models/Board.ts';
 import { Player } from '@/domain/enums.ts';
 import { TileId } from '@/domain/models/Inventory.ts';
 import TurnHistory, { PlacementLinks, ValidationError, ValidationResult } from '@/domain/models/TurnHistory.ts';
-import { IdGenerator } from '@/domain/ports/IdGenerator.ts';
+import { IdGenerator } from '@/shared/ports.ts';
 
 export default class TurnDirector {
   private constructor(
@@ -28,6 +28,12 @@ export default class TurnDirector {
     return director;
   }
 
+  static hydrate(data: unknown): TurnDirector {
+    const director = Object.setPrototypeOf(data, TurnDirector.prototype) as TurnDirector;
+    TurnHistory.hydrate(director.history);
+    return director;
+  }
+
   get currentPlayer(): Player {
     return this.history.currentPlayer;
   }
@@ -41,15 +47,15 @@ export default class TurnDirector {
   }
 
   get currentTurnError(): ValidationError | undefined {
-    return this.history.currentTurn.error;
+    return this.history.currentTurnError;
   }
 
   get currentTurnScore(): number | undefined {
-    return this.history.currentTurn.score;
+    return this.history.currentTurnScore;
   }
 
   get currentTurnIsValid(): boolean {
-    return this.history.currentTurn.isValid;
+    return this.history.currentTurnIsValid;
   }
 
   get currentTurnPlacementLinks(): PlacementLinks {
@@ -73,24 +79,24 @@ export default class TurnDirector {
   }
 
   placeTile({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
-    this.history.currentTurn.placeTile({ cell, tile });
+    this.history.placeTileInCurrentTurn({ cell, tile });
     this.board.placeTile(cell, tile);
   }
 
   undoPlaceTile({ tile }: { tile: TileId }): void {
-    this.history.currentTurn.undoPlaceTile({ tile });
+    this.history.undoPlaceTileInCurrentTurn({ tile });
     this.board.undoPlaceTile(tile);
   }
 
   setCurrentTurnValidation(result: ValidationResult): void {
-    this.history.currentTurn.setValidationResult(result);
+    this.history.setCurrentTurnValidation(result);
   }
 
   resetCurrentTurn(): void {
-    for (const { tile } of this.history.currentTurn.placementLinks) {
+    for (const { tile } of this.history.currentTurnPlacementLinks) {
       this.board.undoPlaceTile(tile);
     }
-    this.history.currentTurn.reset();
+    this.history.resetCurrentTurn();
   }
 
   saveCurrentTurn(): void {

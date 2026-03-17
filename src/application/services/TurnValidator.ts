@@ -1,6 +1,5 @@
-import { GenerationContext } from '@/application/services/GenerationContext.ts';
-import { CellIndex, AnchorCoordinates } from '@/domain/models/Board.ts';
-import { TileId } from '@/domain/models/Inventory.ts';
+import { GameContext } from '@/application/types.ts';
+import { AnchorCoordinates } from '@/domain/models/Board.ts';
 import PlacementLinksBuilder from '@/domain/services/PlacementBuilder.ts';
 import ScoreCalculator from '@/domain/services/ScoreCalculator.ts';
 import {
@@ -8,17 +7,16 @@ import {
   ValidationStatus,
   ValidationError,
   ComputedValue,
+  ComputedSequences,
+  ComputedPlacementLinks,
+  ComputedWords,
+  ComputedScore,
   ValidationResult,
   InvalidResult,
   ValidResult,
 } from '@/domain/models/TurnHistory.ts';
 
 export type ValidatorArguments = { initialPlacementLinks: PlacementLinks };
-
-type ComputedSequences = { sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> } };
-type ComputedPlacementLinks = { placementLinks: ReadonlyArray<PlacementLinks> };
-type ComputedWords = { words: ReadonlyArray<string> };
-type ComputedScore = { score: number };
 
 export type PendingResult<State> = { status: ValidationStatus.Pending; state: State };
 

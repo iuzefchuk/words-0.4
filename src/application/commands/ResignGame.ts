@@ -1,4 +1,4 @@
-import { GameContext } from '@/application/index.ts';
+import { GameContext } from '@/application/types.ts';
 
 export default class ResignGame {
   static execute(context: GameContext): void {

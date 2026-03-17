@@ -9,7 +9,10 @@ export default class IndexedDbDictionaryFactory {
 
   static async create(): Promise<Dictionary> {
     const cache = await this.IndexedDbManager.load(this.cacheVersion);
-    if (cache) return Dictionary.createFromCache(cache);
+    if (cache) {
+      const dictionary = Dictionary.createFromCache(cache);
+      if (dictionary) return dictionary;
+    }
     const dictionary = Dictionary.create();
     const versionedCache: VersionedCache = { version: this.cacheVersion, data: dictionary.cache };
     this.IndexedDbManager.save(versionedCache);

@@ -1,5 +1,5 @@
 import { Player } from '@/domain/enums.ts';
-import { GameContext, GameState } from '@/application/index.ts';
+import { GameContext, GameState } from '@/application/types.ts';
 
 export default class GameStateQuery {
   static execute(context: GameContext, isMutable: boolean): GameState {

@@ -21,10 +21,10 @@ export enum ValidationError {
   WordNotInDictionary = 'error_tile_4',
 }
 
-type ComputedSequences = { sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> } };
-type ComputedPlacementLinks = { placementLinks: ReadonlyArray<PlacementLinks> };
-type ComputedWords = { words: ReadonlyArray<string> };
-type ComputedScore = { score: number };
+export type ComputedSequences = { sequences: { cell: ReadonlyArray<CellIndex>; tile: ReadonlyArray<TileId> } };
+export type ComputedPlacementLinks = { placementLinks: ReadonlyArray<PlacementLinks> };
+export type ComputedWords = { words: ReadonlyArray<string> };
+export type ComputedScore = { score: number };
 
 export type ComputedValue = ComputedSequences | ComputedPlacementLinks | ComputedWords | ComputedScore;
 
@@ -48,6 +48,10 @@ export default class TurnHistory {
     return new TurnHistory([], idGenerator);
   }
 
+  static hydrate(data: unknown): TurnHistory {
+    return Object.setPrototypeOf(data, TurnHistory.prototype);
+  }
+
   get hasOpponentTurns(): boolean {
     return this.turns.length > 1;
   }
@@ -61,7 +65,7 @@ export default class TurnHistory {
     return this.currentPlayer === Player.User ? Player.Opponent : Player.User;
   }
 
-  get currentTurn(): Turn {
+  private get currentTurn(): Turn {
     const last = this.turns.at(-1);
     if (!last) throw new Error('Current turn does not exist');
     return last;
@@ -85,8 +89,36 @@ export default class TurnHistory {
       .reduce((sum, turn) => sum + (turn.score ?? 0), 0);
   }
 
+  get currentTurnError(): ValidationError | undefined {
+    return this.currentTurn.error;
+  }
+
+  get currentTurnScore(): number | undefined {
+    return this.currentTurn.score;
+  }
+
+  get currentTurnIsValid(): boolean {
+    return this.currentTurn.isValid;
+  }
+
   get currentTurnPlacementLinks(): PlacementLinks {
     return this.currentTurn.placementLinks;
+  }
+
+  placeTileInCurrentTurn({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
+    this.currentTurn.placeTile({ cell, tile });
+  }
+
+  undoPlaceTileInCurrentTurn({ tile }: { tile: TileId }): void {
+    this.currentTurn.undoPlaceTile({ tile });
+  }
+
+  setCurrentTurnValidation(result: ValidationResult): void {
+    this.currentTurn.setValidationResult(result);
+  }
+
+  resetCurrentTurn(): void {
+    this.currentTurn.reset();
   }
 
   createNewTurnFor(player: Player): void {
@@ -104,7 +136,7 @@ class Turn {
   ) {}
 
   static create({ player, idGenerator }: { player: Player; idGenerator: IdGenerator }): Turn {
-    const id = idGenerator.generate();
+    const id = idGenerator.execute();
     const initialPlacement = Placement.create();
     const validationResult: UnvalidatedResult = { status: ValidationStatus.Unvalidated };
     return new Turn(id, player, initialPlacement, validationResult);

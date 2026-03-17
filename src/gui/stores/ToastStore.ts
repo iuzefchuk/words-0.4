@@ -4,7 +4,7 @@ import { wait } from '@/shared/helpers.ts';
 import { IdGenerator } from '@/shared/ports.ts';
 import CryptoIdGenerator from '@/infrastructure/CryptoIdGenerator.ts';
 
-export type Message = { html: string; timestamp: string };
+export type Message = { html: string; id: string };
 
 export default class ToastStore {
   private static readonly timeoutMs = 2500;
@@ -31,15 +31,15 @@ export default class ToastStore {
   }
 
   private async addMessage(html: string): Promise<void> {
-    const message: Message = { html, timestamp: ToastStore.idGenerator.generate() };
+    const message: Message = { html, id: ToastStore.idGenerator.execute() };
     if (this.maxLimitIsReached) this.messages.shift();
     this.messages.push(message);
     await wait(ToastStore.timeoutMs);
-    this.removeMessage(message.timestamp);
+    this.removeMessage(message.id);
   }
 
-  private removeMessage(timestamp: string): void {
-    const index = this.messages.findIndex(toast => toast.timestamp === timestamp);
+  private removeMessage(id: string): void {
+    const index = this.messages.findIndex(toast => toast.id === id);
     if (index !== -1) this.messages.splice(index, 1);
   }
 }

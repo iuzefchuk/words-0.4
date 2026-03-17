@@ -1,4 +1,4 @@
-import { GameContext } from '@/application/index.ts';
+import { GameContext } from '@/application/types.ts';
 import { Player } from '@/domain/enums.ts';
 import { PlacementLinks } from '@/domain/models/TurnHistory.ts';
 

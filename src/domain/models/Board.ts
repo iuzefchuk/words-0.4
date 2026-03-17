@@ -34,54 +34,54 @@ class Layout {
   private static readonly bonusByCell: ReadonlyMap<CellIndex, Bonus> = new Map(
     Object.values(Bonus).flatMap(bonus => BONUS_CELL_INDEXES[bonus].map(cellIndex => [cellIndex, bonus] as const)),
   );
+  private static readonly centerCell: CellIndex = (() => {
+    const mid = Math.floor(Layout.cellsPerAxis / 2);
+    return mid * Layout.cellsPerAxis + mid;
+  })();
 
-  static create(): Layout {
-    return new Layout();
-  }
-
-  get cells(): ReadonlyArray<CellIndex> {
+  static get cells(): ReadonlyArray<CellIndex> {
     return Layout.cellsByIndex;
   }
 
-  isCellPositionOnLeftEdge(cellPosition: number): boolean {
+  static isCellPositionOnLeftEdge(cellPosition: number): boolean {
     return cellPosition === 0;
   }
 
-  isCellPositionOnRightEdge(cellPosition: number): boolean {
+  static isCellPositionOnRightEdge(cellPosition: number): boolean {
     return cellPosition === Layout.cellsPerAxis - 1;
   }
 
-  isCellCenter(cell: CellIndex): boolean {
-    this.validateCell(cell);
-    return cell === this.centerCell;
+  static isCellCenter(cell: CellIndex): boolean {
+    Layout.validateCell(cell);
+    return cell === Layout.centerCell;
   }
 
-  getBonusForCell(cell: CellIndex): Bonus | null {
-    this.validateCell(cell);
+  static getBonusForCell(cell: CellIndex): Bonus | null {
+    Layout.validateCell(cell);
     return Layout.bonusByCell.get(cell) ?? null;
   }
 
-  getLetterMultiplier(cell: CellIndex): number {
-    this.validateCell(cell);
-    const bonus = this.getBonusForCell(cell);
+  static getLetterMultiplier(cell: CellIndex): number {
+    Layout.validateCell(cell);
+    const bonus = Layout.getBonusForCell(cell);
     if (bonus === Bonus.DoubleLetter) return 2;
     if (bonus === Bonus.TripleLetter) return 3;
     return 1;
   }
 
-  getWordMultiplier(cell: CellIndex): number {
-    this.validateCell(cell);
-    const bonus = this.getBonusForCell(cell);
+  static getWordMultiplier(cell: CellIndex): number {
+    Layout.validateCell(cell);
+    const bonus = Layout.getBonusForCell(cell);
     if (bonus === Bonus.DoubleWord) return 2;
     if (bonus === Bonus.TripleWord) return 3;
     return 1;
   }
 
-  getAdjacentCells(cell: CellIndex): ReadonlyArray<CellIndex> {
-    this.validateCell(cell);
+  static getAdjacentCells(cell: CellIndex): ReadonlyArray<CellIndex> {
+    Layout.validateCell(cell);
     const result: Array<CellIndex> = [];
-    const row = this.getRowIndex(cell);
-    const column = this.getColumnIndex(cell);
+    const row = Layout.getRowIndex(cell);
+    const column = Layout.getColumnIndex(cell);
     if (column > 0) result.push(cell - 1);
     if (column < Layout.cellsPerAxis - 1) result.push(cell + 1);
     if (row > 0) result.push(cell - Layout.cellsPerAxis);
@@ -89,38 +89,32 @@ class Layout {
     return result;
   }
 
-  getAxisCells(coords: AnchorCoordinates): ReadonlyArray<CellIndex> {
+  static getAxisCells(coords: AnchorCoordinates): ReadonlyArray<CellIndex> {
     const { axis, cell } = coords;
-    this.validateCell(cell);
+    Layout.validateCell(cell);
     return Array.from({ length: Layout.cellsPerAxis }, (_, i) =>
-      axis === Axis.X ? cell - this.getColumnIndex(cell) + i : this.getColumnIndex(cell) + i * Layout.cellsPerAxis,
+      axis === Axis.X ? cell - Layout.getColumnIndex(cell) + i : Layout.getColumnIndex(cell) + i * Layout.cellsPerAxis,
     );
   }
 
-  getRowIndex(cell: CellIndex): number {
+  static getRowIndex(cell: CellIndex): number {
     return Math.floor(cell / Layout.cellsPerAxis);
   }
 
-  getColumnIndex(cell: CellIndex): number {
+  static getColumnIndex(cell: CellIndex): number {
     return cell % Layout.cellsPerAxis;
   }
 
-  getOppositeAxis(axis: Axis): Axis {
+  static getOppositeAxis(axis: Axis): Axis {
     return axis === Axis.X ? Axis.Y : Axis.X;
   }
 
-  validateCell(cell: CellIndex): void {
+  static validateCell(cell: CellIndex): void {
     if (cell < 0 || cell >= Layout.cellsByIndex.length) throw new Error('Cell out of bounds');
-  }
-
-  private get centerCell(): CellIndex {
-    const mid = Math.floor(Layout.cellsPerAxis / 2);
-    return mid * Layout.cellsPerAxis + mid;
   }
 }
 
 export default class Board {
-  private static readonly layout = Layout.create();
   private static readonly defaultAxis = Axis.X;
 
   private constructor(
@@ -132,52 +126,56 @@ export default class Board {
     return new Board(new Map(), new Map());
   }
 
+  static hydrate(data: unknown): Board {
+    return Object.setPrototypeOf(data, Board.prototype);
+  }
+
   get cells(): ReadonlyArray<CellIndex> {
-    return Board.layout.cells;
+    return Layout.cells;
   }
 
   isCellCenter(cell: CellIndex): boolean {
-    return Board.layout.isCellCenter(cell);
+    return Layout.isCellCenter(cell);
   }
 
   getBonusForCell(cell: CellIndex): Bonus | null {
-    return Board.layout.getBonusForCell(cell);
+    return Layout.getBonusForCell(cell);
   }
 
   getLetterMultiplier(cell: CellIndex): number {
-    return Board.layout.getLetterMultiplier(cell);
+    return Layout.getLetterMultiplier(cell);
   }
 
   getWordMultiplier(cell: CellIndex): number {
-    return Board.layout.getWordMultiplier(cell);
+    return Layout.getWordMultiplier(cell);
   }
 
   getAdjacentCells(cell: CellIndex): ReadonlyArray<CellIndex> {
-    return Board.layout.getAdjacentCells(cell);
+    return Layout.getAdjacentCells(cell);
   }
 
   getAxisCells(coords: AnchorCoordinates): ReadonlyArray<CellIndex> {
-    return Board.layout.getAxisCells(coords);
+    return Layout.getAxisCells(coords);
   }
 
   getRowIndex(cell: CellIndex): number {
-    return Board.layout.getRowIndex(cell);
+    return Layout.getRowIndex(cell);
   }
 
   getColumnIndex(cell: CellIndex): number {
-    return Board.layout.getColumnIndex(cell);
+    return Layout.getColumnIndex(cell);
   }
 
   getOppositeAxis(axis: Axis): Axis {
-    return Board.layout.getOppositeAxis(axis);
+    return Layout.getOppositeAxis(axis);
   }
 
   isCellPositionOnLeftEdge(cellPosition: number): boolean {
-    return Board.layout.isCellPositionOnLeftEdge(cellPosition);
+    return Layout.isCellPositionOnLeftEdge(cellPosition);
   }
 
   isCellPositionOnRightEdge(cellPosition: number): boolean {
-    return Board.layout.isCellPositionOnRightEdge(cellPosition);
+    return Layout.isCellPositionOnRightEdge(cellPosition);
   }
 
   findTileByCell(cell: CellIndex): TileId | undefined {
@@ -197,7 +195,7 @@ export default class Board {
   }
 
   placeTile(cell: CellIndex, tile: TileId): void {
-    Board.layout.validateCell(cell);
+    Layout.validateCell(cell);
     if (this.tileByCell.has(cell)) throw new Error(`Cell ${cell} is already occupied`);
     if (this.cellByTile.has(tile)) throw new Error(`Tile ${tile} is already placed on the board`);
     this.tileByCell.set(cell, tile);
@@ -213,13 +211,13 @@ export default class Board {
 
   getAnchorCells(historyHasOpponentTurns: boolean): ReadonlySet<CellIndex> {
     return new Set(
-      Board.layout.cells.filter((cell: CellIndex) => {
-        const isCenter = Board.layout.isCellCenter(cell);
+      Layout.cells.filter((cell: CellIndex) => {
+        const isCenter = Layout.isCellCenter(cell);
         if (!historyHasOpponentTurns) return isCenter;
         if (this.isCellOccupied(cell)) return false;
-        const hasUsedAdjacentCells = Board.layout
-          .getAdjacentCells(cell)
-          .some((adjacentCell: CellIndex) => this.isCellOccupied(adjacentCell));
+        const hasUsedAdjacentCells = Layout.getAdjacentCells(cell).some((adjacentCell: CellIndex) =>
+          this.isCellOccupied(adjacentCell),
+        );
         return isCenter || hasUsedAdjacentCells;
       }),
     );

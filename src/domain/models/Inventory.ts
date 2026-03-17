@@ -30,6 +30,15 @@ export default class Inventory {
     return new Inventory(drawPool, racks, discardPool, tileById);
   }
 
+  static hydrate(data: unknown): Inventory {
+    const inventory = Object.setPrototypeOf(data, Inventory.prototype) as Inventory;
+    for (const rack of inventory.racks.values()) Rack.hydrate(rack);
+    for (const tile of inventory.tileById.values()) Tile.hydrate(tile);
+    for (const tile of inventory.drawPool) Tile.hydrate(tile);
+    for (const tile of inventory.discardPool) Tile.hydrate(tile);
+    return inventory;
+  }
+
   get unusedTilesCount(): number {
     return this.drawPool.length;
   }
@@ -105,6 +114,12 @@ class Rack {
     return new Rack(maxLimit, tiles);
   }
 
+  static hydrate(data: unknown): Rack {
+    const rack = Object.setPrototypeOf(data, Rack.prototype) as Rack;
+    for (const tile of rack.tiles) Tile.hydrate(tile);
+    return rack;
+  }
+
   get tileCount(): number {
     return this.tiles.length;
   }
@@ -161,8 +176,12 @@ class Tile {
   ) {}
 
   static create({ letter, idGenerator }: { letter: Letter; idGenerator: IdGenerator }): Tile {
-    const id = idGenerator.generate();
+    const id = idGenerator.execute();
     return new Tile(id, letter);
+  }
+
+  static hydrate(data: unknown): Tile {
+    return Object.setPrototypeOf(data, Tile.prototype);
   }
 
   get points(): number {
@@ -175,26 +194,26 @@ class Tile {
 }
 
 const LETTER_DISTRIBUTION = {
-  [Letter.A]: 10,
+  [Letter.A]: 9,
   [Letter.B]: 2,
   [Letter.C]: 2,
-  [Letter.D]: 5,
+  [Letter.D]: 4,
   [Letter.E]: 12,
   [Letter.F]: 2,
   [Letter.G]: 3,
-  [Letter.H]: 3,
+  [Letter.H]: 2,
   [Letter.I]: 9,
   [Letter.J]: 1,
   [Letter.K]: 1,
   [Letter.L]: 4,
   [Letter.M]: 2,
   [Letter.N]: 6,
-  [Letter.O]: 7,
+  [Letter.O]: 8,
   [Letter.P]: 2,
   [Letter.Q]: 1,
   [Letter.R]: 6,
-  [Letter.S]: 5,
-  [Letter.T]: 7,
+  [Letter.S]: 4,
+  [Letter.T]: 6,
   [Letter.U]: 4,
   [Letter.V]: 2,
   [Letter.W]: 2,

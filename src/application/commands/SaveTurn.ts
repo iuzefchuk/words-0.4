@@ -1,4 +1,4 @@
-import { GameContext } from '@/application/index.ts';
+import { GameContext } from '@/application/types.ts';
 import { TileId } from '@/domain/models/Inventory.ts';
 import { ValidationError } from '@/domain/models/TurnHistory.ts';
 

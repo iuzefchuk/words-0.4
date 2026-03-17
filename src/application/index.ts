@@ -1,9 +1,11 @@
-import Board, { Bonus, CellIndex } from '@/domain/models/Board.ts';
+import Board, { Bonus } from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
 import { Letter, Player } from '@/domain/enums.ts';
-import Inventory, { TileId } from '@/domain/models/Inventory.ts';
-import { PlacementLinks, ValidationError } from '@/domain/models/TurnHistory.ts';
+import { DomainEvent, EventCollector } from '@/domain/events.ts';
+import Inventory from '@/domain/models/Inventory.ts';
+import { ValidationError } from '@/domain/models/TurnHistory.ts';
 import { TIME } from '@/shared/constants.ts';
+import { GameContext, GameCell, GameTile, GameState } from '@/application/types.ts';
 import GameStateQuery from '@/application/queries/GameState.ts';
 import TurnValidator from '@/application/services/TurnValidator.ts';
 import TurnDirector from '@/application/TurnDirector.ts';
@@ -17,33 +19,14 @@ import IndexedDbDictionaryFactory from '@/infrastructure/IndexedDbDictionaryFact
 import IdGenerator from '@/infrastructure/CryptoIdGenerator.ts';
 import Clock from '@/infrastructure/DateApiClock.ts';
 
-export type GameContext = {
-  board: Board;
-  dictionary: Dictionary;
-  inventory: Inventory;
-  turnDirector: TurnDirector;
-};
-
-export type GameCell = CellIndex;
-
-export type GameTile = TileId;
-
-export type GameState = {
-  isFinished: boolean;
-  tilesRemaining: number;
-  userTiles: ReadonlyArray<TileId>;
-  currentTurnScore?: number;
-  userScore: number;
-  opponentScore: number;
-  currentPlayerIsUser: boolean;
-  userPassWillBeResign: boolean;
-};
+export type { GameCell, GameTile, GameState } from '@/application/types.ts';
 
 export default class Game {
   private static readonly clock = new Clock();
   static readonly bonuses = Bonus;
   static readonly letters = Letter;
   private readonly placementLinksGeneratorWorker = new PlacementLinksGeneratorWorker();
+  private readonly events = new EventCollector();
   private static dictionary: Dictionary;
   private isMutable: boolean = true;
 
@@ -118,19 +101,26 @@ export default class Game {
     return previousTurnTileSequence.includes(tile);
   }
 
+  drainEvents(): Array<DomainEvent> {
+    return this.events.drain();
+  }
+
   shuffleUserTiles(): void {
     this.ensureMutability();
     this.inventory.shuffleTilesFor(Player.User);
+    this.events.raise(DomainEvent.TilesShuffled);
   }
 
   placeTile({ cell, tile }: { cell: GameCell; tile: GameTile }): void {
     this.ensureMutability();
     PlaceTileCommand.execute(this.context, { cell, tile });
+    this.events.raise(DomainEvent.TilePlaced);
   }
 
   undoPlaceTile(tile: GameTile): void {
     this.ensureMutability();
     UndoPlaceTileCommand.execute(this.context, { tile });
+    this.events.raise(DomainEvent.TileUndone);
   }
 
   resetTurn(): void {
@@ -138,19 +128,23 @@ export default class Game {
     this.turnDirector.resetCurrentTurn();
   }
 
-  saveTurn(): ValidationError | null {
+  async saveTurn(): Promise<ValidationError | null> {
     this.ensureMutability();
     const error = SaveTurnCommand.execute(this.context);
     if (error) return error;
+    this.events.raise(DomainEvent.TurnSaved);
+    if (this.turnDirector.currentPlayer !== Player.User) await this.createOpponentTurn();
     return null;
   }
 
-  passTurn(): void {
+  async passTurn(): Promise<void> {
     this.ensureMutability();
     PassTurnCommand.execute(this.context);
+    this.events.raise(DomainEvent.TurnPassed);
+    if (this.turnDirector.currentPlayer !== Player.User) await this.createOpponentTurn();
   }
 
-  async createOpponentTurn(): Promise<void> {
+  private async createOpponentTurn(): Promise<void> {
     const generatedPlacementLinks = await this.setMinimumExecutionTime(() =>
       this.placementLinksGeneratorWorker.execute({ context: this.context, player: Player.Opponent }),
     );
@@ -166,6 +160,7 @@ export default class Game {
     ResignGameCommand.execute(this.context);
     this.placementLinksGeneratorWorker.terminate();
     this.isMutable = false;
+    this.events.raise(DomainEvent.GameResigned);
   }
 
   private async setMinimumExecutionTime<T>(
