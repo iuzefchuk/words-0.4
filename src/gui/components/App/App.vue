@@ -3,7 +3,6 @@ import AppMain from '@/gui/components/App/AppMain/AppMain.vue';
 import AppDialog from '@/gui/components/App/AppDialog.vue';
 import AppEndscreen from '@/gui/components/App/AppEndscreen.vue';
 import AppLoader from '@/gui/components/App/AppLoader.vue';
-import AppToast from '@/gui/components/App/AppToast.vue';
 import { onMounted, ref, inject } from 'vue';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import { storeToRefs } from 'pinia';
@@ -33,7 +32,6 @@ onMounted(() => {
     <AppLoader :is-active="loaderIsActive" @derendered="mainIsRendered = true" />
     <AppMain v-if="mainIsRendered" />
     <AppDialog />
-    <AppToast />
   </div>
   <AppEndscreen v-if="matchIsFinished" />
 </template>

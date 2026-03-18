@@ -11,8 +11,9 @@ export default class GameStateQuery {
       currentTurnScore: turnDirector.currentTurnScore,
       userScore: turnDirector.getScoreFor(Player.User),
       opponentScore: turnDirector.getScoreFor(Player.Opponent),
+      currentTurnIsValid: turnDirector.currentTurnIsValid,
       currentPlayerIsUser: turnDirector.currentPlayer === Player.User,
-      userPassWillBeResign: turnDirector.hasPlayerPassed(Player.User),
+      userPassWillBeResign: turnDirector.willPlayerPassBeResign(Player.User),
     };
   }
 }

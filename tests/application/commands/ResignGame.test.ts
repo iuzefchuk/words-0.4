@@ -10,7 +10,7 @@ describe('ResignGame', () => {
 
     ResignGame.execute(context);
     // Resignation records loss for current player, not a pass
-    expect(context.turnDirector.hasPlayerPassed(Player.User)).toBe(false);
+    expect(context.turnDirector.willPlayerPassBeResign(Player.User)).toBe(false);
   });
 
   it('does not advance the turn', () => {

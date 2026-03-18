@@ -24,6 +24,7 @@ export type GameState = {
   currentTurnScore?: number;
   userScore: number;
   opponentScore: number;
+  currentTurnIsValid: boolean;
   currentPlayerIsUser: boolean;
   userPassWillBeResign: boolean;
 };

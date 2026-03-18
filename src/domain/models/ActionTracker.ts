@@ -1,31 +1,43 @@
 import { Player } from '@/domain/enums.ts';
 
-export enum PlayerAction {
-  Joined = 'Joined',
-  Saved = 'Saved',
-  Passed = 'Passed',
+export enum ActionType {
+  Save = 'Save',
+  Pass = 'Pass',
   Won = 'Won',
   Lost = 'Lost',
   Tied = 'Tied',
 }
 
+export type Action =
+  | { type: ActionType.Save; player: Player; words: ReadonlyArray<string>; points: number }
+  | { type: ActionType.Pass; player: Player }
+  | { type: ActionType.Won; player: Player }
+  | { type: ActionType.Lost; player: Player }
+  | { type: ActionType.Tied; player: Player };
+
 export default class ActionTracker {
-  private constructor(private readonly lastActions: Map<Player, PlayerAction>) {}
+  private readonly _log: Array<Action> = [];
 
-  static create(players: ReadonlyArray<Player>): ActionTracker {
-    const actions = new Map(players.map(player => [player, PlayerAction.Joined]));
-    return new ActionTracker(actions);
+  get log(): ReadonlyArray<Action> {
+    return [...this._log];
   }
 
-  record(player: Player, action: PlayerAction): void {
-    this.lastActions.set(player, action);
+  record(action: Action): void {
+    this._log.push(action);
   }
 
-  hasPlayerPassed(player: Player): boolean {
-    return this.lastActions.get(player) === PlayerAction.Passed;
+  willPlayerPassBeResign(player: Player): boolean {
+    return this.lastActionFor(player)?.type === ActionType.Pass;
   }
 
-  getLastAction(player: Player): PlayerAction | undefined {
-    return this.lastActions.get(player);
+  getLastAction(player: Player): Action | undefined {
+    return this.lastActionFor(player);
+  }
+
+  private lastActionFor(player: Player): Action | undefined {
+    for (let i = this._log.length - 1; i >= 0; i--) {
+      if (this._log[i].player === player) return this._log[i];
+    }
+    return undefined;
   }
 }

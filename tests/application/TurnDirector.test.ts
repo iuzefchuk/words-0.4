@@ -8,7 +8,7 @@ import { TestIdGenerator, cellIndex, tileId } from '$/helpers.ts';
 function createDirector() {
   const board = Board.create();
   const idGenerator = new TestIdGenerator();
-  return { director: TurnDirector.create({ players: [Player.User, Player.Opponent], board, idGenerator }), board };
+  return { director: TurnDirector.create({ board, idGenerator }), board };
 }
 
 describe('TurnDirector', () => {
@@ -87,7 +87,7 @@ describe('TurnDirector', () => {
     it('records pass action', () => {
       const { director } = createDirector();
       director.passCurrentTurn();
-      expect(director.hasPlayerPassed(Player.User)).toBe(true);
+      expect(director.willPlayerPassBeResign(Player.User)).toBe(true);
     });
   });
 
@@ -96,8 +96,8 @@ describe('TurnDirector', () => {
       const { director } = createDirector();
       // User resigns
       director.resignCurrentTurn();
-      // hasPlayerPassed won't be true since resign records Won/Lost not Passed
-      expect(director.hasPlayerPassed(Player.User)).toBe(false);
+      // willPlayerPassBeResign won't be true since resign records Won/Lost not Passed
+      expect(director.willPlayerPassBeResign(Player.User)).toBe(false);
     });
   });
 

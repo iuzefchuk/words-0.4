@@ -1,16 +1,14 @@
 <script lang="ts" setup>
-const messages: ReadonlyArray<{ text: string; words: ReadonlyArray<string> }> = [
-  {
-    text: 'You player FOO for 34 pts',
-    words: ['FOO'],
-  },
-];
-function convertMessageToHtml(message: { text: string; words: ReadonlyArray<string> }): string {
-  const result = message.text;
-  message.words.forEach(word => {
-    result.replaceAll(word, `<em>${word}</em>`);
-  });
-  return result;
+import { computed } from 'vue';
+import { ActionType, type Action } from '@/domain/models/ActionTracker.ts';
+import MatchStore from '@/gui/stores/MatchStore.ts';
+const MAX_ACTIONS = 3;
+const matchStore = MatchStore.getInstance();
+const messages = computed(() => matchStore.actionLog.slice(-MAX_ACTIONS));
+function convertMessageToHtml(message: Action): string {
+  if (message.type === ActionType.Save) return `${message.words.join(', ')} <em>${message.points}pts</em>`;
+  if (message.type === ActionType.Pass) return '<em>passed</em>';
+  return '';
 }
 </script>
 

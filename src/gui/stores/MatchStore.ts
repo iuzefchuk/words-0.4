@@ -1,5 +1,6 @@
 import Game from '@/application/index.ts';
 import { GameCell, GameTile, GameState, SaveTurnResult } from '@/application/types.ts';
+import { Action } from '@/domain/models/ActionTracker.ts';
 import { DomainEvent } from '@/domain/events.ts';
 import { defineStore } from 'pinia';
 import { computed, Ref, shallowRef } from 'vue';
@@ -36,6 +37,7 @@ export default class MatchStore {
       currentTurnScore: store.state.currentTurnScore,
       userScore: store.state.userScore,
       opponentScore: store.state.opponentScore,
+      currentTurnIsValid: store.state.currentTurnIsValid,
       currentPlayerIsUser: store.state.currentPlayerIsUser,
       userPassWillBeResign: store.state.userPassWillBeResign,
       isCellInCenterOfLayout: store.isCellInCenterOfLayout.bind(store),
@@ -54,6 +56,7 @@ export default class MatchStore {
       saveTurn: store.saveTurn.bind(store),
       passTurn: store.passTurn.bind(store),
       resignGame: store.resignGame.bind(store),
+      actionLog: store.state.actionLog,
     };
   });
 
@@ -157,8 +160,13 @@ export default class MatchStore {
     readonly currentTurnScore = computed(() => this.state.currentTurnScore);
     readonly userScore = computed(() => this.state.userScore);
     readonly opponentScore = computed(() => this.state.opponentScore);
+    readonly currentTurnIsValid = computed(() => this.state.currentTurnIsValid);
     readonly currentPlayerIsUser = computed(() => this.state.currentPlayerIsUser);
     readonly userPassWillBeResign = computed(() => this.state.userPassWillBeResign);
+    readonly actionLog = computed<ReadonlyArray<Action>>(() => {
+      void this.stateRef.value;
+      return [...this.game.actionLog];
+    });
 
     private readonly stateRef: Ref<GameState>;
 

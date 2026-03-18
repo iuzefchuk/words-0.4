@@ -1,4 +1,4 @@
-import ActionTracker, { PlayerAction } from '@/domain/models/ActionTracker.ts';
+import ActionTracker, { Action, ActionType } from '@/domain/models/ActionTracker.ts';
 import Board, { CellIndex } from '@/domain/models/Board.ts';
 import { Player } from '@/domain/enums.ts';
 import { TileId } from '@/domain/models/Inventory.ts';
@@ -12,17 +12,9 @@ export default class TurnDirector {
     private readonly actionTracker: ActionTracker,
   ) {}
 
-  static create({
-    players,
-    board,
-    idGenerator,
-  }: {
-    players: ReadonlyArray<Player>;
-    board: Board;
-    idGenerator: IdGenerator;
-  }): TurnDirector {
+  static create({ board, idGenerator }: { board: Board; idGenerator: IdGenerator }): TurnDirector {
     const history = TurnHistory.create({ idGenerator });
-    const actionTracker = ActionTracker.create(players);
+    const actionTracker = new ActionTracker();
     const director = new TurnDirector(board, history, actionTracker);
     director.startTurnForNextPlayer();
     return director;
@@ -78,12 +70,16 @@ export default class TurnDirector {
     return this.history.getScoreFor(player);
   }
 
-  hasPlayerPassed(player: Player): boolean {
-    return this.actionTracker.hasPlayerPassed(player);
+  willPlayerPassBeResign(player: Player): boolean {
+    return this.actionTracker.willPlayerPassBeResign(player);
   }
 
-  getLastActionFor(player: Player): PlayerAction | undefined {
+  getLastActionFor(player: Player): Action | undefined {
     return this.actionTracker.getLastAction(player);
+  }
+
+  get actionLog(): ReadonlyArray<Action> {
+    return this.actionTracker.log;
   }
 
   placeTile({ cell, tile }: { cell: CellIndex; tile: TileId }): void {
@@ -109,20 +105,24 @@ export default class TurnDirector {
 
   saveCurrentTurn(): void {
     if (!this.currentTurnIsValid) throw new Error('Turn is not valid');
-    this.actionTracker.record(this.history.currentPlayer, PlayerAction.Saved);
+    const player = this.history.currentPlayer;
+    const words = this.currentTurnWords ?? [];
+    const points = this.currentTurnScore ?? 0;
+    this.actionTracker.record({ type: ActionType.Save, player, words, points });
     this.startTurnForNextPlayer();
   }
 
   passCurrentTurn(): void {
-    this.actionTracker.record(this.history.currentPlayer, PlayerAction.Passed);
+    const player = this.history.currentPlayer;
+    this.actionTracker.record({ type: ActionType.Pass, player });
     this.startTurnForNextPlayer();
   }
 
   resignCurrentTurn(): void {
     const loser = this.history.currentPlayer;
     const winner = this.history.nextPlayer;
-    this.actionTracker.record(loser, PlayerAction.Lost);
-    this.actionTracker.record(winner, PlayerAction.Won);
+    this.actionTracker.record({ type: ActionType.Lost, player: loser });
+    this.actionTracker.record({ type: ActionType.Won, player: winner });
   }
 
   endGameByTileDepletion(players: ReadonlyArray<Player>): void {
@@ -130,10 +130,10 @@ export default class TurnDirector {
     const maxScore = Math.max(...scores.map(s => s.score));
     const allTied = scores.every(s => s.score === maxScore);
     if (allTied) {
-      for (const { player } of scores) this.actionTracker.record(player, PlayerAction.Tied);
+      for (const { player } of scores) this.actionTracker.record({ type: ActionType.Tied, player });
     } else {
       for (const { player, score } of scores) {
-        this.actionTracker.record(player, score === maxScore ? PlayerAction.Won : PlayerAction.Lost);
+        this.actionTracker.record({ type: score === maxScore ? ActionType.Won : ActionType.Lost, player });
       }
     }
   }

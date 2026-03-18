@@ -2,7 +2,7 @@ import Board, { Bonus } from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
 import { Letter, Player } from '@/domain/enums.ts';
 import { DomainEvent, EventCollector } from '@/domain/events.ts';
-import { PlayerAction } from '@/domain/models/ActionTracker.ts';
+import { Action, ActionType } from '@/domain/models/ActionTracker.ts';
 import Inventory from '@/domain/models/Inventory.ts';
 import { TIME } from '@/shared/constants.ts';
 import { GameContext, GameCell, GameTile, GameState, SaveTurnResult } from '@/application/types.ts';
@@ -20,10 +20,10 @@ import IdGenerator from '@/infrastructure/CryptoIdGenerator.ts';
 import Clock from '@/infrastructure/DateApiClock.ts';
 
 export default class Game {
-  private static readonly outcomeEvents: Partial<Record<PlayerAction, DomainEvent>> = {
-    [PlayerAction.Won]: DomainEvent.GameWon,
-    [PlayerAction.Tied]: DomainEvent.GameTied,
-    [PlayerAction.Lost]: DomainEvent.GameLost,
+  private static readonly actionEvents: Partial<Record<ActionType, DomainEvent>> = {
+    [ActionType.Won]: DomainEvent.GameWon,
+    [ActionType.Tied]: DomainEvent.GameTied,
+    [ActionType.Lost]: DomainEvent.GameLost,
   };
   private static readonly opponentResponseMinTime = TIME.ms_in_second * 2;
   private static readonly clock = new Clock();
@@ -46,7 +46,7 @@ export default class Game {
     const players = Object.values(Player);
     const board = Board.create();
     const inventory = Inventory.create({ players, idGenerator });
-    const turnDirector = TurnDirector.create({ players, board, idGenerator });
+    const turnDirector = TurnDirector.create({ board, idGenerator });
     return new Game(board, inventory, turnDirector);
   }
 
@@ -65,6 +65,10 @@ export default class Game {
 
   get state(): GameState {
     return GameStateQuery.execute(this.context, this.isMutable);
+  }
+
+  get actionLog(): ReadonlyArray<Action> {
+    return this.turnDirector.actionLog;
   }
 
   isCellInCenterOfLayout(cell: GameCell): boolean {
@@ -156,7 +160,7 @@ export default class Game {
       this.placementLinksGeneratorWorker.execute({ context: this.context, player: Player.Opponent }),
     );
     if (generatedPlacementLinks === null) {
-      if (this.turnDirector.hasPlayerPassed(Player.User)) {
+      if (this.turnDirector.willPlayerPassBeResign(Player.User)) {
         ResignGameCommand.execute(this.context);
         this.endGame();
       } else {
@@ -192,7 +196,7 @@ export default class Game {
     this.placementLinksGeneratorWorker.terminate();
     this.isMutable = false;
     const userAction = this.turnDirector.getLastActionFor(Player.User);
-    const event = userAction && Game.outcomeEvents[userAction];
+    const event = userAction && Game.actionEvents[userAction.type];
     if (event) this.events.raise(event);
   }
 

@@ -15,7 +15,7 @@ describe('PassTurn', () => {
   it('records the pass', () => {
     const context = createTestContext();
     PassTurn.execute(context);
-    expect(context.turnDirector.hasPlayerPassed(Player.User)).toBe(true);
+    expect(context.turnDirector.willPlayerPassBeResign(Player.User)).toBe(true);
   });
 
   it('allows consecutive passes by different players', () => {
@@ -23,6 +23,6 @@ describe('PassTurn', () => {
     PassTurn.execute(context); // User passes
     PassTurn.execute(context); // Opponent passes
     expect(context.turnDirector.currentPlayer).toBe(Player.User);
-    expect(context.turnDirector.hasPlayerPassed(Player.Opponent)).toBe(true);
+    expect(context.turnDirector.willPlayerPassBeResign(Player.Opponent)).toBe(true);
   });
 });

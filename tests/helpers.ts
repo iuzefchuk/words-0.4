@@ -77,7 +77,7 @@ export function createTestContext(options?: {
   const players = [Player.User, Player.Opponent];
   const board = Board.create();
   const inventory = Inventory.create({ players, idGenerator });
-  const turnDirector = TurnDirector.create({ players, board, idGenerator });
+  const turnDirector = TurnDirector.create({ board, idGenerator });
   const dictionary = createTestDictionary(options?.words ?? ['CAT', 'DOG', 'CAR', 'CARD', 'CATS', 'DO', 'AT']);
   return { board, inventory, turnDirector, dictionary };
 }
