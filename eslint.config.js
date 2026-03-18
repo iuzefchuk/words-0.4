@@ -19,6 +19,38 @@ export default defineConfigWithVueTs([
       'vue/no-v-html': 'off',
       '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+      '@typescript-eslint/member-ordering': [
+        'error',
+        {
+          default: {
+            memberTypes: [
+              // public
+              'public-static-readonly-field',
+              'public-static-field',
+              'public-readonly-field',
+              'public-instance-field',
+              // protected
+              'protected-static-readonly-field',
+              'protected-static-field',
+              'protected-readonly-field',
+              'protected-instance-field',
+              // private
+              'private-static-readonly-field',
+              'private-static-field',
+              'private-readonly-field',
+              'private-instance-field',
+              // lifecycle
+              'constructor',
+              'public-static-method',
+              'public-instance-method',
+              'protected-static-method',
+              'protected-instance-method',
+              'private-static-method',
+              'private-instance-method',
+            ],
+          },
+        },
+      ],
       '@typescript-eslint/naming-convention': [
         'error',
         {

@@ -49,20 +49,6 @@ export default class Dictionary {
     return new Dictionary(cache.rootNode, cache.nodeById, cache.allLetters);
   }
 
-  private static freezeTree(node: FrozenNode): void {
-    for (const child of node.children.values()) this.freezeTree(child);
-    Object.freeze(node.children);
-    Object.freeze(node);
-  }
-
-  private static traverseNode(nodeById: Map<NodeId, FrozenNode>, allLetters: Set<Letter>, node: FrozenNode): void {
-    nodeById.set(node.id, node);
-    for (const [childLetter, childNode] of node.children) {
-      allLetters.add(childLetter);
-      this.traverseNode(nodeById, allLetters, childNode);
-    }
-  }
-
   get cache(): DictionaryCache {
     return { rootNode: this.rootNode, nodeById: this.nodeById, allLetters: this.allLetters };
   }
@@ -97,6 +83,20 @@ export default class Dictionary {
 
   isNodeFinal(node: NodeId): boolean {
     return this.findNodeById(node).isFinal;
+  }
+
+  private static freezeTree(node: FrozenNode): void {
+    for (const child of node.children.values()) this.freezeTree(child);
+    Object.freeze(node.children);
+    Object.freeze(node);
+  }
+
+  private static traverseNode(nodeById: Map<NodeId, FrozenNode>, allLetters: Set<Letter>, node: FrozenNode): void {
+    nodeById.set(node.id, node);
+    for (const [childLetter, childNode] of node.children) {
+      allLetters.add(childLetter);
+      this.traverseNode(nodeById, allLetters, childNode);
+    }
   }
 
   private findNodeForWord(word: string, startNodeId: NodeId = this.rootNode.id): FrozenNode | null {

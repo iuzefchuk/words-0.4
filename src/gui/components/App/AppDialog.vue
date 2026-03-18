@@ -49,10 +49,10 @@ function toggleExitAnimation() {
   width: 100%;
   height: 100%;
   z-index: var(--z-index-level-2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-   background: rgb(24 24 27 / 0.35);
+  display: grid;
+  place-items: center;
+  background: rgb(24 24 27 / 0.35);
+  opacity: 0.95;
   &__window {
     padding: var(--space-l) var(--space-xl);
     border-radius: var(--primary-border-radius);

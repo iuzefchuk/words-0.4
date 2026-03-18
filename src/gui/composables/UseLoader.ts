@@ -6,9 +6,6 @@ import Game from '@/application/index.ts';
 export default class UseLoader {
   static readonly WORD = [Game.LETTERS.W, Game.LETTERS.O, Game.LETTERS.R, Game.LETTERS.D, Game.LETTERS.S];
 
-  private readonly counter;
-  private readonly isRenderedRef = ref(false);
-
   readonly isRendered = computed({
     get: () => this.isRenderedRef.value,
     set: (newValue: boolean) => {
@@ -18,6 +15,8 @@ export default class UseLoader {
 
   readonly allTilesAreHighlighted = computed(() => this.counter.value > 0 && this.remainingCounterValue.value === 0);
 
+  private readonly counter;
+  private readonly isRenderedRef = ref(false);
   private readonly remainingCounterValue = computed(() => this.counter.value % (UseLoader.WORD.length + 1));
 
   private readonly onlyFirstTileIsElevated = computed(() =>

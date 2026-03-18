@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { ActionType, type Action } from '@/domain/models/ActionTracker.ts';
+import { TurnOutcomeType, type TurnOutcome } from '@/domain/models/TurnHistory.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
-const MAX_ACTIONS = 3;
+const MAX_OUTCOMES = 3;
 const matchStore = MatchStore.INSTANCE();
-const messages = computed(() => matchStore.actionLog.slice(-MAX_ACTIONS));
-function convertMessageToHtml(message: Action): string {
-  if (message.type === ActionType.Save) return `${message.words.join(', ')} <em>${message.points}pts</em>`;
-  if (message.type === ActionType.Pass) return '<em>passed</em>';
+const messages = computed(() => matchStore.outcomeLog.slice(-MAX_OUTCOMES));
+function convertMessageToHtml(message: TurnOutcome): string {
+  if (message.type === TurnOutcomeType.Save) return `${message.words.join(', ')} <em>${message.points}pts</em>`;
+  if (message.type === TurnOutcomeType.Pass) return '<em>passed</em>';
   return '';
 }
 </script>

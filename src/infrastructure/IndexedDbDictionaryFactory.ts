@@ -5,20 +5,6 @@ import { DictionaryCache } from '@/domain/models/Dictionary.ts';
 type VersionedCache = { version: number; data: DictionaryCache };
 
 export default class IndexedDbDictionaryFactory {
-  private static readonly CACHE_VERSION = DICTIONARY_DATA.length;
-
-  static async create(): Promise<Dictionary> {
-    const cache = await this.IndexedDbManager.load(this.CACHE_VERSION);
-    if (cache) {
-      const dictionary = Dictionary.createFromCache(cache);
-      if (dictionary) return dictionary;
-    }
-    const dictionary = Dictionary.create();
-    const versionedCache: VersionedCache = { version: this.CACHE_VERSION, data: dictionary.cache };
-    this.IndexedDbManager.save(versionedCache);
-    return dictionary;
-  }
-
   static IndexedDbManager = class {
     private static readonly DB_NAME = 'words-dictionary';
     private static readonly STORE_NAME = 'cache';
@@ -73,4 +59,18 @@ export default class IndexedDbDictionaryFactory {
       });
     }
   };
+
+  private static readonly CACHE_VERSION = DICTIONARY_DATA.length;
+
+  static async create(): Promise<Dictionary> {
+    const cache = await this.IndexedDbManager.load(this.CACHE_VERSION);
+    if (cache) {
+      const dictionary = Dictionary.createFromCache(cache);
+      if (dictionary) return dictionary;
+    }
+    const dictionary = Dictionary.create();
+    const versionedCache: VersionedCache = { version: this.CACHE_VERSION, data: dictionary.cache };
+    this.IndexedDbManager.save(versionedCache);
+    return dictionary;
+  }
 }

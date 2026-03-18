@@ -35,16 +35,6 @@ export type WordsOutput = PlacementLinksOutput & ComputedWords;
 export type ScoreOutput = WordsOutput & ComputedScore;
 
 export default class TurnValidator {
-  static execute(context: GameContext, initialPlacementLinks: PlacementLinks): ValidationResult {
-    const args: ValidatorArguments = { initialPlacementLinks };
-    return this.Pipeline.start(context, args)
-      .continue(state => this.computeAndValidateSequences(state))
-      .continue(state => this.computeAndValidateAllPlacementLinks(state))
-      .continue(state => this.computeAndValidateWords(state))
-      .continue(state => this.computeAndValidateScore(state))
-      .end();
-  }
-
   private static Pipeline = class Pipeline<State extends PipelineInput> {
     private constructor(private throughput: PipelineThroughput<State>) {}
 
@@ -77,6 +67,16 @@ export default class TurnValidator {
       return { status: ValidationStatus.Valid, sequences, placementLinks, words, score } as ValidResult;
     }
   };
+
+  static execute(context: GameContext, initialPlacementLinks: PlacementLinks): ValidationResult {
+    const args: ValidatorArguments = { initialPlacementLinks };
+    return this.Pipeline.start(context, args)
+      .continue(state => this.computeAndValidateSequences(state))
+      .continue(state => this.computeAndValidateAllPlacementLinks(state))
+      .continue(state => this.computeAndValidateWords(state))
+      .continue(state => this.computeAndValidateScore(state))
+      .end();
+  }
 
   private static computeAndValidateSequences(state: PipelineInput): PipelineThroughput<PipelineState<SequencesOutput>> {
     const tiles = state.initialPlacementLinks.map(link => link.tile);

@@ -1,6 +1,6 @@
 import Game from '@/application/index.ts';
 import { GameCell, GameTile, GameState, SaveTurnResult } from '@/application/types.ts';
-import { Action } from '@/domain/models/ActionTracker.ts';
+import { TurnOutcome } from '@/domain/models/TurnHistory.ts';
 import { DomainEvent } from '@/domain/events.ts';
 import { defineStore } from 'pinia';
 import { computed, Ref, shallowRef } from 'vue';
@@ -13,18 +13,6 @@ export async function startGame(): Promise<void> {
 }
 
 export default class MatchStore {
-  private static readonly EVENT_SOUNDS: Record<DomainEvent, Sound> = {
-    [DomainEvent.TilePlaced]: Sound.ActionNeutral,
-    [DomainEvent.TileUndoPlaced]: Sound.ActionNeutralReverse,
-    [DomainEvent.TurnSaved]: Sound.ActionGood,
-    [DomainEvent.TurnPassed]: Sound.ActionBad,
-    [DomainEvent.TilesShuffled]: Sound.ActionMix,
-    [DomainEvent.GameWon]: Sound.EndGood,
-    [DomainEvent.GameTied]: Sound.EndNeutral,
-    [DomainEvent.GameLost]: Sound.EndBad,
-    [DomainEvent.OpponentTurnGenerated]: Sound.OpponentAction,
-  };
-
   static readonly INSTANCE = defineStore('game', () => {
     const store = new MatchStore(game);
     return {
@@ -56,9 +44,65 @@ export default class MatchStore {
       saveTurn: store.saveTurn.bind(store),
       passTurn: store.passTurn.bind(store),
       resignGame: store.resignGame.bind(store),
-      actionLog: store.state.actionLog,
+      outcomeLog: store.state.outcomeLog,
     };
   });
+
+  private static readonly EVENT_SOUNDS: Record<DomainEvent, Sound> = {
+    [DomainEvent.TilePlaced]: Sound.ActionNeutral,
+    [DomainEvent.TileUndoPlaced]: Sound.ActionNeutralReverse,
+    [DomainEvent.TurnSaved]: Sound.ActionGood,
+    [DomainEvent.TurnPassed]: Sound.ActionBad,
+    [DomainEvent.TilesShuffled]: Sound.ActionMix,
+    [DomainEvent.GameWon]: Sound.EndGood,
+    [DomainEvent.GameTied]: Sound.EndNeutral,
+    [DomainEvent.GameLost]: Sound.EndBad,
+    [DomainEvent.OpponentTurnGenerated]: Sound.OpponentAction,
+  };
+
+  private static ReactiveState = class {
+    readonly isFinished = computed(() => this.state.isFinished);
+    readonly tilesRemaining = computed(() => this.state.tilesRemaining);
+    readonly userTiles = computed(() => this.state.userTiles);
+    readonly currentTurnScore = computed(() => this.state.currentTurnScore);
+    readonly userScore = computed(() => this.state.userScore);
+    readonly opponentScore = computed(() => this.state.opponentScore);
+    readonly currentTurnIsValid = computed(() => this.state.currentTurnIsValid);
+    readonly currentPlayerIsUser = computed(() => this.state.currentPlayerIsUser);
+    readonly userPassWillBeResign = computed(() => this.state.userPassWillBeResign);
+    readonly outcomeLog = computed<ReadonlyArray<TurnOutcome>>(() => {
+      void this.stateRef.value;
+      return [...this.game.outcomeLog];
+    });
+
+    private readonly stateRef: Ref<GameState>;
+
+    constructor(private readonly game: Game) {
+      this.stateRef = shallowRef(this.game.state);
+    }
+
+    private get state(): GameState {
+      return this.stateRef.value;
+    }
+
+    voidRefBefore<T>(callback: () => T): T {
+      void this.stateRef.value;
+      return callback();
+    }
+
+    triggerRefAfter<T>(callback: () => T): T {
+      const result = callback();
+      this.refreshState();
+      if (result instanceof Promise) {
+        result.then(() => this.refreshState());
+      }
+      return result;
+    }
+
+    refreshState(): void {
+      this.stateRef.value = this.game.state;
+    }
+  };
 
   private readonly soundPlayer = new SoundPlayer();
   private readonly state: InstanceType<typeof MatchStore.ReactiveState>;
@@ -152,48 +196,4 @@ export default class MatchStore {
   private handleEvents(): void {
     for (const event of this.game.drainEvents()) this.soundPlayer.play(MatchStore.EVENT_SOUNDS[event]);
   }
-
-  private static ReactiveState = class {
-    readonly isFinished = computed(() => this.state.isFinished);
-    readonly tilesRemaining = computed(() => this.state.tilesRemaining);
-    readonly userTiles = computed(() => this.state.userTiles);
-    readonly currentTurnScore = computed(() => this.state.currentTurnScore);
-    readonly userScore = computed(() => this.state.userScore);
-    readonly opponentScore = computed(() => this.state.opponentScore);
-    readonly currentTurnIsValid = computed(() => this.state.currentTurnIsValid);
-    readonly currentPlayerIsUser = computed(() => this.state.currentPlayerIsUser);
-    readonly userPassWillBeResign = computed(() => this.state.userPassWillBeResign);
-    readonly actionLog = computed<ReadonlyArray<Action>>(() => {
-      void this.stateRef.value;
-      return [...this.game.actionLog];
-    });
-
-    private readonly stateRef: Ref<GameState>;
-
-    constructor(private readonly game: Game) {
-      this.stateRef = shallowRef(this.game.state);
-    }
-
-    private get state(): GameState {
-      return this.stateRef.value;
-    }
-
-    voidRefBefore<T>(callback: () => T): T {
-      void this.stateRef.value;
-      return callback();
-    }
-
-    triggerRefAfter<T>(callback: () => T): T {
-      const result = callback();
-      this.refreshState();
-      if (result instanceof Promise) {
-        result.then(() => this.refreshState());
-      }
-      return result;
-    }
-
-    refreshState(): void {
-      this.stateRef.value = this.game.state;
-    }
-  };
 }

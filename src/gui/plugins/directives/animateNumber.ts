@@ -5,16 +5,6 @@ type AnimatedHtmlElement = HTMLElement & { _animationFrameRequestId?: number };
 type BindingValue = { number: number; animationDelay?: number; animationDuration?: number };
 
 export default class AnimateNumber extends Directive<AnimatedHtmlElement, BindingValue> {
-  mounted(element: AnimatedHtmlElement, binding: DirectiveBinding<BindingValue>): void {
-    AnimateNumber.Animator.create(element, binding.value).execute();
-  }
-
-  beforeUpdate(element: AnimatedHtmlElement, binding: DirectiveBinding<BindingValue>): void {
-    const { value, oldValue } = binding;
-    if (value.number === oldValue?.number) return;
-    AnimateNumber.Animator.create(element, binding.value, oldValue?.number).execute();
-  }
-
   private static Animator = class Animator {
     private readonly startTime: number;
 
@@ -53,4 +43,14 @@ export default class AnimateNumber extends Directive<AnimatedHtmlElement, Bindin
       this.element._animationFrameRequestId = requestAnimationFrame(time => this.frameCallback(time));
     }
   };
+
+  mounted(element: AnimatedHtmlElement, binding: DirectiveBinding<BindingValue>): void {
+    AnimateNumber.Animator.create(element, binding.value).execute();
+  }
+
+  beforeUpdate(element: AnimatedHtmlElement, binding: DirectiveBinding<BindingValue>): void {
+    const { value, oldValue } = binding;
+    if (value.number === oldValue?.number) return;
+    AnimateNumber.Animator.create(element, binding.value, oldValue?.number).execute();
+  }
 }

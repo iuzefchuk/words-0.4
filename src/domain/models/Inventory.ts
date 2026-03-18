@@ -10,6 +10,35 @@ export type TileCollection = Map<Letter, Array<TileId>>;
 export default class Inventory {
   private static readonly RACK_CAPACITY = 7;
 
+  private static readonly LETTER_CONFIG: Record<Letter, { distribution: number; points: number }> = {
+    [Letter.A]: { distribution: 9, points: 1 },
+    [Letter.B]: { distribution: 2, points: 4 },
+    [Letter.C]: { distribution: 2, points: 4 },
+    [Letter.D]: { distribution: 4, points: 2 },
+    [Letter.E]: { distribution: 12, points: 1 },
+    [Letter.F]: { distribution: 2, points: 4 },
+    [Letter.G]: { distribution: 3, points: 3 },
+    [Letter.H]: { distribution: 2, points: 4 },
+    [Letter.I]: { distribution: 9, points: 1 },
+    [Letter.J]: { distribution: 1, points: 10 },
+    [Letter.K]: { distribution: 1, points: 5 },
+    [Letter.L]: { distribution: 4, points: 1 },
+    [Letter.M]: { distribution: 2, points: 3 },
+    [Letter.N]: { distribution: 6, points: 1 },
+    [Letter.O]: { distribution: 8, points: 1 },
+    [Letter.P]: { distribution: 2, points: 4 },
+    [Letter.Q]: { distribution: 1, points: 10 },
+    [Letter.R]: { distribution: 6, points: 1 },
+    [Letter.S]: { distribution: 4, points: 1 },
+    [Letter.T]: { distribution: 6, points: 1 },
+    [Letter.U]: { distribution: 4, points: 2 },
+    [Letter.V]: { distribution: 2, points: 4 },
+    [Letter.W]: { distribution: 2, points: 4 },
+    [Letter.X]: { distribution: 1, points: 8 },
+    [Letter.Y]: { distribution: 2, points: 4 },
+    [Letter.Z]: { distribution: 1, points: 10 },
+  };
+
   private constructor(
     private drawPool: Array<Tile>,
     private racks: Map<Player, Rack>,
@@ -22,7 +51,9 @@ export default class Inventory {
   static create({ players, idGenerator }: { players: ReadonlyArray<Player>; idGenerator: IdGenerator }): Inventory {
     const drawPool = shuffleArrayWithFisherYates(
       Object.values(Letter).flatMap(letter =>
-        Array.from({ length: LETTER_CONFIG[letter].distribution }, () => Tile.create({ letter, idGenerator })),
+        Array.from({ length: Inventory.LETTER_CONFIG[letter].distribution }, () =>
+          Tile.create({ letter, idGenerator }),
+        ),
       ),
     );
     const racks = new Map(players.map(player => [player, Rack.create({ maxLimit: this.RACK_CAPACITY })]));
@@ -61,7 +92,8 @@ export default class Inventory {
   }
 
   getTilePoints(tileId: TileId): number {
-    return this.getTileById(tileId).points;
+    const letter = this.getTileLetter(tileId);
+    return Inventory.LETTER_CONFIG[letter].points;
   }
 
   getTileLetter(tileId: TileId): Letter {
@@ -189,40 +221,7 @@ class Tile {
     return Object.setPrototypeOf(data, Tile.prototype);
   }
 
-  get points(): number {
-    return LETTER_CONFIG[this.letter].points;
-  }
-
   equals(other: Tile): boolean {
     return this.id === other.id;
   }
 }
-
-const LETTER_CONFIG: Record<Letter, { distribution: number; points: number }> = {
-  [Letter.A]: { distribution: 9, points: 1 },
-  [Letter.B]: { distribution: 2, points: 4 },
-  [Letter.C]: { distribution: 2, points: 4 },
-  [Letter.D]: { distribution: 4, points: 2 },
-  [Letter.E]: { distribution: 12, points: 1 },
-  [Letter.F]: { distribution: 2, points: 4 },
-  [Letter.G]: { distribution: 3, points: 3 },
-  [Letter.H]: { distribution: 2, points: 4 },
-  [Letter.I]: { distribution: 9, points: 1 },
-  [Letter.J]: { distribution: 1, points: 10 },
-  [Letter.K]: { distribution: 1, points: 5 },
-  [Letter.L]: { distribution: 4, points: 1 },
-  [Letter.M]: { distribution: 2, points: 3 },
-  [Letter.N]: { distribution: 6, points: 1 },
-  [Letter.O]: { distribution: 8, points: 1 },
-  [Letter.P]: { distribution: 2, points: 4 },
-  [Letter.Q]: { distribution: 1, points: 10 },
-  [Letter.R]: { distribution: 6, points: 1 },
-  [Letter.S]: { distribution: 4, points: 1 },
-  [Letter.T]: { distribution: 6, points: 1 },
-  [Letter.U]: { distribution: 4, points: 2 },
-  [Letter.V]: { distribution: 2, points: 4 },
-  [Letter.W]: { distribution: 2, points: 4 },
-  [Letter.X]: { distribution: 1, points: 8 },
-  [Letter.Y]: { distribution: 2, points: 4 },
-  [Letter.Z]: { distribution: 1, points: 10 },
-};

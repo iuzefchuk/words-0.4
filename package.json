@@ -6,8 +6,6 @@
 	"scripts": {
 		"serve": "vite",
 		"build": "vite build",
-		"preview": "vite preview",
-		"lint": "eslint --fix .",
 		"test": "vitest run",
 		"test:watch": "vitest"
 	},

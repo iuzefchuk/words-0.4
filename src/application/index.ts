@@ -2,7 +2,7 @@ import Board, { Bonus } from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
 import { Letter, Player } from '@/domain/enums.ts';
 import { DomainEvent, EventCollector } from '@/domain/events.ts';
-import { Action, ActionType } from '@/domain/models/ActionTracker.ts';
+import { TurnOutcome, TurnOutcomeType } from '@/domain/models/TurnHistory.ts';
 import Inventory from '@/domain/models/Inventory.ts';
 import { TIME } from '@/shared/constants.ts';
 import { GameContext, GameCell, GameTile, GameState, SaveTurnResult } from '@/application/types.ts';
@@ -20,18 +20,18 @@ import IdGenerator from '@/infrastructure/CryptoIdGenerator.ts';
 import Clock from '@/infrastructure/DateApiClock.ts';
 
 export default class Game {
-  private static readonly ACTION_EVENTS: Partial<Record<ActionType, DomainEvent>> = {
-    [ActionType.Won]: DomainEvent.GameWon,
-    [ActionType.Tied]: DomainEvent.GameTied,
-    [ActionType.Lost]: DomainEvent.GameLost,
+  static readonly BONUSES = Bonus;
+  static readonly LETTERS = Letter;
+  private static readonly OUTCOME_EVENTS: Partial<Record<TurnOutcomeType, DomainEvent>> = {
+    [TurnOutcomeType.Won]: DomainEvent.GameWon,
+    [TurnOutcomeType.Tied]: DomainEvent.GameTied,
+    [TurnOutcomeType.Lost]: DomainEvent.GameLost,
   };
   private static readonly OPPONENT_RESPONSE_MIN_TIME = TIME.ms_in_second * 2;
   private static readonly CLOCK = new Clock();
-  static readonly BONUSES = Bonus;
-  static readonly LETTERS = Letter;
+  private static dictionary: Dictionary;
   private readonly placementLinksGeneratorWorker = new PlacementLinksGeneratorWorker();
   private readonly events = new EventCollector();
-  private static dictionary: Dictionary;
   private isMutable: boolean = true;
 
   private constructor(
@@ -67,8 +67,8 @@ export default class Game {
     return GameStateQuery.execute(this.context, this.isMutable);
   }
 
-  get actionLog(): ReadonlyArray<Action> {
-    return this.turnDirector.actionLog;
+  get outcomeLog(): ReadonlyArray<TurnOutcome> {
+    return this.turnDirector.outcomeLog;
   }
 
   isCellInCenterOfLayout(cell: GameCell): boolean {
@@ -155,6 +155,12 @@ export default class Game {
     return { opponentTurn };
   }
 
+  resignGame(): void {
+    this.ensureMutability();
+    ResignGameCommand.execute(this.context);
+    this.endGame();
+  }
+
   private async createOpponentTurn(): Promise<SaveTurnResult> {
     const generatedPlacementLinks = await this.setMinimumExecutionTime(() =>
       this.placementLinksGeneratorWorker.execute({ context: this.context, player: Player.Opponent }),
@@ -179,12 +185,6 @@ export default class Game {
     return saveResult;
   }
 
-  resignGame(): void {
-    this.ensureMutability();
-    ResignGameCommand.execute(this.context);
-    this.endGame();
-  }
-
   private checkTileDepletion(player: Player): boolean {
     if (this.inventory.hasTilesFor(player)) return false;
     this.turnDirector.endGameByTileDepletion(Object.values(Player));
@@ -195,8 +195,8 @@ export default class Game {
   private endGame(): void {
     this.placementLinksGeneratorWorker.terminate();
     this.isMutable = false;
-    const userAction = this.turnDirector.getLastActionFor(Player.User);
-    const event = userAction && Game.ACTION_EVENTS[userAction.type];
+    const userOutcome = this.turnDirector.getLastOutcomeFor(Player.User);
+    const event = userOutcome && Game.OUTCOME_EVENTS[userOutcome.type];
     if (event) this.events.raise(event);
   }
 

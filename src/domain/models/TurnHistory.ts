@@ -7,6 +7,21 @@ export type Link = { readonly cell: CellIndex; readonly tile: TileId };
 
 export type PlacementLinks = ReadonlyArray<Link>;
 
+export enum TurnOutcomeType {
+  Save = 'Save',
+  Pass = 'Pass',
+  Won = 'Won',
+  Lost = 'Lost',
+  Tied = 'Tied',
+}
+
+export type TurnOutcome =
+  | { type: TurnOutcomeType.Save; player: Player; words: ReadonlyArray<string>; points: number }
+  | { type: TurnOutcomeType.Pass; player: Player }
+  | { type: TurnOutcomeType.Won; player: Player }
+  | { type: TurnOutcomeType.Lost; player: Player }
+  | { type: TurnOutcomeType.Tied; player: Player };
+
 export enum ValidationStatus {
   Unvalidated = 'Unvalidated',
   Pending = 'Pending',
@@ -42,10 +57,11 @@ export default class TurnHistory {
   private constructor(
     private turns: Array<Turn>,
     private readonly idGenerator: IdGenerator,
+    private readonly _outcomeLog: Array<TurnOutcome>,
   ) {}
 
   static create({ idGenerator }: { idGenerator: IdGenerator }): TurnHistory {
-    return new TurnHistory([], idGenerator);
+    return new TurnHistory([], idGenerator, []);
   }
 
   static hydrate(data: unknown): TurnHistory {
@@ -107,6 +123,25 @@ export default class TurnHistory {
 
   get currentTurnPlacementLinks(): PlacementLinks {
     return this.currentTurn.placementLinks;
+  }
+
+  get outcomeLog(): ReadonlyArray<TurnOutcome> {
+    return [...this._outcomeLog];
+  }
+
+  willPlayerPassBeResign(player: Player): boolean {
+    return this.getLastOutcomeFor(player)?.type === TurnOutcomeType.Pass;
+  }
+
+  getLastOutcomeFor(player: Player): TurnOutcome | undefined {
+    for (let i = this._outcomeLog.length - 1; i >= 0; i--) {
+      if (this._outcomeLog[i].player === player) return this._outcomeLog[i];
+    }
+    return undefined;
+  }
+
+  recordOutcome(outcome: TurnOutcome): void {
+    this._outcomeLog.push(outcome);
   }
 
   placeTileInCurrentTurn({ cell, tile }: { cell: CellIndex; tile: TileId }): void {

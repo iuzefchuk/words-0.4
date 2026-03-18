@@ -80,43 +80,24 @@ enum GenerationCommandType {
 }
 
 export default class PlacementLinksGenerator {
-  static *execute(context: GameContext, player: Player): Generator<PlacementLinks> {
-    const { inventory, board, dictionary, turnDirector } = context;
-    const playerTileCollection = inventory.getTileCollectionFor(player);
-    if (playerTileCollection.size === 0) return;
-    const anchorCells = board.getAnchorCells(turnDirector.historyHasOpponentTurns);
-    if (anchorCells.size === 0) return;
-    const lettersComputer = new CrossCheckComputer(board, dictionary, inventory);
-    for (const cell of anchorCells) {
-      for (const axis of Object.values(Axis)) {
-        const coords: AnchorCoordinates = { axis, cell };
-        for (const links of this.generate({ context, lettersComputer, playerTileCollection, coords })) yield links;
-      }
-    }
-  }
-
-  static *generate(args: GeneratorArguments): Generator<PlacementLinks> {
-    const { context, coords } = args;
-    const { dictionary } = context;
-    const dispatcher = PlacementLinksGenerator.TaskDispatcher.create(args);
-    const firstTask: EvaluateTask = {
-      type: GenerationTask.EvaluateTraversal,
-      traversal: {
-        position: dispatcher.computeds.axisCells.indexOf(coords.cell),
-        direction: GenerationDirection.Left,
-        node: dictionary.firstNode,
-      },
-    };
-    const resolver = PlacementLinksGenerator.TaskCommandResolver.create(firstTask);
-    yield* resolver.execute(task => dispatcher.execute(task));
-  }
-
   private static TaskCommandResolver = class TaskCommandResolver {
     private constructor(private readonly stack: Array<Task>) {}
 
     static create(firstTask: Task): TaskCommandResolver {
       const tasks = [firstTask];
       return new TaskCommandResolver(tasks);
+    }
+
+    static continueExecute(newTasks: Array<Task>): ContinueTaskCommand {
+      return { type: GenerationCommandType.ContinueExecute, newTasks };
+    }
+
+    static stopExecute(): StopTaskCommand {
+      return { type: GenerationCommandType.StopExecute };
+    }
+
+    static returnResult(result: PlacementLinks): ReturnTaskCommand {
+      return { type: GenerationCommandType.ReturnResult, result };
     }
 
     *execute(dispatcher: (task: Task) => TaskCommand): Generator<PlacementLinks> {
@@ -136,18 +117,6 @@ export default class PlacementLinksGenerator {
       const lastTask = this.stack.pop();
       if (!lastTask) throw new Error('Task has to exist');
       return lastTask;
-    }
-
-    static continueExecute(newTasks: Array<Task>): ContinueTaskCommand {
-      return { type: GenerationCommandType.ContinueExecute, newTasks };
-    }
-
-    static stopExecute(): StopTaskCommand {
-      return { type: GenerationCommandType.StopExecute };
-    }
-
-    static returnResult(result: PlacementLinks): ReturnTaskCommand {
-      return { type: GenerationCommandType.ReturnResult, result };
     }
   };
 
@@ -334,4 +303,35 @@ export default class PlacementLinksGenerator {
       return this.emitContinue();
     }
   };
+
+  static *execute(context: GameContext, player: Player): Generator<PlacementLinks> {
+    const { inventory, board, dictionary, turnDirector } = context;
+    const playerTileCollection = inventory.getTileCollectionFor(player);
+    if (playerTileCollection.size === 0) return;
+    const anchorCells = board.getAnchorCells(turnDirector.historyHasOpponentTurns);
+    if (anchorCells.size === 0) return;
+    const lettersComputer = new CrossCheckComputer(board, dictionary, inventory);
+    for (const cell of anchorCells) {
+      for (const axis of Object.values(Axis)) {
+        const coords: AnchorCoordinates = { axis, cell };
+        for (const links of this.generate({ context, lettersComputer, playerTileCollection, coords })) yield links;
+      }
+    }
+  }
+
+  static *generate(args: GeneratorArguments): Generator<PlacementLinks> {
+    const { context, coords } = args;
+    const { dictionary } = context;
+    const dispatcher = PlacementLinksGenerator.TaskDispatcher.create(args);
+    const firstTask: EvaluateTask = {
+      type: GenerationTask.EvaluateTraversal,
+      traversal: {
+        position: dispatcher.computeds.axisCells.indexOf(coords.cell),
+        direction: GenerationDirection.Left,
+        node: dictionary.firstNode,
+      },
+    };
+    const resolver = PlacementLinksGenerator.TaskCommandResolver.create(firstTask);
+    yield* resolver.execute(task => dispatcher.execute(task));
+  }
 }
