@@ -30,7 +30,7 @@ const players = reactive([
 
 <style lang="scss" scoped>
 .header {
-  width: calc(100% + var(--space-s) * 2);
+  width: 100%;
   display: grid;
   place-items: center;
   border-bottom: 1.5px solid var(--color-gray);

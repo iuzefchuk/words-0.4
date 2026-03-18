@@ -2,6 +2,7 @@
 import AppMainHeader from '@/gui/components/App/AppMain/AppMainHeader.vue';
 import AppMainGrid from '@/gui/components/App/AppMain/AppMainGrid/AppMainGrid.vue';
 import AppMainFooter from '@/gui/components/App/AppMain/AppMainFooter/AppMainFooter.vue';
+import AppMainAnnotation from '@/gui/components/App/AppMain/AppMainAnnotation.vue';
 import { ref } from 'vue';
 const isBlurred = ref(false);
 </script>
@@ -11,8 +12,10 @@ const isBlurred = ref(false);
     <Transition name="fade-down-up" appear>
       <AppMainHeader />
     </Transition>
-    <!-- <AppMainNotifications /> -->
-    <AppMainGrid />
+    <div class="main__center app__width-content">
+      <AppMainAnnotation class="main__center-annotation" />
+      <AppMainGrid />
+    </div>
     <Transition name="fade-up-down" appear>
       <AppMainFooter />
     </Transition>
@@ -34,9 +37,17 @@ const isBlurred = ref(false);
   align-items: center;
   padding-left: var(--primary-padding);
   padding-right: var(--primary-padding);
+  justify-items: center;
   &--blurred {
     filter: blur(0.2rem);
     opacity: 0.9;
+  }
+  &__center {
+    position: relative;
+  }
+  &__center-annotation {
+    position: absolute;
+    top: -7rem;
   }
 }
 </style>

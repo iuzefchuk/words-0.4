@@ -156,7 +156,7 @@ export default class Game {
       this.placementLinksGeneratorWorker.execute({ context: this.context, player: Player.Opponent }),
     );
     if (generatedPlacementLinks === null) {
-      if (this.turnDirector.hasPlayerPassed(Player.Opponent)) {
+      if (this.turnDirector.hasPlayerPassed(Player.User)) {
         ResignGameCommand.execute(this.context);
         this.endGame();
       } else {

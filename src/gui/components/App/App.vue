@@ -9,7 +9,7 @@ import MatchStore from '@/gui/stores/MatchStore.ts';
 import { storeToRefs } from 'pinia';
 import { transitionDurationMsKey } from '@/gui/plugins/provides/index.ts';
 const matchStore = MatchStore.getInstance();
-const { gameIsFinished } = storeToRefs(matchStore);
+const { matchIsFinished } = storeToRefs(matchStore);
 const loaderIsActive = ref(true);
 const mainIsRendered = ref(false);
 const transitionDurationMs = inject(transitionDurationMsKey);
@@ -21,7 +21,7 @@ onMounted(() => {
 
 <template>
   <div
-    :class="{ app: true, 'app--blurred': gameIsFinished }"
+    :class="{ app: true, 'app--blurred': matchIsFinished }"
     :style="{
       ...(transitionDurationMs && {
         '--transition-duration': `${transitionDurationMs}ms`,
@@ -35,7 +35,7 @@ onMounted(() => {
     <AppDialog />
     <AppToast />
   </div>
-  <AppEndscreen v-if="gameIsFinished" />
+  <AppEndscreen v-if="matchIsFinished" />
 </template>
 
 <style lang="scss">

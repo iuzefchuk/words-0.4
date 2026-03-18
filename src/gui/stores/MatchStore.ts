@@ -12,8 +12,6 @@ export async function startGame(): Promise<void> {
 }
 
 export default class MatchStore {
-  private static readonly soundPlayer = new SoundPlayer();
-
   private static readonly eventSounds: Record<DomainEvent, Sound> = {
     [DomainEvent.TilePlaced]: Sound.ActionNeutral,
     [DomainEvent.TileUndoPlaced]: Sound.ActionNeutralReverse,
@@ -27,70 +25,129 @@ export default class MatchStore {
   };
 
   static readonly getInstance = defineStore('game', () => {
-    const state = new MatchStore.ReactiveState(game);
+    const store = new MatchStore(game);
     return {
       bonuses: Game.bonuses,
       letters: Game.letters,
       layoutCells: game.layoutCells,
-      gameIsFinished: state.isFinished,
-      tilesRemaining: state.tilesRemaining,
-      userTiles: state.userTiles,
-      currentTurnScore: state.currentTurnScore,
-      userScore: state.userScore,
-      opponentScore: state.opponentScore,
-      currentPlayerIsUser: state.currentPlayerIsUser,
-      userPassWillBeResign: state.userPassWillBeResign,
-      isCellInCenterOfLayout: (cell: GameCell) => game.isCellInCenterOfLayout(cell),
-      getCellBonus: (cell: GameCell) => game.getCellBonus(cell),
-      findTileOnCell: (cell: GameCell) => state.voidRefBefore(() => game.findTileByCell(cell)),
-      findCellWithTile: (tile: GameTile) => state.voidRefBefore(() => game.findCellByTile(tile)),
-      isTilePlaced: (tile: GameTile) => state.voidRefBefore(() => game.isTilePlaced(tile)),
-      areTilesSame: (firstTile: GameTile, secondTile: GameTile) => game.areTilesSame(firstTile, secondTile),
-      getTileLetter: (tile: GameTile) => game.getTileLetter(tile),
-      isCellLastConnectionInTurn: (cell: GameCell) => state.voidRefBefore(() => game.isCellLastConnectionInTurn(cell)),
-      wasTileUsedInPreviousTurn: (tile: GameTile) => state.voidRefBefore(() => game.wasTileUsedInPreviousTurn(tile)),
-      shuffleUserTiles: () => {
-        state.triggerRefAfter(() => game.shuffleUserTiles());
-        this.handleEvents();
-      },
-      placeTile: (args: { cell: GameCell; tile: GameTile }) => {
-        state.triggerRefAfter(() => game.placeTile(args));
-        this.handleEvents();
-      },
-      undoPlaceTile: (tile: GameTile) => {
-        state.triggerRefAfter(() => game.undoPlaceTile(tile));
-        this.handleEvents();
-      },
-      resetTurn: () => state.triggerRefAfter(() => game.resetTurn()),
-      saveTurn: (): { result: SaveTurnResult; opponentTurn?: Promise<SaveTurnResult> } => {
-        const { result, opponentTurn } = state.triggerRefAfter(() => game.saveTurn());
-        this.handleEvents();
-        const resolved = opponentTurn?.then(opponentResult => {
-          state.refreshState();
-          this.handleEvents();
-          return opponentResult;
-        });
-        return { result, opponentTurn: resolved };
-      },
-      passTurn: (): { opponentTurn?: Promise<SaveTurnResult> } => {
-        const { opponentTurn } = state.triggerRefAfter(() => game.passTurn());
-        this.handleEvents();
-        const resolved = opponentTurn?.then(opponentResult => {
-          state.refreshState();
-          this.handleEvents();
-          return opponentResult;
-        });
-        return { opponentTurn: resolved };
-      },
-      resignGame: () => {
-        state.triggerRefAfter(() => game.resignGame());
-        this.handleEvents();
-      },
+      matchIsFinished: store.state.isFinished,
+      tilesRemaining: store.state.tilesRemaining,
+      userTiles: store.state.userTiles,
+      currentTurnScore: store.state.currentTurnScore,
+      userScore: store.state.userScore,
+      opponentScore: store.state.opponentScore,
+      currentPlayerIsUser: store.state.currentPlayerIsUser,
+      userPassWillBeResign: store.state.userPassWillBeResign,
+      isCellInCenterOfLayout: store.isCellInCenterOfLayout.bind(store),
+      getCellBonus: store.getCellBonus.bind(store),
+      findTileOnCell: store.findTileOnCell.bind(store),
+      findCellWithTile: store.findCellWithTile.bind(store),
+      isTilePlaced: store.isTilePlaced.bind(store),
+      areTilesSame: store.areTilesSame.bind(store),
+      getTileLetter: store.getTileLetter.bind(store),
+      isCellLastConnectionInTurn: store.isCellLastConnectionInTurn.bind(store),
+      wasTileUsedInPreviousTurn: store.wasTileUsedInPreviousTurn.bind(store),
+      shuffleUserTiles: store.shuffleUserTiles.bind(store),
+      placeTile: store.placeTile.bind(store),
+      undoPlaceTile: store.undoPlaceTile.bind(store),
+      resetTurn: store.resetTurn.bind(store),
+      saveTurn: store.saveTurn.bind(store),
+      passTurn: store.passTurn.bind(store),
+      resignGame: store.resignGame.bind(store),
     };
   });
 
-  private static handleEvents(): void {
-    for (const event of game.drainEvents()) this.soundPlayer.play(this.eventSounds[event]);
+  private readonly soundPlayer = new SoundPlayer();
+  private readonly state: InstanceType<typeof MatchStore.ReactiveState>;
+
+  private constructor(private readonly game: Game) {
+    this.state = new MatchStore.ReactiveState(game);
+  }
+
+  private isCellInCenterOfLayout(cell: GameCell): boolean {
+    return this.game.isCellInCenterOfLayout(cell);
+  }
+
+  private getCellBonus(cell: GameCell): string | null {
+    return this.game.getCellBonus(cell);
+  }
+
+  private findTileOnCell(cell: GameCell): GameTile | undefined {
+    return this.state.voidRefBefore(() => this.game.findTileByCell(cell));
+  }
+
+  private findCellWithTile(tile: GameTile): GameCell | undefined {
+    return this.state.voidRefBefore(() => this.game.findCellByTile(tile));
+  }
+
+  private isTilePlaced(tile: GameTile): boolean {
+    return this.state.voidRefBefore(() => this.game.isTilePlaced(tile));
+  }
+
+  private areTilesSame(firstTile: GameTile, secondTile: GameTile): boolean {
+    return this.game.areTilesSame(firstTile, secondTile);
+  }
+
+  private getTileLetter(tile: GameTile): string {
+    return this.game.getTileLetter(tile);
+  }
+
+  private isCellLastConnectionInTurn(cell: GameCell): boolean {
+    return this.state.voidRefBefore(() => this.game.isCellLastConnectionInTurn(cell));
+  }
+
+  private wasTileUsedInPreviousTurn(tile: GameTile): boolean {
+    return this.state.voidRefBefore(() => this.game.wasTileUsedInPreviousTurn(tile));
+  }
+
+  private shuffleUserTiles(): void {
+    this.state.triggerRefAfter(() => this.game.shuffleUserTiles());
+    this.handleEvents();
+  }
+
+  private placeTile(args: { cell: GameCell; tile: GameTile }): void {
+    this.state.triggerRefAfter(() => this.game.placeTile(args));
+    this.handleEvents();
+  }
+
+  private undoPlaceTile(tile: GameTile): void {
+    this.state.triggerRefAfter(() => this.game.undoPlaceTile(tile));
+    this.handleEvents();
+  }
+
+  private resetTurn(): void {
+    this.state.triggerRefAfter(() => this.game.resetTurn());
+  }
+
+  private saveTurn(): { result: SaveTurnResult; opponentTurn?: Promise<SaveTurnResult> } {
+    const { result, opponentTurn } = this.state.triggerRefAfter(() => this.game.saveTurn());
+    this.handleEvents();
+    const resolved = opponentTurn?.then((opponentResult: SaveTurnResult) => {
+      this.state.refreshState();
+      this.handleEvents();
+      return opponentResult;
+    });
+    return { result, opponentTurn: resolved };
+  }
+
+  private passTurn(): { opponentTurn?: Promise<SaveTurnResult> } {
+    const { opponentTurn } = this.state.triggerRefAfter(() => this.game.passTurn());
+    this.handleEvents();
+    const resolved = opponentTurn?.then((opponentResult: SaveTurnResult) => {
+      this.state.refreshState();
+      this.handleEvents();
+      return opponentResult;
+    });
+    return { opponentTurn: resolved };
+  }
+
+  private resignGame(): void {
+    this.state.triggerRefAfter(() => this.game.resignGame());
+    this.handleEvents();
+  }
+
+  private handleEvents(): void {
+    for (const event of this.game.drainEvents()) this.soundPlayer.play(MatchStore.eventSounds[event]);
   }
 
   private static ReactiveState = class {
@@ -113,15 +170,11 @@ export default class MatchStore {
       return this.stateRef.value;
     }
 
-    // Read the shallowRef to register a reactive dependency before
-    // calling into the imperative Game object.
     voidRefBefore<T>(callback: () => T): T {
       void this.stateRef.value;
       return callback();
     }
 
-    // Re-assign the shallowRef after mutation to trigger reactive
-    // updates in all dependents.
     triggerRefAfter<T>(callback: () => T): T {
       const result = callback();
       this.refreshState();
