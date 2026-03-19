@@ -4,11 +4,10 @@ import { IdGenerator } from '@/shared/ports.ts';
 import { Brand } from '@/shared/brand.ts';
 
 export type TileId = Brand<string, 'TileId'>;
-
 export type TileCollection = Map<Letter, Array<TileId>>;
 
 export default class Inventory {
-  private static readonly RACK_CAPACITY = 7;
+  private static readonly PLAYER_POOL_CAPACITY = 7;
 
   private static readonly LETTER_CONFIG: Record<Letter, { distribution: number; points: number }> = {
     [Letter.A]: { distribution: 9, points: 1 },
@@ -40,51 +39,54 @@ export default class Inventory {
   };
 
   private constructor(
-    private drawPool: Array<Tile>,
-    private racks: Map<Player, Rack>,
-    private discardPool: Array<Tile>,
+    private drawPool: TilePool,
+    private poolByPlayer: Map<Player, TilePool>,
+    private discardPool: TilePool,
     private readonly tileById: Map<TileId, Tile>,
   ) {
-    this.initializeRacks();
+    this.initializePlayerPools();
   }
 
   static create({ players, idGenerator }: { players: ReadonlyArray<Player>; idGenerator: IdGenerator }): Inventory {
-    const drawPool = shuffleArrayWithFisherYates(
+    const tiles = shuffleArrayWithFisherYates(
       Object.values(Letter).flatMap(letter =>
         Array.from({ length: Inventory.LETTER_CONFIG[letter].distribution }, () =>
           Tile.create({ letter, idGenerator }),
         ),
       ),
     );
-    const racks = new Map(players.map(player => [player, Rack.create({ maxLimit: this.RACK_CAPACITY })]));
-    const discardPool: Array<Tile> = [];
-    const tileById = new Map<TileId, Tile>(drawPool.map(tile => [tile.id, tile]));
-    return new Inventory(drawPool, racks, discardPool, tileById);
+    const tileById = new Map<TileId, Tile>(tiles.map(tile => [tile.id, tile]));
+    const drawPool = TilePool.create({ tiles });
+    const poolByPlayer = new Map(
+      players.map(player => [player, TilePool.create({ capacity: this.PLAYER_POOL_CAPACITY })]),
+    );
+    const discardPool = TilePool.create();
+    return new Inventory(drawPool, poolByPlayer, discardPool, tileById);
   }
 
   static hydrate(data: unknown): Inventory {
     const inventory = Object.setPrototypeOf(data, Inventory.prototype) as Inventory;
-    for (const rack of inventory.racks.values()) Rack.hydrate(rack);
+    TilePool.hydrate(inventory.drawPool);
+    for (const pool of inventory.poolByPlayer.values()) TilePool.hydrate(pool);
+    TilePool.hydrate(inventory.discardPool);
     for (const tile of inventory.tileById.values()) Tile.hydrate(tile);
-    for (const tile of inventory.drawPool) Tile.hydrate(tile);
-    for (const tile of inventory.discardPool) Tile.hydrate(tile);
     return inventory;
   }
 
   get unusedTilesCount(): number {
-    return this.drawPool.length;
+    return this.drawPool.tileCount;
   }
 
   getTilesFor(player: Player): ReadonlyArray<TileId> {
-    return this.getRackFor(player).tileIds;
+    return this.getTilePoolFor(player).tileIds;
   }
 
   hasTilesFor(player: Player): boolean {
-    return this.getRackFor(player).tileCount > 0;
+    return this.getTilePoolFor(player).tileCount > 0;
   }
 
   getTileCollectionFor(player: Player): TileCollection {
-    return this.getRackFor(player).tileCollection;
+    return this.getTilePoolFor(player).tileCollection;
   }
 
   areTilesEqual(firstTile: TileId, secondTile: TileId): boolean {
@@ -101,35 +103,33 @@ export default class Inventory {
   }
 
   replenishTilesFor(player: Player): void {
-    const rack = this.getRackFor(player);
-    this.replenishRack(rack);
+    const pool = this.getTilePoolFor(player);
+    this.replenishPlayerPool(pool);
   }
 
   discardTile({ player, tile }: { player: Player; tile: TileId }): void {
-    const removedTile = this.getRackFor(player).discardTile(tile);
-    this.discardPool.push(removedTile);
+    const removedTile = this.getTilePoolFor(player).discardTile(tile);
+    this.discardPool.addTile(removedTile);
   }
 
   shuffleTilesFor(player: Player): void {
-    this.getRackFor(player).shuffle();
+    this.getTilePoolFor(player).shuffle();
   }
 
-  private initializeRacks(): void {
-    this.racks.forEach(rack => this.replenishRack(rack));
+  private initializePlayerPools(): void {
+    this.poolByPlayer.forEach(pool => this.replenishPlayerPool(pool));
   }
 
-  private getRackFor(player: Player): Rack {
-    const rack = this.racks.get(player);
-    if (!rack) throw new Error('Inventory rack not found');
-    return rack;
+  private getTilePoolFor(player: Player): TilePool {
+    const pool = this.poolByPlayer.get(player);
+    if (!pool) throw new Error('Player pool not found');
+    return pool;
   }
 
-  private replenishRack(rack: Rack): void {
-    const drawCount = Math.min(Inventory.RACK_CAPACITY - rack.tileCount, this.unusedTilesCount);
+  private replenishPlayerPool(pool: TilePool): void {
+    const drawCount = Math.min(Inventory.PLAYER_POOL_CAPACITY - pool.tileCount, this.unusedTilesCount);
     for (let i = 0; i < drawCount; i++) {
-      const tile = this.drawPool.pop();
-      if (!tile) throw new Error('No tiles left in inventory');
-      rack.addTile(tile);
+      pool.addTile(this.drawPool.popTile());
     }
   }
 
@@ -140,19 +140,18 @@ export default class Inventory {
   }
 }
 
-class Rack {
+class TilePool {
   private constructor(
-    private readonly maxLimit: number,
+    private readonly capacity: number | undefined,
     private readonly tiles: Array<Tile>,
   ) {}
 
-  static create({ maxLimit }: { maxLimit: number }): Rack {
-    const tiles: Array<Tile> = [];
-    return new Rack(maxLimit, tiles);
+  static create({ capacity, tiles }: { capacity?: number; tiles?: Array<Tile> } = {}): TilePool {
+    return new TilePool(capacity, tiles ?? []);
   }
 
-  static hydrate(data: unknown): Rack {
-    const rack = Object.setPrototypeOf(data, Rack.prototype) as Rack;
+  static hydrate(data: unknown): TilePool {
+    const rack = Object.setPrototypeOf(data, TilePool.prototype) as TilePool;
     for (const tile of rack.tiles) Tile.hydrate(tile);
     return rack;
   }
@@ -184,7 +183,7 @@ class Rack {
 
   addTile(tile: Tile): void {
     this.ensureTileAbsence(tile);
-    this.validateMaxLimit({ newTileCount: this.tiles.length + 1 });
+    this.validateCapacity({ newTileCount: this.tiles.length + 1 });
     this.tiles.push(tile);
   }
 
@@ -195,8 +194,14 @@ class Rack {
     return removedTile;
   }
 
-  private validateMaxLimit({ newTileCount }: { newTileCount: number }): void {
-    if (newTileCount > this.maxLimit) throw new Error('Rack limit exceeded');
+  popTile(): Tile {
+    const tile = this.tiles.pop();
+    if (!tile) throw new Error('No tiles left to draw');
+    return tile;
+  }
+
+  private validateCapacity({ newTileCount }: { newTileCount: number }): void {
+    if (this.capacity !== undefined && newTileCount > this.capacity) throw new Error('Rack limit exceeded');
   }
 
   private ensureTileAbsence(tile: Tile): void {

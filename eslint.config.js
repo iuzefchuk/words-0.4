@@ -42,10 +42,13 @@ export default defineConfigWithVueTs([
               // lifecycle
               'constructor',
               'public-static-method',
+              ['public-get', 'public-set'],
               'public-instance-method',
               'protected-static-method',
+              ['protected-get', 'protected-set'],
               'protected-instance-method',
               'private-static-method',
+              ['private-get', 'private-set'],
               'private-instance-method',
             ],
           },

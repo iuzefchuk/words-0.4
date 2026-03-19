@@ -1,4 +1,3 @@
-/* eslint-disable */
 export const DICTIONARY_DATA = [
   'AA',
   'AAH',

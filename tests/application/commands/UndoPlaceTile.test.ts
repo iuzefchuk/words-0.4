@@ -15,7 +15,7 @@ describe('UndoPlaceTile', () => {
 
     UndoPlaceTile.execute(context, { tile });
     expect(context.board.isTilePlaced(tile)).toBe(false);
-    expect(context.turnDirector.currentTurnPlacementLinks).toHaveLength(0);
+    expect(context.turnDirector.currentTurnPlacement).toHaveLength(0);
   });
 
   it('re-validates after undo', () => {
@@ -27,6 +27,6 @@ describe('UndoPlaceTile', () => {
 
     UndoPlaceTile.execute(context, { tile: userTiles[1] });
     // Only one tile left, validation re-runs
-    expect(context.turnDirector.currentTurnPlacementLinks).toHaveLength(1);
+    expect(context.turnDirector.currentTurnPlacement).toHaveLength(1);
   });
 });

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import TurnDirector from '@/application/TurnDirector.ts';
 import Board from '@/domain/models/Board.ts';
 import { Player } from '@/domain/enums.ts';
-import { ValidationStatus } from '@/domain/models/TurnHistory.ts';
+import { ValidationStatus } from '@/domain/models/TurnTracker.ts';
 import { TestIdGenerator, cellIndex, tileId } from '$/helpers.ts';
 
 function createDirector() {
@@ -28,7 +28,7 @@ describe('TurnDirector', () => {
       director.placeTile({ cell: cellIndex(112), tile: tileId('t1') });
 
       expect(board.isTilePlaced(tileId('t1'))).toBe(true);
-      expect(director.currentTurnPlacementLinks).toHaveLength(1);
+      expect(director.currentTurnPlacement).toHaveLength(1);
     });
 
     it('undoes a tile placement from both board and history', () => {
@@ -37,7 +37,7 @@ describe('TurnDirector', () => {
       director.undoPlaceTile({ tile: tileId('t1') });
 
       expect(board.isTilePlaced(tileId('t1'))).toBe(false);
-      expect(director.currentTurnPlacementLinks).toHaveLength(0);
+      expect(director.currentTurnPlacement).toHaveLength(0);
     });
   });
 
@@ -50,7 +50,7 @@ describe('TurnDirector', () => {
 
       expect(board.isTilePlaced(tileId('t1'))).toBe(false);
       expect(board.isTilePlaced(tileId('t2'))).toBe(false);
-      expect(director.currentTurnPlacementLinks).toHaveLength(0);
+      expect(director.currentTurnPlacement).toHaveLength(0);
     });
   });
 
@@ -65,8 +65,8 @@ describe('TurnDirector', () => {
       director.placeTile({ cell: cellIndex(112), tile: tileId('t1') });
       director.setCurrentTurnValidation({
         status: ValidationStatus.Valid,
-        sequences: { cell: [cellIndex(112)], tile: [tileId('t1')] },
-        placementLinks: [[{ cell: cellIndex(112), tile: tileId('t1') }]],
+        sequences: { cell: [cellIndex(112)] },
+        computedTiles: [[{ cell: cellIndex(112), tile: tileId('t1') }]],
         words: ['A'],
         score: 1,
       });
@@ -122,8 +122,8 @@ describe('TurnDirector', () => {
       const { director } = createDirector();
       director.setCurrentTurnValidation({
         status: ValidationStatus.Valid,
-        sequences: { cell: [cellIndex(112)], tile: [tileId('t1')] },
-        placementLinks: [[{ cell: cellIndex(112), tile: tileId('t1') }]],
+        sequences: { cell: [cellIndex(112)] },
+        computedTiles: [[{ cell: cellIndex(112), tile: tileId('t1') }]],
         words: ['TEST'],
         score: 10,
       });

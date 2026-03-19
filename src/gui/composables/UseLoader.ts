@@ -1,7 +1,7 @@
 import { ref, computed, watch, inject } from 'vue';
 import UseCounter from '@/gui/composables/UseCounter.ts';
 import { transitionDurationMsKey } from '@/gui/plugins/provides/index.ts';
-import Game from '@/application/index.ts';
+import Game from '@/application/Game.ts';
 
 export default class UseLoader {
   static readonly WORD = [Game.LETTERS.W, Game.LETTERS.O, Game.LETTERS.R, Game.LETTERS.D, Game.LETTERS.S];

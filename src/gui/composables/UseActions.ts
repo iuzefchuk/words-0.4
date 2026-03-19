@@ -4,16 +4,6 @@ import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
 
 export default class UseActions {
-  private get dialogStore() {
-    return DialogStore.INSTANCE();
-  }
-  private get matchStore() {
-    return MatchStore.INSTANCE();
-  }
-  private get rackStore() {
-    return RackStore.INSTANCE();
-  }
-
   readonly allActionsAreDisabled = computed(() => !MatchStore.INSTANCE().currentPlayerIsUser);
 
   async handleResign(): Promise<void> {
@@ -43,6 +33,16 @@ export default class UseActions {
   handlePlay(): void {
     this.matchStore.saveTurn();
     this.rackStore.initialize();
+  }
+
+  private get dialogStore() {
+    return DialogStore.INSTANCE();
+  }
+  private get matchStore() {
+    return MatchStore.INSTANCE();
+  }
+  private get rackStore() {
+    return RackStore.INSTANCE();
   }
 
   private async triggerResignDialog() {

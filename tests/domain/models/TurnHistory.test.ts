@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import TurnHistory, { ValidationStatus } from '@/domain/models/TurnHistory.ts';
+import TurnTracker, { ValidationStatus } from '@/domain/models/TurnTracker.ts';
 import { Player } from '@/domain/enums.ts';
 import { TestIdGenerator, cellIndex, tileId } from '$/helpers.ts';
 
-describe('TurnHistory', () => {
+describe('TurnTracker', () => {
   function createHistory() {
-    return TurnHistory.create({ idGenerator: new TestIdGenerator() });
+    return TurnTracker.create({ idGenerator: new TestIdGenerator() });
   }
 
   it('nextPlayer starts with User', () => {
@@ -34,31 +34,30 @@ describe('TurnHistory', () => {
       const history = createHistory();
       history.createNewTurnFor(Player.User);
 
-      history.placeTileInCurrentTurn({ cell: cellIndex(112), tile: tileId('t1') });
-      const links = history.currentTurnPlacementLinks;
-      expect(links).toHaveLength(1);
-      expect(links[0].cell).toBe(cellIndex(112));
-      expect(links[0].tile).toBe(tileId('t1'));
+      history.placeTileInCurrentTurn(tileId('t1'));
+      const tiles = history.currentTurnTiles;
+      expect(tiles).toHaveLength(1);
+      expect(tiles[0]).toBe(tileId('t1'));
     });
 
     it('undoes a placed tile', () => {
       const history = createHistory();
       history.createNewTurnFor(Player.User);
 
-      history.placeTileInCurrentTurn({ cell: cellIndex(112), tile: tileId('t1') });
+      history.placeTileInCurrentTurn(tileId('t1'));
       history.undoPlaceTileInCurrentTurn({ tile: tileId('t1') });
-      expect(history.currentTurnPlacementLinks).toHaveLength(0);
+      expect(history.currentTurnTiles).toHaveLength(0);
     });
 
-    it('sorts links by cell index', () => {
+    it('tracks multiple tiles in placement order', () => {
       const history = createHistory();
       history.createNewTurnFor(Player.User);
 
-      history.placeTileInCurrentTurn({ cell: cellIndex(115), tile: tileId('t2') });
-      history.placeTileInCurrentTurn({ cell: cellIndex(112), tile: tileId('t1') });
-      const links = history.currentTurnPlacementLinks;
-      expect(links[0].cell).toBe(cellIndex(112));
-      expect(links[1].cell).toBe(cellIndex(115));
+      history.placeTileInCurrentTurn(tileId('t2'));
+      history.placeTileInCurrentTurn(tileId('t1'));
+      const tiles = history.currentTurnTiles;
+      expect(tiles[0]).toBe(tileId('t2'));
+      expect(tiles[1]).toBe(tileId('t1'));
     });
   });
 
@@ -66,10 +65,10 @@ describe('TurnHistory', () => {
     it('clears placement and validation', () => {
       const history = createHistory();
       history.createNewTurnFor(Player.User);
-      history.placeTileInCurrentTurn({ cell: cellIndex(112), tile: tileId('t1') });
+      history.placeTileInCurrentTurn(tileId('t1'));
       history.resetCurrentTurn();
 
-      expect(history.currentTurnPlacementLinks).toHaveLength(0);
+      expect(history.currentTurnTiles).toHaveLength(0);
       expect(history.currentTurnIsValid).toBe(false);
     });
   });
@@ -88,8 +87,8 @@ describe('TurnHistory', () => {
       history.createNewTurnFor(Player.User);
       history.setCurrentTurnValidation({
         status: ValidationStatus.Valid,
-        sequences: { cell: [cellIndex(112)], tile: [tileId('t1')] },
-        placementLinks: [[{ cell: cellIndex(112), tile: tileId('t1') }]],
+        sequences: { cell: [cellIndex(112)] },
+        computedTiles: [[{ cell: cellIndex(112), tile: tileId('t1') }]],
         words: ['CAT'],
         score: 5,
       });

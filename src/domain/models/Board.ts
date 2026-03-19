@@ -14,8 +14,9 @@ export enum Axis {
 }
 
 export type CellIndex = Brand<number, 'CellIndex'>;
-
 export type AnchorCoordinates = { readonly axis: Axis; readonly cell: CellIndex };
+export type Link = { readonly cell: CellIndex; readonly tile: TileId };
+export type Placement = ReadonlyArray<Link>;
 
 export default class Board {
   private static readonly DEFAULT_AXIS = Axis.X;
@@ -112,6 +113,10 @@ export default class Board {
     this.cellByTile.delete(tile);
   }
 
+  resolvePlacement(tiles: ReadonlyArray<TileId>): Placement {
+    return tiles.map(tile => ({ cell: this.cellByTile.get(tile)!, tile })).sort((a, b) => a.cell - b.cell);
+  }
+
   getAnchorCells(historyHasOpponentTurns: boolean): ReadonlySet<CellIndex> {
     return new Set(
       Layout.cells.filter((cell: CellIndex) => {
@@ -126,10 +131,10 @@ export default class Board {
     );
   }
 
-  calculateAxis(cellSequence: ReadonlyArray<CellIndex>): Axis {
-    let normalizedSequence = cellSequence;
-    if (cellSequence.length === 1) {
-      const [firstCell] = cellSequence;
+  calculateAxis(cells: ReadonlyArray<CellIndex>): Axis {
+    let normalizedSequence = cells;
+    if (cells.length === 1) {
+      const [firstCell] = cells;
       const connectedAdjacents = this.getAdjacentCells(firstCell).filter(cell => this.isCellOccupied(cell));
       normalizedSequence = connectedAdjacents.length === 0 ? [] : [connectedAdjacents[0], firstCell];
     }
@@ -161,15 +166,6 @@ class Layout {
       }[bonus].map(number => [this.createCellIndex(number), bonus] as const);
     }),
   );
-
-  private static get centerCell(): CellIndex {
-    const mid = Math.floor(this.CELLS_PER_AXIS / 2);
-    return this.createCellIndex(mid * this.CELLS_PER_AXIS + mid);
-  }
-
-  static get cells(): ReadonlyArray<CellIndex> {
-    return this.CELLS_BY_INDEX;
-  }
 
   static isCellPositionOnLeftEdge(cellPosition: number): boolean {
     return cellPosition === 0;
@@ -243,7 +239,16 @@ class Layout {
     if (cell < 0 || cell >= this.CELLS_BY_INDEX.length) throw new Error('Cell out of bounds');
   }
 
+  static get cells(): ReadonlyArray<CellIndex> {
+    return this.CELLS_BY_INDEX;
+  }
+
   private static createCellIndex(value: number): CellIndex {
     return value as CellIndex;
+  }
+
+  private static get centerCell(): CellIndex {
+    const mid = Math.floor(this.CELLS_PER_AXIS / 2);
+    return this.createCellIndex(mid * this.CELLS_PER_AXIS + mid);
   }
 }

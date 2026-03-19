@@ -1,25 +1,23 @@
 import { GameContext } from '@/application/types.ts';
-import { AnchorCoordinates } from '@/domain/models/Board.ts';
-import PlacementLinksBuilder from '@/domain/services/PlacementBuilder.ts';
+import { AnchorCoordinates, Placement } from '@/domain/models/Board.ts';
+import PlacementBuilder from '@/domain/services/PlacementBuilder.ts';
 import ScoreCalculator from '@/domain/services/ScoreCalculator.ts';
 import {
-  PlacementLinks,
   ValidationStatus,
   ValidationError,
   ComputedValue,
-  ComputedSequences,
-  ComputedPlacementLinks,
+  ComputedCells,
+  ComputedPlacements,
   ComputedWords,
   ComputedScore,
   ValidationResult,
   InvalidResult,
   ValidResult,
-} from '@/domain/models/TurnHistory.ts';
+} from '@/domain/models/TurnTracker.ts';
+import { TileId } from '@/domain/models/Inventory.ts';
 
-export type ValidatorArguments = { initialPlacementLinks: PlacementLinks };
-
+export type ValidatorArguments = { tiles: ReadonlyArray<TileId> };
 export type PendingResult<State> = { status: ValidationStatus.Pending; state: State };
-
 export type PipelineInput = { context: GameContext } & ValidatorArguments;
 export type PipelineThroughput<State> =
   | PendingResult<State>
@@ -27,11 +25,10 @@ export type PipelineThroughput<State> =
 export type PipelineState<Output extends ComputedValue> = PipelineInput & Output;
 export type PipelineOutput =
   | { status: ValidationStatus.Invalid; error: ValidationError }
-  | ({ status: ValidationStatus.Valid } & ComputedSequences & ComputedPlacementLinks & ComputedWords & ComputedScore);
-
-export type SequencesOutput = ComputedSequences;
-export type PlacementLinksOutput = SequencesOutput & ComputedPlacementLinks;
-export type WordsOutput = PlacementLinksOutput & ComputedWords;
+  | ({ status: ValidationStatus.Valid } & ComputedCells & ComputedPlacements & ComputedWords & ComputedScore);
+export type SequencesOutput = ComputedCells;
+export type ComputedTilesOutput = SequencesOutput & ComputedPlacements;
+export type WordsOutput = ComputedTilesOutput & ComputedWords;
 export type ScoreOutput = WordsOutput & ComputedScore;
 
 export default class TurnValidator {
@@ -61,28 +58,26 @@ export default class TurnValidator {
 
     end(): PipelineOutput {
       if (this.throughput.status === ValidationStatus.Invalid) return this.throughput;
-      const { sequences, placementLinks, words, score } = this.throughput
-        .state as unknown as PipelineState<ScoreOutput>;
+      const { cells, placements, words, score } = this.throughput.state as unknown as PipelineState<ScoreOutput>;
       if (score === undefined) throw new Error('Can`t show end result when pipeline wasn`t completed');
-      return { status: ValidationStatus.Valid, sequences, placementLinks, words, score } as ValidResult;
+      return { status: ValidationStatus.Valid, cells, placements, words, score } as ValidResult;
     }
   };
 
-  static execute(context: GameContext, initialPlacementLinks: PlacementLinks): ValidationResult {
-    const args: ValidatorArguments = { initialPlacementLinks };
+  static execute(context: GameContext, tiles: ReadonlyArray<TileId>): ValidationResult {
+    const args: ValidatorArguments = { tiles };
     return this.Pipeline.start(context, args)
-      .continue(state => this.computeAndValidateSequences(state))
-      .continue(state => this.computeAndValidateAllPlacementLinks(state))
+      .continue(state => this.computeAndValidateCells(state))
+      .continue(state => this.computeAndValidatePlacements(state))
       .continue(state => this.computeAndValidateWords(state))
       .continue(state => this.computeAndValidateScore(state))
       .end();
   }
 
-  private static computeAndValidateSequences(state: PipelineInput): PipelineThroughput<PipelineState<SequencesOutput>> {
-    const tiles = state.initialPlacementLinks.map(link => link.tile);
-    if (tiles.length === 0) return this.Pipeline.fail(ValidationError.InvalidTilePlacement);
-    const cells = state.initialPlacementLinks.map(link => link.cell);
-    if (cells.length === 0) return this.Pipeline.fail(ValidationError.InvalidCellPlacement);
+  private static computeAndValidateCells(state: PipelineInput): PipelineThroughput<PipelineState<SequencesOutput>> {
+    if (state.tiles.length === 0) return this.Pipeline.fail(ValidationError.InvalidTilePlacement);
+    const placement = state.context.board.resolvePlacement(state.tiles);
+    const cells = placement.map(link => link.cell);
     const { board, turnDirector } = state.context;
     const placementCells = new Set(cells);
     const someCellsAreAnchor = cells.some(cell => {
@@ -91,38 +86,38 @@ export default class TurnValidator {
       return board.getAdjacentCells(cell).some(adj => board.isCellOccupied(adj) && !placementCells.has(adj));
     });
     return someCellsAreAnchor
-      ? this.Pipeline.pass(state, { sequences: { cell: cells, tile: tiles } })
+      ? this.Pipeline.pass(state, { cells })
       : this.Pipeline.fail(ValidationError.NoCellsUsableAsFirst);
   }
 
-  private static computeAndValidateAllPlacementLinks(
+  private static computeAndValidatePlacements(
     state: PipelineState<SequencesOutput>,
-  ): PipelineThroughput<PipelineState<PlacementLinksOutput>> {
-    const { board } = state.context;
-    const tileSequence = state.sequences.tile;
-    const primaryAxis = board.calculateAxis(state.sequences.cell);
-    const coords = { axis: primaryAxis, cell: state.sequences.cell[0] };
-    const primaryPlacementLinks = PlacementLinksBuilder.execute(board, { coords, tileSequence });
-    const areLinksUsable = (placementLinks: PlacementLinks): boolean => placementLinks.length > 1;
-    if (!areLinksUsable(primaryPlacementLinks)) return this.Pipeline.fail(ValidationError.InvalidTilePlacement);
-    const result: Array<PlacementLinks> = [primaryPlacementLinks];
-    for (const cell of state.sequences.cell) {
+  ): PipelineThroughput<PipelineState<ComputedTilesOutput>> {
+    const { tiles, context } = state;
+    const { board } = context;
+    const primaryAxis = board.calculateAxis(state.cells);
+    const coords = { axis: primaryAxis, cell: state.cells[0] };
+    const primaryPlacement = PlacementBuilder.execute(board, { coords, tiles });
+    const areLinksUsable = (placement: Placement): boolean => placement.length > 1;
+    if (!areLinksUsable(primaryPlacement)) return this.Pipeline.fail(ValidationError.InvalidTilePlacement);
+    const result: Array<Placement> = [primaryPlacement];
+    for (const cell of state.cells) {
       const coords: AnchorCoordinates = { axis: board.getOppositeAxis(primaryAxis), cell };
-      const secondaryPlacementLinks = PlacementLinksBuilder.execute(board, { coords, tileSequence });
-      if (areLinksUsable(secondaryPlacementLinks)) result.push(secondaryPlacementLinks);
+      const secondaryPlacement = PlacementBuilder.execute(board, { coords, tiles });
+      if (areLinksUsable(secondaryPlacement)) result.push(secondaryPlacement);
     }
-    return this.Pipeline.pass(state, { placementLinks: result });
+    return this.Pipeline.pass(state, { placements: result });
   }
 
   private static computeAndValidateWords(
-    state: PipelineState<PlacementLinksOutput>,
+    state: PipelineState<ComputedTilesOutput>,
   ): PipelineThroughput<PipelineState<WordsOutput>> {
     const { dictionary, inventory } = state.context;
     const words: Array<string> = [];
-    for (let i = 0; i < state.placementLinks.length; i++) {
-      const placementLinks = state.placementLinks[i];
+    for (let i = 0; i < state.placements.length; i++) {
+      const placement = state.placements[i];
       let word = '';
-      for (const { tile } of placementLinks) word += inventory.getTileLetter(tile);
+      for (const { tile } of placement) word += inventory.getTileLetter(tile);
       words[i] = word;
     }
     return dictionary.containsWords(words)
@@ -134,9 +129,9 @@ export default class TurnValidator {
     state: PipelineState<WordsOutput>,
   ): PipelineThroughput<PipelineState<ScoreOutput>> {
     const { board, inventory } = state.context;
-    const newCells = new Set(state.sequences.cell);
+    const newCells = new Set(state.cells);
     const score = ScoreCalculator.execute(
-      state.placementLinks,
+      state.placements,
       newCells,
       tile => inventory.getTilePoints(tile),
       cell => board.getLetterMultiplier(cell),

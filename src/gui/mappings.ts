@@ -1,4 +1,4 @@
-import Game from '@/application/index.ts';
+import Game from '@/application/Game.ts';
 const { BONUSES: bonuses, LETTERS: letters } = Game;
 
 export function getBonusName(cellBonus: string): string {

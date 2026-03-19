@@ -2,10 +2,11 @@ import Board, { Bonus } from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
 import { Letter, Player } from '@/domain/enums.ts';
 import { DomainEvent, EventCollector } from '@/domain/events.ts';
-import { TurnOutcome, TurnOutcomeType } from '@/domain/models/TurnHistory.ts';
+import { TurnOutcome } from '@/domain/models/TurnTracker.ts';
 import Inventory from '@/domain/models/Inventory.ts';
 import { TIME } from '@/shared/constants.ts';
-import { GameContext, GameCell, GameTile, GameState, SaveTurnResult } from '@/application/types.ts';
+import { GameContext, GameCell, GameTile, GameState, GameTurnResult } from '@/application/types.ts';
+import { GameResultType } from '@/application/enums.ts';
 import GameStateQuery from '@/application/queries/GameState.ts';
 import TurnValidator from '@/application/services/TurnValidator.ts';
 import TurnDirector from '@/application/TurnDirector.ts';
@@ -14,7 +15,7 @@ import PlaceTileCommand from '@/application/commands/PlaceTile.ts';
 import ResignGameCommand from '@/application/commands/ResignGame.ts';
 import SaveTurnCommand from '@/application/commands/SaveTurn.ts';
 import UndoPlaceTileCommand from '@/application/commands/UndoPlaceTile.ts';
-import PlacementLinksGeneratorWorker from '@/infrastructure/PlacementLinksGeneratorWorker/index.ts';
+import PlacementGeneratorWorker from '@/infrastructure/PlacementGeneratorWorker/index.ts';
 import IndexedDbDictionaryFactory from '@/infrastructure/IndexedDbDictionaryFactory.ts';
 import IdGenerator from '@/infrastructure/CryptoIdGenerator.ts';
 import Clock from '@/infrastructure/DateApiClock.ts';
@@ -22,15 +23,15 @@ import Clock from '@/infrastructure/DateApiClock.ts';
 export default class Game {
   static readonly BONUSES = Bonus;
   static readonly LETTERS = Letter;
-  private static readonly OUTCOME_EVENTS: Partial<Record<TurnOutcomeType, DomainEvent>> = {
-    [TurnOutcomeType.Won]: DomainEvent.GameWon,
-    [TurnOutcomeType.Tied]: DomainEvent.GameTied,
-    [TurnOutcomeType.Lost]: DomainEvent.GameLost,
+  private static readonly RESULT_EVENTS: Partial<Record<GameResultType, DomainEvent>> = {
+    [GameResultType.Win]: DomainEvent.GameWon,
+    [GameResultType.Lose]: DomainEvent.GameLost,
+    [GameResultType.Tie]: DomainEvent.GameTied,
   };
   private static readonly OPPONENT_RESPONSE_MIN_TIME = TIME.ms_in_second * 2;
   private static readonly CLOCK = new Clock();
   private static dictionary: Dictionary;
-  private readonly placementLinksGeneratorWorker = new PlacementLinksGeneratorWorker();
+  private readonly placementGeneratorWorker = new PlacementGeneratorWorker();
   private readonly events = new EventCollector();
   private isMutable: boolean = true;
 
@@ -50,15 +51,6 @@ export default class Game {
     return new Game(board, inventory, turnDirector);
   }
 
-  private get context(): GameContext {
-    return {
-      board: this.board,
-      dictionary: Game.dictionary,
-      inventory: this.inventory,
-      turnDirector: this.turnDirector,
-    };
-  }
-
   get layoutCells(): ReadonlyArray<GameCell> {
     return this.board.cells;
   }
@@ -67,8 +59,8 @@ export default class Game {
     return GameStateQuery.execute(this.context, this.isMutable);
   }
 
-  get outcomeLog(): ReadonlyArray<TurnOutcome> {
-    return this.turnDirector.outcomeLog;
+  get outcomeHistory(): ReadonlyArray<TurnOutcome> {
+    return this.turnDirector.outcomeHistory;
   }
 
   isCellInCenterOfLayout(cell: GameCell): boolean {
@@ -100,17 +92,13 @@ export default class Game {
   }
 
   isCellLastConnectionInTurn(cell: GameCell): boolean {
-    return this.turnDirector.currentTurnCellSequence?.at(-1) === cell;
+    return this.turnDirector.currentTurnCells?.at(-1) === cell;
   }
 
   wasTileUsedInPreviousTurn(tile: GameTile): boolean {
-    const { previousTurnTileSequence } = this.turnDirector;
-    if (!previousTurnTileSequence) return false;
-    return previousTurnTileSequence.includes(tile);
-  }
-
-  drainEvents(): Array<DomainEvent> {
-    return this.events.drain();
+    const { previousTurnTiles } = this.turnDirector;
+    if (!previousTurnTiles) return false;
+    return previousTurnTiles.includes(tile);
   }
 
   shuffleUserTiles(): void {
@@ -136,7 +124,7 @@ export default class Game {
     this.turnDirector.resetCurrentTurn();
   }
 
-  saveTurn(): { result: SaveTurnResult; opponentTurn?: Promise<SaveTurnResult> } {
+  saveTurn(): { result: GameTurnResult; opponentTurn?: Promise<GameTurnResult> } {
     this.ensureMutability();
     const player = this.turnDirector.currentPlayer;
     const result = SaveTurnCommand.execute(this.context);
@@ -147,7 +135,7 @@ export default class Game {
     return { result, opponentTurn };
   }
 
-  passTurn(): { opponentTurn?: Promise<SaveTurnResult> } {
+  passTurn(): { opponentTurn?: Promise<GameTurnResult> } {
     this.ensureMutability();
     PassTurnCommand.execute(this.context);
     this.events.raise(DomainEvent.TurnPassed);
@@ -161,11 +149,24 @@ export default class Game {
     this.endGame();
   }
 
-  private async createOpponentTurn(): Promise<SaveTurnResult> {
-    const generatedPlacementLinks = await this.setMinimumExecutionTime(() =>
-      this.placementLinksGeneratorWorker.execute({ context: this.context, player: Player.Opponent }),
+  drainEvents(): Array<DomainEvent> {
+    return this.events.drain();
+  }
+
+  private get context(): GameContext {
+    return {
+      board: this.board,
+      dictionary: Game.dictionary,
+      inventory: this.inventory,
+      turnDirector: this.turnDirector,
+    };
+  }
+
+  private async createOpponentTurn(): Promise<GameTurnResult> {
+    const generatedPlacement = await this.setMinimumExecutionTime(() =>
+      this.placementGeneratorWorker.execute({ context: this.context, player: Player.Opponent }),
     );
-    if (generatedPlacementLinks === null) {
+    if (generatedPlacement === null) {
       if (this.turnDirector.willPlayerPassBeResign(Player.User)) {
         ResignGameCommand.execute(this.context);
         this.endGame();
@@ -176,8 +177,8 @@ export default class Game {
       return { ok: true, value: { words: [] } };
     }
     const player = this.turnDirector.currentPlayer;
-    for (const link of generatedPlacementLinks) this.turnDirector.placeTile({ cell: link.cell, tile: link.tile });
-    const result = TurnValidator.execute(this.context, this.turnDirector.currentTurnPlacementLinks);
+    for (const link of generatedPlacement) this.turnDirector.placeTile({ cell: link.cell, tile: link.tile });
+    const result = TurnValidator.execute(this.context, this.turnDirector.currentTurnTiles);
     this.turnDirector.setCurrentTurnValidation(result);
     const saveResult = SaveTurnCommand.execute(this.context);
     this.checkTileDepletion(player);
@@ -193,10 +194,10 @@ export default class Game {
   }
 
   private endGame(): void {
-    this.placementLinksGeneratorWorker.terminate();
+    this.placementGeneratorWorker.terminate();
     this.isMutable = false;
-    const userOutcome = this.turnDirector.getLastOutcomeFor(Player.User);
-    const event = userOutcome && Game.OUTCOME_EVENTS[userOutcome.type];
+    const userGameResult = this.turnDirector.getGameResultFor(Player.User);
+    const event = userGameResult && Game.RESULT_EVENTS[userGameResult.type];
     if (event) this.events.raise(event);
   }
 

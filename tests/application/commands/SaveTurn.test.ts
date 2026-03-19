@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import SaveTurn from '@/application/commands/SaveTurn.ts';
 import { createTestContext, cellIndex } from '$/helpers.ts';
 import { Player } from '@/domain/enums.ts';
-import { ValidationStatus, ValidationError } from '@/domain/models/TurnHistory.ts';
+import { ValidationStatus, ValidationError } from '@/domain/models/TurnTracker.ts';
 
 describe('SaveTurn', () => {
   it('returns error when turn has validation error', () => {
@@ -28,8 +28,8 @@ describe('SaveTurn', () => {
     context.turnDirector.placeTile({ cell: cellIndex(112), tile });
     context.turnDirector.setCurrentTurnValidation({
       status: ValidationStatus.Valid,
-      sequences: { cell: [cellIndex(112)], tile: [tile] },
-      placementLinks: [[{ cell: cellIndex(112), tile }]],
+      sequences: { cell: [cellIndex(112)] },
+      computedTiles: [[{ cell: cellIndex(112), tile }]],
       words: ['A'],
       score: 1,
     });
@@ -49,8 +49,8 @@ describe('SaveTurn', () => {
     context.turnDirector.placeTile({ cell: cellIndex(112), tile });
     context.turnDirector.setCurrentTurnValidation({
       status: ValidationStatus.Valid,
-      sequences: { cell: [cellIndex(112)], tile: [tile] },
-      placementLinks: [[{ cell: cellIndex(112), tile }]],
+      sequences: { cell: [cellIndex(112)] },
+      computedTiles: [[{ cell: cellIndex(112), tile }]],
       words: ['A'],
       score: 1,
     });
@@ -71,8 +71,8 @@ describe('SaveTurn', () => {
     context.turnDirector.placeTile({ cell: cellIndex(112), tile });
     context.turnDirector.setCurrentTurnValidation({
       status: ValidationStatus.Valid,
-      sequences: { cell: [cellIndex(112)], tile: [tile] },
-      placementLinks: [[{ cell: cellIndex(112), tile }]],
+      sequences: { cell: [cellIndex(112)] },
+      computedTiles: [[{ cell: cellIndex(112), tile }]],
       words: ['A'],
       score: 1,
     });

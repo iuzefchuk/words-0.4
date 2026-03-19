@@ -12,7 +12,7 @@ describe('PlaceTile', () => {
     PlaceTile.execute(context, { cell: cellIndex(112), tile });
 
     expect(context.board.isTilePlaced(tile)).toBe(true);
-    expect(context.turnDirector.currentTurnPlacementLinks).toHaveLength(1);
+    expect(context.turnDirector.currentTurnPlacement).toHaveLength(1);
     // Validation should have run (score or error should be set)
     const hasValidation =
       context.turnDirector.currentTurnError !== undefined || context.turnDirector.currentTurnScore !== undefined;
@@ -26,6 +26,6 @@ describe('PlaceTile', () => {
     PlaceTile.execute(context, { cell: cellIndex(112), tile: userTiles[0] });
     PlaceTile.execute(context, { cell: cellIndex(113), tile: userTiles[1] });
 
-    expect(context.turnDirector.currentTurnPlacementLinks).toHaveLength(2);
+    expect(context.turnDirector.currentTurnPlacement).toHaveLength(2);
   });
 });

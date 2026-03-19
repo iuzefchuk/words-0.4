@@ -1,16 +1,12 @@
-import Board, { AnchorCoordinates } from '@/domain/models/Board.ts';
+import Board, { AnchorCoordinates, Link, Placement } from '@/domain/models/Board.ts';
 import { TileId } from '@/domain/models/Inventory.ts';
-import { PlacementLinks, Link } from '@/domain/models/TurnHistory.ts';
 
-export default class PlacementLinksBuilder {
-  static execute(
-    board: Board,
-    args: { coords: AnchorCoordinates; tileSequence: ReadonlyArray<TileId> },
-  ): PlacementLinks {
-    const { coords, tileSequence } = args;
-    if (tileSequence.length === 0) throw new Error('Tile sequence can`t be empty');
+export default class PlacementBuilder {
+  static execute(board: Board, args: { coords: AnchorCoordinates; tiles: ReadonlyArray<TileId> }): Placement {
+    const { coords, tiles } = args;
+    if (tiles.length === 0) throw new Error('Tile sequence can`t be empty');
     const axisCells = board.getAxisCells(coords);
-    const tilesToPlace = new Set(tileSequence);
+    const tilesToPlace = new Set(tiles);
     let links: Array<Link> = [];
     let segmentContainsTile = false;
     let matchedTilesCount = 0;
@@ -30,7 +26,7 @@ export default class PlacementLinksBuilder {
         matchedTilesCount++;
       }
     }
-    const isValid = segmentContainsTile && matchedTilesCount === tileSequence.length;
+    const isValid = segmentContainsTile && matchedTilesCount === tiles.length;
     return isValid ? links : [];
   }
 }

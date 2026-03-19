@@ -1,6 +1,6 @@
-import Game from '@/application/index.ts';
-import { GameCell, GameTile, GameState, SaveTurnResult } from '@/application/types.ts';
-import { TurnOutcome } from '@/domain/models/TurnHistory.ts';
+import Game from '@/application/Game.ts';
+import { GameCell, GameTile, GameState, GameTurnResult } from '@/application/types.ts';
+import { TurnOutcome } from '@/domain/models/TurnTracker.ts';
 import { DomainEvent } from '@/domain/events.ts';
 import { defineStore } from 'pinia';
 import { computed, Ref, shallowRef } from 'vue';
@@ -44,7 +44,7 @@ export default class MatchStore {
       saveTurn: store.saveTurn.bind(store),
       passTurn: store.passTurn.bind(store),
       resignGame: store.resignGame.bind(store),
-      outcomeLog: store.state.outcomeLog,
+      outcomeHistory: store.state.outcomeHistory,
     };
   });
 
@@ -57,7 +57,7 @@ export default class MatchStore {
     [DomainEvent.GameWon]: Sound.EndGood,
     [DomainEvent.GameTied]: Sound.EndNeutral,
     [DomainEvent.GameLost]: Sound.EndBad,
-    [DomainEvent.OpponentTurnGenerated]: Sound.OpponentAction,
+    [DomainEvent.OpponentTurnGenerated]: Sound.AltActionGood,
   };
 
   private static ReactiveState = class {
@@ -70,19 +70,15 @@ export default class MatchStore {
     readonly currentTurnIsValid = computed(() => this.state.currentTurnIsValid);
     readonly currentPlayerIsUser = computed(() => this.state.currentPlayerIsUser);
     readonly userPassWillBeResign = computed(() => this.state.userPassWillBeResign);
-    readonly outcomeLog = computed<ReadonlyArray<TurnOutcome>>(() => {
+    readonly outcomeHistory = computed<ReadonlyArray<TurnOutcome>>(() => {
       void this.stateRef.value;
-      return [...this.game.outcomeLog];
+      return [...this.game.outcomeHistory];
     });
 
     private readonly stateRef: Ref<GameState>;
 
     constructor(private readonly game: Game) {
       this.stateRef = shallowRef(this.game.state);
-    }
-
-    private get state(): GameState {
-      return this.stateRef.value;
     }
 
     voidRefBefore<T>(callback: () => T): T {
@@ -101,6 +97,10 @@ export default class MatchStore {
 
     refreshState(): void {
       this.stateRef.value = this.game.state;
+    }
+
+    private get state(): GameState {
+      return this.stateRef.value;
     }
   };
 
@@ -166,10 +166,10 @@ export default class MatchStore {
     this.state.triggerRefAfter(() => this.game.resetTurn());
   }
 
-  private saveTurn(): { result: SaveTurnResult; opponentTurn?: Promise<SaveTurnResult> } {
+  private saveTurn(): { result: GameTurnResult; opponentTurn?: Promise<GameTurnResult> } {
     const { result, opponentTurn } = this.state.triggerRefAfter(() => this.game.saveTurn());
     this.handleEvents();
-    const resolved = opponentTurn?.then((opponentResult: SaveTurnResult) => {
+    const resolved = opponentTurn?.then((opponentResult: GameTurnResult) => {
       this.state.refreshState();
       this.handleEvents();
       return opponentResult;
@@ -177,10 +177,10 @@ export default class MatchStore {
     return { result, opponentTurn: resolved };
   }
 
-  private passTurn(): { opponentTurn?: Promise<SaveTurnResult> } {
+  private passTurn(): { opponentTurn?: Promise<GameTurnResult> } {
     const { opponentTurn } = this.state.triggerRefAfter(() => this.game.passTurn());
     this.handleEvents();
-    const resolved = opponentTurn?.then((opponentResult: SaveTurnResult) => {
+    const resolved = opponentTurn?.then((opponentResult: GameTurnResult) => {
       this.state.refreshState();
       this.handleEvents();
       return opponentResult;

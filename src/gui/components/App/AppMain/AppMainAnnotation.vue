@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { TurnOutcomeType, type TurnOutcome } from '@/domain/models/TurnHistory.ts';
+import { TurnOutcomeType, type TurnOutcome } from '@/domain/models/TurnTracker.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 const MAX_OUTCOMES = 3;
 const matchStore = MatchStore.INSTANCE();
-const messages = computed(() => matchStore.outcomeLog.slice(-MAX_OUTCOMES));
+const messages = computed(() => matchStore.outcomeHistory.slice(-MAX_OUTCOMES));
 function convertMessageToHtml(message: TurnOutcome): string {
-  if (message.type === TurnOutcomeType.Save) return `${message.words.join(', ')} <em>${message.points}pts</em>`;
+  if (message.type === TurnOutcomeType.Save) return `${message.words.join(', ')} <em>${message.score}pts</em>`;
   if (message.type === TurnOutcomeType.Pass) return '<em>passed</em>';
   return '';
 }

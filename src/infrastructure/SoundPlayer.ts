@@ -4,7 +4,7 @@ export enum Sound {
   ActionNeutralReverse = 'ActionNeutralReverse',
   ActionBad = 'ActionBad',
   ActionMix = 'ActionMix',
-  OpponentAction = 'OpponentAction',
+  AltActionGood = 'AltActionGood',
   EndGood = 'EndGood',
   EndNeutral = 'EndNeutral',
   EndBad = 'EndBad',
@@ -36,7 +36,7 @@ export default class SoundPlayer {
       { frequency: 622, duration: 0.04, type: 'sine', gain: 0.11 },
       { frequency: 370, duration: 0.04, type: 'sine', gain: 0.1 },
     ],
-    [Sound.OpponentAction]: [
+    [Sound.AltActionGood]: [
       { frequency: 220, duration: 0.1, type: 'triangle', gain: 0.1 },
       { frequency: 262, duration: 0.08, type: 'triangle', gain: 0.08 },
     ],
@@ -63,31 +63,28 @@ export default class SoundPlayer {
   private _context: AudioContext | null = null;
   private queueEnd: number = 0;
 
-  private get context(): AudioContext {
-    if (!this._context) this._context = new AudioContext();
-    return this._context;
-  }
-
   play(sound: Sound): void {
     const notes = SoundPlayer.DEFINITIONS[sound];
     if (notes.length === 0) return;
     setTimeout(() => this.scheduleSound(notes), 0);
   }
 
+  private get context(): AudioContext {
+    if (!this._context) this._context = new AudioContext();
+    return this._context;
+  }
+
   private scheduleSound(notes: ReadonlyArray<SoundDefinition>): void {
     try {
       const ctx = this.context;
       if (ctx.state === 'suspended') ctx.resume();
-
       const now = ctx.currentTime + 0.02;
       let time = Math.max(now, this.queueEnd);
-
       for (const note of notes) {
         const end = time + note.duration;
         this.scheduleNote(ctx, note, time, end);
         time = end;
       }
-
       this.queueEnd = time;
     } catch (e) {
       console.error('[SoundPlayer]', e);
@@ -97,14 +94,11 @@ export default class SoundPlayer {
   private scheduleNote(ctx: AudioContext, note: SoundDefinition, start: number, end: number): void {
     const osc = ctx.createOscillator();
     const gainNode = ctx.createGain();
-
     osc.type = note.type;
     osc.frequency.value = note.frequency;
-
     gainNode.gain.setValueAtTime(note.gain, start);
     gainNode.gain.setValueAtTime(note.gain, end - SoundPlayer.FADE_OUT);
     gainNode.gain.linearRampToValueAtTime(0.001, end);
-
     osc.connect(gainNode);
     gainNode.connect(ctx.destination);
     osc.start(start);

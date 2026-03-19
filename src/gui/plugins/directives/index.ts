@@ -1,4 +1,4 @@
-import { App, } from 'vue';
+import { App } from 'vue';
 import ClickOutside from '@/gui/plugins/directives/ClickOutside.ts';
 import AnimateNumber from '@/gui/plugins/directives/AnimateNumber.ts';
 

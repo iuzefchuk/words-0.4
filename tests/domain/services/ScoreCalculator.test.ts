@@ -4,7 +4,7 @@ import { cellIndex, tileId } from '$/helpers.ts';
 
 describe('ScoreCalculator', () => {
   it('calculates score for a single word with no multipliers', () => {
-    const placementLinks = [
+    const placement = [
       [
         { cell: cellIndex(112), tile: tileId('t1') },
         { cell: cellIndex(113), tile: tileId('t2') },
@@ -13,7 +13,7 @@ describe('ScoreCalculator', () => {
     ];
     const newCells = new Set([cellIndex(112), cellIndex(113), cellIndex(114)]);
     const score = ScoreCalculator.execute(
-      placementLinks,
+      placement,
       newCells,
       () => 1, // 1 point per tile
       () => 1, // no letter multiplier
@@ -23,7 +23,7 @@ describe('ScoreCalculator', () => {
   });
 
   it('applies letter multiplier to new tiles', () => {
-    const placementLinks = [
+    const placement = [
       [
         { cell: cellIndex(0), tile: tileId('t1') },
         { cell: cellIndex(1), tile: tileId('t2') },
@@ -31,7 +31,7 @@ describe('ScoreCalculator', () => {
     ];
     const newCells = new Set([cellIndex(0), cellIndex(1)]);
     const score = ScoreCalculator.execute(
-      placementLinks,
+      placement,
       newCells,
       () => 2,
       cell => (cell === cellIndex(0) ? 3 : 1), // triple letter on cell 0
@@ -42,7 +42,7 @@ describe('ScoreCalculator', () => {
   });
 
   it('applies word multiplier', () => {
-    const placementLinks = [
+    const placement = [
       [
         { cell: cellIndex(0), tile: tileId('t1') },
         { cell: cellIndex(1), tile: tileId('t2') },
@@ -50,7 +50,7 @@ describe('ScoreCalculator', () => {
     ];
     const newCells = new Set([cellIndex(0), cellIndex(1)]);
     const score = ScoreCalculator.execute(
-      placementLinks,
+      placement,
       newCells,
       () => 1,
       () => 1,
@@ -61,7 +61,7 @@ describe('ScoreCalculator', () => {
   });
 
   it('does not apply multipliers to existing tiles', () => {
-    const placementLinks = [
+    const placement = [
       [
         { cell: cellIndex(0), tile: tileId('t1') }, // existing
         { cell: cellIndex(1), tile: tileId('t2') }, // new
@@ -69,7 +69,7 @@ describe('ScoreCalculator', () => {
     ];
     const newCells = new Set([cellIndex(1)]); // only cell 1 is new
     const score = ScoreCalculator.execute(
-      placementLinks,
+      placement,
       newCells,
       () => 5,
       () => 3, // should only apply to new
@@ -80,7 +80,7 @@ describe('ScoreCalculator', () => {
   });
 
   it('sums scores for multiple words (cross-word)', () => {
-    const placementLinks = [
+    const placement = [
       [
         { cell: cellIndex(0), tile: tileId('t1') },
         { cell: cellIndex(1), tile: tileId('t2') },
@@ -92,7 +92,7 @@ describe('ScoreCalculator', () => {
     ];
     const newCells = new Set([cellIndex(0), cellIndex(1), cellIndex(15)]);
     const score = ScoreCalculator.execute(
-      placementLinks,
+      placement,
       newCells,
       () => 1,
       () => 1,

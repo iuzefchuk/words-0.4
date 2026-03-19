@@ -2,25 +2,19 @@ import { Letter } from '@/domain/enums.ts';
 import { DICTIONARY_DATA } from '@/domain/constants.ts';
 
 export type NodeId = number;
-
 export type NextNodeGenerator = Generator<[Letter, NodeId]>;
-
 export type DictionaryCache = {
   rootNode: FrozenNode;
   nodeById: ReadonlyMap<NodeId, FrozenNode>;
   allLetters: ReadonlySet<Letter>;
 };
-
 type Transition = { parentNode: Node; childLetter: Letter; childNode: Node };
-
 type Node = { id: NodeId; isFinal: boolean; children: Map<Letter, Node> };
-
 type FrozenNode = {
   readonly id: NodeId;
   readonly isFinal: boolean;
   readonly children: ReadonlyMap<Letter, FrozenNode>;
 };
-
 type NodeGenerator = Generator<Node, Node>;
 
 export default class Dictionary {

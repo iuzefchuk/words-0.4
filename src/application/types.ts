@@ -4,7 +4,9 @@ import Dictionary from '@/domain/models/Dictionary.ts';
 import Inventory, { TileId } from '@/domain/models/Inventory.ts';
 import TurnDirector from '@/application/TurnDirector.ts';
 import { Result } from '@/shared/result.ts';
-import { ValidationError } from '@/domain/models/TurnHistory.ts';
+import { ValidationError } from '@/domain/models/TurnTracker.ts';
+import { GameResultType } from './enums.ts';
+import { Player } from '@/domain/enums.ts';
 
 export type GameContext = {
   board: Board;
@@ -29,4 +31,6 @@ export type GameState = {
   userPassWillBeResign: boolean;
 };
 
-export type SaveTurnResult = Result<{ words: ReadonlyArray<string> }, ValidationError>;
+export type GameTurnResult = Result<{ words: ReadonlyArray<string> }, ValidationError>;
+
+export type GameResult = { type: GameResultType; player: Player };
