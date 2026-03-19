@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { getLetterSvgHtml } from "@/gui/mappings.ts";
+import { getLetterSvgHtml } from '@/gui/mappings.ts';
 defineProps({
   letter: { type: String, required: true },
   isInverted: { type: Boolean, default: false },
-  isHighlighted: { type: Boolean, default: false },
-  isElevated: { type: Boolean, default: false },
+  isSaturated: { type: Boolean, default: false },
+  isOutlined: { type: Boolean, default: false },
 });
 </script>
 
@@ -13,8 +13,8 @@ defineProps({
     :class="{
       tile: true,
       'tile--inverted': isInverted,
-      'tile--highlighted': isHighlighted,
-      'tile--elevated': isElevated,
+      'tile--saturated': isSaturated,
+      'tile--outlined': isOutlined,
     }"
     viewBox="0 0 21 21"
     v-html="getLetterSvgHtml(letter)"
@@ -29,7 +29,7 @@ defineProps({
   color: var(--tile-color);
   background: var(--tile-bg);
   border-radius: inherit;
-  transition-property: top, left, background, color, box-shadow, outline;
+  transition-property: background, color, outline;
   transition-duration: var(--transition-duration-half);
   transition-timing-function: var(--transition-timing-function);
   position: relative;
@@ -37,15 +37,18 @@ defineProps({
   left: 0;
   z-index: 1;
   min-height: 100%;
-  &--inverted:not(&--highlighted) {
+  &--inverted:not(&--saturated) {
     background: var(--tile-bg-inverted);
     color: var(--tile-color-inverted);
   }
-  &--highlighted:not(&--elevated) {
-    background: var(--tile-bg-highlighted);
+  &--saturated:not(&--outlined) {
+    background: var(--tile-bg-saturated);
   }
-  &--elevated {
+  &--outlined {
     outline: 2px solid var(--tile-outline-color);
+  }
+  &--outlined:is(&--inverted) {
+    outline: 2px solid var(--tile-outline-color-inverted);
   }
 }
 </style>

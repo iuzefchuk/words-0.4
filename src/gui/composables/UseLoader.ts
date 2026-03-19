@@ -13,7 +13,7 @@ export default class UseLoader {
     },
   });
 
-  readonly allTilesAreHighlighted = computed(() => this.counter.value > 0 && this.remainingCounterValue.value === 0);
+  readonly allTilesAreSaturated = computed(() => this.counter.value > 0 && this.remainingCounterValue.value === 0);
 
   private readonly counter;
   private readonly isRenderedRef = ref(false);

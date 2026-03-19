@@ -34,9 +34,9 @@ describe('AppTile', () => {
     expect(wrapper.find('svg').classes()).not.toContain('tile--inverted');
   });
 
-  it('applies highlighted class when isHighlighted is true', () => {
+  it('applies saturated class when isHighlighted is true', () => {
     const wrapper = mountTile({ letter: 'A', isHighlighted: true });
-    expect(wrapper.find('svg').classes()).toContain('tile--highlighted');
+    expect(wrapper.find('svg').classes()).toContain('tile--saturated');
   });
 
   it('applies elevated class when isElevated is true', () => {

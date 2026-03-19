@@ -13,52 +13,32 @@ const buttons = reactive([
   {
     name: window.t('game.action_resign'),
     action: () => actions.handleResign(),
-    get isRendered() {
-      return true;
-    },
-    get isDisabled() {
-      return allActionsAreDisabled.value;
-    },
+    isRendered: () => true,
+    isDisabled: () => allActionsAreDisabled.value,
   },
   {
     name: window.t('game.action_pass'),
     action: () => actions.handlePass(),
-    get isRendered() {
-      return true;
-    },
-    get isDisabled() {
-      return allActionsAreDisabled.value;
-    },
+    isRendered: () => true,
+    isDisabled: () => allActionsAreDisabled.value,
   },
   {
     name: window.t('game.action_shuffle'),
     action: () => actions.handleShuffle(),
-    get isRendered() {
-      return allTilesArePlaced.value;
-    },
-    get isDisabled() {
-      return allActionsAreDisabled.value;
-    },
+    isRendered: () => allTilesArePlaced.value,
+    isDisabled: () => allActionsAreDisabled.value,
   },
   {
     name: window.t('game.action_clear'),
     action: () => actions.handleClear(),
-    get isRendered() {
-      return !allTilesArePlaced.value;
-    },
-    get isDisabled() {
-      return allActionsAreDisabled.value;
-    },
+    isRendered: () => !allTilesArePlaced.value,
+    isDisabled: () => allActionsAreDisabled.value,
   },
   {
     name: window.t('game.action_play'),
     action: () => actions.handlePlay(),
-    get isRendered() {
-      return true;
-    },
-    get isDisabled() {
-      return allActionsAreDisabled.value || !matchStore.currentTurnIsValid;
-    },
+    isRendered: () => true,
+    isDisabled: () => allActionsAreDisabled.value || !matchStore.currentTurnIsValid,
   },
 ]);
 </script>
@@ -67,8 +47,8 @@ const buttons = reactive([
   <div class="actions">
     <ul class="actions__list app__width-content">
       <template v-for="{ name, action, isRendered, isDisabled } in buttons" :key="name">
-        <li v-if="isRendered" class="actions__list-item">
-          <button class="actions__btn" :disabled="isDisabled" @click="action()">
+        <li v-if="isRendered()" class="actions__list-item">
+          <button class="actions__btn" :disabled="isDisabled()" @click="action()">
             {{ name }}
           </button>
         </li>
@@ -106,10 +86,10 @@ const buttons = reactive([
     transition-duration: var(--transition-duration-half);
     transition-timing-function: var(--transition-timing-function);
     &:hover:not(:active):not(:disabled) {
-       background: var(--color-white);
+      background: var(--color-white);
     }
     &:active:not(:disabled) {
-       background: var(--color-gray-lightest);
+      background: var(--color-gray-lightest);
     }
     &:disabled {
       opacity: 0.7;

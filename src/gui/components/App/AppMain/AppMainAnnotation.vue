@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { computed } from "vue";
-import { TurnOutcomeType, type TurnOutcome } from "@/domain/models/TurnTracker.ts"; // TODO fix
-import MatchStore from "@/gui/stores/MatchStore.ts";
+import { computed } from 'vue';
+import { TurnOutcomeType, type TurnOutcome } from '@/domain/models/TurnTracker.ts'; // TODO fix
+import MatchStore from '@/gui/stores/MatchStore.ts';
 const MAX_LENGTH = 3;
 const matchStore = MatchStore.INSTANCE();
 const messages = computed(() => {
@@ -10,23 +10,23 @@ const messages = computed(() => {
   return history.slice(start).map((message, i) => ({ message, key: start + i }));
 });
 function convertMessageToHtml(message: TurnOutcome): string {
-  if (message.type === TurnOutcomeType.Save) return `${message.words.join(", ")} <em>${message.score}pts</em>`;
-  if (message.type === TurnOutcomeType.Pass) return "<em>passed</em>";
-  return "";
+  if (message.type === TurnOutcomeType.Save) return `${message.words.join(', ')} <em>${message.score}pts</em>`;
+  if (message.type === TurnOutcomeType.Pass) return '<em>passed</em>';
+  return '';
 }
 </script>
 
 <template>
-  <TransitionGroup name="fade-from-left" tag="ul" v-if="messages.length > 0" class="annotation" appear>
+  <TransitionGroup v-if="messages.length > 0" name="fade-from-left" tag="ul" class="annotation" appear>
     <li v-for="{ message, key } in messages" :key="key" v-html="convertMessageToHtml(message)" />
   </TransitionGroup>
 </template>
 
 <style lang="scss" scoped>
 .annotation {
-  color: var(--color-gray-light);
+  color: var(--secondary-color);
   height: 6rem;
-  border-left: 1px solid var(--color-gray-light);
+  border-left: 1px solid var(--secondary-color);
   padding-left: calc(var(--cell-tile-width) / 4);
   padding-right: calc(var(--cell-tile-width) / 2);
   display: flex;

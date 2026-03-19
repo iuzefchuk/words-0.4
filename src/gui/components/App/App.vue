@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import AppMain from "@/gui/components/App/AppMain/AppMain.vue";
-import AppDialog from "@/gui/components/App/AppDialog.vue";
-import AppEndscreen from "@/gui/components/App/AppEndscreen.vue";
-import AppLoader from "@/gui/components/App/AppLoader.vue";
-import { onMounted, ref, inject, watch } from "vue";
-import MatchStore from "@/gui/stores/MatchStore.ts";
-import { storeToRefs } from "pinia";
-import ProvidesPlugin from "@/gui/plugins/ProvidesPlugin.ts";
+import AppMain from '@/gui/components/App/AppMain/AppMain.vue';
+import AppDialog from '@/gui/components/App/AppDialog.vue';
+import AppEndscreen from '@/gui/components/App/AppEndscreen.vue';
+import AppLoader from '@/gui/components/App/AppLoader.vue';
+import { onMounted, ref, inject, watch } from 'vue';
+import MatchStore from '@/gui/stores/MatchStore.ts';
+import { storeToRefs } from 'pinia';
+import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
 const matchStore = MatchStore.INSTANCE();
 const { matchIsFinished } = storeToRefs(matchStore);
 const loaderIsActive = ref(true);
@@ -14,7 +14,7 @@ const mainIsRendered = ref(false);
 const showEndscreen = ref(false);
 const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY);
 
-watch(matchIsFinished, (finished) => {
+watch(matchIsFinished, finished => {
   if (finished) setTimeout(() => (showEndscreen.value = true), transitionDurationMs! * 2);
 });
 
@@ -42,10 +42,10 @@ onMounted(() => {
 </template>
 
 <style lang="scss">
-@use "@/gui/assets/css/adjustments.scss";
-@use "@/gui/assets/css/animations.scss";
-@use "@/gui/assets/css/app.scss";
-@use "@/gui/assets/css/colors.scss";
-@use "@/gui/assets/css/transitions.scss";
-@use "@/gui/assets/css/variables.scss";
+@use '@/gui/assets/css/adjustments.scss';
+@use '@/gui/assets/css/animations.scss';
+@use '@/gui/assets/css/app.scss';
+@use '@/gui/assets/css/colors.scss';
+@use '@/gui/assets/css/transitions.scss';
+@use '@/gui/assets/css/variables.scss';
 </style>

@@ -4,6 +4,10 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
   root: 'src/gui',
+  build: {
+    outDir: fileURLToPath(new URL('./dist', import.meta.url)),
+    emptyOutDir: true,
+  },
   publicDir: fileURLToPath(new URL('./public', import.meta.url)),
   plugins: [vue()],
   resolve: {

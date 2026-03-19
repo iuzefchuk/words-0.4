@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import AppMainGridCell from "@/gui/components/App/AppMain/AppMainGrid/AppMainGridCell.vue";
-import AppMainGridTooltip from "@/gui/components/App/AppMain/AppMainGrid/AppMainGridTooltip.vue";
-import MatchStore from "@/gui/stores/MatchStore.ts";
+import AppMainGridCell from '@/gui/components/App/AppMain/AppMainGrid/AppMainGridCell.vue';
+import AppMainGridTooltip from '@/gui/components/App/AppMain/AppMainGrid/AppMainGridTooltip.vue';
+import MatchStore from '@/gui/stores/MatchStore.ts';
 const matchStore = MatchStore.INSTANCE();
 </script>
 

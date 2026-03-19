@@ -11,7 +11,7 @@ const rackStore = RackStore.INSTANCE();
 const bonus = computed(() => matchStore.getCellBonus(props.cell));
 const bonusName = computed(() => (bonus.value ? getBonusName(bonus.value) : ''));
 const tile = computed(() => matchStore.findTileOnCell(props.cell));
-const isTileHighlighted = computed(() => tile.value != null && matchStore.wasTileUsedInPreviousTurn(tile.value));
+const isTileSaturated = computed(() => tile.value != null && matchStore.wasTileUsedInPreviousTurn(tile.value));
 </script>
 
 <template>
@@ -46,8 +46,8 @@ const isTileHighlighted = computed(() => tile.value != null && matchStore.wasTil
         v-if="tile"
         :letter="matchStore.getTileLetter(tile)"
         :is-inverted="rackStore.isTileSelected(tile)"
-        :is-highlighted="isTileHighlighted"
-        :is-elevated="rackStore.isTileInItems(tile)"
+        :is-saturated="isTileSaturated"
+        :is-outlined="rackStore.isTileInItems(tile)"
         @click.stop="rackStore.handleClickBoardTile(tile)"
       />
     </Transition>

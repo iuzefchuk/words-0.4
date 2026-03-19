@@ -5,6 +5,7 @@
   --primary-border-color: var(--color-gray);
   --primary-border: 1.5px solid var(--primary-border-color);
   --primary-border-radius: var(--space-xs);
+  --secondary-color: var(--color-gray-light);
   --cell-color-dw: var(--color-blue);
   --cell-color-tw: var(--color-red);
   --cell-color-dl: var(--color-green);
@@ -15,36 +16,14 @@
   --cell-tile-width: var(--space-4xl);
   --cell-tile-gap: var(--space-2xs);
   --cell-shadow: var(--box-shadow-level-0);
+  --cell-shadow-footer: var(--box-shadow-inner);
   --tile-color: var(--primary-color);
   --tile-color-inverted: var(--color-gray-fainter);
   --tile-bg: var(--color-pink);
   --tile-bg-inverted: var(--color-purple-dark);
-  --tile-bg-highlighted: var(--color-pink-saturated);
+  --tile-bg-saturated: var(--color-pink-saturated);
   --tile-outline-color: var(--color-purple);
-  // --tile-shadow-color: var(--color-purple);
-  // --tile-shadow-color-inverted: var(--color-purple-darker);
-  // --tile-shadow-inset-elevated: var(--space-xs);
-  --header-height: 5.3rem;
-}
-
-@mixin dark-theme {
-  --primary-color: var(--color-gray-lightest);
-  --primary-bg: rgba(36 36 77 / 1);
-  // --primary-border: 1.5px solid var(--color-gray-lightest);
-  --cell-color-dw: rgba(10 189 227 / 1);
-  --cell-color-tw: rgba(238 83 83 / 1);
-  --cell-color-dl: rgba(17 172 132 / 1);
-  --cell-color-tl: rgba(255 159 68 / 1);
-  --cell-bg: rgba(25 25 48 / 1);
-  --cell-bg-center: rgba(47 47 95 / 1);
-  --cell-bg-footer: var(--color-gray-faint);
-  --cell-shadow: var(--box-shadow-inner-dark);
-  --tile-color-inverted: rgba(0 0 0 / 1);
-  --tile-bg: rgba(121 67 176 / 1);
-  --tile-bg-inverted: rgba(0 0 0 / 1);
-  --tile-bg-highlighted: rgba(202 121 221 / 1);
-  // --tile-shadow-color: var(--color-purple);
-  // --tile-shadow-color-inverted: var(--color-purple-darker);
+  --tile-outline-color-inverted: transparent;
 }
 
 .app {
@@ -57,9 +36,6 @@
   align-items: center;
   &--blurred {
     filter: blur(0.1rem);
-  }
-  &--dark {
-    @include dark-theme;
   }
   &__width-content {
     max-width: calc(
@@ -92,8 +68,27 @@
   }
 }
 
-// @media (prefers-color-scheme: dark) {
-//   .app:not(.app--light) {
-//     @include dark-theme;
-//   }
-// }
+// TODO to variables
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: var(--color-gray-lightest);
+    --primary-bg: rgba(36 36 77 / 1);
+    --primary-border-color: var(--color-gray-lighter);
+    --secondary-color: var(--color-gray-lightest);
+    --cell-color-dw: rgba(10 189 227 / 1);
+    --cell-color-tw: rgba(238 83 83 / 1);
+    --cell-color-dl: rgba(17 172 132 / 1);
+    --cell-color-tl: rgba(255 159 68 / 1);
+    --cell-bg: rgba(25 25 48 / 1);
+    --cell-bg-center: rgba(47 47 95 / 1);
+    --cell-bg-footer: rgba(30 30 58 / 1);
+    --cell-shadow: var(--box-shadow-inner-dark);
+    --cell-shadow-footer: var(--box-shadow-inner-dark);
+    --tile-color-inverted: var(--color-gray-darkest);
+    --tile-bg: rgba(85 50 160 / 1);
+    --tile-bg-inverted: var(--color-gray-faintest);
+    --tile-bg-saturated: rgba(130 70 210 / 1);
+    --tile-outline-color: var(--color-pink);
+    --tile-outline-color-inverted: transparent;
+  }
+}

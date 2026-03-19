@@ -4,7 +4,7 @@ import UseLoader from '@/gui/composables/UseLoader.ts';
 const props = defineProps({ isActive: { type: Boolean, required: true } });
 const emit = defineEmits(['derendered']);
 const loader = new UseLoader(props, emit);
-const { isRendered, allTilesAreHighlighted } = loader;
+const { isRendered, allTilesAreSaturated } = loader;
 </script>
 
 <template>
@@ -16,8 +16,8 @@ const { isRendered, allTilesAreHighlighted } = loader;
           :key="idx"
           class="loader__tile"
           :letter="letter"
-          :is-highlighted="allTilesAreHighlighted"
-          :is-elevated="loader.isTileElevated(idx)"
+          :is-saturated="allTilesAreSaturated"
+          :is-outlined="loader.isTileElevated(idx)"
         />
       </div>
     </div>
@@ -27,7 +27,7 @@ const { isRendered, allTilesAreHighlighted } = loader;
 <style lang="scss" scoped>
 .loader {
   position: fixed;
-  background: var(--color-gray-fainter);
+  background: var(--primary-bg);
   width: 100vw;
   height: 100vh;
   z-index: var(--z-index-level-3);

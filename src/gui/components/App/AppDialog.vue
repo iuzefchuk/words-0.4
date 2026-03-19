@@ -1,7 +1,9 @@
 <script lang="ts" setup>
-import DialogStore, { DialogStatus } from "@/gui/stores/DialogStore.ts";
-import { storeToRefs } from "pinia";
-import { ref } from "vue";
+import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
+import DialogStore, { DialogStatus } from '@/gui/stores/DialogStore.ts';
+import { storeToRefs } from 'pinia';
+import { ref, inject } from 'vue';
+const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY);
 const dialogStore = DialogStore.INSTANCE();
 const { title, html, cancelText, confirmText, cancelIsHidden, confirmIsHidden } = storeToRefs(dialogStore);
 const { resolve } = dialogStore;
@@ -10,7 +12,7 @@ function toggleExitAnimation() {
   exitAnimation.value = true;
   setTimeout(() => {
     exitAnimation.value = false;
-  }, 300);
+  }, transitionDurationMs);
 }
 </script>
 
@@ -28,10 +30,10 @@ function toggleExitAnimation() {
             <p v-html="html" />
           </div>
           <div class="dialog__footer">
-            <button class="dialog__button" v-if="!confirmIsHidden" @click="resolve({ status: DialogStatus.Confirmed })">
+            <button v-if="!confirmIsHidden" class="dialog__button" @click="resolve({ status: DialogStatus.Confirmed })">
               {{ confirmText }}
             </button>
-            <button class="dialog__button" v-if="!cancelIsHidden" @click="resolve({ status: DialogStatus.Canceled })">
+            <button v-if="!cancelIsHidden" class="dialog__button" @click="resolve({ status: DialogStatus.Canceled })">
               {{ cancelText }}
             </button>
           </div>

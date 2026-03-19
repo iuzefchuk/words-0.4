@@ -5,15 +5,11 @@ const matchStore = MatchStore.INSTANCE();
 const players = reactive([
   {
     name: window.t('game.player_user'),
-    get score() {
-      return matchStore.userScore;
-    },
+    score: () => matchStore.userScore,
   },
   {
     name: window.t('game.player_opponent'),
-    get score() {
-      return matchStore.opponentScore;
-    },
+    score: () => matchStore.opponentScore,
   },
 ]);
 </script>
@@ -22,7 +18,7 @@ const players = reactive([
   <header class="header">
     <div class="header__wrapper app__width-content">
       <p v-for="player in players" :key="player.name" class="header__player">
-        {{ player.name }}: <span v-animate-number="{ number: player.score }" class="header__player-score" />
+        {{ player.name }}: <span v-animate-number="{ number: player.score() }" class="header__player-score" />
       </p>
     </div>
   </header>
@@ -38,7 +34,7 @@ const players = reactive([
   padding: var(--primary-padding);
   justify-self: center;
   align-self: start;
-  height: var(--header-height);
+  height: 5.3rem;
   &__wrapper {
     display: flex;
     flex-direction: column;
