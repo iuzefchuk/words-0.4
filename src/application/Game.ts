@@ -115,7 +115,7 @@ export default class Game {
     return this.inventory.getTileLetter(tile);
   }
 
-  isCellLastConnectionInTurn(cell: GameCell): boolean {
+  isCellLastInTurn(cell: GameCell): boolean {
     return this.turnDirector.currentTurnCells?.at(-1) === cell;
   }
 

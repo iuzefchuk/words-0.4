@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import MatchStore from '@/gui/stores/MatchStore.ts';
-import { storeToRefs } from 'pinia';
+import MatchStore from "@/gui/stores/MatchStore.ts";
+import { storeToRefs } from "pinia";
 const matchStore = MatchStore.INSTANCE();
 const { currentTurnScore } = storeToRefs(matchStore);
 </script>
@@ -13,7 +13,7 @@ const { currentTurnScore } = storeToRefs(matchStore);
 .tooltip {
   position: absolute;
   inset: auto;
-  bottom: var(--space-l);
+  bottom: var(--space-2xl);
   right: calc(-1 * var(--space-xl));
   width: max-content;
   height: max-content;

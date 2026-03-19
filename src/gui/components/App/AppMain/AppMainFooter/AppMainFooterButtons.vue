@@ -97,28 +97,20 @@ const buttons = reactive([
     cursor: pointer;
     text-align: center;
     border-radius: var(--primary-border-radius);
-    // background: var(--color-gray-faintest);
     width: 100%;
     height: 100%;
     font-weight: var(--font-weight);
     border: var(--primary-border);
-    // box-shadow: var(--box-shadow-level-1);
     user-select: none;
     transition-property: box-shadow, border-color;
     transition-duration: var(--transition-duration-half);
     transition-timing-function: var(--transition-timing-function);
     &:hover:not(:active):not(:disabled) {
-      //  box-shadow: var(--box-shadow-level-1);
-      border-color: var(--color-gray-lighter);
+       background: var(--color-white);
     }
     &:active:not(:disabled) {
-      //  box-shadow: none;
+       background: var(--color-gray-lightest);
     }
-    // &:focus:not(:active):not(:disabled) {
-    //   outline-offset: 1px;
-    //   outline: 1.5px solid var(--color-purple-dark);
-    //   transition-duration: calc(var(--transition-duration) / 2);
-    // }
     &:disabled {
       opacity: 0.7;
       cursor: not-allowed;

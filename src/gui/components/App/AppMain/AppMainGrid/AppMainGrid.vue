@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import AppMainGridCell from '@/gui/components/App/AppMain/AppMainGrid/AppMainGridCell.vue';
-import AppMainGridTooltip from '@/gui/components/App/AppMain/AppMainGrid/AppMainGridTooltip.vue';
-import MatchStore from '@/gui/stores/MatchStore.ts';
+import AppMainGridCell from "@/gui/components/App/AppMain/AppMainGrid/AppMainGridCell.vue";
+import AppMainGridTooltip from "@/gui/components/App/AppMain/AppMainGrid/AppMainGridTooltip.vue";
+import MatchStore from "@/gui/stores/MatchStore.ts";
 const matchStore = MatchStore.INSTANCE();
 </script>
 
@@ -16,7 +16,7 @@ const matchStore = MatchStore.INSTANCE();
   >
     <AppMainGridCell v-for="cell in matchStore.layoutCells" :key="cell" :cell="cell">
       <Transition name="fade" appear>
-        <AppMainGridTooltip v-if="matchStore.isCellLastConnectionInTurn(cell)" />
+        <AppMainGridTooltip v-if="matchStore.isCellLastInTurn(cell)" />
       </Transition>
     </AppMainGridCell>
   </ul>

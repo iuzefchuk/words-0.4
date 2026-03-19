@@ -2,7 +2,8 @@
   --primary-color: var(--color-gray-darkest);
   --primary-bg: var(--color-gray-fainter);
   --primary-padding: var(--space-s);
-  --primary-border: 1.5px solid var(--color-gray);
+  --primary-border-color: var(--color-gray);
+  --primary-border: 1.5px solid var(--primary-border-color);
   --primary-border-radius: var(--space-xs);
   --cell-color-dw: var(--color-blue);
   --cell-color-tw: var(--color-red);
@@ -19,16 +20,17 @@
   --tile-bg: var(--color-pink);
   --tile-bg-inverted: var(--color-purple-dark);
   --tile-bg-highlighted: var(--color-pink-saturated);
-  --tile-shadow-color: var(--color-purple);
-  --tile-shadow-color-inverted: var(--color-purple-darker);
-  --tile-shadow-inset-elevated: var(--space-xs);
+  --tile-outline-color: var(--primary-border-color);
+  // --tile-shadow-color: var(--color-purple);
+  // --tile-shadow-color-inverted: var(--color-purple-darker);
+  // --tile-shadow-inset-elevated: var(--space-xs);
   --header-height: 5.3rem;
 }
 
 @mixin dark-theme {
   --primary-color: var(--color-gray-lightest);
   --primary-bg: rgba(36 36 77 / 1);
-  --primary-border: 1.5px solid var(--color-gray-lightest);
+  // --primary-border: 1.5px solid var(--color-gray-lightest);
   --cell-color-dw: rgba(10 189 227 / 1);
   --cell-color-tw: rgba(238 83 83 / 1);
   --cell-color-dl: rgba(17 172 132 / 1);
@@ -41,8 +43,8 @@
   --tile-bg: rgba(121 67 176 / 1);
   --tile-bg-inverted: rgba(0 0 0 / 1);
   --tile-bg-highlighted: rgba(202 121 221 / 1);
-  --tile-shadow-color: var(--color-purple);
-  --tile-shadow-color-inverted: var(--color-purple-darker);
+  // --tile-shadow-color: var(--color-purple);
+  // --tile-shadow-color-inverted: var(--color-purple-darker);
 }
 
 .app {
