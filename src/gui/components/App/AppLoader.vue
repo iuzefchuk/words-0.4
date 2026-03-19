@@ -36,7 +36,7 @@ const { isRendered, allTilesAreHighlighted } = loader;
   &__logo {
     display: flex;
     flex-direction: row;
-    gap: var(--cell-tile-gap);
+    gap: calc(var(--cell-tile-gap) * 1.25);
   }
   &__tile {
     pointer-events: none;

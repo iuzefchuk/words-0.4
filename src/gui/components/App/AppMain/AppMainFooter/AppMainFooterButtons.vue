@@ -102,7 +102,7 @@ const buttons = reactive([
     font-weight: var(--font-weight);
     border: var(--primary-border);
     user-select: none;
-    transition-property: box-shadow, border-color;
+    transition-property: box-shadow;
     transition-duration: var(--transition-duration-half);
     transition-timing-function: var(--transition-timing-function);
     &:hover:not(:active):not(:disabled) {

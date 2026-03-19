@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import DialogStore, { DialogStatus } from '@/gui/stores/DialogStore.ts';
-import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
+import DialogStore, { DialogStatus } from "@/gui/stores/DialogStore.ts";
+import { storeToRefs } from "pinia";
+import { ref } from "vue";
 const dialogStore = DialogStore.INSTANCE();
 const { title, html, cancelText, confirmText, cancelIsHidden, confirmIsHidden } = storeToRefs(dialogStore);
 const { resolve } = dialogStore;
@@ -28,11 +28,11 @@ function toggleExitAnimation() {
             <p v-html="html" />
           </div>
           <div class="dialog__footer">
-            <button v-if="!cancelIsHidden" @click="resolve({ status: DialogStatus.Canceled })">
-              {{ cancelText }}
-            </button>
-            <button v-if="!confirmIsHidden" @click="resolve({ status: DialogStatus.Confirmed })">
+            <button class="dialog__button" v-if="!confirmIsHidden" @click="resolve({ status: DialogStatus.Confirmed })">
               {{ confirmText }}
+            </button>
+            <button class="dialog__button" v-if="!cancelIsHidden" @click="resolve({ status: DialogStatus.Canceled })">
+              {{ cancelText }}
             </button>
           </div>
         </div>
@@ -58,7 +58,9 @@ function toggleExitAnimation() {
     border-radius: var(--primary-border-radius);
     color: var(--color-gray-fainter);
     background: var(--color-gray-darker);
-    margin-top: calc(var(--header-height) + var(--space-s));
+    width: max-content;
+    min-width: 24rem;
+    margin-top: 17rem;
     &--shaking {
       animation: horizontal-shake var(--transition-duration) linear forwards;
     }
@@ -80,13 +82,23 @@ function toggleExitAnimation() {
     gap: var(--space-m);
     padding-top: var(--space-xl);
     padding-bottom: var(--space-xs);
-    button {
-      cursor: pointer;
-      border-bottom: 1px solid var(--color-gray-faintest);
-      &:last-child {
-        color: var(--color-red);
-      }
-      padding: var(--space-4xs) 0;
+  }
+  &__button {
+    cursor: pointer;
+    padding: var(--space-s);
+    border: 1px solid var(--color-gray-faintest);
+    border-radius: var(--primary-border-radius);
+    transition-property: box-shadow;
+    transition-duration: var(--transition-duration-half);
+    transition-timing-function: var(--transition-timing-function);
+    &:last-child {
+      color: var(--color-red);
+    }
+    &:hover {
+      background: var(--color-gray-dark);
+    }
+    &:active {
+      background: var(--color-gray-darkest);
     }
   }
 }
