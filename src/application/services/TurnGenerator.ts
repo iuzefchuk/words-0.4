@@ -5,7 +5,7 @@ import CrossCheckComputer from '@/domain/services/CrossCheckComputer.ts';
 import { ValidationStatus } from '@/domain/models/TurnTracker.ts';
 import TurnValidator from '@/application/services/TurnValidator.ts';
 import { Player } from '@/domain/enums.ts';
-import { GameContext } from '@/application/types.ts';
+import { GameContext } from '@/application/Game.ts';
 
 enum GenerationDirection {
   Left = -1,

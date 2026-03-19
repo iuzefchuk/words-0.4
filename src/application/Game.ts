@@ -1,19 +1,45 @@
-import Board, { Bonus } from '@/domain/models/Board.ts';
+import Board, { Bonus, CellIndex } from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
 import { Letter, Player } from '@/domain/enums.ts';
 import { DomainEvent, EventCollector } from '@/domain/events.ts';
-import { TurnOutcome, TurnOutcomeType } from '@/domain/models/TurnTracker.ts';
-import Inventory from '@/domain/models/Inventory.ts';
+import { TurnOutcome, TurnOutcomeType, ValidationError } from '@/domain/models/TurnTracker.ts';
+import Inventory, { TileId } from '@/domain/models/Inventory.ts';
 import { TIME } from '@/shared/constants.ts';
-import { GameContext, GameCell, GameTile, GameState, GameTurnResult, GameResult } from '@/application/types.ts';
-import { GameResultType } from '@/application/enums.ts';
 import GameStateQuery from '@/application/queries/GameState.ts';
 import TurnDirector from '@/application/services/TurnDirector.ts';
+
+export enum GameResultType {
+  Win = 'Win',
+  Lose = 'Lose',
+  Tie = 'Tie',
+}
+
+export type GameContext = {
+  board: Board;
+  dictionary: Dictionary;
+  inventory: Inventory;
+  turnDirector: TurnDirector;
+};
+export type GameCell = CellIndex;
+export type GameTile = TileId;
+export type GameState = {
+  isFinished: boolean;
+  tilesRemaining: number;
+  userTiles: ReadonlyArray<TileId>;
+  currentTurnScore?: number;
+  userScore: number;
+  opponentScore: number;
+  currentTurnIsValid: boolean;
+  currentPlayerIsUser: boolean;
+  userPassWillBeResign: boolean;
+};
+export type GameTurnResult = Result<{ words: ReadonlyArray<string> }, ValidationError>;
+export type GameResult = { type: GameResultType; player: Player };
+
 import PlaceTileCommand from '@/application/commands/PlaceTile.ts';
 import SaveTurnCommand from '@/application/commands/SaveTurn.ts';
 import UndoPlaceTileCommand from '@/application/commands/UndoPlaceTile.ts';
-import OpponentTurnCreator from '@/application/services/OpponentTurnCreator.ts';
-import TurnGeneratorWorker from '@/infrastructure/TurnGeneratorWorker/index.ts';
+import TurnExecutor from '@/application/services/TurnExecutor.ts';
 import IndexedDbDictionaryFactory from '@/infrastructure/IndexedDbDictionaryFactory.ts';
 import IdGenerator from '@/infrastructure/CryptoIdGenerator.ts';
 import Clock from '@/infrastructure/DateApiClock.ts';
@@ -29,7 +55,7 @@ export default class Game {
   private static readonly OPPONENT_RESPONSE_MIN_TIME = TIME.ms_in_second * 2;
   private static readonly CLOCK = new Clock();
   private static dictionary: Dictionary;
-  private readonly turnGeneratorWorker = new TurnGeneratorWorker();
+  private readonly turnExecutor = new TurnExecutor();
   private readonly events = new EventCollector();
   private readonly resultLog: Array<GameResult> = [];
   private isMutable: boolean = true;
@@ -176,9 +202,7 @@ export default class Game {
   }
 
   private async createOpponentTurn(): Promise<GameTurnResult> {
-    const outcome = await this.setMinimumExecutionTime(() =>
-      OpponentTurnCreator.execute(this.context, this.turnGeneratorWorker),
-    );
+    const outcome = await this.setMinimumExecutionTime(() => this.turnExecutor.execute(this.context, Player.Opponent));
     switch (outcome.type) {
       case TurnOutcomeType.Resign:
         this.recordResign();
@@ -190,14 +214,16 @@ export default class Game {
       case TurnOutcomeType.Save:
         this.checkTileDepletion(Player.Opponent);
         this.events.raise(DomainEvent.OpponentTurnGenerated);
-        return outcome.result;
+        return { ok: true, value: { words: outcome.words } };
+      default:
+        throw new Error(`Unexpected outcome type: ${(outcome as { type: string }).type}`);
     }
   }
 
   private checkTileDepletion(player: Player): boolean {
     if (this.inventory.hasTilesFor(player)) return false;
     const players = Object.values(Player);
-    const scores = players.map(p => ({ player: p, score: this.turnDirector.getScoreFor(p) }));
+    const scores = players.map(player => ({ player, score: this.turnDirector.getScoreFor(player) }));
     const maxScore = Math.max(...scores.map(s => s.score));
     const allTied = scores.every(s => s.score === maxScore);
     if (allTied) {
@@ -212,7 +238,7 @@ export default class Game {
   }
 
   private endGame(): void {
-    this.turnGeneratorWorker.terminate();
+    this.turnExecutor.terminate();
     this.isMutable = false;
     const userGameResult = this.getGameResultFor(Player.User);
     const event = userGameResult && Game.RESULT_EVENTS[userGameResult.type];

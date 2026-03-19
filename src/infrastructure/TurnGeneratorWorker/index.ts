@@ -1,5 +1,5 @@
 import { TurnGeneratorResult } from '@/application/services/TurnGenerator.ts';
-import { GameContext } from '@/application/types.ts';
+import { GameContext } from '@/application/Game.ts';
 import { Player } from '@/domain/enums.ts';
 
 export type TurnGeneratorWorkerRequest = { context: GameContext; player: Player };

@@ -1,4 +1,4 @@
-import { GameContext } from '@/application/types.ts';
+import { GameContext } from '@/application/Game.ts';
 import { AnchorCoordinates, Placement } from '@/domain/models/Board.ts';
 import PlacementBuilder from '@/domain/services/PlacementBuilder.ts';
 import ScoreCalculator from '@/domain/services/ScoreCalculator.ts';

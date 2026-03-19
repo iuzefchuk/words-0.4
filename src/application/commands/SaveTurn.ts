@@ -1,4 +1,4 @@
-import { GameContext, GameTurnResult } from '@/application/types.ts';
+import { GameContext, GameTurnResult } from '@/application/Game.ts';
 import { TileId } from '@/domain/models/Inventory.ts';
 
 export default class SaveTurn {

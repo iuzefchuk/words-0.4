@@ -1,5 +1,5 @@
 import Game from '@/application/Game.ts';
-import { GameCell, GameTile, GameState, GameTurnResult } from '@/application/types.ts';
+import { GameCell, GameTile, GameState, GameTurnResult } from '@/application/Game.ts';
 import { TurnOutcome } from '@/domain/models/TurnTracker.ts';
 import { DomainEvent } from '@/domain/events.ts';
 import { defineStore } from 'pinia';
