@@ -16,7 +16,7 @@ export default class UseLoader {
   private readonly isRenderedRef = ref(false);
   private readonly remainingCounterValue = computed(() => this.counter.value % (UseLoader.WORD.length + 1));
   private readonly onlyFirstTileIsElevated = computed(() =>
-    UseLoader.WORD.every((_, idx) => (idx === 0 ? this.isTileElevated(idx) : !this.isTileElevated(idx))),
+    UseLoader.WORD.every((_, idx) => (idx === 0 ? this.isTileOutlined(idx) : !this.isTileOutlined(idx))),
   );
 
   constructor(
@@ -34,7 +34,7 @@ export default class UseLoader {
     );
   }
 
-  isTileElevated(idx: number): boolean {
+  isTileOutlined(idx: number): boolean {
     return idx < this.remainingCounterValue.value;
   }
 

@@ -4,7 +4,6 @@ defineProps({
   letter: { type: String, required: true },
   isInverted: { type: Boolean, default: false },
   isSaturated: { type: Boolean, default: false },
-  isOutlined: { type: Boolean, default: false },
 });
 </script>
 
@@ -14,7 +13,6 @@ defineProps({
       tile: true,
       'tile--inverted': isInverted,
       'tile--saturated': isSaturated,
-      'tile--outlined': isOutlined,
     }"
     viewBox="0 0 21 21"
     v-html="getLetterSvgHtml(letter)"
@@ -41,11 +39,8 @@ defineProps({
     background: var(--tile-bg-inverted);
     color: var(--tile-color-inverted);
   }
-  &--saturated:not(&--outlined) {
+  &--saturated {
     background: var(--tile-bg-saturated);
-  }
-  &--outlined:not(&--inverted) {
-    //  outline: 2px solid var(--tile-outline-color);
   }
 }
 </style>

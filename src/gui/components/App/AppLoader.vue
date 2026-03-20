@@ -1,25 +1,28 @@
 <script lang="ts" setup>
 import AppTile from '@/gui/components/shared/AppTile.vue';
+import AppOutline from '@/gui/components/shared/AppOutline.vue';
 import UseLoader from '@/gui/composables/UseLoader.ts';
 const props = defineProps({ isActive: { type: Boolean, required: true } });
 const emit = defineEmits(['derendered']);
 const loader = new UseLoader(props, emit);
 const { isRendered, allTilesAreSaturated } = loader;
+// TODO apply loader.isTileOutlined(idx)
 </script>
 
 <template>
   <Transition name="fade">
     <div v-if="isRendered" class="loader">
       <div class="loader__logo">
-        <AppTile
-          v-for="(letter, idx) in UseLoader.WORD"
-          :key="idx"
-          class="loader__tile"
-          :letter="letter"
-          :is-saturated="allTilesAreSaturated"
-          :is-outlined="loader.isTileElevated(idx)"
-        />
+        <template v-for="(letter, idx) in UseLoader.WORD" :key="idx">
+          <AppTile
+            v-show="loader.isTileOutlined(idx) || allTilesAreSaturated"
+            class="loader__tile"
+            :letter="letter"
+            :is-saturated="allTilesAreSaturated"
+          />
+        </template>
       </div>
+      <!-- <AppOutline /> -->
     </div>
   </Transition>
 </template>
