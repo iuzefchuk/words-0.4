@@ -7,7 +7,7 @@ import Inventory, { TileId } from '@/domain/models/Inventory.ts';
 import { TIME } from '@/shared/constants.ts';
 import { Clock } from '@/shared/ports.ts';
 import GameStateQuery from '@/application/queries/GameState.ts';
-import TurnDirector from '@/application/services/TurnDirector.ts';
+import TurnDirector from '@/application/TurnDirector.ts';
 import PlaceTileCommand from '@/application/commands/PlaceTile.ts';
 import SaveTurnCommand from '@/application/commands/SaveTurn.ts';
 import UndoPlaceTileCommand from '@/application/commands/UndoPlaceTile.ts';

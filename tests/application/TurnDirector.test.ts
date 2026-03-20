@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import TurnDirector from '@/application/services/TurnDirector.ts';
+import TurnDirector from '@/application//TurnDirector.ts';
 import Board from '@/domain/models/Board.ts';
 import { Player } from '@/domain/enums.ts';
 import { ValidationStatus } from '@/domain/models/TurnTracker.ts';

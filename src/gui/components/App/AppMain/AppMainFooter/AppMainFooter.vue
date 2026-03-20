@@ -12,7 +12,6 @@ import AppMainFooterButtons from '@/gui/components/App/AppMain/AppMainFooter/App
 
 <style lang="scss" scoped>
 .footer {
-  z-index: 1;
   justify-self: center;
   align-self: end;
   display: flex;

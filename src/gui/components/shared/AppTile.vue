@@ -35,7 +35,7 @@ defineProps({
   position: relative;
   top: 0;
   left: 0;
-  z-index: 1;
+  z-index: var(--z-index-level-1);
   min-height: 100%;
   &--inverted:not(&--saturated) {
     background: var(--tile-bg-inverted);

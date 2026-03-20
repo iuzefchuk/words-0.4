@@ -14,5 +14,6 @@
   display: grid;
   place-items: center;
   z-index: var(--z-index-level-3);
+  color: var(--primary-color);
 }
 </style>

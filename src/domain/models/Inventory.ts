@@ -1,4 +1,3 @@
-import { shuffleArrayWithFisherYates } from '@/shared/helpers.ts';
 import { Letter, Player } from '@/domain/enums.ts';
 import { IdGenerator } from '@/shared/ports.ts';
 
@@ -47,7 +46,7 @@ export default class Inventory {
   }
 
   static create({ players, idGenerator }: { players: ReadonlyArray<Player>; idGenerator: IdGenerator }): Inventory {
-    const tiles = shuffleArrayWithFisherYates(
+    const tiles = this.shuffleTilesWithFisherYates(
       Object.values(Letter).flatMap(letter =>
         Array.from({ length: Inventory.LETTER_CONFIG[letter].distribution }, () =>
           Tile.create({ letter, idGenerator }),
@@ -70,6 +69,14 @@ export default class Inventory {
     TilePool.hydrate(inventory.discardPool);
     for (const tile of inventory.tileById.values()) Tile.hydrate(tile);
     return inventory;
+  }
+
+  static shuffleTilesWithFisherYates(tiles: Array<Tile>): Array<Tile> {
+    for (let i = tiles.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+    }
+    return tiles;
   }
 
   get unusedTilesCount(): number {
@@ -177,7 +184,7 @@ class TilePool {
   }
 
   shuffle(): void {
-    shuffleArrayWithFisherYates(this.tiles);
+    Inventory.shuffleTilesWithFisherYates(this.tiles);
   }
 
   addTile(tile: Tile): void {

@@ -86,10 +86,10 @@ const buttons = reactive([
     transition-duration: var(--transition-duration-half);
     transition-timing-function: var(--transition-timing-function);
     &:hover:not(:active):not(:disabled) {
-      background: var(--color-white);
+      background: var(--button-bg-hover);
     }
     &:active:not(:disabled) {
-      background: var(--color-gray-lightest);
+      background: var(--button-bg-active);
     }
     &:disabled {
       opacity: 0.7;

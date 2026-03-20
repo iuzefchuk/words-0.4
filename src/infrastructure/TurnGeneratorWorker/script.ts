@@ -1,5 +1,5 @@
 import TurnGenerator from '@/application/services/TurnGenerator.ts';
-import TurnDirector from '@/application/services/TurnDirector.ts';
+import TurnDirector from '@/application//TurnDirector.ts';
 import Board from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
 import Inventory from '@/domain/models/Inventory.ts';

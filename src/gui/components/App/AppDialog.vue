@@ -58,8 +58,8 @@ function toggleExitAnimation() {
   &__window {
     padding: var(--space-l) var(--space-xl);
     border-radius: var(--primary-border-radius);
-    color: var(--color-gray-fainter);
-    background: var(--color-gray-darker);
+    color: var(--dialog-color);
+    background: var(--dialog-bg);
     width: max-content;
     min-width: 24rem;
     margin-top: 17rem;
@@ -88,7 +88,7 @@ function toggleExitAnimation() {
   &__button {
     cursor: pointer;
     padding: var(--space-s);
-    border: 1px solid var(--color-gray-faintest);
+    border: var(--dialog-button-border);
     border-radius: var(--primary-border-radius);
     transition-property: box-shadow;
     transition-duration: var(--transition-duration-half);
@@ -97,10 +97,10 @@ function toggleExitAnimation() {
       color: var(--color-red);
     }
     &:hover {
-      background: var(--color-gray-dark);
+      background: var(--dialog-button-bg-hover);
     }
     &:active {
-      background: var(--color-gray-darkest);
+      background: var(--dialog-button-bg-active);
     }
   }
 }

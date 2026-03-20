@@ -2,7 +2,7 @@ import Game from '@/application/Game.ts';
 import Board from '@/domain/models/Board.ts';
 import { Player } from '@/domain/enums.ts';
 import Inventory from '@/domain/models/Inventory.ts';
-import TurnDirector from '@/application/services/TurnDirector.ts';
+import TurnDirector from '@/application//TurnDirector.ts';
 import TurnExecutor from '@/application/services/TurnExecutor.ts';
 import IndexedDbDictionaryFactory from '@/infrastructure/IndexedDbDictionaryFactory.ts';
 import IdGenerator from '@/infrastructure/CryptoIdGenerator.ts';

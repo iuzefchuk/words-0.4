@@ -23,6 +23,13 @@
   --tile-bg-inverted: var(--color-purple-dark);
   --tile-bg-saturated: var(--color-pink-saturated);
   --tile-outline-color: var(--color-purple);
+  --button-bg-hover: var(--color-white);
+  --button-bg-active: var(--color-gray-lightest);
+  --dialog-color: var(--color-gray-fainter);
+  --dialog-bg: var(--color-gray-darker);
+  --dialog-button-border: 1px solid var(--color-gray-faintest);
+  --dialog-button-bg-hover: var(--color-gray-dark);
+  --dialog-button-bg-active: var(--color-gray-darkest);
 }
 
 .app {
@@ -68,25 +75,32 @@
 }
 
 // TODO to variables
-// @media (prefers-color-scheme: dark) {
-//   :root {
-//     --primary-color: var(--color-gray-lightest);
-//     --primary-bg: rgba(36 36 77 / 1);
-//     --primary-border-color: var(--color-gray-lighter);
-//     --secondary-color: var(--color-gray-lightest);
-//     --cell-color-dw: rgba(10 189 227 / 1);
-//     --cell-color-tw: rgba(238 83 83 / 1);
-//     --cell-color-dl: rgba(17 172 132 / 1);
-//     --cell-color-tl: rgba(255 159 68 / 1);
-//     --cell-bg: rgba(25 25 48 / 1);
-//     --cell-bg-center: rgba(47 47 95 / 1);
-//     --cell-bg-footer: rgba(30 30 58 / 1);
-//     --cell-shadow: var(--box-shadow-inner-dark);
-//     --cell-shadow-footer: var(--box-shadow-inner-dark);
-//     --tile-color-inverted: var(--color-gray-darkest);
-//     --tile-bg: rgba(85 50 160 / 1);
-//     --tile-bg-inverted: var(--color-gray-faintest);
-//     --tile-bg-saturated: rgba(130 70 210 / 1);
-//     --tile-outline-color: var(--color-pink);
-//   }
-// }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: var(--color-gray-lightest);
+    --primary-bg: rgba(36 36 77);
+    --primary-border-color: var(--color-gray-lighter);
+    --secondary-color: var(--color-gray-lightest);
+    --cell-color-dw: rgba(10 189 227);
+    --cell-color-tw: rgba(238 83 83);
+    --cell-color-dl: rgba(17 172 132);
+    --cell-color-tl: rgba(255 159 68);
+    --cell-bg: rgba(25 25 48);
+    --cell-bg-center: rgba(47 47 95);
+    --cell-bg-footer: rgb(31, 31, 60);
+    --cell-shadow: var(--box-shadow-inner-dark);
+    --cell-shadow-footer: var(--box-shadow-inner-dark);
+    --tile-color-inverted: var(--color-gray-darkest);
+    --tile-bg: rgba(85 50 160);
+    --tile-bg-inverted: var(--color-gray-faintest);
+    --tile-bg-saturated: rgb(142, 74, 231);
+    --tile-outline-color: var(--color-pink);
+    --button-bg-hover: rgb(55, 55, 103);
+    --button-bg-active: rgb(22, 22, 48);
+    --dialog-color: var(--color-gray-darkest);
+    --dialog-bg: var(--color-gray-fainter);
+    --dialog-button-border: 1px solid var(--color-gray-darkest);
+    --dialog-button-bg-hover: var(--color-white);
+    --dialog-button-bg-active: var(--color-gray-lightest);
+  }
+}

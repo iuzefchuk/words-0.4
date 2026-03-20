@@ -1,24 +1,25 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { TurnOutcomeType, type TurnOutcome } from '@/domain/models/TurnTracker.ts'; // TODO fix
 import MatchStore from '@/gui/stores/MatchStore.ts';
 const MAX_LENGTH = 3;
 const matchStore = MatchStore.INSTANCE();
 const messages = computed(() => {
   const history = matchStore.outcomeHistory;
   const start = Math.max(0, history.length - MAX_LENGTH);
-  return history.slice(start).map((message, i) => ({ message, key: start + i }));
+  return history.slice(start).map((message, i) => ({
+    ...('words' in message && { words: message.words, score: message.score }),
+    key: start + i,
+  }));
 });
-function convertMessageToHtml(message: TurnOutcome): string {
-  if (message.type === TurnOutcomeType.Save) return `${message.words.join(', ')} <em>${message.score}pts</em>`;
-  if (message.type === TurnOutcomeType.Pass) return '<em>passed</em>';
-  return '';
+function convertMessageToHtml(words: ReadonlyArray<string> | undefined, score: number | undefined): string {
+  if (words && score) return `<em>${words.join(', ')}</em> for ${score}pts`;
+  else return 'passed';
 }
 </script>
 
 <template>
   <TransitionGroup v-if="messages.length > 0" name="fade-from-left" tag="ul" class="annotation" appear>
-    <li v-for="{ message, key } in messages" :key="key" v-html="convertMessageToHtml(message)" />
+    <li v-for="{ words, score, key } in messages" :key="key" v-html="convertMessageToHtml(words, score)" />
   </TransitionGroup>
 </template>
 
