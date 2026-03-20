@@ -2,16 +2,24 @@
 import AppTile from '@/gui/components/shared/AppTile.vue';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
+import UseActions from '@/gui/composables/UseActions.ts';
 import { storeToRefs } from 'pinia';
 const matchStore = MatchStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
 const { tilesRemaining } = storeToRefs(matchStore);
 const { tiles } = storeToRefs(rackStore);
+const actions = new UseActions();
+const { allActionsAreDisabled } = actions;
 </script>
 
 <template>
-  <ul class="app__width-content app__grid--footer">
-    <li v-for="(tile, idx) in tiles" :key="idx" class="grid__cell" @click.stop="rackStore.handleClickFooterCell(idx)">
+  <ul class="rack app__width-content app__grid--footer">
+    <li
+      v-for="(tile, idx) in tiles"
+      :key="idx"
+      :class="{ rack__cell: true, 'rack__cell--disabled': allActionsAreDisabled }"
+      @click.stop="rackStore.handleClickFooterCell(idx)"
+    >
       <AppTile
         v-if="rackStore.isTileVisible(tile)"
         :letter="matchStore.getTileLetter(tile)"
@@ -19,9 +27,9 @@ const { tiles } = storeToRefs(rackStore);
         @click.stop="rackStore.handleClickFooterTile(tile)"
       />
     </li>
-    <li class="grid__count">
+    <li class="rack__count">
       <p>
-        <span v-animate-number="{ number: tilesRemaining }" class="grid__count-item" />
+        <span v-animate-number="{ number: tilesRemaining }" class="rack__count-item" />
         {{ t('game.unassigned_count') }}
       </p>
     </li>
@@ -29,12 +37,19 @@ const { tiles } = storeToRefs(rackStore);
 </template>
 
 <style lang="scss" scoped>
-.grid {
+.rack {
   &__cell {
     cursor: pointer;
     background: var(--cell-bg-footer);
     border-radius: calc(var(--primary-border-radius) * 2);
     box-shadow: var(--cell-shadow-footer);
+    &--disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      & > * {
+        pointer-events: none;
+      }
+    }
   }
   &__count {
     display: flex;
@@ -43,6 +58,7 @@ const { tiles } = storeToRefs(rackStore);
     justify-content: center;
     color: var(--secondary-color);
     font-size: var(--font-size-small);
+    user-select: none;
   }
   &__count-item {
     width: max-content;

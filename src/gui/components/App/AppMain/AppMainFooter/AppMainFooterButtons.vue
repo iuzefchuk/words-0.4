@@ -44,11 +44,11 @@ const buttons = reactive([
 </script>
 
 <template>
-  <div class="actions">
-    <ul class="actions__list app__width-content">
+  <div class="buttons">
+    <ul class="buttons__list app__width-content">
       <template v-for="{ name, action, isRendered, isDisabled } in buttons" :key="name">
-        <li v-if="isRendered()" class="actions__list-item">
-          <button class="actions__btn" :disabled="isDisabled()" @click="action()">
+        <li v-if="isRendered()" class="buttons__list-item">
+          <button class="buttons__btn" :disabled="isDisabled()" @click="action()">
             {{ name }}
           </button>
         </li>
@@ -58,7 +58,7 @@ const buttons = reactive([
 </template>
 
 <style lang="scss" scoped>
-.actions {
+.buttons {
   height: calc(var(--cell-tile-width) * 1.6);
   width: 100%;
   display: grid;

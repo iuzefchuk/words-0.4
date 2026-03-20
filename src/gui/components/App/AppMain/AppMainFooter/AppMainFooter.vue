@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import AppMainFooterGrid from '@/gui/components/App/AppMain/AppMainFooter/AppMainFooterGrid.vue';
+import AppMainFooterRack from '@/gui/components/App/AppMain/AppMainFooter/AppMainFooterRack.vue';
 import AppMainFooterButtons from '@/gui/components/App/AppMain/AppMainFooter/AppMainFooterButtons.vue';
 </script>
 
 <template>
   <footer class="footer">
-    <AppMainFooterGrid />
+    <AppMainFooterRack />
     <AppMainFooterButtons />
   </footer>
 </template>

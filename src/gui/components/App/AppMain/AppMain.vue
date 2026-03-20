@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import AppMainHeader from '@/gui/components/App/AppMain/AppMainHeader.vue';
-import AppMainGrid from '@/gui/components/App/AppMain/AppMainGrid/AppMainGrid.vue';
+import AppMainBoard from '@/gui/components/App/AppMain/AppMainBoard/AppMainBoard.vue';
 import AppMainFooter from '@/gui/components/App/AppMain/AppMainFooter/AppMainFooter.vue';
 import AppMainAnnotation from '@/gui/components/App/AppMain/AppMainAnnotation.vue';
-import AppMainOutline from '@/gui/components/App/AppMain/AppMainOutline.vue';
 import RackStore from '@/gui/stores/RackStore.ts';
 import { ref } from 'vue';
 const isBlurred = ref(false);
@@ -17,8 +16,7 @@ const rackStore = RackStore.INSTANCE();
     </Transition>
     <div class="main__center app__width-content">
       <AppMainAnnotation class="main__center-annotation" />
-      <AppMainGrid />
-      <AppMainOutline />
+      <AppMainBoard />
     </div>
     <Transition name="fade-up-down" appear>
       <AppMainFooter />

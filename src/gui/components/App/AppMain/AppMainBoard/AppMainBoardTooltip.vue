@@ -3,7 +3,7 @@ import MatchStore from '@/gui/stores/MatchStore.ts';
 import { storeToRefs } from 'pinia';
 const matchStore = MatchStore.INSTANCE();
 const { currentTurnScore } = storeToRefs(matchStore);
-const SHIMMER_THRESHOLD_SCORE = 5;
+const SHIMMER_THRESHOLD_SCORE = 30;
 </script>
 
 <template>
