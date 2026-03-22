@@ -52,7 +52,7 @@ export default class RackStore {
   }
 
   private get allTilesArePlaced(): boolean {
-    return this.tiles.every(tile => !this.matchStore.isTilePlaced(tile));
+    return this.tiles.every(tile => this.matchStore.isTilePlaced(tile));
   }
 
   private get anyTileIsPlaced(): boolean {

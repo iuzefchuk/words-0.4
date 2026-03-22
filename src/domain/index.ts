@@ -5,6 +5,7 @@ import Dictionary from '@/domain/models/Dictionary.ts';
 import { IdGenerator } from '@/shared/ports.ts';
 import { DomainCell, DomainTile, DomainPlayer, DomainTurnOutcome, DomainTurnOutcomeType } from '@/domain/types.ts';
 import TurnValidator, { ValidatorContext } from '@/domain/services/TurnValidator.ts';
+import { GeneratorContext } from '@/domain/services/TurnGenerator.ts';
 
 export default class Domain {
   private constructor(
@@ -43,10 +44,6 @@ export default class Domain {
 
   get currentTurnCells(): ReadonlyArray<DomainCell> | undefined {
     return this.turnTracker.currentTurnCells;
-  }
-
-  get currentTurnError(): string | undefined {
-    return this.turnTracker.currentTurnError;
   }
 
   get currentTurnScore(): number | undefined {
@@ -189,6 +186,16 @@ export default class Domain {
 
   shuffleTilesFor(player: DomainPlayer): void {
     this.inventory.shuffleTilesFor(player);
+  }
+
+  toGeneratorContext(): GeneratorContext {
+    // TODO wft
+    return {
+      board: this.board,
+      dictionary: this.dictionary,
+      inventory: this.inventory,
+      turnTracker: this.turnTracker,
+    };
   }
 
   private startTurnForNextPlayer(): void {

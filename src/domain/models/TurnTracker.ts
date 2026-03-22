@@ -51,7 +51,11 @@ export default class TurnTracker {
   }
 
   static hydrate(data: unknown): TurnTracker {
-    return Object.setPrototypeOf(data, TurnTracker.prototype);
+    const tracker = Object.setPrototypeOf(data, TurnTracker.prototype) as TurnTracker;
+    for (const turn of tracker.turns) {
+      Object.setPrototypeOf(turn, Turn.prototype);
+    }
+    return tracker;
   }
 
   get hasPriorTurns(): boolean {
@@ -174,6 +178,7 @@ class Turn {
       };
     }
     if (this._outcomeType === TurnOutcomeType.Pass) return { type: TurnOutcomeType.Pass, player: this.player };
+    if (this._outcomeType === TurnOutcomeType.Resign) return { type: TurnOutcomeType.Resign, player: this.player };
   }
 
   get outcomeType(): TurnOutcomeType | undefined {

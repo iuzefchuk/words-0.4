@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import AppDialog from '@/gui/components/App/AppDialog.vue';
@@ -43,7 +43,7 @@ describe('AppDialog', () => {
     await wrapper.vm.$nextTick();
 
     const buttons = wrapper.findAll('.dialog__footer button');
-    const confirmButton = buttons[buttons.length - 1];
+    const confirmButton = buttons[0];
     await confirmButton.trigger('click');
 
     const result = await resultPromise;
@@ -59,7 +59,7 @@ describe('AppDialog', () => {
     const resultPromise = store.trigger({ title: 'Test', html: 'body' });
     await wrapper.vm.$nextTick();
 
-    const cancelButton = wrapper.findAll('.dialog__footer button')[0];
+    const cancelButton = wrapper.findAll('.dialog__footer button')[1];
     await cancelButton.trigger('click');
 
     const result = await resultPromise;
@@ -97,7 +97,8 @@ describe('AppDialog', () => {
     await wrapper.vm.$nextTick();
     expect(wrapper.find('.dialog').exists()).toBe(true);
 
-    store.resolve({ status: DialogStatus.Confirmed });
+    const buttons = wrapper.findAll('.dialog__footer button');
+    await buttons[0].trigger('click');
     await resultPromise;
     await wrapper.vm.$nextTick();
 

@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import AppTile from '@/gui/components/shared/AppTile.vue';
 import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
 
-function mountTile(props: { letter: string; isInverted?: boolean; isHighlighted?: boolean; isElevated?: boolean }) {
+function mountTile(props: { letter: string; isInverted?: boolean; isSaturated?: boolean }) {
   return mount(AppTile, {
     props,
     global: {
@@ -34,14 +34,14 @@ describe('AppTile', () => {
     expect(wrapper.find('svg').classes()).not.toContain('tile--inverted');
   });
 
-  it('applies saturated class when isHighlighted is true', () => {
-    const wrapper = mountTile({ letter: 'A', isHighlighted: true });
+  it('applies saturated class when isSaturated is true', () => {
+    const wrapper = mountTile({ letter: 'A', isSaturated: true });
     expect(wrapper.find('svg').classes()).toContain('tile--saturated');
   });
 
-  it('applies elevated class when isElevated is true', () => {
-    const wrapper = mountTile({ letter: 'A', isElevated: true });
-    expect(wrapper.find('svg').classes()).toContain('tile--elevated');
+  it('does not apply saturated class when isSaturated is false', () => {
+    const wrapper = mountTile({ letter: 'A', isSaturated: false });
+    expect(wrapper.find('svg').classes()).not.toContain('tile--saturated');
   });
 
   it('renders svg content for the letter', () => {

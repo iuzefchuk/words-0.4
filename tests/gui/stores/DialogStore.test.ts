@@ -63,8 +63,8 @@ describe('DialogStore', () => {
     // After reset, refs should be back to defaults
     expect(store.title).toBe('');
     expect(store.html).toBe('');
-    expect(store.cancelText).toBe('general.cancel');
-    expect(store.confirmText).toBe('general.ok');
+    expect(store.cancelText).toBe('');
+    expect(store.confirmText).toBe('');
   });
 
   it('sets dialog properties when triggered', () => {

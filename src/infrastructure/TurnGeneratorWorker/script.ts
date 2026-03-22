@@ -9,14 +9,7 @@ self.onmessage = (event: MessageEvent<TurnGeneratorWorkerRequest>) => {
       throw new Error('Invalid worker request: missing domain or player');
     }
     const hydrated = Domain.hydrate(domain);
-    const context = hydrated as any;
-    const generatorContext = {
-      board: context.board,
-      dictionary: context.dictionary,
-      inventory: context.inventory,
-      turnTracker: context.turnTracker,
-    };
-    for (const result of TurnGenerator.execute(generatorContext, player)) return self.postMessage({ return: result });
+    for (const result of TurnGenerator.execute(hydrated.toGeneratorContext(), player)) return self.postMessage({ return: result });
     self.postMessage({ return: null });
   } catch (error) {
     self.postMessage({ return: null, error: error instanceof Error ? error.message : String(error) });

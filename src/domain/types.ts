@@ -6,7 +6,6 @@ export {
   TurnOutcomeType as DomainTurnOutcomeType,
   ValidationStatus as DomainValidationStatus,
 } from '@/domain/models/TurnTracker.ts';
-// TODO
 export { DomainEvent, DomainEventCollector } from '@/domain/events.ts';
 export type { default as Domain } from '@/domain/index.ts';
 export type { default as DomainDictionary } from '@/domain/models/Dictionary.ts';
