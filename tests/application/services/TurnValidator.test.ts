@@ -1,92 +1,64 @@
 import { describe, it, expect } from 'vitest';
-import TurnValidator from '@/domain/services/TurnValidator.ts';
-import { createTestContext, cellIndex } from '$/helpers.ts';
-import { Player, ValidationStatus, ValidationError } from '@/domain/index.ts';
+import { createTestContext, cellIndex, ALL_WORDS } from '$/helpers.ts';
+import { Player } from '@/domain/enums.ts';
+import { ValidationError } from '@/domain/models/TurnTracker.ts';
 
 describe('TurnValidator', () => {
-  it('fails with InvalidTilePlacement for empty placement links', () => {
-    const context = createTestContext();
-    const result = TurnValidator.execute(context, []);
-    expect(result.status).toBe(ValidationStatus.Invalid);
-    if (result.status === ValidationStatus.Invalid) {
-      expect(result.error).toBe(ValidationError.InvalidTilePlacement);
-    }
+  it('fails with InvalidTilePlacement for empty tiles', () => {
+    const domain = createTestContext();
+    domain.validateCurrentTurn();
+    expect(domain.currentTurnIsValid).toBe(false);
+    expect(domain.currentTurnError).toBe(ValidationError.InvalidTilePlacement);
   });
 
-  it('validates a single tile placed on center cell', () => {
-    const context = createTestContext({ words: ['A', 'AT', 'CAT'] });
-    const userTiles = context.inventory.getTilesFor(Player.User);
-    const tile = userTiles[0];
-    const cell = cellIndex(112); // center
+  it('validates tiles placed on center cell', () => {
+    const domain = createTestContext({ words: ALL_WORDS });
+    const userTiles = domain.getTilesFor(Player.User);
 
-    context.board.placeTile(cell, tile);
+    domain.placeTile({ cell: cellIndex(112), tile: userTiles[0] });
+    domain.placeTile({ cell: cellIndex(113), tile: userTiles[1] });
+    domain.validateCurrentTurn();
 
-    const result = TurnValidator.execute(context, [tile]);
-    // Single tile on center: must form a word. Depends on whether the letter is in dictionary.
-    // Could be Valid or Invalid depending on the tile's letter
-    expect([ValidationStatus.Valid, ValidationStatus.Invalid]).toContain(result.status);
+    expect(domain.currentTurnIsValid).toBe(true);
   });
 
   it('fails with NoCellsUsableAsFirst when tile is not on anchor', () => {
-    const context = createTestContext();
-    const userTiles = context.inventory.getTilesFor(Player.User);
-    const tile = userTiles[0];
+    const domain = createTestContext({ words: ALL_WORDS });
+    const userTiles = domain.getTilesFor(Player.User);
     // Place far from center on an empty board — no anchor adjacency
-    const cell = cellIndex(0);
-    context.board.placeTile(cell, tile);
+    domain.placeTile({ cell: cellIndex(0), tile: userTiles[0] });
+    domain.placeTile({ cell: cellIndex(1), tile: userTiles[1] });
+    domain.validateCurrentTurn();
 
-    const result = TurnValidator.execute(context, [tile]);
-    expect(result.status).toBe(ValidationStatus.Invalid);
-    if (result.status === ValidationStatus.Invalid) {
-      expect(result.error).toBe(ValidationError.NoCellsUsableAsFirst);
-    }
+    expect(domain.currentTurnIsValid).toBe(false);
+    expect(domain.currentTurnError).toBe(ValidationError.NoCellsUsableAsFirst);
   });
 
   it('fails with WordNotInDictionary for invalid word', () => {
-    const context = createTestContext({ words: ['CAT', 'DOG'] });
-    const userTiles = context.inventory.getTilesFor(Player.User);
+    const domain = createTestContext({ words: ['CAT', 'DOG'] });
+    const userTiles = domain.getTilesFor(Player.User);
 
-    // Place two different tiles on center row to form a word
-    const cell1 = cellIndex(112); // center
-    const cell2 = cellIndex(113);
-    const tile1 = userTiles[0];
-    const tile2 = userTiles[1];
-    context.board.placeTile(cell1, tile1);
-    context.board.placeTile(cell2, tile2);
-
-    const result = TurnValidator.execute(context, [tile1, tile2]);
+    // Place two tiles on center row
+    domain.placeTile({ cell: cellIndex(112), tile: userTiles[0] });
+    domain.placeTile({ cell: cellIndex(113), tile: userTiles[1] });
+    domain.validateCurrentTurn();
 
     // The formed word may or may not be in dictionary — depends on tile letters
     // But we verify the validator runs the full pipeline without crashing
-    expect([ValidationStatus.Valid, ValidationStatus.Invalid]).toContain(result.status);
+    expect([true, false]).toContain(domain.currentTurnIsValid);
   });
 
   it('returns score when word is valid', () => {
-    const context = createTestContext({ words: ['CAT', 'DOG', 'AT', 'A', 'T', 'C', 'D', 'O', 'G'] });
-    const userTiles = context.inventory.getTilesFor(Player.User);
+    const domain = createTestContext({ words: ALL_WORDS });
+    const userTiles = domain.getTilesFor(Player.User);
 
-    // We need to find what letters the tiles actually have
-    const tile = userTiles[0];
-    const letter = context.inventory.getTileLetter(tile);
+    domain.placeTile({ cell: cellIndex(112), tile: userTiles[0] });
+    domain.placeTile({ cell: cellIndex(113), tile: userTiles[1] });
+    domain.validateCurrentTurn();
 
-    // Add the single letter to dictionary to guarantee validity
-    const singleLetterContext = createTestContext({
-      words: [letter, 'CAT', 'DOG'],
-    });
-    const singleTiles = singleLetterContext.inventory.getTilesFor(Player.User);
-    const singleTile = singleTiles[0];
-    const cell = cellIndex(112);
-
-    singleLetterContext.board.placeTile(cell, singleTile);
-
-    const result = TurnValidator.execute(singleLetterContext, [singleTile]);
-
-    if (result.status === ValidationStatus.Valid) {
-      expect(result.score).toBeGreaterThanOrEqual(0);
-      expect(result.words).toBeDefined();
-      expect(result.words.length).toBeGreaterThan(0);
-    }
-    // If still invalid, the pipeline completed without error — that's fine
-    expect([ValidationStatus.Valid, ValidationStatus.Invalid]).toContain(result.status);
+    expect(domain.currentTurnIsValid).toBe(true);
+    expect(domain.currentTurnScore).toBeGreaterThanOrEqual(0);
+    expect(domain.currentTurnWords).toBeDefined();
+    expect(domain.currentTurnWords!.length).toBeGreaterThan(0);
   });
 });

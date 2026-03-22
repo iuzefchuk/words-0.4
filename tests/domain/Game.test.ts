@@ -1,127 +1,118 @@
 import { describe, it, expect } from 'vitest';
-import { createTestContext, cellIndex, tileId } from '$/helpers.ts';
-import { Player, ValidationStatus } from '@/domain/index.ts';
+import { createTestContext, cellIndex, placeAndValidate, ALL_WORDS } from '$/helpers.ts';
+import { Player } from '@/domain/enums.ts';
 
 describe('Game (domain)', () => {
   it('starts with User as current player', () => {
-    const context = createTestContext();
-    expect(context.game.currentPlayer).toBe(Player.User);
+    const domain = createTestContext();
+    expect(domain.currentPlayer).toBe(Player.User);
   });
 
   it('has no prior turns initially', () => {
-    const context = createTestContext();
-    expect(context.game.hasPriorTurns).toBe(false);
+    const domain = createTestContext();
+    expect(domain.hasPriorTurns).toBe(false);
   });
 
   describe('placeTile / undoPlaceTile', () => {
     it('places a tile on both board and history', () => {
-      const context = createTestContext();
-      const userTiles = context.inventory.getTilesFor(Player.User);
+      const domain = createTestContext();
+      const userTiles = domain.getTilesFor(Player.User);
       const tile = userTiles[0];
-      context.game.placeTile({ cell: cellIndex(112), tile });
+      domain.placeTile({ cell: cellIndex(112), tile });
 
-      expect(context.board.isTilePlaced(tile)).toBe(true);
-      expect(context.game.currentTurnPlacement).toHaveLength(1);
+      expect(domain.isTilePlaced(tile)).toBe(true);
+      expect(domain.currentTurnTiles).toHaveLength(1);
     });
 
     it('undoes a tile placement from both board and history', () => {
-      const context = createTestContext();
-      const userTiles = context.inventory.getTilesFor(Player.User);
+      const domain = createTestContext();
+      const userTiles = domain.getTilesFor(Player.User);
       const tile = userTiles[0];
-      context.game.placeTile({ cell: cellIndex(112), tile });
-      context.game.undoPlaceTile({ tile });
+      domain.placeTile({ cell: cellIndex(112), tile });
+      domain.undoPlaceTile({ tile });
 
-      expect(context.board.isTilePlaced(tile)).toBe(false);
-      expect(context.game.currentTurnPlacement).toHaveLength(0);
+      expect(domain.isTilePlaced(tile)).toBe(false);
+      expect(domain.currentTurnTiles).toHaveLength(0);
     });
   });
 
   describe('resetCurrentTurn', () => {
     it('removes all placed tiles from board and history', () => {
-      const context = createTestContext();
-      const userTiles = context.inventory.getTilesFor(Player.User);
+      const domain = createTestContext();
+      const userTiles = domain.getTilesFor(Player.User);
       const tile1 = userTiles[0];
       const tile2 = userTiles[1];
-      context.game.placeTile({ cell: cellIndex(112), tile: tile1 });
-      context.game.placeTile({ cell: cellIndex(113), tile: tile2 });
-      context.game.resetCurrentTurn();
+      domain.placeTile({ cell: cellIndex(112), tile: tile1 });
+      domain.placeTile({ cell: cellIndex(113), tile: tile2 });
+      domain.resetCurrentTurn();
 
-      expect(context.board.isTilePlaced(tile1)).toBe(false);
-      expect(context.board.isTilePlaced(tile2)).toBe(false);
-      expect(context.game.currentTurnPlacement).toHaveLength(0);
+      expect(domain.isTilePlaced(tile1)).toBe(false);
+      expect(domain.isTilePlaced(tile2)).toBe(false);
+      expect(domain.currentTurnTiles).toHaveLength(0);
     });
   });
 
   describe('saveCurrentTurn', () => {
     it('throws when turn is not valid', () => {
-      const context = createTestContext();
-      expect(() => context.game.saveCurrentTurn()).toThrow('not valid');
+      const domain = createTestContext();
+      expect(() => domain.saveCurrentTurn()).toThrow('not valid');
     });
 
     it('advances to next player when valid', () => {
-      const context = createTestContext();
-      const userTiles = context.inventory.getTilesFor(Player.User);
-      const tile = userTiles[0];
-      context.game.placeTile({ cell: cellIndex(112), tile });
-      context.game.setCurrentTurnValidation({
-        status: ValidationStatus.Valid,
-        cells: [cellIndex(112)],
-        placements: [[{ cell: cellIndex(112), tile }]],
-        words: ['A'],
-        score: 1,
-      });
-      context.game.saveCurrentTurn();
+      const domain = createTestContext({ words: ALL_WORDS });
+      placeAndValidate(domain, [
+        { cell: cellIndex(112), tile: domain.getTilesFor(Player.User)[0] },
+        { cell: cellIndex(113), tile: domain.getTilesFor(Player.User)[1] },
+      ]);
+      domain.saveCurrentTurn();
 
-      expect(context.game.currentPlayer).toBe(Player.Opponent);
-      expect(context.game.hasPriorTurns).toBe(true);
+      expect(domain.currentPlayer).toBe(Player.Opponent);
+      expect(domain.hasPriorTurns).toBe(true);
     });
   });
 
   describe('passCurrentTurn', () => {
     it('advances to next player', () => {
-      const context = createTestContext();
-      context.game.passCurrentTurn();
-      expect(context.game.currentPlayer).toBe(Player.Opponent);
+      const domain = createTestContext();
+      domain.passCurrentTurn();
+      expect(domain.currentPlayer).toBe(Player.Opponent);
     });
 
     it('records pass action', () => {
-      const context = createTestContext();
-      context.game.passCurrentTurn();
-      expect(context.game.willPlayerPassBeResign(Player.User)).toBe(true);
+      const domain = createTestContext();
+      domain.passCurrentTurn();
+      expect(domain.willPlayerPassBeResign(Player.User)).toBe(true);
     });
   });
 
   describe('getScoreFor', () => {
     it('returns 0 initially', () => {
-      const context = createTestContext();
-      expect(context.game.getScoreFor(Player.User)).toBe(0);
-      expect(context.game.getScoreFor(Player.Opponent)).toBe(0);
+      const domain = createTestContext();
+      expect(domain.getScoreFor(Player.User)).toBe(0);
+      expect(domain.getScoreFor(Player.Opponent)).toBe(0);
     });
   });
 
   describe('validation state', () => {
     it('starts without error or score', () => {
-      const context = createTestContext();
-      expect(context.game.currentTurnError).toBeUndefined();
-      expect(context.game.currentTurnScore).toBeUndefined();
-      expect(context.game.currentTurnWords).toBeUndefined();
-      expect(context.game.currentTurnIsValid).toBe(false);
+      const domain = createTestContext();
+      expect(domain.currentTurnError).toBeUndefined();
+      expect(domain.currentTurnScore).toBeUndefined();
+      expect(domain.currentTurnWords).toBeUndefined();
+      expect(domain.currentTurnIsValid).toBe(false);
     });
 
-    it('reflects set validation result', () => {
-      const context = createTestContext();
-      const userTiles = context.inventory.getTilesFor(Player.User);
-      const tile = userTiles[0];
-      context.game.setCurrentTurnValidation({
-        status: ValidationStatus.Valid,
-        cells: [cellIndex(112)],
-        placements: [[{ cell: cellIndex(112), tile }]],
-        words: ['TEST'],
-        score: 10,
-      });
-      expect(context.game.currentTurnIsValid).toBe(true);
-      expect(context.game.currentTurnScore).toBe(10);
-      expect(context.game.currentTurnWords).toEqual(['TEST']);
+    it('reflects validation result after validateCurrentTurn', () => {
+      const domain = createTestContext({ words: ALL_WORDS });
+      const userTiles = domain.getTilesFor(Player.User);
+      domain.placeTile({ cell: cellIndex(112), tile: userTiles[0] });
+      domain.placeTile({ cell: cellIndex(113), tile: userTiles[1] });
+      domain.validateCurrentTurn();
+
+      expect(domain.currentTurnIsValid).toBe(true);
+      expect(domain.currentTurnScore).toBeGreaterThan(0);
+      expect(domain.currentTurnWords).toBeDefined();
+      expect(domain.currentTurnWords!.length).toBeGreaterThan(0);
     });
   });
 

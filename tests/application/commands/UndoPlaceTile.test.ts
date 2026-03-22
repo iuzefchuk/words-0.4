@@ -2,31 +2,31 @@ import { describe, it, expect } from 'vitest';
 import PlaceTile from '@/application/commands/PlaceTile.ts';
 import UndoPlaceTile from '@/application/commands/UndoPlaceTile.ts';
 import { createTestContext, cellIndex } from '$/helpers.ts';
-import { Player } from '@/domain/index.ts';
+import { Player } from '@/domain/enums.ts';
 
 describe('UndoPlaceTile', () => {
   it('removes a placed tile and re-validates', () => {
-    const context = createTestContext();
-    const userTiles = context.inventory.getTilesFor(Player.User);
+    const domain = createTestContext();
+    const userTiles = domain.getTilesFor(Player.User);
     const tile = userTiles[0];
 
-    PlaceTile.execute(context, { cell: cellIndex(112), tile });
-    expect(context.board.isTilePlaced(tile)).toBe(true);
+    PlaceTile.execute(domain, { cell: cellIndex(112), tile });
+    expect(domain.isTilePlaced(tile)).toBe(true);
 
-    UndoPlaceTile.execute(context, { tile });
-    expect(context.board.isTilePlaced(tile)).toBe(false);
-    expect(context.game.currentTurnPlacement).toHaveLength(0);
+    UndoPlaceTile.execute(domain, tile);
+    expect(domain.isTilePlaced(tile)).toBe(false);
+    expect(domain.currentTurnTiles).toHaveLength(0);
   });
 
   it('re-validates after undo', () => {
-    const context = createTestContext();
-    const userTiles = context.inventory.getTilesFor(Player.User);
+    const domain = createTestContext();
+    const userTiles = domain.getTilesFor(Player.User);
 
-    PlaceTile.execute(context, { cell: cellIndex(112), tile: userTiles[0] });
-    PlaceTile.execute(context, { cell: cellIndex(113), tile: userTiles[1] });
+    PlaceTile.execute(domain, { cell: cellIndex(112), tile: userTiles[0] });
+    PlaceTile.execute(domain, { cell: cellIndex(113), tile: userTiles[1] });
 
-    UndoPlaceTile.execute(context, { tile: userTiles[1] });
+    UndoPlaceTile.execute(domain, userTiles[1]);
     // Only one tile left, validation re-runs
-    expect(context.game.currentTurnPlacement).toHaveLength(1);
+    expect(domain.currentTurnTiles).toHaveLength(1);
   });
 });

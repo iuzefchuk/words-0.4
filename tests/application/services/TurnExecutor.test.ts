@@ -1,9 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createTestContext } from '$/helpers.ts';
-import { Player, TurnOutcomeType } from '@/domain/index.ts';
-import TurnValidator from '@/domain/services/TurnValidator.ts';
+import { Player } from '@/domain/enums.ts';
+import { TurnOutcomeType } from '@/domain/models/TurnTracker.ts';
 import PassTurnCommand from '@/application/commands/PassTurn.ts';
-import SaveTurnCommand from '@/application/commands/SaveTurn.ts';
 
 vi.mock('@/infrastructure/TurnGeneratorWorker/TurnGeneratorWorker.ts', () => {
   return {
@@ -32,32 +31,32 @@ describe('Opponent turn execution', () => {
     const MockWorker = await getMockWorkerClass();
     MockWorker.mockExecute = () => Promise.resolve(null);
 
-    const context = createTestContext();
+    const domain = createTestContext();
     const player = Player.Opponent;
 
     // Simulate what Application.executeOpponentTurn does
     let generatorResult;
     try {
-      generatorResult = await new (await import('@/infrastructure/TurnGeneratorWorker/TurnGeneratorWorker.ts')).default().execute({ context, player });
+      generatorResult = await new (await import('@/infrastructure/TurnGeneratorWorker/TurnGeneratorWorker.ts')).default().execute({ domain, player });
     } catch {
       generatorResult = null;
     }
 
     expect(generatorResult).toBeNull();
     // Should pass since not resign condition
-    expect(context.game.willPlayerPassBeResign(player)).toBe(false);
+    expect(domain.willPlayerPassBeResign(player)).toBe(false);
   });
 
   it('falls back to pass when worker throws an error', async () => {
     const MockWorker = await getMockWorkerClass();
     MockWorker.mockExecute = () => Promise.reject(new Error('Worker crashed'));
 
-    const context = createTestContext();
+    const domain = createTestContext();
     const player = Player.Opponent;
 
     let generatorResult;
     try {
-      generatorResult = await new (await import('@/infrastructure/TurnGeneratorWorker/TurnGeneratorWorker.ts')).default().execute({ context, player });
+      generatorResult = await new (await import('@/infrastructure/TurnGeneratorWorker/TurnGeneratorWorker.ts')).default().execute({ domain, player });
     } catch {
       generatorResult = null;
     }
@@ -69,12 +68,12 @@ describe('Opponent turn execution', () => {
     const MockWorker = await getMockWorkerClass();
     MockWorker.mockExecute = () => Promise.reject(new Error('Worker error'));
 
-    const context = createTestContext();
+    const domain = createTestContext();
     // Simulate opponent having already passed
-    context.game.passCurrentTurn(); // User → Opponent
-    context.game.passCurrentTurn(); // Opponent → User
-    context.game.passCurrentTurn(); // User → Opponent
+    domain.passCurrentTurn(); // User → Opponent
+    domain.passCurrentTurn(); // Opponent → User
+    domain.passCurrentTurn(); // User → Opponent
 
-    expect(context.game.willPlayerPassBeResign(Player.Opponent)).toBe(true);
+    expect(domain.willPlayerPassBeResign(Player.Opponent)).toBe(true);
   });
 });

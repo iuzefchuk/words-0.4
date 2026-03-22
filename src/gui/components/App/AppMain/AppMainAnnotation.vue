@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import MatchStore from '@/gui/stores/MatchStore.ts';
-import { GameOutcome } from '@/application/index.ts';
+import { AppTurnOutcomeHistory } from '@/application/types.ts';
 const MAX_LENGTH = 3;
 const matchStore = MatchStore.INSTANCE();
 const messages = computed(() => {
@@ -12,7 +12,7 @@ const messages = computed(() => {
     html: convertOutcomeToHtml(outcome),
   }));
 });
-function convertOutcomeToHtml(outcome: GameOutcome): string {
+function convertOutcomeToHtml(outcome: AppTurnOutcomeHistory[number]): string {
   const { isSave, isUser } = outcome;
   if (isSave) {
     return window.t(isUser ? 'game.outcome_save_user' : 'game.outcome_save_opponent', {

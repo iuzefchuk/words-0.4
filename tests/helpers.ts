@@ -1,13 +1,25 @@
 import { IdGenerator } from '@/shared/ports.ts';
-import Domain, { Dictionary, type GameContext, type GameCell, type GameTile, Player, Letter } from '@/domain/index.ts';
-import TurnValidator from '@/domain/services/TurnValidator.ts';
+import Domain from '@/domain/index.ts';
+import Dictionary from '@/domain/models/Dictionary.ts';
+import { Player, Letter } from '@/domain/enums.ts';
+import { CellIndex } from '@/domain/models/Board.ts';
+import { TileId } from '@/domain/models/Inventory.ts';
 
-export function tileId(value: string): GameTile {
-  return value as GameTile;
+export function tileId(value: string): TileId {
+  return value as TileId;
 }
 
-export function cellIndex(value: number): GameCell {
-  return value as GameCell;
+export function cellIndex(value: number): CellIndex {
+  return value as CellIndex;
+}
+
+// All single + two-letter combos so any tile combination on center row is valid
+export const ALL_WORDS: string[] = [];
+for (const a of Object.values(Letter)) {
+  ALL_WORDS.push(a);
+  for (const b of Object.values(Letter)) {
+    ALL_WORDS.push(a + b);
+  }
 }
 
 export class TestIdGenerator implements IdGenerator {
@@ -21,9 +33,6 @@ export class TestIdGenerator implements IdGenerator {
 
 export function createTestDictionary(words: ReadonlyArray<string>): Dictionary {
   const sorted = [...words].sort();
-  // Build a trie manually and use the Dictionary's internal structure
-  // We use the DictionaryTreeBuilder via Dictionary.create but with a custom word list
-  // Since Dictionary.create() reads from DICTIONARY_DATA, we'll build one from scratch
   return buildDictionary(sorted);
 }
 
@@ -58,40 +67,37 @@ function buildDictionary(sortedWords: ReadonlyArray<string>): Dictionary {
   }
   collectNodes(rootNode);
 
-  // Use createFromCache to construct a real Dictionary instance
   const cache = { rootNode: rootNode as any, nodeById: nodeById as any, allLetters };
   const dict = Dictionary.createFromCache(cache);
   if (!dict) throw new Error('Failed to create test dictionary');
   return dict;
 }
 
-export function findTileWithLetter(context: GameContext, player: Player, letter: Letter): GameTile | undefined {
-  const tiles = context.inventory.getTilesFor(player);
-  return tiles.find(tile => context.inventory.getTileLetter(tile) === letter);
+export function findTileWithLetter(domain: Domain, player: Player, letter: Letter): TileId | undefined {
+  const tiles = domain.getTilesFor(player);
+  return tiles.find(tile => domain.getTileLetter(tile) === letter);
 }
 
 export function placeAndValidate(
-  context: GameContext,
-  placements: ReadonlyArray<{ cell: GameCell; tile: GameTile }>,
+  domain: Domain,
+  placements: ReadonlyArray<{ cell: CellIndex; tile: TileId }>,
 ): void {
   for (const { cell, tile } of placements) {
-    context.game.placeTile({ cell, tile });
+    domain.placeTile({ cell, tile });
   }
-  const tiles = context.game.currentTurnTiles;
-  const result = TurnValidator.execute(context, tiles);
-  context.game.setCurrentTurnValidation(result);
+  domain.validateCurrentTurn();
 }
 
 export function placeFirstTurn(
-  context: GameContext,
+  domain: Domain,
   player: Player,
-): { tiles: GameTile[]; cells: GameCell[] } {
-  const playerTiles = context.inventory.getTilesFor(player);
+): { tiles: TileId[]; cells: CellIndex[] } {
+  const playerTiles = domain.getTilesFor(player);
   const tile1 = playerTiles[0];
   const tile2 = playerTiles[1];
   const cell1 = cellIndex(112); // center
   const cell2 = cellIndex(113); // right of center
-  placeAndValidate(context, [
+  placeAndValidate(domain, [
     { cell: cell1, tile: tile1 },
     { cell: cell2, tile: tile2 },
   ]);
@@ -100,9 +106,8 @@ export function placeFirstTurn(
 
 export function createTestContext(options?: {
   words?: ReadonlyArray<string>;
-}): GameContext {
+}): Domain {
   const idGenerator = new TestIdGenerator();
   const dictionary = createTestDictionary(options?.words ?? ['CAT', 'DOG', 'CAR', 'CARD', 'CATS', 'DO', 'AT']);
-  const game = Domain.create({ dictionary, idGenerator });
-  return game.context;
+  return Domain.create({ dictionary, idGenerator });
 }

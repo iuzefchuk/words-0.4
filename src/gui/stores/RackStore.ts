@@ -1,4 +1,4 @@
-import { GameCell, GameTile } from '@/application/index.ts';
+import { AppCell, AppTile } from '@/application/types.ts';
 import { defineStore } from 'pinia';
 import { shallowRef, ref, computed, triggerRef } from 'vue';
 import MatchStore from '@/gui/stores/MatchStore.ts';
@@ -31,23 +31,23 @@ export default class RackStore {
 
   private constructor(
     private matchStore: ReturnType<typeof MatchStore.INSTANCE>,
-    private tilesRef = shallowRef<Array<GameTile>>([]),
-    private selectedTileRef = ref<GameTile | null>(null),
+    private tilesRef = shallowRef<Array<AppTile>>([]),
+    private selectedTileRef = ref<AppTile | null>(null),
   ) {}
 
-  private get tiles(): Array<GameTile> {
+  private get tiles(): Array<AppTile> {
     return this.tilesRef.value;
   }
 
-  private set tiles(newValue: Array<GameTile>) {
+  private set tiles(newValue: Array<AppTile>) {
     this.tilesRef.value = newValue;
   }
 
-  private get selectedTile(): GameTile | null {
+  private get selectedTile(): AppTile | null {
     return this.selectedTileRef.value;
   }
 
-  private set selectedTile(newValue: GameTile | null) {
+  private set selectedTile(newValue: AppTile | null) {
     this.selectedTileRef.value = newValue;
   }
 
@@ -67,7 +67,7 @@ export default class RackStore {
     return this.selectedTile !== null && this.matchStore.isTilePlaced(this.selectedTile);
   }
 
-  private initialize(userTiles: ReadonlyArray<GameTile>): void {
+  private initialize(userTiles: ReadonlyArray<AppTile>): void {
     this.tiles = [...userTiles];
     this.selectedTile = null;
   }
@@ -76,23 +76,23 @@ export default class RackStore {
     this.selectedTile = null;
   }
 
-  private getTileIdx(tile: GameTile): number {
+  private getTileIdx(tile: AppTile): number {
     return this.tiles.findIndex(item => this.matchStore.areTilesSame(item, tile));
   }
 
-  private isTileInRack(tile: GameTile): boolean {
+  private isTileInRack(tile: AppTile): boolean {
     return this.getTileIdx(tile) !== -1;
   }
 
-  private isTileSelected(tile: GameTile): boolean {
+  private isTileSelected(tile: AppTile): boolean {
     return this.selectedTile !== null && this.matchStore.areTilesSame(this.selectedTile, tile);
   }
 
-  private isTileVisible(tile: GameTile): boolean {
+  private isTileVisible(tile: AppTile): boolean {
     return this.isTileInRack(tile) && !this.matchStore.isTilePlaced(tile);
   }
 
-  private switchTiles(firstTile: GameTile, secondTile: GameTile): void {
+  private switchTiles(firstTile: AppTile, secondTile: AppTile): void {
     const firstIdx = this.getTileIdx(firstTile);
     const secondIdx = this.getTileIdx(secondTile);
     if (firstIdx === -1 || secondIdx === -1) throw new Error('Can`t find tile indexes');
@@ -111,7 +111,7 @@ export default class RackStore {
     this.deselectTile();
   }
 
-  private handleClickFooterTile(tile: GameTile): void {
+  private handleClickFooterTile(tile: AppTile): void {
     if (!this.selectedTile) {
       this.selectedTile = tile;
       return;
@@ -127,7 +127,7 @@ export default class RackStore {
     this.deselectTile();
   }
 
-  private handleClickBoardCell(cell: GameCell): void {
+  private handleClickBoardCell(cell: AppCell): void {
     if (!this.selectedTile) return;
     const existingTile = this.matchStore.findTileOnCell(cell);
     if (existingTile) return;
@@ -136,7 +136,7 @@ export default class RackStore {
     this.deselectTile();
   }
 
-  private handleClickBoardTile(tile: GameTile): void {
+  private handleClickBoardTile(tile: AppTile): void {
     if (!this.isTileInRack(tile)) return;
     if (this.isTileSelected(tile)) {
       this.deselectTile();

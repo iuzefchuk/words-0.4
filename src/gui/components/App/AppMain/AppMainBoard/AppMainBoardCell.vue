@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import AppTile from '@/gui/components/shared/AppTile.vue';
-import { GameCell } from '@/application/index.ts';
+import Application from '@/application/index.ts';
+import { AppCell } from '@/application/types.ts';
 import { PropType, computed } from 'vue';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
 import { getBonusName } from '@/gui/mappings.ts';
-const props = defineProps({ cell: { type: Number as unknown as PropType<GameCell>, required: true } });
+const props = defineProps({ cell: { type: Number as unknown as PropType<AppCell>, required: true } });
 const matchStore = MatchStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
 const bonus = computed(() => matchStore.getCellBonus(props.cell));
@@ -28,10 +29,10 @@ const isTileSaturated = computed(() => tile.value != null && matchStore.wasTileU
         v-if="bonus"
         :class="{
           cell__bonus: true,
-          'cell__bonus--dw': bonus === matchStore.bonuses.DoubleWord,
-          'cell__bonus--tw': bonus === matchStore.bonuses.TripleWord,
-          'cell__bonus--dl': bonus === matchStore.bonuses.DoubleLetter,
-          'cell__bonus--tl': bonus === matchStore.bonuses.TripleLetter,
+          'cell__bonus--dw': bonus === Application.BONUSES.DoubleWord,
+          'cell__bonus--tw': bonus === Application.BONUSES.TripleWord,
+          'cell__bonus--dl': bonus === Application.BONUSES.DoubleLetter,
+          'cell__bonus--tl': bonus === Application.BONUSES.TripleLetter,
         }"
         class="cell__bonus"
         viewBox="0 0 40 40"

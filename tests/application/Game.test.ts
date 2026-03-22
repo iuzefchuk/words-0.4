@@ -1,165 +1,158 @@
 import { describe, it, expect } from 'vitest';
-import { createTestContext, cellIndex, placeAndValidate, placeFirstTurn } from '$/helpers.ts';
-import { Player, Letter, DomainEvent, DomainEventCollector, ValidationStatus, TurnOutcomeType } from '@/domain/index.ts';
+import { createTestContext, cellIndex, placeAndValidate, placeFirstTurn, ALL_WORDS } from '$/helpers.ts';
+import { Player, Letter } from '@/domain/enums.ts';
+import { DomainEvent, DomainEventCollector } from '@/domain/events.ts';
+import { ValidationStatus, TurnOutcomeType } from '@/domain/models/TurnTracker.ts';
 import SaveTurnCommand from '@/application/commands/SaveTurn.ts';
 import PassTurnCommand from '@/application/commands/PassTurn.ts';
 import PlaceTileCommand from '@/application/commands/PlaceTile.ts';
 import UndoPlaceTileCommand from '@/application/commands/UndoPlaceTile.ts';
-import TurnValidator from '@/domain/services/TurnValidator.ts';
-
-// All single letters + all 2-letter combos so any tile combination on center row is valid
-const WORDS = Object.values(Letter);
-for (const a of Object.values(Letter)) {
-  for (const b of Object.values(Letter)) {
-    WORDS.push(a + b);
-  }
-}
 
 function createIntegrationContext() {
-  return createTestContext({ words: WORDS });
+  return createTestContext({ words: ALL_WORDS });
 }
 
 describe('Game Integration', () => {
   describe('full turn cycle', () => {
     it('places tiles, validates, saves, replenishes, and advances player', () => {
-      const context = createIntegrationContext();
-      const { tiles } = placeFirstTurn(context, Player.User);
+      const domain = createIntegrationContext();
+      const { tiles } = placeFirstTurn(domain, Player.User);
 
-      expect(context.game.currentTurnIsValid).toBe(true);
-      expect(context.game.currentTurnScore).toBeGreaterThan(0);
+      expect(domain.currentTurnIsValid).toBe(true);
+      expect(domain.currentTurnScore).toBeGreaterThan(0);
 
-      const unusedBefore = context.inventory.unusedTilesCount;
-      const result = SaveTurnCommand.execute(context);
+      const unusedBefore = domain.unusedTilesCount;
+      const result = SaveTurnCommand.execute(domain);
       expect(result.ok).toBe(true);
       if (result.ok) expect(result.value.words.length).toBeGreaterThan(0);
 
       // 2 tiles discarded, 2 drawn
-      expect(context.inventory.unusedTilesCount).toBe(unusedBefore - tiles.length);
-      expect(context.inventory.getTilesFor(Player.User)).toHaveLength(7);
-      expect(context.game.currentPlayer).toBe(Player.Opponent);
+      expect(domain.unusedTilesCount).toBe(unusedBefore - tiles.length);
+      expect(domain.getTilesFor(Player.User)).toHaveLength(7);
+      expect(domain.currentPlayer).toBe(Player.Opponent);
     });
 
     it('tracks scores across multiple turns', () => {
-      const context = createIntegrationContext();
+      const domain = createIntegrationContext();
 
       // User turn
-      placeFirstTurn(context, Player.User);
-      SaveTurnCommand.execute(context);
+      placeFirstTurn(domain, Player.User);
+      SaveTurnCommand.execute(domain);
 
       // Opponent turn: place adjacent
-      const opponentTiles = context.inventory.getTilesFor(Player.Opponent);
-      placeAndValidate(context, [
+      const opponentTiles = domain.getTilesFor(Player.Opponent);
+      placeAndValidate(domain, [
         { cell: cellIndex(114), tile: opponentTiles[0] },
       ]);
 
-      if (context.game.currentTurnIsValid) {
-        SaveTurnCommand.execute(context);
-        expect(context.game.getScoreFor(Player.User)).toBeGreaterThan(0);
-        expect(context.game.getScoreFor(Player.Opponent)).toBeGreaterThan(0);
+      if (domain.currentTurnIsValid) {
+        SaveTurnCommand.execute(domain);
+        expect(domain.getScoreFor(Player.User)).toBeGreaterThan(0);
+        expect(domain.getScoreFor(Player.Opponent)).toBeGreaterThan(0);
       }
     });
   });
 
   describe('pass and resign flow', () => {
     it('passes turn and advances player', () => {
-      const context = createIntegrationContext();
-      PassTurnCommand.execute(context);
-      expect(context.game.currentPlayer).toBe(Player.Opponent);
+      const domain = createIntegrationContext();
+      PassTurnCommand.execute(domain);
+      expect(domain.currentPlayer).toBe(Player.Opponent);
     });
 
     it('consecutive passes by same player triggers resign condition', () => {
-      const context = createIntegrationContext();
+      const domain = createIntegrationContext();
 
       // User passes → Opponent's turn
-      PassTurnCommand.execute(context);
-      expect(context.game.willPlayerPassBeResign(Player.User)).toBe(true);
+      PassTurnCommand.execute(domain);
+      expect(domain.willPlayerPassBeResign(Player.User)).toBe(true);
 
       // Opponent passes → User's turn
-      PassTurnCommand.execute(context);
-      expect(context.game.willPlayerPassBeResign(Player.Opponent)).toBe(true);
+      PassTurnCommand.execute(domain);
+      expect(domain.willPlayerPassBeResign(Player.Opponent)).toBe(true);
     });
   });
 
   describe('reset turn', () => {
     it('clears placed tiles from board and turn state', () => {
-      const context = createIntegrationContext();
-      const userTiles = context.inventory.getTilesFor(Player.User);
+      const domain = createIntegrationContext();
+      const userTiles = domain.getTilesFor(Player.User);
       const tile1 = userTiles[0];
       const tile2 = userTiles[1];
 
-      context.game.placeTile({ cell: cellIndex(112), tile: tile1 });
-      context.game.placeTile({ cell: cellIndex(113), tile: tile2 });
-      expect(context.board.isTilePlaced(tile1)).toBe(true);
-      expect(context.board.isTilePlaced(tile2)).toBe(true);
+      domain.placeTile({ cell: cellIndex(112), tile: tile1 });
+      domain.placeTile({ cell: cellIndex(113), tile: tile2 });
+      expect(domain.isTilePlaced(tile1)).toBe(true);
+      expect(domain.isTilePlaced(tile2)).toBe(true);
 
-      context.game.resetCurrentTurn();
+      domain.resetCurrentTurn();
 
-      expect(context.board.isTilePlaced(tile1)).toBe(false);
-      expect(context.board.isTilePlaced(tile2)).toBe(false);
-      expect(context.game.currentTurnTiles).toHaveLength(0);
-      expect(context.game.currentPlayer).toBe(Player.User);
+      expect(domain.isTilePlaced(tile1)).toBe(false);
+      expect(domain.isTilePlaced(tile2)).toBe(false);
+      expect(domain.currentTurnTiles).toHaveLength(0);
+      expect(domain.currentPlayer).toBe(Player.User);
     });
   });
 
   describe('invalid turn rejection', () => {
     it('rejects save when tiles are not on anchor cells', () => {
-      const context = createIntegrationContext();
-      const userTiles = context.inventory.getTilesFor(Player.User);
+      const domain = createIntegrationContext();
+      const userTiles = domain.getTilesFor(Player.User);
 
       // Place far from center on empty board
-      placeAndValidate(context, [
+      placeAndValidate(domain, [
         { cell: cellIndex(0), tile: userTiles[0] },
         { cell: cellIndex(1), tile: userTiles[1] },
       ]);
-      expect(context.game.currentTurnIsValid).toBe(false);
+      expect(domain.currentTurnIsValid).toBe(false);
 
-      const result = SaveTurnCommand.execute(context);
+      const result = SaveTurnCommand.execute(domain);
       expect(result.ok).toBe(false);
-      expect(context.game.currentPlayer).toBe(Player.User);
+      expect(domain.currentPlayer).toBe(Player.User);
     });
 
     it('rejects save when no tiles are placed', () => {
-      const context = createIntegrationContext();
-      const result = TurnValidator.execute(context, []);
-      expect(result.status).toBe(ValidationStatus.Invalid);
+      const domain = createIntegrationContext();
+      domain.validateCurrentTurn();
+      expect(domain.currentTurnIsValid).toBe(false);
     });
   });
 
   describe('undo place tile', () => {
     it('removes tile from board and re-validates', () => {
-      const context = createIntegrationContext();
-      const userTiles = context.inventory.getTilesFor(Player.User);
+      const domain = createIntegrationContext();
+      const userTiles = domain.getTilesFor(Player.User);
       const tile1 = userTiles[0];
       const tile2 = userTiles[1];
       const tile3 = userTiles[2];
 
       // Place 3 tiles
-      PlaceTileCommand.execute(context, { cell: cellIndex(112), tile: tile1 });
-      PlaceTileCommand.execute(context, { cell: cellIndex(113), tile: tile2 });
-      PlaceTileCommand.execute(context, { cell: cellIndex(114), tile: tile3 });
-      expect(context.game.currentTurnTiles).toHaveLength(3);
+      PlaceTileCommand.execute(domain, { cell: cellIndex(112), tile: tile1 });
+      PlaceTileCommand.execute(domain, { cell: cellIndex(113), tile: tile2 });
+      PlaceTileCommand.execute(domain, { cell: cellIndex(114), tile: tile3 });
+      expect(domain.currentTurnTiles).toHaveLength(3);
 
       // Undo last tile
-      UndoPlaceTileCommand.execute(context, { tile: tile3 });
-      expect(context.game.currentTurnTiles).toHaveLength(2);
-      expect(context.board.isTilePlaced(tile3)).toBe(false);
+      UndoPlaceTileCommand.execute(domain, tile3);
+      expect(domain.currentTurnTiles).toHaveLength(2);
+      expect(domain.isTilePlaced(tile3)).toBe(false);
       // Two tiles on center row should still be valid
-      expect(context.game.currentTurnIsValid).toBe(true);
+      expect(domain.currentTurnIsValid).toBe(true);
     });
   });
 
   describe('outcome history', () => {
     it('records save and pass outcomes across turns', () => {
-      const context = createIntegrationContext();
+      const domain = createIntegrationContext();
 
       // User saves a turn
-      placeFirstTurn(context, Player.User);
-      SaveTurnCommand.execute(context);
+      placeFirstTurn(domain, Player.User);
+      SaveTurnCommand.execute(domain);
 
       // Opponent passes
-      PassTurnCommand.execute(context);
+      PassTurnCommand.execute(domain);
 
-      const history = context.game.outcomeHistory;
+      const history = domain.turnOutcomeHistory;
       expect(history).toHaveLength(2);
       expect(history[0].type).toBe(TurnOutcomeType.Save);
       expect(history[0].player).toBe(Player.User);
@@ -183,28 +176,28 @@ describe('Game Integration', () => {
 
   describe('inventory depletion', () => {
     it('draw pool shrinks as tiles are discarded and replenished', () => {
-      const context = createIntegrationContext();
-      const initialUnused = context.inventory.unusedTilesCount;
+      const domain = createIntegrationContext();
+      const initialUnused = domain.unusedTilesCount;
 
       // User places 2 tiles → save discards 2, replenishes 2 from pool
-      placeFirstTurn(context, Player.User);
-      SaveTurnCommand.execute(context);
+      placeFirstTurn(domain, Player.User);
+      SaveTurnCommand.execute(domain);
 
       // Pool shrank by 2 (replenished player) but 2 were also discarded
       // Net: unusedTilesCount decreases by the number replenished (2)
-      expect(context.inventory.unusedTilesCount).toBe(initialUnused - 2);
-      expect(context.inventory.getTilesFor(Player.User)).toHaveLength(7);
+      expect(domain.unusedTilesCount).toBe(initialUnused - 2);
+      expect(domain.getTilesFor(Player.User)).toHaveLength(7);
     });
 
     it('replenishment stops when draw pool is empty', () => {
-      const context = createIntegrationContext();
+      const domain = createIntegrationContext();
 
       // Drain the draw pool by repeatedly placing + saving turns
       let turnsPlayed = 0;
       const maxTurns = 50; // safety limit
-      while (context.inventory.unusedTilesCount > 0 && turnsPlayed < maxTurns) {
-        const player = context.game.currentPlayer;
-        const tiles = context.inventory.getTilesFor(player);
+      while (domain.unusedTilesCount > 0 && turnsPlayed < maxTurns) {
+        const player = domain.currentPlayer;
+        const tiles = domain.getTilesFor(player);
         if (tiles.length < 2) break;
 
         // Place 2 tiles adjacent to existing (or center for first turn)
@@ -213,7 +206,7 @@ describe('Game Integration', () => {
 
         // Check if cells are within bounds and not occupied
         try {
-          placeAndValidate(context, [
+          placeAndValidate(domain, [
             { cell: cell1, tile: tiles[0] },
             { cell: cell2, tile: tiles[1] },
           ]);
@@ -221,38 +214,38 @@ describe('Game Integration', () => {
           break;
         }
 
-        if (!context.game.currentTurnIsValid) {
-          context.game.resetCurrentTurn();
+        if (!domain.currentTurnIsValid) {
+          domain.resetCurrentTurn();
           break;
         }
 
-        SaveTurnCommand.execute(context);
+        SaveTurnCommand.execute(domain);
         turnsPlayed++;
       }
 
       expect(turnsPlayed).toBeGreaterThan(0);
       // After many turns, the pool should be significantly depleted
-      expect(context.inventory.unusedTilesCount).toBeLessThan(86); // started at 86 (100 - 7 - 7)
+      expect(domain.unusedTilesCount).toBeLessThan(86); // started at 86 (100 - 7 - 7)
     });
   });
 
   describe('multi-turn integration', () => {
     it('supports alternating save turns between players', () => {
-      const context = createIntegrationContext();
+      const domain = createIntegrationContext();
 
       // Turn 1: User places two tiles on center row
-      placeFirstTurn(context, Player.User);
-      expect(SaveTurnCommand.execute(context).ok).toBe(true);
-      expect(context.game.currentPlayer).toBe(Player.Opponent);
+      placeFirstTurn(domain, Player.User);
+      expect(SaveTurnCommand.execute(domain).ok).toBe(true);
+      expect(domain.currentPlayer).toBe(Player.Opponent);
 
       // Turn 2: Opponent places adjacent to existing tiles
-      const opponentTiles = context.inventory.getTilesFor(Player.Opponent);
-      placeAndValidate(context, [{ cell: cellIndex(114), tile: opponentTiles[0] }]);
+      const opponentTiles = domain.getTilesFor(Player.Opponent);
+      placeAndValidate(domain, [{ cell: cellIndex(114), tile: opponentTiles[0] }]);
 
-      if (context.game.currentTurnIsValid) {
-        expect(SaveTurnCommand.execute(context).ok).toBe(true);
-        expect(context.game.currentPlayer).toBe(Player.User);
-        expect(context.game.outcomeHistory).toHaveLength(2);
+      if (domain.currentTurnIsValid) {
+        expect(SaveTurnCommand.execute(domain).ok).toBe(true);
+        expect(domain.currentPlayer).toBe(Player.User);
+        expect(domain.turnOutcomeHistory).toHaveLength(2);
       }
     });
   });

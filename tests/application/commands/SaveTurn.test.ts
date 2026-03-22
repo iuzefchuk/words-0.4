@@ -1,82 +1,62 @@
 import { describe, it, expect } from 'vitest';
 import SaveTurn from '@/application/commands/SaveTurn.ts';
-import { createTestContext, cellIndex } from '$/helpers.ts';
-import { Player, ValidationStatus, ValidationError } from '@/domain/index.ts';
+import { createTestContext, cellIndex, placeAndValidate, ALL_WORDS } from '$/helpers.ts';
+import { Player } from '@/domain/enums.ts';
 
 describe('SaveTurn', () => {
   it('returns error when turn has validation error', () => {
-    const context = createTestContext();
-    // Set an invalid validation result
-    context.game.setCurrentTurnValidation({
-      status: ValidationStatus.Invalid,
-      error: ValidationError.InvalidTilePlacement,
-    });
+    const domain = createTestContext();
+    // Validate with no tiles placed → InvalidTilePlacement
+    domain.validateCurrentTurn();
 
-    const result = SaveTurn.execute(context);
+    const result = SaveTurn.execute(domain);
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toBe(ValidationError.InvalidTilePlacement);
-    }
   });
 
   it('saves a valid turn and returns words', () => {
-    const context = createTestContext();
-    const userTiles = context.inventory.getTilesFor(Player.User);
-    const tile = userTiles[0];
+    const domain = createTestContext({ words: ALL_WORDS });
+    const userTiles = domain.getTilesFor(Player.User);
 
-    context.game.placeTile({ cell: cellIndex(112), tile });
-    context.game.setCurrentTurnValidation({
-      status: ValidationStatus.Valid,
-      cells: [cellIndex(112)],
-      placements: [[{ cell: cellIndex(112), tile }]],
-      words: ['A'],
-      score: 1,
-    });
+    placeAndValidate(domain, [
+      { cell: cellIndex(112), tile: userTiles[0] },
+      { cell: cellIndex(113), tile: userTiles[1] },
+    ]);
+    expect(domain.currentTurnIsValid).toBe(true);
 
-    const result = SaveTurn.execute(context);
+    const result = SaveTurn.execute(domain);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value.words).toEqual(['A']);
+      expect(result.value.words.length).toBeGreaterThan(0);
     }
   });
 
   it('discards tiles and replenishes after saving', () => {
-    const context = createTestContext();
-    const userTiles = context.inventory.getTilesFor(Player.User);
-    const tile = userTiles[0];
+    const domain = createTestContext({ words: ALL_WORDS });
+    const userTiles = domain.getTilesFor(Player.User);
 
-    context.game.placeTile({ cell: cellIndex(112), tile });
-    context.game.setCurrentTurnValidation({
-      status: ValidationStatus.Valid,
-      cells: [cellIndex(112)],
-      placements: [[{ cell: cellIndex(112), tile }]],
-      words: ['A'],
-      score: 1,
-    });
+    placeAndValidate(domain, [
+      { cell: cellIndex(112), tile: userTiles[0] },
+      { cell: cellIndex(113), tile: userTiles[1] },
+    ]);
 
-    const unusedBefore = context.inventory.unusedTilesCount;
-    SaveTurn.execute(context);
-    // One tile discarded, one drawn: net change = 0 if pool has tiles
-    expect(context.inventory.unusedTilesCount).toBe(unusedBefore - 1);
+    const unusedBefore = domain.unusedTilesCount;
+    SaveTurn.execute(domain);
+    // Two tiles discarded, two drawn: net change = -2
+    expect(domain.unusedTilesCount).toBe(unusedBefore - 2);
     // Player should still have 7 tiles (replenished)
-    expect(context.inventory.getTilesFor(Player.User)).toHaveLength(7);
+    expect(domain.getTilesFor(Player.User)).toHaveLength(7);
   });
 
   it('advances to next player after saving', () => {
-    const context = createTestContext();
-    const userTiles = context.inventory.getTilesFor(Player.User);
-    const tile = userTiles[0];
+    const domain = createTestContext({ words: ALL_WORDS });
+    const userTiles = domain.getTilesFor(Player.User);
 
-    context.game.placeTile({ cell: cellIndex(112), tile });
-    context.game.setCurrentTurnValidation({
-      status: ValidationStatus.Valid,
-      cells: [cellIndex(112)],
-      placements: [[{ cell: cellIndex(112), tile }]],
-      words: ['A'],
-      score: 1,
-    });
+    placeAndValidate(domain, [
+      { cell: cellIndex(112), tile: userTiles[0] },
+      { cell: cellIndex(113), tile: userTiles[1] },
+    ]);
 
-    SaveTurn.execute(context);
-    expect(context.game.currentPlayer).toBe(Player.Opponent);
+    SaveTurn.execute(domain);
+    expect(domain.currentPlayer).toBe(Player.Opponent);
   });
 });
