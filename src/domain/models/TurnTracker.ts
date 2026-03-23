@@ -50,14 +50,6 @@ export default class TurnTracker {
     return new TurnTracker(idGenerator, []);
   }
 
-  static hydrate(data: unknown): TurnTracker {
-    const tracker = Object.setPrototypeOf(data, TurnTracker.prototype) as TurnTracker;
-    for (const turn of tracker.turns) {
-      Object.setPrototypeOf(turn, Turn.prototype);
-    }
-    return tracker;
-  }
-
   get hasPriorTurns(): boolean {
     return this.turns.length > 1;
   }
@@ -150,7 +142,7 @@ export default class TurnTracker {
   }
 }
 
-class Turn {
+export class Turn {
   private constructor(
     readonly id: string,
     readonly player: Player,

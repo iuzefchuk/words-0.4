@@ -7,6 +7,8 @@ export {
   DomainBonus as AppBonus,
   DomainTurnOutcomeType as AppTurnOutcomeType,
   DomainDictionary as AppDictionary,
+  DomainHydrator as AppDomainHydrator,
+  DomainTurnGenerator as AppTurnGenerator,
 } from '@/domain/types.ts';
 export type {
   Domain as AppDomain,

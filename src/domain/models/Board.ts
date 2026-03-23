@@ -29,10 +29,6 @@ export default class Board {
     return new Board(new Map(), new Map());
   }
 
-  static hydrate(data: unknown): Board {
-    return Object.setPrototypeOf(data, Board.prototype);
-  }
-
   get cells(): ReadonlyArray<CellIndex> {
     return Layout.cells;
   }

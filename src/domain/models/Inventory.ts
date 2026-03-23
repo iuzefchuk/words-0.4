@@ -63,15 +63,6 @@ export default class Inventory {
     return new Inventory(drawPool, poolByPlayer, discardPool, tileById);
   }
 
-  static hydrate(data: unknown): Inventory {
-    const inventory = Object.setPrototypeOf(data, Inventory.prototype) as Inventory;
-    TilePool.hydrate(inventory.drawPool);
-    for (const pool of inventory.poolByPlayer.values()) TilePool.hydrate(pool);
-    TilePool.hydrate(inventory.discardPool);
-    for (const tile of inventory.tileById.values()) Tile.hydrate(tile);
-    return inventory;
-  }
-
   static shuffleTilesWithFisherYates(tiles: Array<Tile>): Array<Tile> {
     return shuffleWithFisherYates(tiles);
   }
@@ -143,7 +134,7 @@ export default class Inventory {
   }
 }
 
-class TilePool {
+export class TilePool {
   private constructor(
     private readonly capacity: number | undefined,
     private readonly tiles: Array<Tile>,
@@ -151,12 +142,6 @@ class TilePool {
 
   static create({ capacity, tiles }: { capacity?: number; tiles?: Array<Tile> } = {}): TilePool {
     return new TilePool(capacity, tiles ?? []);
-  }
-
-  static hydrate(data: unknown): TilePool {
-    const rack = Object.setPrototypeOf(data, TilePool.prototype) as TilePool;
-    for (const tile of rack.tiles) Tile.hydrate(tile);
-    return rack;
   }
 
   get tileCount(): number {
@@ -214,7 +199,7 @@ class TilePool {
   }
 }
 
-class Tile {
+export class Tile {
   private constructor(
     readonly id: TileId,
     readonly letter: Letter,
@@ -223,10 +208,6 @@ class Tile {
   static create({ letter, idGenerator }: { letter: Letter; idGenerator: IdGenerator }): Tile {
     const id = idGenerator.execute() as TileId;
     return new Tile(id, letter);
-  }
-
-  static hydrate(data: unknown): Tile {
-    return Object.setPrototypeOf(data, Tile.prototype);
   }
 
   equals(other: Tile): boolean {

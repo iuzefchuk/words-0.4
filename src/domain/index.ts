@@ -25,15 +25,6 @@ export default class Domain {
     return domain;
   }
 
-  static hydrate(data: unknown): Domain {
-    const domain = Object.setPrototypeOf(data, Domain.prototype) as Domain;
-    Board.hydrate(domain.board);
-    Dictionary.hydrate(domain.dictionary);
-    Inventory.hydrate(domain.inventory);
-    TurnTracker.hydrate(domain.turnTracker);
-    return domain;
-  }
-
   get currentPlayer(): DomainPlayer {
     return this.turnTracker.currentPlayer;
   }
