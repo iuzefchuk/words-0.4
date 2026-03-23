@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import AppMain from '@/gui/components/App/AppMain/AppMain.vue';
+import { storeToRefs } from 'pinia';
+import { onMounted, ref, inject, watch } from 'vue';
 import AppDialog from '@/gui/components/App/AppDialog.vue';
 import AppEndscreen from '@/gui/components/App/AppEndscreen.vue';
 import AppLoader from '@/gui/components/App/AppLoader.vue';
-import { onMounted, ref, inject, watch } from 'vue';
-import MatchStore from '@/gui/stores/MatchStore.ts';
-import { storeToRefs } from 'pinia';
+import AppMain from '@/gui/components/App/AppMain/AppMain.vue';
 import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
+import MatchStore from '@/gui/stores/MatchStore.ts';
 const matchStore = MatchStore.INSTANCE();
 const { matchIsFinished } = storeToRefs(matchStore);
 const loaderIsActive = ref(true);

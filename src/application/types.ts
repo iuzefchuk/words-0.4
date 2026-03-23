@@ -1,7 +1,7 @@
 import { MatchResult } from '@/application/enums.ts';
-import { IdGenerator, Clock, TurnGenerationWorker, SoundPlayer } from '@/shared/ports.ts';
 import { Sound } from '@/application/enums.ts';
 import { DomainDictionary, DomainPlayer, DomainCell, DomainTile } from '@/domain/types.ts';
+import { IdGenerator, Clock, TurnGenerationWorker, SoundPlayer } from '@/shared/ports.ts';
 
 export { DomainEvent } from '@/domain/types.ts';
 

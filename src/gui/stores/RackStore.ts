@@ -1,8 +1,8 @@
-import { AppCell, AppTile } from '@/application/types.ts';
 import { defineStore } from 'pinia';
 import { shallowRef, ref, computed, triggerRef } from 'vue';
-import MatchStore from '@/gui/stores/MatchStore.ts';
+import { AppCell, AppTile } from '@/application/types.ts';
 import UseOutline from '@/gui/composables/UseOutline.ts';
+import MatchStore from '@/gui/stores/MatchStore.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 export default class RackStore {

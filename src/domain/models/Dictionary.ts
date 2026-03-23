@@ -1,5 +1,5 @@
-import { Letter } from '@/domain/enums.ts';
 import { DICTIONARY_DATA } from '@/domain/constants.ts';
+import { Letter } from '@/domain/enums.ts';
 
 export type NodeId = number;
 

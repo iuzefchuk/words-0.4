@@ -1,5 +1,5 @@
-import { Domain } from '@/domain/types.ts';
 import { AppTurnExecutionResult } from '@/application/types.ts';
+import { Domain } from '@/domain/types.ts';
 
 export default class SaveTurnCommand {
   static execute(domain: Domain): AppTurnExecutionResult {

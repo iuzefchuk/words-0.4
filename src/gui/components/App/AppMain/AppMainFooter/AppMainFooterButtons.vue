@@ -1,9 +1,9 @@
 <script lang="ts" setup>
+import { storeToRefs } from 'pinia';
+import { reactive } from 'vue';
+import UseActions from '@/gui/composables/UseActions.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
-import UseActions from '@/gui/composables/UseActions.ts';
-import { reactive } from 'vue';
-import { storeToRefs } from 'pinia';
 const matchStore = MatchStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
 const { anyTileIsPlaced } = storeToRefs(rackStore);

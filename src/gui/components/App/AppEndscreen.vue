@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import MatchStore from '@/gui/stores/MatchStore.ts';
-import { getMatchResultText } from '@/gui/mappings.ts';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
+import { getMatchResultText } from '@/gui/mappings.ts';
+import MatchStore from '@/gui/stores/MatchStore.ts';
 const { matchResult } = storeToRefs(MatchStore.INSTANCE());
 const text = computed(() => (matchResult.value && getMatchResultText(matchResult.value)) || '');
 </script>

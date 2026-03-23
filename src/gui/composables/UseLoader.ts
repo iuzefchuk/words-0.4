@@ -1,7 +1,7 @@
 import { ref, computed, watch, inject } from 'vue';
+import Application from '@/application/index.ts';
 import UseCounter from '@/gui/composables/UseCounter.ts';
 import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
-import Application from '@/application/index.ts';
 
 export default class UseLoader {
   static readonly WORD = [

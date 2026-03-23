@@ -1,10 +1,10 @@
+import { Player, Letter } from '@/domain/enums.ts';
 import Board, { AnchorCoordinates, CellIndex, Axis, Link } from '@/domain/models/Board.ts';
 import Dictionary, { NodeId } from '@/domain/models/Dictionary.ts';
 import Inventory, { TileCollection, TileId } from '@/domain/models/Inventory.ts';
-import CrossCheckComputer from '@/domain/services/CrossCheckComputer.ts';
 import TurnTracker, { ValidationStatus } from '@/domain/models/TurnTracker.ts';
+import CrossCheckComputer from '@/domain/services/CrossCheckComputer.ts';
 import TurnValidator, { ValidatorContext } from '@/domain/services/TurnValidator.ts';
-import { Player, Letter } from '@/domain/enums.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 enum GenerationDirection {

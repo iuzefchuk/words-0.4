@@ -1,9 +1,9 @@
-import { createApp } from 'vue';
 import { createPinia } from 'pinia';
+import { createApp } from 'vue';
 import App from '@/gui/components/App/App.vue';
 import DirectivesPlugin from '@/gui/plugins/DirectivesPlugin/DirectivesPlugin.ts';
-import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
 import LocalesPlugin from '@/gui/plugins/LocalesPlugin/LocalesPlugin.ts';
+import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
 import { startGame } from '@/gui/stores/MatchStore.ts';
 
 class Application {

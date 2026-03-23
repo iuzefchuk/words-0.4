@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import AppMainFooterRack from '@/gui/components/App/AppMain/AppMainFooter/AppMainFooterRack.vue';
 import AppMainFooterButtons from '@/gui/components/App/AppMain/AppMainFooter/AppMainFooterButtons.vue';
+import AppMainFooterRack from '@/gui/components/App/AppMain/AppMainFooter/AppMainFooterRack.vue';
 </script>
 
 <template>

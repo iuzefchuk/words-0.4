@@ -1,6 +1,6 @@
 import Board, { AnchorCoordinates, Placement } from '@/domain/models/Board.ts';
-import PlacementBuilder from '@/domain/services/PlacementBuilder.ts';
-import ScoreCalculator from '@/domain/services/ScoreCalculator.ts';
+import Dictionary from '@/domain/models/Dictionary.ts';
+import Inventory, { TileId } from '@/domain/models/Inventory.ts';
 import TurnTracker, {
   ValidationStatus,
   ValidationError,
@@ -13,8 +13,8 @@ import TurnTracker, {
   InvalidResult,
   ValidResult,
 } from '@/domain/models/TurnTracker.ts';
-import Inventory, { TileId } from '@/domain/models/Inventory.ts';
-import Dictionary from '@/domain/models/Dictionary.ts';
+import PlacementBuilder from '@/domain/services/PlacementBuilder.ts';
+import ScoreCalculator from '@/domain/services/ScoreCalculator.ts';
 
 export type ValidatorContext = { board: Board; dictionary: Dictionary; inventory: Inventory; turnTracker: TurnTracker };
 

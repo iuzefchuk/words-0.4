@@ -1,4 +1,10 @@
-import Domain from '@/domain/index.ts';
+import PassTurnCommand from '@/application/commands/PassTurn.ts';
+import PlaceTileCommand from '@/application/commands/PlaceTile.ts';
+import SaveTurnCommand from '@/application/commands/SaveTurn.ts';
+import UndoPlaceTileCommand from '@/application/commands/UndoPlaceTile.ts';
+import { MATCH_RESULT_EVENTS, DOMAIN_EVENT_SOUNDS, EVENT_SOUNDS } from '@/application/constants.ts';
+import { MatchResult, Event, Sound } from '@/application/enums.ts';
+import StateQuery from '@/application/queries/State.ts';
 import {
   AppPlayer,
   AppLetter,
@@ -11,16 +17,10 @@ import {
   AppTurnResolutionHistory,
   AppTurnExecutionResult,
 } from '@/application/types.ts';
-import { MatchResult, Event, Sound } from '@/application/enums.ts';
-import { MATCH_RESULT_EVENTS, DOMAIN_EVENT_SOUNDS, EVENT_SOUNDS } from '@/application/constants.ts';
-import StateQuery from '@/application/queries/State.ts';
-import PlaceTileCommand from '@/application/commands/PlaceTile.ts';
-import SaveTurnCommand from '@/application/commands/SaveTurn.ts';
-import UndoPlaceTileCommand from '@/application/commands/UndoPlaceTile.ts';
-import PassTurnCommand from '@/application/commands/PassTurn.ts';
+import Domain from '@/domain/index.ts';
+import AppDependenciesFactory from '@/infrastructure/factories/AppDependenciesFactory.ts';
 import { TIME } from '@/shared/constants.ts';
 import { Clock, TurnGenerationWorker, SoundPlayer } from '@/shared/ports.ts';
-import AppDependenciesFactory from '@/infrastructure/factories/AppDependenciesFactory.ts';
 
 type AppTurnGenerationWorker = TurnGenerationWorker<AppPlayer, AppTile, AppCell>;
 type AppSoundPlayer = SoundPlayer<Sound>;

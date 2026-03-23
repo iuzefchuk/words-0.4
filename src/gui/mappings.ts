@@ -1,5 +1,5 @@
-import Application from '@/application/index.ts';
 import { MatchResult } from '@/application/enums.ts';
+import Application from '@/application/index.ts';
 const { BONUSES, LETTERS } = Application;
 
 export function getBonusName(cellBonus: string): string {

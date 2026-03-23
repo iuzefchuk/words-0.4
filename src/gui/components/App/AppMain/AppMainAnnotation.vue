@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import MatchStore from '@/gui/stores/MatchStore.ts';
 import { AppTurnResolutionHistory } from '@/application/types.ts';
+import MatchStore from '@/gui/stores/MatchStore.ts';
 const MAX_LENGTH = 3;
 const matchStore = MatchStore.INSTANCE();
 const messages = computed(() => {

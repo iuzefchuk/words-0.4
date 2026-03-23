@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import RackStore from '@/gui/stores/RackStore.ts';
 import type { OutlineGroup } from '@/gui/composables/UseOutline.ts';
+import RackStore from '@/gui/stores/RackStore.ts';
 const rackStore = RackStore.INSTANCE();
 const cellStep = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axis))';
 

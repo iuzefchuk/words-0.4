@@ -1,8 +1,8 @@
-import Application from '@/application/index.ts';
-import { Sound } from '@/application/enums.ts';
-import { AppCell, AppTile, AppState, AppTurnExecutionResult, AppTurnResolutionHistory } from '@/application/types.ts';
 import { defineStore } from 'pinia';
 import { computed, Ref, shallowRef } from 'vue';
+import { Sound } from '@/application/enums.ts';
+import Application from '@/application/index.ts';
+import { AppCell, AppTile, AppState, AppTurnExecutionResult, AppTurnResolutionHistory } from '@/application/types.ts';
 
 let application: Application;
 

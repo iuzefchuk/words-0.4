@@ -1,3 +1,4 @@
+import pluginImport from 'eslint-plugin-import';
 import pluginVue from 'eslint-plugin-vue';
 import prettierConfig from '@vue/eslint-config-prettier';
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
@@ -9,7 +10,23 @@ export default defineConfigWithVueTs([
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.recommended,
   {
+    plugins: {
+      import: pluginImport,
+    },
     rules: {
+      'import/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          pathGroups: [
+            { pattern: '@/**', group: 'internal' },
+            { pattern: '$/**', group: 'internal' },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          alphabetize: { order: 'asc', caseInsensitive: true },
+          'newlines-between': 'never',
+        },
+      ],
       'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
       'prettier/prettier': [1, { semicolons: false, singleQuote: true, arrowParens: 'avoid' }],

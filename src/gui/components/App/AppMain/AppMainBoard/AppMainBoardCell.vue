@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import AppTile from '@/gui/components/shared/AppTile.vue';
+import { PropType, computed } from 'vue';
 import Application from '@/application/index.ts';
 import { AppCell } from '@/application/types.ts';
-import { PropType, computed } from 'vue';
+import AppTile from '@/gui/components/shared/AppTile.vue';
+import { getBonusName } from '@/gui/mappings.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
-import { getBonusName } from '@/gui/mappings.ts';
 const props = defineProps({ cell: { type: Number as unknown as PropType<AppCell>, required: true } });
 const matchStore = MatchStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();

@@ -1,8 +1,10 @@
+import { Event } from '@/domain/enums.ts';
 import Board from '@/domain/models/Board.ts';
+import Dictionary from '@/domain/models/Dictionary.ts';
 import Inventory from '@/domain/models/Inventory.ts';
 import TurnTracker from '@/domain/models/TurnTracker.ts';
-import Dictionary from '@/domain/models/Dictionary.ts';
-import { IdGenerator } from '@/shared/ports.ts';
+import TurnGenerator, { GeneratorResult } from '@/domain/services/TurnGenerator.ts';
+import TurnValidator, { ValidatorContext } from '@/domain/services/TurnValidator.ts';
 import {
   DomainCell,
   DomainTile,
@@ -10,9 +12,7 @@ import {
   DomainTurnResolution,
   DomainTurnResolutionType,
 } from '@/domain/types.ts';
-import { Event } from '@/domain/enums.ts';
-import TurnValidator, { ValidatorContext } from '@/domain/services/TurnValidator.ts';
-import TurnGenerator, { GeneratorResult } from '@/domain/services/TurnGenerator.ts';
+import { IdGenerator } from '@/shared/ports.ts';
 
 export default class Domain {
   private readonly events: Array<Event> = [];

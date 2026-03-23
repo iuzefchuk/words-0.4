@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import MatchStore from '@/gui/stores/MatchStore.ts';
 import { storeToRefs } from 'pinia';
+import MatchStore from '@/gui/stores/MatchStore.ts';
 const matchStore = MatchStore.INSTANCE();
 const { currentTurnScore } = storeToRefs(matchStore);
 const SHIMMER_THRESHOLD_SCORE = 30;
