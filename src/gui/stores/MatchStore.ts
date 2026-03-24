@@ -23,6 +23,7 @@ export default class MatchStore {
     const store = new MatchStore(application);
     return {
       boardCells: application.config.boardCells,
+      boardCellsPerAxis: application.config.boardCellsPerAxis,
       matchIsFinished: store.state.matchIsFinished,
       matchResult: store.state.matchResult,
       tilesRemaining: store.state.tilesRemaining,

@@ -40,6 +40,10 @@ export default class Board {
     return Layout.cells;
   }
 
+  get cellsPerAxis(): number {
+    return Layout.CELLS_PER_AXIS;
+  }
+
   isCellCenter(cell: CellIndex): boolean {
     return Layout.isCellCenter(cell);
   }
@@ -166,7 +170,7 @@ export default class Board {
 }
 
 class Layout {
-  private static readonly CELLS_PER_AXIS = 15;
+  static readonly CELLS_PER_AXIS = 15;
 
   private static readonly CELLS_BY_INDEX: ReadonlyArray<CellIndex> = Array.from(
     { length: this.CELLS_PER_AXIS ** 2 },

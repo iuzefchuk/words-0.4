@@ -22,6 +22,7 @@ export {
 
 export type DomainConfig = {
   readonly boardCells: ReadonlyArray<DomainCell>;
+  readonly boardCellsPerAxis: number;
 };
 
 export type DomainState = {

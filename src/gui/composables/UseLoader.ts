@@ -1,30 +1,60 @@
-import { ref, computed, watch, inject } from 'vue';
+import { ref, watch, inject } from 'vue';
 import { DomainLetter } from '@/application/types.ts';
 import UseCounter from '@/gui/composables/UseCounter.ts';
 import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
 
 export default class UseLoader {
   static readonly WORD = [DomainLetter.W, DomainLetter.O, DomainLetter.R, DomainLetter.D, DomainLetter.S];
-  readonly isRendered = computed({
-    get: () => this.isRenderedRef.value,
-    set: (newValue: boolean) => {
-      this.isRenderedRef.value = newValue;
-    },
-  });
-  readonly allTilesAreSaturated = computed(() => this.counter.value > 0 && this.remainingCounterValue.value === 0);
-  private readonly counter;
-  private readonly isRenderedRef = ref(false);
-  private readonly remainingCounterValue = computed(() => this.counter.value % (UseLoader.WORD.length + 1));
-  private readonly onlyFirstTileIsElevated = computed(() =>
-    UseLoader.WORD.every((_, idx) => (idx === 0 ? this.isTileOutlined(idx) : !this.isTileOutlined(idx))),
-  );
+  readonly isRendered = ref(false);
 
-  constructor(
+  private constructor(
     private readonly props: { isActive: boolean },
     private readonly emit: (event: 'derendered') => void,
-  ) {
+    private readonly counter: UseCounter,
+  ) {}
+
+  static create(props: { isActive: boolean }, emit: (event: 'derendered') => void): UseLoader {
     const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY, 0);
-    this.counter = new UseCounter(transitionDurationMs);
+    const counter = new UseCounter(transitionDurationMs);
+    const loader = new UseLoader(props, emit, counter);
+    loader.initRenderWatcher();
+    return loader;
+  }
+
+  isItemVisible(idx: number): boolean {
+    return this.step > idx && this.isBuildingPhase;
+  }
+
+  isItemEmphasized(): boolean {
+    return this.isEmphasizedPhase;
+  }
+
+  isItemRendered(idx: number): boolean {
+    if (this.isItemEmphasized()) return true;
+    return this.isItemVisible(idx);
+  }
+
+  private get wordLength(): number {
+    return UseLoader.WORD.length;
+  }
+
+  private get step(): number {
+    return this.counter.value;
+  }
+
+  private get isBuildingPhase(): boolean {
+    return this.step > 0 && this.step <= this.wordLength;
+  }
+
+  private get isEmphasizedPhase(): boolean {
+    return this.step === this.wordLength + 1;
+  }
+
+  private get isFinishedPhase(): boolean {
+    return this.step > this.wordLength + 1;
+  }
+
+  private initRenderWatcher(): void {
     watch(
       () => this.props.isActive,
       newValue => {
@@ -32,10 +62,6 @@ export default class UseLoader {
       },
       { immediate: true },
     );
-  }
-
-  isTileOutlined(idx: number): boolean {
-    return idx < this.remainingCounterValue.value;
   }
 
   private initRenderWithCounter(): void {
@@ -50,7 +76,7 @@ export default class UseLoader {
   }
 
   private onIncrementCounter(): void {
-    if (this.counter.value <= 1) return;
-    if (!this.props.isActive && this.onlyFirstTileIsElevated.value) this.deinitRenderWithCounter();
+    // Wait until full cycle is done
+    if (!this.props.isActive && this.isFinishedPhase) this.deinitRenderWithCounter();
   }
 }

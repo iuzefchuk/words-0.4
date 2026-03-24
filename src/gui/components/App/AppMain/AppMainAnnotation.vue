@@ -1,28 +1,6 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
-import { AppTurnResolution } from '@/application/types.ts';
-import MatchStore from '@/gui/stores/MatchStore.ts';
-const MAX_LENGTH = 3;
-const matchStore = MatchStore.INSTANCE();
-const messages = computed(() => {
-  const history = matchStore.turnResolutionHistory;
-  const start = Math.max(0, history.length - MAX_LENGTH);
-  return history.slice(start).map((resolution: AppTurnResolution, idx: number) => ({
-    key: start + idx,
-    html: convertResolutionToHtml(resolution),
-  }));
-});
-function convertResolutionToHtml(resolution: AppTurnResolution): string {
-  const { isSave, isUser } = resolution;
-  if (isSave) {
-    return window.t(isUser ? 'game.resolution_save_user' : 'game.resolution_save_opponent', {
-      words: resolution.words!,
-      score: resolution.score!,
-    });
-  } else {
-    return window.t(isUser ? 'game.resolution_pass_user' : 'game.resolution_pass_opponent');
-  }
-}
+import UseAnnotation from '@/gui/composables/UseAnnotation.ts';
+const { messages } = new UseAnnotation();
 </script>
 
 <template>

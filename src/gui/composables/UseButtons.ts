@@ -4,7 +4,7 @@ import DialogStore from '@/gui/stores/DialogStore.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
 
-export default class UseActions {
+export default class UseButtons {
   readonly allActionsAreDisabled = computed(() => !MatchStore.INSTANCE().currentPlayerIsUser);
 
   async handleResign(): Promise<void> {

@@ -3,63 +3,97 @@ import MatchStore from '@/gui/stores/MatchStore.ts';
 
 type OutlineGroup = { row: number; col: number; rowSpan: number; colSpan: number };
 
-type CellKey = string;
+type CellKey = number;
 
 export default class UseOutline {
-  private readonly matchStore = MatchStore.INSTANCE();
-
-  collectGroups(tiles: ReadonlyArray<DomainTile>): ReadonlyArray<OutlineGroup> {
+  createGroups(tiles: ReadonlyArray<DomainTile>): ReadonlyArray<OutlineGroup> {
     const cells = this.collectCells(tiles);
     if (cells.size === 0) return [];
     const visited = new Set<CellKey>();
     const groups: Array<OutlineGroup> = [];
     for (const key of cells) {
       if (visited.has(key)) continue;
-      groups.push(this.floodFill(key, cells, visited));
+      groups.push(this.buildGroup(key, cells, visited));
     }
     return groups;
+  }
+
+  private get matchStore() {
+    return MatchStore.INSTANCE();
+  }
+
+  private get boardCellsPerAxis(): number {
+    return this.matchStore.boardCellsPerAxis;
   }
 
   private collectCells(tiles: ReadonlyArray<DomainTile>): Set<CellKey> {
     const cells = new Set<CellKey>();
     for (const tile of tiles) {
       const cell = this.matchStore.findCellWithTile(tile);
-      if (cell === undefined) continue;
-      cells.add(this.toCellKey(this.matchStore.getCellRowIndex(cell), this.matchStore.getCellColumnIndex(cell)));
+      if (!cell) continue;
+      const row = this.matchStore.getCellRowIndex(cell);
+      const col = this.matchStore.getCellColumnIndex(cell);
+      cells.add(this.toKey(row, col));
     }
     return cells;
   }
 
-  private floodFill(start: CellKey, cells: Set<CellKey>, visited: Set<CellKey>): OutlineGroup {
-    const queue = [start];
+  private buildGroup(start: CellKey, cells: Set<CellKey>, visited: Set<CellKey>): OutlineGroup {
+    const stack = [start];
     visited.add(start);
-    let minRow = Infinity,
-      maxRow = -Infinity,
-      minCol = Infinity,
-      maxCol = -Infinity;
-    while (queue.length > 0) {
-      const [r, c] = queue.pop()!.split(',').map(Number);
-      minRow = Math.min(minRow, r);
-      maxRow = Math.max(maxRow, r);
-      minCol = Math.min(minCol, c);
-      maxCol = Math.max(maxCol, c);
-      for (const [dr, dc] of [
-        [0, 1],
-        [0, -1],
-        [1, 0],
-        [-1, 0],
-      ]) {
-        const neighbor = this.toCellKey(r + dr, c + dc);
-        if (cells.has(neighbor) && !visited.has(neighbor)) {
-          visited.add(neighbor);
-          queue.push(neighbor);
-        }
+    const bounds = this.createBounds();
+    while (stack.length > 0) {
+      const key = stack.pop()!;
+      const row = this.row(key);
+      const col = this.col(key);
+      this.expandBounds(bounds, row, col);
+      for (const neighbor of this.getNeighborKeys(row, col)) {
+        if (!cells.has(neighbor) || visited.has(neighbor)) continue;
+        visited.add(neighbor);
+        stack.push(neighbor);
       }
     }
-    return { row: minRow, col: minCol, rowSpan: maxRow - minRow + 1, colSpan: maxCol - minCol + 1 };
+    return this.boundsToGroup(bounds);
   }
 
-  private toCellKey(row: number, col: number): CellKey {
-    return `${row},${col}`;
+  private getNeighborKeys(row: number, col: number): Array<CellKey> {
+    return [this.toKey(row, col + 1), this.toKey(row, col - 1), this.toKey(row + 1, col), this.toKey(row - 1, col)];
+  }
+
+  private createBounds() {
+    return {
+      minRow: Infinity,
+      maxRow: -Infinity,
+      minCol: Infinity,
+      maxCol: -Infinity,
+    };
+  }
+
+  private expandBounds(bounds: ReturnType<typeof this.createBounds>, row: number, col: number) {
+    bounds.minRow = Math.min(bounds.minRow, row);
+    bounds.maxRow = Math.max(bounds.maxRow, row);
+    bounds.minCol = Math.min(bounds.minCol, col);
+    bounds.maxCol = Math.max(bounds.maxCol, col);
+  }
+
+  private boundsToGroup(bounds: ReturnType<typeof this.createBounds>): OutlineGroup {
+    return {
+      row: bounds.minRow,
+      col: bounds.minCol,
+      rowSpan: bounds.maxRow - bounds.minRow + 1,
+      colSpan: bounds.maxCol - bounds.minCol + 1,
+    };
+  }
+
+  private toKey(row: number, col: number): CellKey {
+    return row * this.boardCellsPerAxis + col;
+  }
+
+  private row(key: CellKey): number {
+    return Math.floor(key / this.boardCellsPerAxis);
+  }
+
+  private col(key: CellKey): number {
+    return key % this.boardCellsPerAxis;
   }
 }

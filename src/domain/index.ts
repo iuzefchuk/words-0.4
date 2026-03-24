@@ -56,6 +56,7 @@ export default class Domain {
   get config(): DomainConfig {
     return {
       boardCells: this.board.cells,
+      boardCellsPerAxis: this.board.cellsPerAxis,
     };
   }
 

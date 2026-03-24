@@ -1,42 +1,42 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
-import UseActions from '@/gui/composables/UseActions.ts';
+import UseButtons from '@/gui/composables/UseButtons.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
 const matchStore = MatchStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
 const { anyTileIsPlaced } = storeToRefs(rackStore);
-const actions = new UseActions();
-const { allActionsAreDisabled } = actions;
-const buttons = reactive([
+const buttons = new UseButtons();
+const { allActionsAreDisabled } = buttons;
+const items = reactive([
   {
     name: window.t('game.action_resign'),
-    action: () => actions.handleResign(),
+    action: () => buttons.handleResign(),
     isRendered: () => true,
     isDisabled: () => allActionsAreDisabled.value,
   },
   {
     name: window.t('game.action_pass'),
-    action: () => actions.handlePass(),
+    action: () => buttons.handlePass(),
     isRendered: () => true,
     isDisabled: () => allActionsAreDisabled.value,
   },
   {
     name: window.t('game.action_shuffle'),
-    action: () => actions.handleShuffle(),
+    action: () => buttons.handleShuffle(),
     isRendered: () => !anyTileIsPlaced.value,
     isDisabled: () => allActionsAreDisabled.value,
   },
   {
     name: window.t('game.action_clear'),
-    action: () => actions.handleClear(),
+    action: () => buttons.handleClear(),
     isRendered: () => anyTileIsPlaced.value,
     isDisabled: () => allActionsAreDisabled.value,
   },
   {
     name: window.t('game.action_play'),
-    action: () => actions.handlePlay(),
+    action: () => buttons.handlePlay(),
     isRendered: () => true,
     isDisabled: () => allActionsAreDisabled.value || !matchStore.currentTurnIsValid,
   },
@@ -46,7 +46,7 @@ const buttons = reactive([
 <template>
   <div class="buttons">
     <ul class="buttons__list app__width-content">
-      <template v-for="{ name, action, isRendered, isDisabled } in buttons" :key="name">
+      <template v-for="{ name, action, isRendered, isDisabled } in items" :key="name">
         <li v-if="isRendered()" class="buttons__list-item">
           <button class="buttons__btn" :disabled="isDisabled()" @click="action()">
             {{ name }}

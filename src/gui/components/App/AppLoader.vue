@@ -3,8 +3,8 @@ import DomainTile from '@/gui/components/shared/AppTile.vue';
 import UseLoader from '@/gui/composables/UseLoader.ts';
 const props = defineProps({ isActive: { type: Boolean, required: true } });
 const emit = defineEmits(['derendered']);
-const loader = new UseLoader(props, emit);
-const { isRendered, allTilesAreSaturated } = loader;
+const loader = UseLoader.create(props, emit);
+const { isRendered } = loader;
 </script>
 
 <template>
@@ -13,10 +13,10 @@ const { isRendered, allTilesAreSaturated } = loader;
       <div class="loader__logo">
         <template v-for="(letter, idx) in UseLoader.WORD" :key="idx">
           <DomainTile
-            v-if="loader.isTileOutlined(idx) || allTilesAreSaturated"
+            v-if="loader.isItemRendered(idx)"
             class="loader__tile"
             :letter="letter"
-            :is-saturated="allTilesAreSaturated"
+            :is-saturated="loader.isItemEmphasized()"
           />
         </template>
       </div>

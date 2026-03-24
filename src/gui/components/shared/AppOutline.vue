@@ -6,7 +6,7 @@ import RackStore from '@/gui/stores/RackStore.ts';
 const outline = new UseOutline();
 const rackStore = RackStore.INSTANCE();
 const { tiles } = storeToRefs(rackStore);
-const outlineGroups = computed(() => outline.collectGroups(tiles.value));
+const outlineGroups = computed(() => outline.createGroups(tiles.value));
 const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axis))';
 </script>
 
