@@ -13,7 +13,7 @@ import {
   DomainMatchResult,
   DomainDictionary,
 } from '@/domain/types.ts';
-import { IdGenerator, Clock, TurnGenerationWorker } from '@/shared/ports.ts';
+import { IdGenerator, Clock, Scheduler } from '@/shared/ports.ts';
 
 export type { DomainCell, DomainTile, DomainTurnResolution, DomainDictionaryProps };
 export { DomainBonus, DomainEvent, DomainLetter, DomainPlayer, DomainMatchResult, DomainDictionary };
@@ -37,8 +37,8 @@ export type AppState = {
 export type AppDependencies = {
   dictionary: DomainDictionary;
   idGenerator: IdGenerator;
-  turnGenerationWorker: TurnGenerationWorker<DomainPlayer, DomainCell, DomainTile>;
   clock: Clock;
+  scheduler: Scheduler;
 };
 
 export type AppTurnResponse = Result<{ words: ReadonlyArray<string> }, string>;

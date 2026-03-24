@@ -64,20 +64,6 @@ export default class Inventory {
     return new Inventory(drawPool, poolByPlayer, discardPool, tileById);
   }
 
-  static reconstruct(data: unknown): Inventory {
-    const inventory = Object.setPrototypeOf(data, Inventory.prototype) as {
-      drawPool: unknown;
-      poolByPlayer: Map<unknown, unknown>;
-      discardPool: unknown;
-      tileById: Map<unknown, unknown>;
-    };
-    TilePool.reconstruct(inventory.drawPool);
-    for (const pool of inventory.poolByPlayer.values()) TilePool.reconstruct(pool);
-    TilePool.reconstruct(inventory.discardPool);
-    for (const tile of inventory.tileById.values()) Tile.reconstruct(tile);
-    return inventory as unknown as Inventory;
-  }
-
   static shuffleTilesWithFisherYates(tiles: Array<Tile>): Array<Tile> {
     return shuffleWithFisherYates(tiles);
   }
@@ -155,12 +141,6 @@ class TilePool {
     return new TilePool(capacity, tiles ?? []);
   }
 
-  static reconstruct(data: unknown): TilePool {
-    const pool = Object.setPrototypeOf(data, TilePool.prototype) as { tiles: Array<unknown> };
-    for (const tile of pool.tiles) Tile.reconstruct(tile);
-    return pool as unknown as TilePool;
-  }
-
   get tileCount(): number {
     return this.tiles.length;
   }
@@ -221,10 +201,6 @@ class Tile {
   static create({ letter, idGenerator }: { letter: Letter; idGenerator: IdGenerator }): Tile {
     const id = idGenerator.execute() as TileId;
     return new Tile(id, letter);
-  }
-
-  static reconstruct(data: unknown): Tile {
-    return Object.setPrototypeOf(data, Tile.prototype) as Tile;
   }
 
   equals(other: Tile): boolean {

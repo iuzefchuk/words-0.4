@@ -27,7 +27,13 @@ enum GenerationCommandType {
   ReturnResult = 'ReturnResult',
 }
 
-export type GeneratorContext = { board: Board; dictionary: Dictionary; inventory: Inventory; turnTracker: TurnTracker };
+export type GeneratorContext = {
+  board: Board;
+  dictionary: Dictionary;
+  inventory: Inventory;
+  turnTracker: TurnTracker;
+  yieldControl: () => Promise<void>;
+};
 
 export type GeneratorArguments = {
   context: GeneratorContext;
@@ -86,6 +92,8 @@ export type DispatcherState = { tiles: MutableTileCollection; placement: Array<L
 export type DispatcherComputeds = { axisCells: ReadonlyArray<CellIndex>; oppositeAxis: Axis };
 
 export default class TurnGenerator {
+  private static readonly YIELD_INTERVAL = 100;
+
   private static TaskCommandResolver = class TaskCommandResolver {
     private constructor(private readonly stack: Array<Task>) {}
 
@@ -106,12 +114,17 @@ export default class TurnGenerator {
       return { type: GenerationCommandType.ReturnResult, result };
     }
 
-    *execute(dispatcher: (task: Task) => TaskCommand): Generator<GeneratorResult> {
+    async *execute(
+      dispatcher: (task: Task) => TaskCommand,
+      yieldControl: () => Promise<void>,
+    ): AsyncGenerator<GeneratorResult> {
+      let taskCount = 0;
       while (this.stack.length > 0) {
         const task = this.popFromStack();
         const command = dispatcher(task);
         if (command.type === GenerationCommandType.ContinueExecute) this.pushToStack(command.newTasks);
         if (command.type === GenerationCommandType.ReturnResult) yield command.result;
+        if (++taskCount % TurnGenerator.YIELD_INTERVAL === 0) await yieldControl();
       }
     }
 
@@ -317,7 +330,7 @@ export default class TurnGenerator {
     }
   };
 
-  static *execute(context: GeneratorContext, player: Player): Generator<GeneratorResult> {
+  static async *execute(context: GeneratorContext, player: Player): AsyncGenerator<GeneratorResult> {
     const { inventory, board, dictionary, turnTracker } = context;
     const playerTileCollection = inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;
@@ -327,12 +340,12 @@ export default class TurnGenerator {
     for (const cell of anchorCells) {
       for (const axis of Object.values(Axis)) {
         const coords: AnchorCoordinates = { axis, cell };
-        for (const links of this.generate({ context, lettersComputer, playerTileCollection, coords })) yield links;
+        yield* this.generate({ context, lettersComputer, playerTileCollection, coords });
       }
     }
   }
 
-  static *generate(args: GeneratorArguments): Generator<GeneratorResult> {
+  static async *generate(args: GeneratorArguments): AsyncGenerator<GeneratorResult> {
     const { context, coords } = args;
     const { dictionary } = context;
     const dispatcher = TurnGenerator.TaskDispatcher.create(args);
@@ -345,6 +358,6 @@ export default class TurnGenerator {
       },
     };
     const resolver = TurnGenerator.TaskCommandResolver.create(firstTask);
-    yield* resolver.execute(task => dispatcher.execute(task));
+    yield* resolver.execute(task => dispatcher.execute(task), context.yieldControl);
   }
 }

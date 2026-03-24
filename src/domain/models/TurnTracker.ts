@@ -63,12 +63,6 @@ export default class TurnTracker {
     return new TurnTracker(idGenerator, []);
   }
 
-  static reconstruct(data: unknown): TurnTracker {
-    const tracker = Object.setPrototypeOf(data, TurnTracker.prototype) as { turns: Array<unknown> };
-    for (const turn of tracker.turns) Turn.reconstruct(turn);
-    return tracker as unknown as TurnTracker;
-  }
-
   get hasPriorTurns(): boolean {
     return this.turns.length > 1;
   }
@@ -187,10 +181,6 @@ class Turn {
     const id = idGenerator.execute();
     const validationResult: UnvalidatedResult = { status: ValidationStatus.Unvalidated };
     return new Turn(id, player, [], validationResult, undefined);
-  }
-
-  static reconstruct(data: unknown): Turn {
-    return Object.setPrototypeOf(data, Turn.prototype) as Turn;
   }
 
   get resolution(): Resolution | undefined {

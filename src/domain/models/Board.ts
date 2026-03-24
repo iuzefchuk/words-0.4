@@ -32,8 +32,8 @@ export default class Board {
     return new Board(new Map(), new Map());
   }
 
-  static reconstruct(data: unknown): Board {
-    return Object.setPrototypeOf(data, Board.prototype) as Board;
+  static clone(board: Board): Board {
+    return new Board(new Map(board.tileByCell), new Map(board.cellByTile));
   }
 
   get cells(): ReadonlyArray<CellIndex> {

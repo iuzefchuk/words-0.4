@@ -36,10 +36,6 @@ export default class Dictionary {
     return new Dictionary(props);
   }
 
-  static reconstruct(data: unknown): Dictionary {
-    return Object.setPrototypeOf(data, Dictionary.prototype) as Dictionary;
-  }
-
   static restoreFromProps(props: DictionaryProps): Dictionary | null {
     if (!(props.nodeById instanceof Map) || !(props.allLetters instanceof Set)) return null;
     this.freezeTree(props.rootNode);

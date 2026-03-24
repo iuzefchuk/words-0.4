@@ -10,21 +10,21 @@ import {
 } from '@/domain/types.ts';
 import Infrastructure from '@/infrastructure/index.ts';
 import { TIME } from '@/shared/constants.ts';
-import { Clock, TurnGenerationWorker } from '@/shared/ports.ts';
+import { Clock, Scheduler } from '@/shared/ports.ts';
 
 export default class Application {
   private static readonly OPPONENT_RESPONSE_MIN_TIME = TIME.ms_in_second * 2;
 
   private constructor(
     private readonly domain: Domain,
-    private readonly turnGenerationWorker: TurnGenerationWorker<DomainPlayer, DomainCell, DomainTile>,
     private readonly clock: Clock,
+    private readonly scheduler: Scheduler,
   ) {}
 
   static async create(): Promise<Application> {
-    const { dictionary, idGenerator, turnGenerationWorker, clock } = await Infrastructure.createAppDependencies();
+    const { dictionary, idGenerator, clock, scheduler } = await Infrastructure.createAppDependencies();
     const domain = Domain.create(dictionary, idGenerator);
-    return new Application(domain, turnGenerationWorker, clock);
+    return new Application(domain, clock, scheduler);
   }
 
   get config(): AppConfig {
@@ -120,7 +120,6 @@ export default class Application {
       return { userResponse };
     }
     if (this.domain.state.matchIsFinished) {
-      this.turnGenerationWorker.terminate();
       return { userResponse };
     }
     const opponentTurn =
@@ -163,7 +162,6 @@ export default class Application {
         return { ok: true, value: { words: [] } };
       case DomainTurnResolutionType.Save:
         if (!this.domain.hasTilesFor(DomainPlayer.Opponent)) this.domain.endMatchByScore();
-        if (this.domain.state.matchIsFinished) this.turnGenerationWorker.terminate();
         return { ok: true, value: { words: resolution.words } };
       default:
         throw new Error(`Unexpected resolution type: ${(resolution as { type: string }).type}`);
@@ -172,11 +170,10 @@ export default class Application {
 
   private async createOpponentTurn(): Promise<DomainTurnResolution> {
     const player = DomainPlayer.Opponent;
-    let generatorResult;
-    try {
-      generatorResult = await this.turnGenerationWorker.execute({ domain: this.domain, player });
-    } catch {
-      generatorResult = null;
+    let generatorResult = null;
+    for await (const result of this.domain.generateTurnFor(player, () => this.scheduler.yield())) {
+      generatorResult = result;
+      break;
     }
     if (generatorResult === null) {
       if (this.domain.willPlayerPassBeResign(player)) return { type: DomainTurnResolutionType.Resign, player };

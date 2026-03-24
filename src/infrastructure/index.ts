@@ -1,16 +1,8 @@
-import {
-  AppDependencies,
-  DomainPlayer,
-  DomainCell,
-  DomainTile,
-  DomainDictionary,
-  DomainDictionaryProps,
-} from '@/application/types.ts';
+import { AppDependencies, DomainDictionary, DomainDictionaryProps } from '@/application/types.ts';
 import IdGenerator from '@/infrastructure/services/CryptoIdGenerator.ts';
 import DateApiClock from '@/infrastructure/services/DateApiClock.ts';
 import IndexedDb from '@/infrastructure/services/IndexedDb.ts';
-import WebWorker from '@/infrastructure/services/WebWorker.ts';
-import { TurnGenerationWorker } from '@/shared/ports.ts';
+import WebScheduler from '@/infrastructure/services/WebScheduler.ts';
 
 export default class Infrastructure {
   private static readonly CACHE_VERSION = 1;
@@ -20,10 +12,10 @@ export default class Infrastructure {
 
   static async createAppDependencies(): Promise<AppDependencies> {
     const dictionary = await this.createDictionary();
-    const turnGenerationWorker = this.createTurnGenerationWorker();
     const idGenerator = new IdGenerator();
     const clock = new DateApiClock();
-    return { dictionary, turnGenerationWorker, idGenerator, clock };
+    const scheduler = new WebScheduler();
+    return { dictionary, idGenerator, clock, scheduler };
   }
 
   private static async createDictionary(): Promise<DomainDictionary> {
@@ -40,13 +32,5 @@ export default class Infrastructure {
     const dictionary = DomainDictionary.create();
     db.save(this.CACHE_VERSION, dictionary[this.DICTIONARY_STORE_NAME]);
     return dictionary;
-  }
-
-  private static createTurnGenerationWorker(): TurnGenerationWorker<DomainPlayer, DomainCell, DomainTile> {
-    const worker = new Worker(new URL('./workers/TurnGeneratorWorker.ts', import.meta.url), { type: 'module' });
-    return WebWorker.create<
-      { domain: unknown; player: DomainPlayer },
-      { tiles: ReadonlyArray<DomainTile>; cells: ReadonlyArray<DomainCell> }
-    >(worker);
   }
 }

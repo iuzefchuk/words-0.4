@@ -53,20 +53,6 @@ export default class Domain {
     return domain;
   }
 
-  static reconstruct(data: unknown): Domain {
-    const domain = Object.setPrototypeOf(data, Domain.prototype) as {
-      board: unknown;
-      dictionary: unknown;
-      inventory: unknown;
-      turnTracker: unknown;
-    };
-    Board.reconstruct(domain.board);
-    Dictionary.reconstruct(domain.dictionary);
-    Inventory.reconstruct(domain.inventory);
-    TurnTracker.reconstruct(domain.turnTracker);
-    return domain as unknown as Domain;
-  }
-
   get config(): DomainConfig {
     return {
       boardCells: this.board.cells,
@@ -204,12 +190,13 @@ export default class Domain {
     this.events.record(newEvent);
   }
 
-  *generateTurnFor(player: DomainPlayer): Generator<GeneratorResult> {
+  async *generateTurnFor(player: DomainPlayer, yieldControl: () => Promise<void>): AsyncGenerator<GeneratorResult> {
     const context = {
-      board: this.board,
+      board: Board.clone(this.board),
       dictionary: this.dictionary,
       inventory: this.inventory,
       turnTracker: this.turnTracker,
+      yieldControl,
     } as GeneratorContext;
     yield* TurnGenerator.execute(context, player);
   }
