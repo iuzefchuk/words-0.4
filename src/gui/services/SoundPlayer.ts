@@ -10,16 +10,10 @@ export enum Sound {
   EndBad = 'EndBad',
 }
 
-type SoundDefinition = {
-  frequency: number;
-  duration: number;
-  type: OscillatorType;
-  gain: number;
-  ramp?: number;
-};
+type Note = { frequency: number; duration: number; type: OscillatorType; gain: number; ramp?: number };
 
 export default class SoundPlayer {
-  private static readonly DEFINITIONS: Record<Sound, ReadonlyArray<SoundDefinition>> = {
+  private static readonly NOTES: Record<Sound, ReadonlyArray<Note>> = {
     [Sound.ActionGood]: [
       { frequency: 523, duration: 0.08, type: 'sine', gain: 0.12 },
       { frequency: 659, duration: 0.1, type: 'sine', gain: 0.15 },
@@ -57,51 +51,43 @@ export default class SoundPlayer {
       { frequency: 262, duration: 0.25, type: 'square', gain: 0.08 },
     ],
   };
+  private static readonly FADE_OUT_MS = 0.03;
+  private static context = new AudioContext();
+  private static queueEnd = 0;
 
-  private static readonly FADE_OUT = 0.03;
-
-  private _context: AudioContext | null = null;
-  private queueEnd: number = 0;
-
-  play(sound: Sound): void {
-    const notes = SoundPlayer.DEFINITIONS[sound];
-    if (notes.length === 0) return;
-    setTimeout(() => this.scheduleSound(notes), 0);
+  static play(sound: Sound): void {
+    const notes = this.NOTES[sound];
+    setTimeout(() => this.playNotes(notes), 0);
   }
 
-  private get context(): AudioContext {
-    if (!this._context) this._context = new AudioContext();
-    return this._context;
-  }
-
-  private scheduleSound(notes: ReadonlyArray<SoundDefinition>): void {
+  private static playNotes(notes: ReadonlyArray<Note>): void {
     try {
-      const ctx = this.context;
-      if (ctx.state === 'suspended') ctx.resume();
-      const now = ctx.currentTime + 0.02;
+      if (this.context.state === 'suspended') this.context.resume();
+      const now = this.context.currentTime + this.FADE_OUT_MS;
       let time = Math.max(now, this.queueEnd);
       for (const note of notes) {
         const end = time + note.duration;
-        this.scheduleNote(ctx, note, time, end);
+        this.playNote(note, time, end);
         time = end;
       }
       this.queueEnd = time;
-    } catch (e) {
-      console.error('[SoundPlayer]', e);
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  private scheduleNote(ctx: AudioContext, note: SoundDefinition, start: number, end: number): void {
-    const osc = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    osc.type = note.type;
-    osc.frequency.value = note.frequency;
-    gainNode.gain.setValueAtTime(note.gain, start);
-    gainNode.gain.setValueAtTime(note.gain, end - SoundPlayer.FADE_OUT);
+  private static playNote(note: Note, start: number, end: number): void {
+    const { type, frequency, gain } = note;
+    const oscillator = this.context.createOscillator();
+    const gainNode = this.context.createGain();
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+    gainNode.gain.setValueAtTime(gain, start);
+    gainNode.gain.setValueAtTime(gain, end - this.FADE_OUT_MS);
     gainNode.gain.linearRampToValueAtTime(0.001, end);
-    osc.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    osc.start(start);
-    osc.stop(end);
+    oscillator.connect(gainNode);
+    gainNode.connect(this.context.destination);
+    oscillator.start(start);
+    oscillator.stop(end);
   }
 }

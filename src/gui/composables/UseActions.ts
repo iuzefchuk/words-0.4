@@ -1,5 +1,5 @@
 import { computed } from 'vue';
-import { Sound } from '@/gui/services/SoundPlayer.ts';
+import SoundPlayer, { Sound } from '@/gui/services/SoundPlayer.ts';
 import DialogStore from '@/gui/stores/DialogStore.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
@@ -23,7 +23,7 @@ export default class UseActions {
 
   handleShuffle(): void {
     this.rackStore.shuffle();
-    this.matchStore.playSound(Sound.ActionMix);
+    SoundPlayer.play(Sound.ActionMix);
   }
 
   handleClear(): void {

@@ -13,7 +13,6 @@ import {
 import SoundPlayer, { Sound } from '@/gui/services/SoundPlayer.ts';
 
 let application: Application;
-const soundPlayer = new SoundPlayer();
 
 export async function startGame(): Promise<void> {
   application = await Application.create();
@@ -21,7 +20,7 @@ export async function startGame(): Promise<void> {
 
 export default class MatchStore {
   static readonly INSTANCE = defineStore('game', () => {
-    const store = new MatchStore(application, soundPlayer);
+    const store = new MatchStore(application);
     return {
       boardCells: application.config.boardCells,
       matchIsFinished: store.state.matchIsFinished,
@@ -118,10 +117,7 @@ export default class MatchStore {
 
   private readonly state: InstanceType<typeof MatchStore.StateReactivityWrapper>;
 
-  private constructor(
-    private readonly application: Application,
-    private readonly soundPlayer: SoundPlayer,
-  ) {
+  private constructor(private readonly application: Application) {
     this.state = new MatchStore.StateReactivityWrapper(application);
   }
 
@@ -287,13 +283,13 @@ export default class MatchStore {
   }
 
   private playSound(sound: Sound): void {
-    this.soundPlayer.play(sound);
+    SoundPlayer.play(sound);
   }
 
   private playPendingSounds(): void {
     for (const event of this.application.clearAllDomainEvents()) {
       const sound = MatchStore.EVENT_SOUNDS[event];
-      if (sound) this.soundPlayer.play(sound);
+      if (sound) this.playSound(sound);
     }
   }
 }
