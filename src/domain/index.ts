@@ -14,6 +14,8 @@ import {
   GameState,
   GameConfig,
   GameMatchResult,
+  GameBonus,
+  GameLetter,
 } from '@/domain/types.ts';
 import { IdGenerator } from '@/shared/ports.ts';
 
@@ -81,7 +83,7 @@ export default class Game {
     return this.board.isCellCenter(cell);
   }
 
-  getBonusForCell(cell: GameCell): string | null {
+  getBonusForCell(cell: GameCell): GameBonus | null {
     return this.board.getBonusForCell(cell);
   }
 
@@ -113,7 +115,7 @@ export default class Game {
     return this.inventory.areTilesEqual(firstTile, secondTile);
   }
 
-  getTileLetter(tile: GameTile): string {
+  getTileLetter(tile: GameTile): GameLetter {
     return this.inventory.getTileLetter(tile);
   }
 

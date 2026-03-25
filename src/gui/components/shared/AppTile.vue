@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import MatchStore from '@/gui/stores/MatchStore.ts';
-const matchStore = MatchStore.INSTANCE();
+import { PropType } from 'vue';
+import { GameLetter } from '@/application/types.ts';
+import { getLetterSvgHtml } from '@/gui/mappings.ts';
 defineProps({
-  letter: { type: String, required: true },
+  letter: { type: String as PropType<GameLetter>, required: true },
   isInverted: { type: Boolean, default: false },
   isSaturated: { type: Boolean, default: false },
 });
@@ -16,7 +17,7 @@ defineProps({
       'tile--saturated': isSaturated,
     }"
     viewBox="0 0 21 21"
-    v-html="matchStore.getLetterSvgHtml(letter)"
+    v-html="getLetterSvgHtml(letter)"
   ></svg>
 </template>
 

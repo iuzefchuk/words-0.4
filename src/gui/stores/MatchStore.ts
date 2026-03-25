@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 import { computed, markRaw, Ref, shallowRef } from 'vue';
 import Application from '@/application/index.ts';
-import { GameCell, GameTile, AppState, GameMatchResult, GameBonus, GameLetter } from '@/application/types.ts';
-import { BONUS_NAMES, EVENT_SOUNDS, LETTERS_SVG_HTML, MATCH_RESULT_TEXT } from '@/gui/constants.ts';
+import { GameCell, GameTile, AppState } from '@/application/types.ts';
+import { EVENT_SOUNDS } from '@/gui/constants.ts';
 import SoundPlayer from '@/gui/services/SoundPlayer.ts';
 
 let app: Application;
@@ -19,10 +19,6 @@ export default class MatchStore {
       ...store.state,
       ...store.queries,
       ...store.commands,
-      // ui helpers
-      getBonusName: store.getBonusName,
-      getMatchResultText: store.getMatchResultText,
-      getLetterSvgHtml: store.getLetterSvgHtml,
     };
   });
 
@@ -34,18 +30,6 @@ export default class MatchStore {
     this.state = new State(app);
     this.queries = new Queries(app, this.state);
     this.commands = new Commands(app, this.state);
-  }
-
-  private getBonusName(bonus: GameBonus): string {
-    return window.t(BONUS_NAMES[bonus] ?? '');
-  }
-
-  private getMatchResultText(result: GameMatchResult): string {
-    return window.t(MATCH_RESULT_TEXT[result] ?? '');
-  }
-
-  private getLetterSvgHtml(letter: GameLetter): string {
-    return LETTERS_SVG_HTML[letter] ?? '';
   }
 }
 

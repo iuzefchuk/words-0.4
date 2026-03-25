@@ -1,13 +1,18 @@
-import { AppConfig, AppState, AppTurnResponse, AppTurnResolution } from '@/application/types.ts';
-import Game from '@/domain/index.ts';
 import {
+  AppConfig,
+  AppState,
+  AppTurnResponse,
+  AppTurnResolution,
   GamePlayer,
   GameCell,
+  GameBonus,
   GameTile,
-  GameEvent,
-  GameTurnResolutionType,
+  GameLetter,
   GameTurnResolution,
-} from '@/domain/types.ts';
+  GameTurnResolutionType,
+  GameEvent,
+} from '@/application/types.ts';
+import Game from '@/domain/index.ts';
 import Infrastructure from '@/infrastructure/index.ts';
 import { TIME } from '@/shared/constants.ts';
 import { Clock, Scheduler } from '@/shared/ports.ts';
@@ -51,7 +56,7 @@ export default class Application {
     return this.game.isCellCenter(cell);
   }
 
-  getCellBonus(cell: GameCell): string | null {
+  getCellBonus(cell: GameCell): GameBonus | null {
     return this.game.getBonusForCell(cell);
   }
 
@@ -79,7 +84,7 @@ export default class Application {
     return this.game.areTilesEqual(firstTile, secondTile);
   }
 
-  getTileLetter(tile: GameTile): string {
+  getTileLetter(tile: GameTile): GameLetter {
     return this.game.getTileLetter(tile);
   }
 

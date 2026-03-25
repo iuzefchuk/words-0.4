@@ -2,13 +2,14 @@
 import { PropType, computed } from 'vue';
 import { GameCell, GameBonus } from '@/application/types.ts';
 import GameTile from '@/gui/components/shared/AppTile.vue';
+import { getBonusName } from '@/gui/mappings.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
 const props = defineProps({ cell: { type: Number as unknown as PropType<GameCell>, required: true } });
 const matchStore = MatchStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
 const bonus = computed(() => matchStore.getCellBonus(props.cell));
-const bonusName = computed(() => (bonus.value ? matchStore.getBonusName(bonus.value) : ''));
+const bonusName = computed(() => (bonus.value ? getBonusName(bonus.value) : ''));
 const tile = computed(() => matchStore.findTileOnCell(props.cell));
 const isTileSaturated = computed(() => tile.value != null && matchStore.wasTileUsedInPreviousTurn(tile.value));
 </script>

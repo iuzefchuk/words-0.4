@@ -1,22 +1,17 @@
-import type {
-  GameCell,
-  GameTile,
-  GameConfig,
-  GameTurnResolution,
-  GameDictionaryProps,
-} from '@/domain/types.ts';
+import type { GameCell, GameTile, GameConfig, GameTurnResolution, GameDictionaryProps } from '@/domain/types.ts';
 import {
   GameBonus,
   GameEvent,
   GameLetter,
   GamePlayer,
   GameMatchResult,
+  GameTurnResolutionType,
   GameDictionary,
 } from '@/domain/types.ts';
 import { IdGenerator, Clock, Scheduler } from '@/shared/ports.ts';
 
 export type { GameCell, GameTile, GameTurnResolution, GameDictionaryProps };
-export { GameBonus, GameEvent, GameLetter, GamePlayer, GameMatchResult, GameDictionary };
+export { GameBonus, GameEvent, GameLetter, GamePlayer, GameMatchResult, GameTurnResolutionType, GameDictionary };
 
 export type AppConfig = GameConfig;
 
