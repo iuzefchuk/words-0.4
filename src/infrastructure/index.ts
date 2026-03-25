@@ -1,4 +1,4 @@
-import { AppDependencies, DomainDictionary, DomainDictionaryProps } from '@/application/types.ts';
+import { AppDependencies, GameDictionary, GameDictionaryProps } from '@/application/types.ts';
 import IdGenerator from '@/infrastructure/services/CryptoIdGenerator.ts';
 import DateApiClock from '@/infrastructure/services/DateApiClock.ts';
 import IndexedDb from '@/infrastructure/services/IndexedDb.ts';
@@ -18,18 +18,18 @@ export default class Infrastructure {
     return { dictionary, idGenerator, clock, scheduler };
   }
 
-  private static async createDictionary(): Promise<DomainDictionary> {
-    const db = new IndexedDb<DomainDictionaryProps>(
+  private static async createDictionary(): Promise<GameDictionary> {
+    const db = new IndexedDb<GameDictionaryProps>(
       this.DICTIONARY_DB_NAME,
       this.DICTIONARY_STORE_NAME,
       this.DICTIONARY_CACHE_KEY,
     );
     const cache = await db.load(this.CACHE_VERSION);
     if (cache) {
-      const dictionary = DomainDictionary.restoreFromProps(cache);
+      const dictionary = GameDictionary.restoreFromProps(cache);
       if (dictionary) return dictionary;
     }
-    const dictionary = DomainDictionary.create();
+    const dictionary = GameDictionary.create();
     db.save(this.CACHE_VERSION, dictionary[this.DICTIONARY_STORE_NAME]);
     return dictionary;
   }

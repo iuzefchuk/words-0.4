@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import DomainTile from '@/gui/components/shared/AppTile.vue';
+import GameTile from '@/gui/components/shared/AppTile.vue';
 import UseLoader from '@/gui/composables/UseLoader.ts';
 const props = defineProps({ isActive: { type: Boolean, required: true } });
 const emit = defineEmits(['derendered']);
@@ -12,7 +12,7 @@ const { isRendered } = loader;
     <div v-if="isRendered" class="loader">
       <div class="loader__logo">
         <template v-for="(letter, idx) in UseLoader.WORD" :key="idx">
-          <DomainTile
+          <GameTile
             v-if="loader.isItemRendered(idx)"
             class="loader__tile"
             :letter="letter"

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import DomainTile from '@/gui/components/shared/AppTile.vue';
+import GameTile from '@/gui/components/shared/AppTile.vue';
 import UseButtons from '@/gui/composables/UseButtons.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
@@ -20,7 +20,7 @@ const { allActionsAreDisabled } = buttons;
       :class="{ rack__cell: true, 'rack__cell--disabled': allActionsAreDisabled }"
       @click.stop="rackStore.handleClickFooterCell(idx)"
     >
-      <DomainTile
+      <GameTile
         v-if="rackStore.isTileVisible(tile)"
         :letter="matchStore.getTileLetter(tile)"
         :is-inverted="rackStore.isTileSelected(tile)"

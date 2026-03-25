@@ -1,24 +1,24 @@
 import type {
-  DomainCell,
-  DomainTile,
-  DomainConfig,
-  DomainTurnResolution,
-  DomainDictionaryProps,
+  GameCell,
+  GameTile,
+  GameConfig,
+  GameTurnResolution,
+  GameDictionaryProps,
 } from '@/domain/types.ts';
 import {
-  DomainBonus,
-  DomainEvent,
-  DomainLetter,
-  DomainPlayer,
-  DomainMatchResult,
-  DomainDictionary,
+  GameBonus,
+  GameEvent,
+  GameLetter,
+  GamePlayer,
+  GameMatchResult,
+  GameDictionary,
 } from '@/domain/types.ts';
 import { IdGenerator, Clock, Scheduler } from '@/shared/ports.ts';
 
-export type { DomainCell, DomainTile, DomainTurnResolution, DomainDictionaryProps };
-export { DomainBonus, DomainEvent, DomainLetter, DomainPlayer, DomainMatchResult, DomainDictionary };
+export type { GameCell, GameTile, GameTurnResolution, GameDictionaryProps };
+export { GameBonus, GameEvent, GameLetter, GamePlayer, GameMatchResult, GameDictionary };
 
-export type AppConfig = DomainConfig;
+export type AppConfig = GameConfig;
 
 export type AppState = {
   tilesRemaining: number;
@@ -29,13 +29,13 @@ export type AppState = {
   userScore: number;
   opponentScore: number;
   userPassWillBeResign: boolean;
-  userTiles: ReadonlyArray<DomainTile>;
+  userTiles: ReadonlyArray<GameTile>;
   turnResolutionHistory: ReadonlyArray<AppTurnResolution>;
-  matchResult?: DomainMatchResult;
+  matchResult?: GameMatchResult;
 };
 
 export type AppDependencies = {
-  dictionary: DomainDictionary;
+  dictionary: GameDictionary;
   idGenerator: IdGenerator;
   clock: Clock;
   scheduler: Scheduler;

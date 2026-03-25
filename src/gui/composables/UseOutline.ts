@@ -1,4 +1,4 @@
-import { DomainTile } from '@/application/types.ts';
+import { GameTile } from '@/application/types.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 
 type OutlineGroup = { row: number; col: number; rowSpan: number; colSpan: number };
@@ -6,7 +6,7 @@ type OutlineGroup = { row: number; col: number; rowSpan: number; colSpan: number
 type CellKey = number;
 
 export default class UseOutline {
-  createGroups(tiles: ReadonlyArray<DomainTile>): ReadonlyArray<OutlineGroup> {
+  createGroups(tiles: ReadonlyArray<GameTile>): ReadonlyArray<OutlineGroup> {
     const cells = this.collectCells(tiles);
     if (cells.size === 0) return [];
     const visited = new Set<CellKey>();
@@ -26,7 +26,7 @@ export default class UseOutline {
     return this.matchStore.boardCellsPerAxis;
   }
 
-  private collectCells(tiles: ReadonlyArray<DomainTile>): Set<CellKey> {
+  private collectCells(tiles: ReadonlyArray<GameTile>): Set<CellKey> {
     const cells = new Set<CellKey>();
     for (const tile of tiles) {
       const cell = this.matchStore.findCellWithTile(tile);

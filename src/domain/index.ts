@@ -7,17 +7,17 @@ import TurnTracker from '@/domain/models/TurnTracker.ts';
 import TurnGenerator, { GeneratorContext, GeneratorResult } from '@/domain/services/TurnGenerator.ts';
 import TurnValidator, { ValidatorContext } from '@/domain/services/TurnValidator.ts';
 import {
-  DomainCell,
-  DomainTile,
-  DomainPlayer,
-  DomainTurnResolutionType,
-  DomainState,
-  DomainConfig,
-  DomainMatchResult,
+  GameCell,
+  GameTile,
+  GamePlayer,
+  GameTurnResolutionType,
+  GameState,
+  GameConfig,
+  GameMatchResult,
 } from '@/domain/types.ts';
 import { IdGenerator } from '@/shared/ports.ts';
 
-export default class Domain {
+export default class Game {
   private static Events = class {
     private readonly events: Array<Event> = [];
 
@@ -32,7 +32,7 @@ export default class Domain {
     }
   };
 
-  private readonly events = new Domain.Events();
+  private readonly events = new Game.Events();
 
   private constructor(
     private readonly board: Board,
@@ -42,25 +42,25 @@ export default class Domain {
     private readonly turnTracker: TurnTracker,
   ) {}
 
-  static create(dictionary: Dictionary, idGenerator: IdGenerator): Domain {
+  static create(dictionary: Dictionary, idGenerator: IdGenerator): Game {
     const board = Board.create();
-    const players = Object.values(DomainPlayer);
+    const players = Object.values(GamePlayer);
     const inventory = Inventory.create(players, idGenerator);
     const matchTracker = MatchTracker.create(players);
     const turnTracker = TurnTracker.create(idGenerator);
-    const domain = new Domain(board, dictionary, inventory, matchTracker, turnTracker);
-    domain.startTurnForNextPlayer();
-    return domain;
+    const game = new Game(board, dictionary, inventory, matchTracker, turnTracker);
+    game.startTurnForNextPlayer();
+    return game;
   }
 
-  get config(): DomainConfig {
+  get config(): GameConfig {
     return {
       boardCells: this.board.cells,
       boardCellsPerAxis: this.board.cellsPerAxis,
     };
   }
 
-  get state(): DomainState {
+  get state(): GameState {
     return {
       unusedTilesCount: this.inventory.unusedTilesCount,
       matchIsFinished: this.matchTracker.matchIsFinished,
@@ -77,74 +77,74 @@ export default class Domain {
     };
   }
 
-  isCellCenter(cell: DomainCell): boolean {
+  isCellCenter(cell: GameCell): boolean {
     return this.board.isCellCenter(cell);
   }
 
-  getBonusForCell(cell: DomainCell): string | null {
+  getBonusForCell(cell: GameCell): string | null {
     return this.board.getBonusForCell(cell);
   }
 
-  findTileByCell(cell: DomainCell): DomainTile | undefined {
+  findTileByCell(cell: GameCell): GameTile | undefined {
     return this.board.findTileByCell(cell);
   }
 
-  findCellByTile(tile: DomainTile): DomainCell | undefined {
+  findCellByTile(tile: GameTile): GameCell | undefined {
     return this.board.findCellByTile(tile);
   }
 
-  isTilePlaced(tile: DomainTile): boolean {
+  isTilePlaced(tile: GameTile): boolean {
     return this.board.isTilePlaced(tile);
   }
 
-  getRowIndex(cell: DomainCell): number {
+  getRowIndex(cell: GameCell): number {
     return this.board.getRowIndex(cell);
   }
 
-  getColumnIndex(cell: DomainCell): number {
+  getColumnIndex(cell: GameCell): number {
     return this.board.getColumnIndex(cell);
   }
 
-  findTopRightCell(cells: ReadonlyArray<DomainCell>): DomainCell | undefined {
+  findTopRightCell(cells: ReadonlyArray<GameCell>): GameCell | undefined {
     return this.board.findTopRightCell(cells);
   }
 
-  areTilesEqual(firstTile: DomainTile, secondTile: DomainTile): boolean {
+  areTilesEqual(firstTile: GameTile, secondTile: GameTile): boolean {
     return this.inventory.areTilesEqual(firstTile, secondTile);
   }
 
-  getTileLetter(tile: DomainTile): string {
+  getTileLetter(tile: GameTile): string {
     return this.inventory.getTileLetter(tile);
   }
 
-  getTilesFor(player: DomainPlayer): ReadonlyArray<DomainTile> {
+  getTilesFor(player: GamePlayer): ReadonlyArray<GameTile> {
     return this.inventory.getTilesFor(player);
   }
 
-  hasTilesFor(player: DomainPlayer): boolean {
+  hasTilesFor(player: GamePlayer): boolean {
     return this.inventory.hasTilesFor(player);
   }
 
-  getMatchResultFor(player: DomainPlayer): DomainMatchResult | undefined {
+  getMatchResultFor(player: GamePlayer): GameMatchResult | undefined {
     return this.matchTracker.getResultFor(player);
   }
 
-  getScoreFor(player: DomainPlayer): number {
+  getScoreFor(player: GamePlayer): number {
     return this.turnTracker.getScoreFor(player);
   }
 
-  willPlayerPassBeResign(player: DomainPlayer): boolean {
+  willPlayerPassBeResign(player: GamePlayer): boolean {
     return this.turnTracker.willPlayerPassBeResign(player);
   }
 
-  placeTile({ cell, tile }: { cell: DomainCell; tile: DomainTile }): void {
+  placeTile({ cell, tile }: { cell: GameCell; tile: GameTile }): void {
     this.matchTracker.ensureMutability();
     this.board.placeTile(cell, tile);
     this.turnTracker.placeTileInCurrentTurn(tile);
     this.events.record(Event.TilePlaced);
   }
 
-  undoPlaceTile({ tile }: { tile: DomainTile }): void {
+  undoPlaceTile({ tile }: { tile: GameTile }): void {
     this.matchTracker.ensureMutability();
     this.turnTracker.undoPlaceTileInCurrentTurn({ tile });
     this.board.undoPlaceTile(tile);
@@ -173,11 +173,11 @@ export default class Domain {
     if (!this.state.currentTurnIsValid) throw new Error('Turn is not valid');
     const { currentPlayer: player, currentTurnTiles: tiles, currentTurnWords: words } = this.state;
     if (!words) throw new Error('Current turn words do not exist');
-    this.turnTracker.recordCurrentTurnResolution(DomainTurnResolutionType.Save);
-    tiles.forEach((tile: DomainTile) => this.inventory.discardTile({ player, tile }));
+    this.turnTracker.recordCurrentTurnResolution(GameTurnResolutionType.Save);
+    tiles.forEach((tile: GameTile) => this.inventory.discardTile({ player, tile }));
     this.inventory.replenishTilesFor(player);
     this.startTurnForNextPlayer();
-    const newEvent = player === DomainPlayer.User ? Event.UserTurnSaved : Event.OpponentTurnSaved;
+    const newEvent = player === GamePlayer.User ? Event.UserTurnSaved : Event.OpponentTurnSaved;
     this.events.record(newEvent);
     return { words };
   }
@@ -185,13 +185,13 @@ export default class Domain {
   passCurrentTurn(): void {
     const { currentPlayer: player } = this.state;
     this.matchTracker.ensureMutability();
-    this.turnTracker.recordCurrentTurnResolution(DomainTurnResolutionType.Pass);
+    this.turnTracker.recordCurrentTurnResolution(GameTurnResolutionType.Pass);
     this.startTurnForNextPlayer();
-    const newEvent = player === DomainPlayer.User ? Event.UserTurnPassed : Event.OpponentTurnPassed;
+    const newEvent = player === GamePlayer.User ? Event.UserTurnPassed : Event.OpponentTurnPassed;
     this.events.record(newEvent);
   }
 
-  async *generateTurnFor(player: DomainPlayer, yieldControl: () => Promise<void>): AsyncGenerator<GeneratorResult> {
+  async *generateTurnFor(player: GamePlayer, yieldControl: () => Promise<void>): AsyncGenerator<GeneratorResult> {
     const context = {
       board: Board.clone(this.board),
       dictionary: this.dictionary,
@@ -209,11 +209,11 @@ export default class Domain {
       this.events.record(Event.MatchTied);
     } else {
       this.completeMatch(leaderByScore, loserByScore);
-      this.events.record(leaderByScore === DomainPlayer.User ? Event.MatchWon : Event.MatchLost);
+      this.events.record(leaderByScore === GamePlayer.User ? Event.MatchWon : Event.MatchLost);
     }
   }
 
-  completeMatch(winner: DomainPlayer, loser: DomainPlayer): void {
+  completeMatch(winner: GamePlayer, loser: GamePlayer): void {
     this.matchTracker.recordCompletion(winner, loser);
   }
 

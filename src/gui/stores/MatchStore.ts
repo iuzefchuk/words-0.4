@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, markRaw, Ref, shallowRef } from 'vue';
 import Application from '@/application/index.ts';
-import { DomainCell, DomainTile, AppState, DomainMatchResult, DomainBonus, DomainLetter } from '@/application/types.ts';
+import { GameCell, GameTile, AppState, GameMatchResult, GameBonus, GameLetter } from '@/application/types.ts';
 import { BONUS_NAMES, EVENT_SOUNDS, LETTERS_SVG_HTML, MATCH_RESULT_TEXT } from '@/gui/constants.ts';
 import SoundPlayer from '@/gui/services/SoundPlayer.ts';
 
@@ -36,15 +36,15 @@ export default class MatchStore {
     this.commands = new MatchCommands(app, this.state);
   }
 
-  private getBonusName(bonus: DomainBonus): string {
+  private getBonusName(bonus: GameBonus): string {
     return window.t(BONUS_NAMES[bonus] ?? '');
   }
 
-  private getMatchResultText(result: DomainMatchResult): string {
+  private getMatchResultText(result: GameMatchResult): string {
     return window.t(MATCH_RESULT_TEXT[result] ?? '');
   }
 
-  private getLetterSvgHtml(letter: DomainLetter): string {
+  private getLetterSvgHtml(letter: GameLetter): string {
     return LETTERS_SVG_HTML[letter] ?? '';
   }
 }
@@ -100,17 +100,17 @@ class MatchQueries {
     private readonly state: MatchState,
   ) {}
 
-  findTileOnCell = (cell: DomainCell) => this.state.read(() => this.app.findTileByCell(cell));
-  findCellWithTile = (tile: DomainTile) => this.state.read(() => this.app.findCellByTile(tile));
-  isTilePlaced = (tile: DomainTile) => this.state.read(() => this.app.isTilePlaced(tile));
-  isCellTopRightInTurn = (cell: DomainCell) => this.state.read(() => this.app.isCellTopRightInTurn(cell));
-  wasTileUsedInPreviousTurn = (tile: DomainTile) => this.state.read(() => this.app.wasTileUsedInPreviousTurn(tile));
-  isCellInCenterOfLayout = (cell: DomainCell) => this.app.isCellInCenterOfLayout(cell);
-  getCellBonus = (cell: DomainCell) => this.app.getCellBonus(cell);
-  getCellRowIndex = (cell: DomainCell) => this.app.getCellRowIndex(cell);
-  getCellColumnIndex = (cell: DomainCell) => this.app.getCellColumnIndex(cell);
-  areTilesSame = (firstTile: DomainTile, secondTile: DomainTile) => this.app.areTilesSame(firstTile, secondTile);
-  getTileLetter = (tile: DomainTile) => this.app.getTileLetter(tile);
+  findTileOnCell = (cell: GameCell) => this.state.read(() => this.app.findTileByCell(cell));
+  findCellWithTile = (tile: GameTile) => this.state.read(() => this.app.findCellByTile(tile));
+  isTilePlaced = (tile: GameTile) => this.state.read(() => this.app.isTilePlaced(tile));
+  isCellTopRightInTurn = (cell: GameCell) => this.state.read(() => this.app.isCellTopRightInTurn(cell));
+  wasTileUsedInPreviousTurn = (tile: GameTile) => this.state.read(() => this.app.wasTileUsedInPreviousTurn(tile));
+  isCellInCenterOfLayout = (cell: GameCell) => this.app.isCellInCenterOfLayout(cell);
+  getCellBonus = (cell: GameCell) => this.app.getCellBonus(cell);
+  getCellRowIndex = (cell: GameCell) => this.app.getCellRowIndex(cell);
+  getCellColumnIndex = (cell: GameCell) => this.app.getCellColumnIndex(cell);
+  areTilesSame = (firstTile: GameTile, secondTile: GameTile) => this.app.areTilesSame(firstTile, secondTile);
+  getTileLetter = (tile: GameTile) => this.app.getTileLetter(tile);
 }
 
 class MatchCommands {
@@ -119,11 +119,11 @@ class MatchCommands {
     private readonly state: MatchState,
   ) {}
 
-  placeTile = (args: { cell: DomainCell; tile: DomainTile }): void => {
+  placeTile = (args: { cell: GameCell; tile: GameTile }): void => {
     return this.writeAndPlaySound(() => this.app.placeTile(args));
   };
 
-  undoPlaceTile = (tile: DomainTile): void => {
+  undoPlaceTile = (tile: GameTile): void => {
     return this.writeAndPlaySound(() => this.app.undoPlaceTile(tile));
   };
 
@@ -157,7 +157,7 @@ class MatchCommands {
   }
 
   private playPendingSounds(): void {
-    for (const event of this.app.clearAllDomainEvents()) {
+    for (const event of this.app.clearAllGameEvents()) {
       const sound = EVENT_SOUNDS[event];
       if (sound) SoundPlayer.play(sound);
     }

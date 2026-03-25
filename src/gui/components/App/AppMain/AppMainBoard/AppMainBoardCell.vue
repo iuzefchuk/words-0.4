@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { PropType, computed } from 'vue';
-import { DomainCell, DomainBonus } from '@/application/types.ts';
-import DomainTile from '@/gui/components/shared/AppTile.vue';
+import { GameCell, GameBonus } from '@/application/types.ts';
+import GameTile from '@/gui/components/shared/AppTile.vue';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
-const props = defineProps({ cell: { type: Number as unknown as PropType<DomainCell>, required: true } });
+const props = defineProps({ cell: { type: Number as unknown as PropType<GameCell>, required: true } });
 const matchStore = MatchStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
 const bonus = computed(() => matchStore.getCellBonus(props.cell));
@@ -27,10 +27,10 @@ const isTileSaturated = computed(() => tile.value != null && matchStore.wasTileU
         v-if="bonus"
         :class="{
           cell__bonus: true,
-          'cell__bonus--dw': bonus === DomainBonus.DoubleWord,
-          'cell__bonus--tw': bonus === DomainBonus.TripleWord,
-          'cell__bonus--dl': bonus === DomainBonus.DoubleLetter,
-          'cell__bonus--tl': bonus === DomainBonus.TripleLetter,
+          'cell__bonus--dw': bonus === GameBonus.DoubleWord,
+          'cell__bonus--tw': bonus === GameBonus.TripleWord,
+          'cell__bonus--dl': bonus === GameBonus.DoubleLetter,
+          'cell__bonus--tl': bonus === GameBonus.TripleLetter,
         }"
         class="cell__bonus"
         viewBox="0 0 40 40"
@@ -41,7 +41,7 @@ const isTileSaturated = computed(() => tile.value != null && matchStore.wasTileU
       </svg>
     </Transition>
     <Transition name="fade" appear>
-      <DomainTile
+      <GameTile
         v-if="tile"
         :letter="matchStore.getTileLetter(tile)"
         :is-inverted="rackStore.isTileSelected(tile)"

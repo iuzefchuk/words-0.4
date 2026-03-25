@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { shallowRef, ref, computed, triggerRef } from 'vue';
-import { DomainCell, DomainTile } from '@/application/types.ts';
+import { GameCell, GameTile } from '@/application/types.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
@@ -29,23 +29,23 @@ export default class RackStore {
 
   private constructor(
     private matchStore: ReturnType<typeof MatchStore.INSTANCE>,
-    private tilesRef = shallowRef<Array<DomainTile>>([]),
-    private selectedTileRef = ref<DomainTile | null>(null),
+    private tilesRef = shallowRef<Array<GameTile>>([]),
+    private selectedTileRef = ref<GameTile | null>(null),
   ) {}
 
-  private get tiles(): Array<DomainTile> {
+  private get tiles(): Array<GameTile> {
     return this.tilesRef.value;
   }
 
-  private set tiles(newValue: Array<DomainTile>) {
+  private set tiles(newValue: Array<GameTile>) {
     this.tilesRef.value = newValue;
   }
 
-  private get selectedTile(): DomainTile | null {
+  private get selectedTile(): GameTile | null {
     return this.selectedTileRef.value;
   }
 
-  private set selectedTile(newValue: DomainTile | null) {
+  private set selectedTile(newValue: GameTile | null) {
     this.selectedTileRef.value = newValue;
   }
 
@@ -57,7 +57,7 @@ export default class RackStore {
     return this.selectedTile !== null && this.matchStore.isTilePlaced(this.selectedTile);
   }
 
-  private initialize(userTiles: ReadonlyArray<DomainTile>): void {
+  private initialize(userTiles: ReadonlyArray<GameTile>): void {
     this.tiles = [...userTiles];
     this.selectedTile = null;
   }
@@ -71,23 +71,23 @@ export default class RackStore {
     this.selectedTile = null;
   }
 
-  private getTileIdx(tile: DomainTile): number {
+  private getTileIdx(tile: GameTile): number {
     return this.tiles.findIndex(item => this.matchStore.areTilesSame(item, tile));
   }
 
-  private isTileInRack(tile: DomainTile): boolean {
+  private isTileInRack(tile: GameTile): boolean {
     return this.getTileIdx(tile) !== -1;
   }
 
-  private isTileSelected(tile: DomainTile): boolean {
+  private isTileSelected(tile: GameTile): boolean {
     return this.selectedTile !== null && this.matchStore.areTilesSame(this.selectedTile, tile);
   }
 
-  private isTileVisible(tile: DomainTile): boolean {
+  private isTileVisible(tile: GameTile): boolean {
     return this.isTileInRack(tile) && !this.matchStore.isTilePlaced(tile);
   }
 
-  private switchTiles(firstTile: DomainTile, secondTile: DomainTile): void {
+  private switchTiles(firstTile: GameTile, secondTile: GameTile): void {
     const firstIdx = this.getTileIdx(firstTile);
     const secondIdx = this.getTileIdx(secondTile);
     if (firstIdx === -1 || secondIdx === -1) throw new Error('Can`t find tile indexes');
@@ -106,7 +106,7 @@ export default class RackStore {
     this.deselectTile();
   }
 
-  private handleClickFooterTile(tile: DomainTile): void {
+  private handleClickFooterTile(tile: GameTile): void {
     if (!this.selectedTile) {
       this.selectedTile = tile;
       return;
@@ -122,7 +122,7 @@ export default class RackStore {
     this.deselectTile();
   }
 
-  private handleClickBoardCell(cell: DomainCell): void {
+  private handleClickBoardCell(cell: GameCell): void {
     if (!this.selectedTile) return;
     const existingTile = this.matchStore.findTileOnCell(cell);
     if (existingTile) return;
@@ -131,13 +131,13 @@ export default class RackStore {
     this.deselectTile();
   }
 
-  private handleDoubleClickBoardTile(tile: DomainTile): void {
+  private handleDoubleClickBoardTile(tile: GameTile): void {
     if (!this.isTileInRack(tile)) return;
     this.deselectTile();
     this.matchStore.undoPlaceTile(tile);
   }
 
-  private handleClickBoardTile(tile: DomainTile): void {
+  private handleClickBoardTile(tile: GameTile): void {
     if (!this.isTileInRack(tile)) return;
     if (this.isTileSelected(tile)) {
       this.deselectTile();

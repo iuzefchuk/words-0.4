@@ -1,41 +1,41 @@
-import { Player as DomainPlayer, Event as DomainEvent, Letter as DomainLetter } from '@/domain/enums.ts';
-import type { default as Domain } from '@/domain/index.ts';
-import { Bonus as DomainBonus } from '@/domain/models/Board.ts';
-import type { CellIndex as DomainCell } from '@/domain/models/Board.ts';
-import { default as DomainDictionary } from '@/domain/models/Dictionary.ts';
-import type { DictionaryProps as DomainDictionaryProps } from '@/domain/models/Dictionary.ts';
-import type { TileId as DomainTile } from '@/domain/models/Inventory.ts';
-import { MatchResult as DomainMatchResult } from '@/domain/models/MatchTracker.ts';
-import { ResolutionType as DomainTurnResolutionType } from '@/domain/models/TurnTracker.ts';
-import type { Resolution as DomainTurnResolution } from '@/domain/models/TurnTracker.ts';
+import { Player as GamePlayer, Event as GameEvent, Letter as GameLetter } from '@/domain/enums.ts';
+import type { default as Game } from '@/domain/index.ts';
+import { Bonus as GameBonus } from '@/domain/models/Board.ts';
+import type { CellIndex as GameCell } from '@/domain/models/Board.ts';
+import { default as GameDictionary } from '@/domain/models/Dictionary.ts';
+import type { DictionaryProps as GameDictionaryProps } from '@/domain/models/Dictionary.ts';
+import type { TileId as GameTile } from '@/domain/models/Inventory.ts';
+import { MatchResult as GameMatchResult } from '@/domain/models/MatchTracker.ts';
+import { ResolutionType as GameTurnResolutionType } from '@/domain/models/TurnTracker.ts';
+import type { Resolution as GameTurnResolution } from '@/domain/models/TurnTracker.ts';
 
-export type { Domain, DomainCell, DomainDictionaryProps, DomainTile, DomainTurnResolution };
+export type { Game, GameCell, GameDictionaryProps, GameTile, GameTurnResolution };
 export {
-  DomainPlayer,
-  DomainEvent,
-  DomainLetter,
-  DomainBonus,
-  DomainDictionary,
-  DomainMatchResult,
-  DomainTurnResolutionType,
+  GamePlayer,
+  GameEvent,
+  GameLetter,
+  GameBonus,
+  GameDictionary,
+  GameMatchResult,
+  GameTurnResolutionType,
 };
 
-export type DomainConfig = {
-  readonly boardCells: ReadonlyArray<DomainCell>;
+export type GameConfig = {
+  readonly boardCells: ReadonlyArray<GameCell>;
   readonly boardCellsPerAxis: number;
 };
 
-export type DomainState = {
-  currentPlayer: DomainPlayer;
-  nextPlayer: DomainPlayer;
-  currentTurnCells?: ReadonlyArray<DomainCell>;
+export type GameState = {
+  currentPlayer: GamePlayer;
+  nextPlayer: GamePlayer;
+  currentTurnCells?: ReadonlyArray<GameCell>;
   currentTurnScore?: number;
   currentTurnWords?: ReadonlyArray<string>;
   currentTurnIsValid: boolean;
-  currentTurnTiles: ReadonlyArray<DomainTile>;
-  previousTurnTiles?: ReadonlyArray<DomainTile>;
+  currentTurnTiles: ReadonlyArray<GameTile>;
+  previousTurnTiles?: ReadonlyArray<GameTile>;
   hasPriorTurns: boolean;
-  turnResolutionHistory: ReadonlyArray<DomainTurnResolution>;
+  turnResolutionHistory: ReadonlyArray<GameTurnResolution>;
   unusedTilesCount: number;
   matchIsFinished: boolean;
 };

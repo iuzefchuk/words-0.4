@@ -1,10 +1,10 @@
 import { ref, watch, inject } from 'vue';
-import { DomainLetter } from '@/application/types.ts';
+import { GameLetter } from '@/application/types.ts';
 import UseCounter from '@/gui/composables/UseCounter.ts';
 import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
 
 export default class UseLoader {
-  static readonly WORD = [DomainLetter.W, DomainLetter.O, DomainLetter.R, DomainLetter.D, DomainLetter.S];
+  static readonly WORD = [GameLetter.W, GameLetter.O, GameLetter.R, GameLetter.D, GameLetter.S];
   readonly isRendered = ref(false);
 
   private constructor(
