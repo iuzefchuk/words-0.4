@@ -23,12 +23,13 @@ export default class UseButtons {
 
   handleShuffle(): void {
     this.rackStore.shuffle();
-    SoundPlayer.play(Sound.ActionMix);
+    SoundPlayer.play(Sound.SystemShuffle);
   }
 
   handleClear(): void {
     this.matchStore.resetTurn();
     this.rackStore.initialize();
+    SoundPlayer.play(Sound.SystemClear);
   }
 
   handlePlay(): void {
@@ -49,6 +50,7 @@ export default class UseButtons {
   }
 
   private async triggerResignDialog() {
+    SoundPlayer.play(Sound.SystemDialog);
     return await this.dialogStore.trigger({
       title: window.t('game.dialog_title'),
       html: window.t('game.dialog_html'),

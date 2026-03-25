@@ -15,15 +15,15 @@ export const MATCH_RESULT_TEXT: Record<GameMatchResult, string> = {
 };
 
 export const EVENT_SOUNDS: Partial<Record<GameEvent, Sound>> = {
-  [GameEvent.TilePlaced]: Sound.ActionNeutral,
-  [GameEvent.TileUndoPlaced]: Sound.ActionNeutralReverse,
-  [GameEvent.UserTurnSaved]: Sound.ActionGood,
-  [GameEvent.UserTurnPassed]: Sound.ActionBad,
-  [GameEvent.OpponentTurnSaved]: Sound.AltActionGood,
-  [GameEvent.OpponentTurnPassed]: Sound.AltActionBad,
-  [GameEvent.MatchWon]: Sound.EndGood,
-  [GameEvent.MatchTied]: Sound.EndNeutral,
-  [GameEvent.MatchLost]: Sound.EndBad,
+  [GameEvent.TilePlaced]: Sound.GameShortNeutral,
+  [GameEvent.TileUndoPlaced]: Sound.GameShortNeutralReverse,
+  [GameEvent.UserTurnSaved]: Sound.GameShortGood,
+  [GameEvent.UserTurnPassed]: Sound.GameShortBad,
+  [GameEvent.OpponentTurnSaved]: Sound.GameShortAltGood,
+  [GameEvent.OpponentTurnPassed]: Sound.GameShortAltBad,
+  [GameEvent.MatchWon]: Sound.GameLongGood,
+  [GameEvent.MatchTied]: Sound.GameLongNeutral,
+  [GameEvent.MatchLost]: Sound.GameLongBad,
 };
 
 export const LETTERS_SVG_HTML: Record<GameLetter, string> = {

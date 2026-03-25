@@ -1,59 +1,69 @@
 export enum Sound {
-  ActionGood = 'ActionGood',
-  ActionNeutral = 'ActionNeutral',
-  ActionNeutralReverse = 'ActionNeutralReverse',
-  ActionBad = 'ActionBad',
-  ActionMix = 'ActionMix',
-  AltActionGood = 'AltActionGood',
-  AltActionBad = 'AltActionBad',
-  EndGood = 'EndGood',
-  EndNeutral = 'EndNeutral',
-  EndBad = 'EndBad',
+  GameShortGood = 'GameShortGood',
+  GameShortNeutral = 'GameShortNeutral',
+  GameShortNeutralReverse = 'GameShortNeutralReverse',
+  GameShortBad = 'GameShortBad',
+  GameShortAltGood = 'GameShortAltGood',
+  GameShortAltBad = 'GameShortAltBad',
+  GameLongGood = 'GameLongGood',
+  GameLongNeutral = 'GameLongNeutral',
+  GameLongBad = 'GameLongBad',
+  SystemShuffle = 'SystemShuffle',
+  SystemClear = 'SystemClear',
+  SystemDialog = 'SystemDialog',
 }
 
 type Note = { frequency: number; duration: number; type: OscillatorType; gain: number; ramp?: number };
 
 export default class SoundPlayer {
   private static readonly NOTES: Record<Sound, ReadonlyArray<Note>> = {
-    [Sound.ActionGood]: [
+    [Sound.GameShortGood]: [
       { frequency: 523, duration: 0.08, type: 'sine', gain: 0.12 },
       { frequency: 659, duration: 0.1, type: 'sine', gain: 0.15 },
     ],
-    [Sound.ActionNeutral]: [{ frequency: 440, duration: 0.07, type: 'sine', gain: 0.12 }],
-    [Sound.ActionNeutralReverse]: [{ frequency: 330, duration: 0.07, type: 'sine', gain: 0.1 }],
-    [Sound.ActionBad]: [
+    [Sound.GameShortNeutral]: [{ frequency: 440, duration: 0.07, type: 'sine', gain: 0.12 }],
+    [Sound.GameShortNeutralReverse]: [{ frequency: 330, duration: 0.07, type: 'sine', gain: 0.1 }],
+    [Sound.GameShortBad]: [
       { frequency: 392, duration: 0.08, type: 'sine', gain: 0.12 },
       { frequency: 311, duration: 0.12, type: 'sine', gain: 0.14 },
     ],
-    [Sound.ActionMix]: [
-      { frequency: 554, duration: 0.04, type: 'sine', gain: 0.1 },
-      { frequency: 440, duration: 0.04, type: 'sine', gain: 0.1 },
-      { frequency: 622, duration: 0.04, type: 'sine', gain: 0.11 },
-      { frequency: 370, duration: 0.04, type: 'sine', gain: 0.1 },
-    ],
-    [Sound.AltActionGood]: [
+    [Sound.GameShortAltGood]: [
       { frequency: 220, duration: 0.1, type: 'triangle', gain: 0.1 },
       { frequency: 262, duration: 0.08, type: 'triangle', gain: 0.08 },
     ],
-    [Sound.AltActionBad]: [
+    [Sound.GameShortAltBad]: [
       { frequency: 262, duration: 0.1, type: 'triangle', gain: 0.1 },
       { frequency: 220, duration: 0.12, type: 'triangle', gain: 0.08 },
     ],
-    [Sound.EndGood]: [
+    [Sound.GameLongGood]: [
       { frequency: 523, duration: 0.12, type: 'square', gain: 0.06 },
       { frequency: 659, duration: 0.12, type: 'square', gain: 0.07 },
       { frequency: 784, duration: 0.12, type: 'square', gain: 0.08 },
       { frequency: 1047, duration: 0.2, type: 'square', gain: 0.09 },
     ],
-    [Sound.EndNeutral]: [
+    [Sound.GameLongNeutral]: [
       { frequency: 440, duration: 0.15, type: 'square', gain: 0.06 },
       { frequency: 523, duration: 0.15, type: 'square', gain: 0.06 },
       { frequency: 440, duration: 0.2, type: 'square', gain: 0.05 },
     ],
-    [Sound.EndBad]: [
+    [Sound.GameLongBad]: [
       { frequency: 370, duration: 0.15, type: 'square', gain: 0.06 },
       { frequency: 311, duration: 0.15, type: 'square', gain: 0.07 },
       { frequency: 262, duration: 0.25, type: 'square', gain: 0.08 },
+    ],
+    [Sound.SystemShuffle]: [
+      { frequency: 554, duration: 0.04, type: 'triangle', gain: 0.06 },
+      { frequency: 440, duration: 0.04, type: 'triangle', gain: 0.06 },
+      { frequency: 622, duration: 0.04, type: 'triangle', gain: 0.07 },
+      { frequency: 370, duration: 0.04, type: 'triangle', gain: 0.06 },
+    ],
+    [Sound.SystemClear]: [
+      { frequency: 660, duration: 0.06, type: 'triangle', gain: 0.06 },
+      { frequency: 660, duration: 0.06, type: 'triangle', gain: 0.05 },
+    ],
+    [Sound.SystemDialog]: [
+      { frequency: 880, duration: 0.05, type: 'triangle', gain: 0.05 },
+      { frequency: 440, duration: 0.08, type: 'triangle', gain: 0.06 },
     ],
   };
   private static readonly FADE_OUT_MS = 0.03;
