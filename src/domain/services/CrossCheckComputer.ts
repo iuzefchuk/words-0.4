@@ -1,5 +1,5 @@
 import { Letter } from '@/domain/enums.ts';
-import Board, { Axis, CellIndex, AnchorCoordinates } from '@/domain/models/Board.ts';
+import Board, { AnchorCoordinates, Axis, CellIndex } from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
 import Inventory from '@/domain/models/Inventory.ts';
 

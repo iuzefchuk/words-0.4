@@ -1,5 +1,5 @@
-import { Player, Letter } from '@/domain/enums.ts';
-import Board, { AnchorCoordinates, CellIndex, Axis, Link } from '@/domain/models/Board.ts';
+import { Letter, Player } from '@/domain/enums.ts';
+import Board, { AnchorCoordinates, Axis, CellIndex, Link } from '@/domain/models/Board.ts';
 import Dictionary, { NodeId } from '@/domain/models/Dictionary.ts';
 import Inventory, { TileCollection, TileId } from '@/domain/models/Inventory.ts';
 import TurnTracker, { ValidationStatus } from '@/domain/models/TurnTracker.ts';

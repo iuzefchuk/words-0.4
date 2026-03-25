@@ -1,7 +1,7 @@
-import pluginImport from 'eslint-plugin-import';
-import pluginVue from 'eslint-plugin-vue';
 import prettierConfig from '@vue/eslint-config-prettier';
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
+import pluginImport from 'eslint-plugin-import';
+import pluginVue from 'eslint-plugin-vue';
 
 export default defineConfigWithVueTs([
   {
@@ -14,6 +14,7 @@ export default defineConfigWithVueTs([
       import: pluginImport,
     },
     rules: {
+      'sort-imports': ['error', { ignoreDeclarationSort: true, ignoreMemberSort: false }],
       'import/order': [
         'error',
         {

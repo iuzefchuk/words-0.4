@@ -33,7 +33,8 @@ export default class Dictionary {
   }
 
   static restoreFromProps(props: DictionaryProps): Dictionary | null {
-    if (!props.rootNode || typeof props.rootNode.id !== 'number' || typeof props.rootNode.isFinal !== 'boolean') return null;
+    if (!props.rootNode || typeof props.rootNode.id !== 'number' || typeof props.rootNode.isFinal !== 'boolean')
+      return null;
     if (!(props.rootNode.children instanceof Map)) return null;
     this.freezeTree(props.rootNode);
     const nodeById = new Map<NodeId, FrozenNode>();

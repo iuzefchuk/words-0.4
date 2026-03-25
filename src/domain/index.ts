@@ -5,16 +5,16 @@ import Inventory from '@/domain/models/Inventory.ts';
 import MatchTracker from '@/domain/models/MatchTracker.ts';
 import TurnTracker from '@/domain/models/TurnTracker.ts';
 import CurrentTurnValidator, { ValidatorContext } from '@/domain/services/CurrentTurnValidator.ts';
-import TurnGenerator, { GeneratorContext, GeneratorResult } from '@/domain/services/TurnGenerator.ts';
+import { GeneratorContext } from '@/domain/services/TurnGenerator.ts';
 import {
-  GameCell,
   GameBoardView,
-  GameTile,
-  GamePlayer,
-  GameTurnResolutionType,
+  GameCell,
   GameInventoryView,
-  GameTurnView,
   GameMatchView,
+  GamePlayer,
+  GameTile,
+  GameTurnResolutionType,
+  GameTurnView,
 } from '@/domain/types.ts';
 import { IdGenerator } from '@/shared/ports.ts';
 
@@ -107,24 +107,21 @@ export default class Game {
     this.events.record(player === GamePlayer.User ? Event.UserTurnPassed : Event.OpponentTurnPassed);
   }
 
-  async *generateTurnFor(player: GamePlayer, yieldControl: () => Promise<void>): AsyncGenerator<GeneratorResult> {
-    yield* TurnGenerator.execute(
-      {
-        board: Board.clone(this.board),
-        dictionary: this.dictionary,
-        inventory: this.inventory,
-        turnTracker: this.turnTracker,
-        yieldControl,
-      } as GeneratorContext,
-      player,
-    );
+  createGeneratorContext(yieldControl: () => Promise<void>): GeneratorContext {
+    return {
+      board: Board.clone(this.board),
+      dictionary: this.dictionary,
+      inventory: this.inventory,
+      turnTracker: this.turnTracker,
+      yieldControl,
+    };
   }
 
   startTurnForNextPlayer(): void {
     this.turnTracker.createNewTurnFor(this.turnTracker.nextPlayer);
   }
 
-  endMatchByScore(): void {
+  finishMatchByScore(): void {
     const { leaderByScore, loserByScore } = this.turnTracker;
     if (leaderByScore === null || loserByScore === null) {
       this.tieMatch();

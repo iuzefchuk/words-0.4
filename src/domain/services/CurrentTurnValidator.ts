@@ -2,16 +2,16 @@ import Board, { AnchorCoordinates, Placement } from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
 import Inventory from '@/domain/models/Inventory.ts';
 import TurnTracker, {
-  ValidationStatus,
-  ValidationError,
-  ComputedValue,
   ComputedCells,
   ComputedPlacements,
-  ComputedWords,
   ComputedScore,
-  ValidationResult,
+  ComputedValue,
+  ComputedWords,
   InvalidResult,
   ValidResult,
+  ValidationError,
+  ValidationResult,
+  ValidationStatus,
 } from '@/domain/models/TurnTracker.ts';
 import PlacementBuilder from '@/domain/services/PlacementBuilder.ts';
 import ScoreCalculator from '@/domain/services/ScoreCalculator.ts';

@@ -1,4 +1,4 @@
-import { GameBonus, GameMatchResult, GameEvent, GameLetter } from '@/domain/types.ts';
+import { GameBonus, GameEvent, GameLetter, GameMatchResult } from '@/domain/types.ts';
 import { Sound } from '@/gui/services/SoundPlayer.ts';
 
 export const BONUS_NAMES: Record<GameBonus, string> = {

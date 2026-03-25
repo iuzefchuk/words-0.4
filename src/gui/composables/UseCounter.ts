@@ -1,4 +1,4 @@
-import { ref, onUnmounted } from 'vue';
+import { onUnmounted, ref } from 'vue';
 
 export default class UseCounter {
   private readonly valueRef = ref(0);

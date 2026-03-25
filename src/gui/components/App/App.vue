@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { onMounted, ref, inject, watch } from 'vue';
+import { inject, onMounted, ref, watch } from 'vue';
 import AppDialog from '@/gui/components/App/AppDialog.vue';
 import AppEndscreen from '@/gui/components/App/AppEndscreen.vue';
 import AppLoader from '@/gui/components/App/AppLoader.vue';

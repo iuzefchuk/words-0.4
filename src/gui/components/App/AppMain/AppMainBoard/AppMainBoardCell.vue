@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { PropType, computed } from 'vue';
-import { GameCell, GameBonus } from '@/application/types.ts';
+import { GameBonus, GameCell } from '@/application/types.ts';
 import GameTile from '@/gui/components/shared/AppTile.vue';
 import { getBonusName } from '@/gui/mappings.ts';
 import MatchStore from '@/gui/stores/MatchStore.ts';

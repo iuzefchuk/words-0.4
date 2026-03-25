@@ -1,4 +1,4 @@
-import { App, ref, watch, Ref } from 'vue';
+import { App, Ref, ref, watch } from 'vue';
 
 enum NumberSeparatorType {
   Dot = 'de-DE',

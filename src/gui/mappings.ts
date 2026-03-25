@@ -1,5 +1,5 @@
-import { GameBonus, GameMatchResult, GameLetter } from '@/domain/types.ts';
-import { BONUS_NAMES, MATCH_RESULT_TEXT, LETTERS_SVG_HTML } from '@/gui/constants.ts';
+import { GameBonus, GameLetter, GameMatchResult } from '@/domain/types.ts';
+import { BONUS_NAMES, LETTERS_SVG_HTML, MATCH_RESULT_TEXT } from '@/gui/constants.ts';
 
 export function getBonusName(bonus: GameBonus): string {
   return window.t(BONUS_NAMES[bonus] ?? '');

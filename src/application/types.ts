@@ -1,23 +1,26 @@
 import type {
-  GameCell,
   GameBoardView,
-  GameTile,
-  GameInventoryView,
-  GameTurnResolution,
+  GameCell,
   GameDictionaryProps,
+  GameGeneratorContext,
+  GameGeneratorResult,
+  GameInventoryView,
   GameMatchView,
+  GameTile,
+  GameTurnResolution,
   GameTurnView,
 } from '@/domain/types.ts';
 import {
   GameBonus,
+  GameDictionary,
   GameEvent,
   GameLetter,
-  GamePlayer,
   GameMatchResult,
+  GamePlayer,
+  GameTurnGenerator,
   GameTurnResolutionType,
-  GameDictionary,
 } from '@/domain/types.ts';
-import { IdGenerator, Clock, Scheduler } from '@/shared/ports.ts';
+import { Clock, IdGenerator, Scheduler } from '@/shared/ports.ts';
 
 export type {
   GameCell,
@@ -28,29 +31,37 @@ export type {
   GameDictionaryProps,
   GameMatchView,
   GameTurnView,
+  GameGeneratorContext,
+  GameGeneratorResult,
 };
-export { GameBonus, GameEvent, GameLetter, GamePlayer, GameMatchResult, GameTurnResolutionType, GameDictionary };
+export {
+  GameBonus,
+  GameEvent,
+  GameLetter,
+  GamePlayer,
+  GameMatchResult,
+  GameTurnResolutionType,
+  GameDictionary,
+  GameTurnGenerator,
+};
 
 export type AppConfig = {
   boardCells: ReadonlyArray<GameCell>;
   boardCellsPerAxis: number;
 };
 
-export type AppState = {
-  tilesRemaining: number;
-  userTiles: ReadonlyArray<GameTile>;
-  userScore: number;
-  opponentScore: number;
-  currentPlayerIsUser: boolean;
-  currentTurnScore?: number;
-  currentTurnIsValid: boolean;
-  userPassWillBeResign: boolean;
-  turnResolutionHistory: ReadonlyArray<AppTurnResolution>;
-  matchIsFinished: boolean;
-  matchResult?: GameMatchResult;
-};
-
 export type AppQueries = {
+  getTilesRemaining: () => number;
+  getUserTiles: () => ReadonlyArray<GameTile>;
+  getUserScore: () => number;
+  getOpponentScore: () => number;
+  isCurrentPlayerUser: () => boolean;
+  getCurrentTurnScore: () => number | undefined;
+  isCurrentTurnValid: () => boolean;
+  willUserPassBeResign: () => boolean;
+  getTurnResolutionHistory: () => ReadonlyArray<AppTurnResolution>;
+  isMatchFinished: () => boolean;
+  getMatchResult: () => GameMatchResult | undefined;
   areTilesSame: (firstTile: GameTile, secondTile: GameTile) => boolean;
   getTileLetter: (tile: GameTile) => GameLetter;
   isCellCenter: (cell: GameCell) => boolean;
@@ -62,6 +73,16 @@ export type AppQueries = {
   isTilePlaced: (tile: GameTile) => boolean;
   isCellTopRightInCurrentTurn: (cell: GameCell) => boolean;
   wasTileUsedInPreviousTurn: (tile: GameTile) => boolean;
+};
+
+export type AppCommands = {
+  placeTile: (args: { cell: GameCell; tile: GameTile }) => void;
+  undoPlaceTile: (tile: GameTile) => void;
+  clearTiles: () => void;
+  handleSaveTurn: () => { userResponse: AppTurnResponse; opponentTurn?: Promise<AppTurnResponse> };
+  handlePassTurn: () => { opponentTurn?: Promise<AppTurnResponse> };
+  handleResignMatch: () => void;
+  clearAllGameEvents: () => Array<GameEvent>;
 };
 
 export type AppDependencies = {

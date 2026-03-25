@@ -1,4 +1,4 @@
-import { ref, watch, inject } from 'vue';
+import { inject, ref, watch } from 'vue';
 import { GameLetter } from '@/application/types.ts';
 import UseCounter from '@/gui/composables/UseCounter.ts';
 import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';

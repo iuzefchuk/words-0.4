@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { ref, inject, watch } from 'vue';
+import { inject, ref, watch } from 'vue';
 import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
 import DialogStore, { DialogStatus } from '@/gui/stores/DialogStore.ts';
 const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY);
