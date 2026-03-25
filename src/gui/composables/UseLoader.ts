@@ -21,10 +21,6 @@ export default class UseLoader {
     return loader;
   }
 
-  isItemVisible(idx: number): boolean {
-    return this.step > idx && this.isBuildingPhase;
-  }
-
   isItemEmphasized(): boolean {
     return this.isEmphasizedPhase;
   }
@@ -52,6 +48,10 @@ export default class UseLoader {
 
   private get isFinishedPhase(): boolean {
     return this.step > this.lettersLength + 1;
+  }
+
+  private isItemVisible(idx: number): boolean {
+    return this.step > idx && this.isBuildingPhase;
   }
 
   private initRenderWatcher(): void {

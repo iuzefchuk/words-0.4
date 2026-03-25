@@ -35,7 +35,7 @@ export type GeneratorContext = {
   yieldControl: () => Promise<void>;
 };
 
-export type GeneratorArguments = {
+type GeneratorArguments = {
   context: GeneratorContext;
   lettersComputer: CrossCheckComputer;
   playerTileCollection: TileCollection;
@@ -44,23 +44,23 @@ export type GeneratorArguments = {
 
 export type GeneratorResult = { tiles: ReadonlyArray<TileId>; cells: ReadonlyArray<CellIndex> };
 
-export type Traversal = { position: number; direction: GenerationDirection; node: NodeId };
+type Traversal = { position: number; direction: GenerationDirection; node: NodeId };
 
-export type Candidate = { position: number; cell: CellIndex; resolution?: Resolution };
+type Candidate = { position: number; cell: CellIndex; resolution?: Resolution };
 
-export type Resolution = { tile: TileId };
+type Resolution = { tile: TileId };
 
-export type ResolutionComputeds = { letterTiles: Array<TileId> };
+type ResolutionComputeds = { letterTiles: Array<TileId> };
 
-export type EvaluateTask = { type: GenerationTask.EvaluateTraversal; traversal: Traversal };
+type EvaluateTask = { type: GenerationTask.EvaluateTraversal; traversal: Traversal };
 
-export type ValidateTask = { type: GenerationTask.ValidateTraversal; traversal: Traversal };
+type ValidateTask = { type: GenerationTask.ValidateTraversal; traversal: Traversal };
 
-export type CalculateTask = { type: GenerationTask.CalculateCandidate; traversal: Traversal };
+type CalculateTask = { type: GenerationTask.CalculateCandidate; traversal: Traversal };
 
-export type ResolveTask = { type: GenerationTask.ResolveCandidate; traversal: Traversal; candidate: Candidate };
+type ResolveTask = { type: GenerationTask.ResolveCandidate; traversal: Traversal; candidate: Candidate };
 
-export type ApplyTask = {
+type ApplyTask = {
   type: GenerationTask.ApplyResolution;
   traversal: Traversal;
   candidate: Candidate;
@@ -68,28 +68,28 @@ export type ApplyTask = {
   resolutionComputeds: ResolutionComputeds;
 };
 
-export type ReverseTask = {
+type ReverseTask = {
   type: GenerationTask.ReverseResolution;
   traversal: Traversal;
   resolution: Resolution;
   resolutionComputeds: ResolutionComputeds;
 };
 
-export type Task = EvaluateTask | ValidateTask | CalculateTask | ResolveTask | ApplyTask | ReverseTask;
+type Task = EvaluateTask | ValidateTask | CalculateTask | ResolveTask | ApplyTask | ReverseTask;
 
-export type ContinueTaskCommand = { type: GenerationCommandType.ContinueExecute; newTasks: Array<Task> };
+type ContinueTaskCommand = { type: GenerationCommandType.ContinueExecute; newTasks: Array<Task> };
 
-export type ReturnTaskCommand = { type: GenerationCommandType.ReturnResult; result: GeneratorResult };
+type ReturnTaskCommand = { type: GenerationCommandType.ReturnResult; result: GeneratorResult };
 
-export type StopTaskCommand = { type: GenerationCommandType.StopExecute };
+type StopTaskCommand = { type: GenerationCommandType.StopExecute };
 
-export type TaskCommand = ContinueTaskCommand | ReturnTaskCommand | StopTaskCommand;
+type TaskCommand = ContinueTaskCommand | ReturnTaskCommand | StopTaskCommand;
 
-export type MutableTileCollection = Map<Letter, Array<TileId>>;
+type MutableTileCollection = Map<Letter, Array<TileId>>;
 
-export type DispatcherState = { tiles: MutableTileCollection; placement: Array<Link> };
+type DispatcherState = { tiles: MutableTileCollection; placement: Array<Link> };
 
-export type DispatcherComputeds = { axisCells: ReadonlyArray<CellIndex>; oppositeAxis: Axis };
+type DispatcherComputeds = { axisCells: ReadonlyArray<CellIndex>; oppositeAxis: Axis };
 
 export default class TurnGenerator {
   private static readonly YIELD_INTERVAL = 100;
@@ -347,7 +347,7 @@ export default class TurnGenerator {
     }
   }
 
-  static async *generate(args: GeneratorArguments): AsyncGenerator<GeneratorResult> {
+  private static async *generate(args: GeneratorArguments): AsyncGenerator<GeneratorResult> {
     const { context, coords } = args;
     const { dictionary } = context;
     const dispatcher = TurnGenerator.TaskDispatcher.create(args);

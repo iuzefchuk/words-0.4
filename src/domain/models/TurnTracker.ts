@@ -83,10 +83,6 @@ export default class TurnTracker {
     return this.currentTurn.cells;
   }
 
-  get currentTurnError(): ValidationError | undefined {
-    return this.currentTurn.error;
-  }
-
   get currentTurnScore(): number | undefined {
     return this.currentTurn.score;
   }

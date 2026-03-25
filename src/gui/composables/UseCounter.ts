@@ -12,18 +12,6 @@ export default class UseCounter {
     return this.valueRef.value;
   }
 
-  set value(newValue: number) {
-    this.valueRef.value = newValue;
-  }
-
-  startCounter(callback = () => {}): void {
-    this.stopCounter();
-    this.interval = setInterval(() => {
-      this.value++;
-      callback();
-    }, this.intervalMs);
-  }
-
   restartCounter(callback = () => {}): void {
     this.value = 0;
     this.startCounter(callback);
@@ -32,5 +20,17 @@ export default class UseCounter {
   stopCounter(): void {
     if (this.interval) clearInterval(this.interval);
     this.interval = null;
+  }
+
+  private set value(newValue: number) {
+    this.valueRef.value = newValue;
+  }
+
+  private startCounter(callback = () => {}): void {
+    this.stopCounter();
+    this.interval = setInterval(() => {
+      this.value++;
+      callback();
+    }, this.intervalMs);
   }
 }

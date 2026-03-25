@@ -56,7 +56,7 @@ export default class Inventory {
   }
 
   static create(players: ReadonlyArray<Player>, idGenerator: IdGenerator): Inventory {
-    const tiles = this.shuffleTilesWithFisherYates(
+    const tiles = shuffleWithFisherYates(
       Object.values(Letter).flatMap(letter =>
         Array.from({ length: Inventory.LETTER_CONFIG[letter].distribution }, () =>
           Tile.create({ letter, idGenerator }),
@@ -70,10 +70,6 @@ export default class Inventory {
     );
     const discardPool = TilePool.create();
     return new Inventory(drawPool, poolByPlayer, discardPool, tileById);
-  }
-
-  static shuffleTilesWithFisherYates(tiles: Array<Tile>): Array<Tile> {
-    return shuffleWithFisherYates(tiles);
   }
 
   get unusedTilesCount(): number {

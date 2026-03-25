@@ -3,8 +3,6 @@ import type {
   GameCell,
   GameDictionaryProps,
   GameEvent,
-  GameGeneratorContext,
-  GameGeneratorResult,
   GameInventoryView,
   GameMatchView,
   GameTile,
@@ -30,8 +28,6 @@ export type {
   GameDictionaryProps,
   GameMatchView,
   GameTurnView,
-  GameGeneratorContext,
-  GameGeneratorResult,
 };
 export { GameBonus, GameEventType, GameLetter, GamePlayer, GameMatchResult, GameDictionary, GameTurnGenerator };
 

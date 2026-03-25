@@ -3,7 +3,7 @@ import { Letter } from '@/domain/enums.ts';
 
 export type NodeId = number;
 
-export type NextNodeGenerator = Generator<[Letter, NodeId]>;
+type NextNodeGenerator = Generator<[Letter, NodeId]>;
 
 export type DictionaryProps = {
   rootNode: FrozenNode;
@@ -55,11 +55,6 @@ export default class Dictionary {
     return words.every(word => this.containsWord(word));
   }
 
-  containsWord(word: string): boolean {
-    const node = this.findNodeForWord(word);
-    return node?.isFinal || false;
-  }
-
   getNode(word: string, startNode: NodeId = this.firstNode): NodeId | null {
     const node = this.findNodeForWord(word, startNode);
     return node ? node.id : null;
@@ -99,6 +94,11 @@ export default class Dictionary {
 
   private get nodeById(): ReadonlyMap<NodeId, FrozenNode> {
     return this.props.nodeById;
+  }
+
+  private containsWord(word: string): boolean {
+    const node = this.findNodeForWord(word);
+    return node?.isFinal || false;
   }
 
   private findNodeForWord(word: string, startNodeId: NodeId = this.rootNode.id): FrozenNode | null {

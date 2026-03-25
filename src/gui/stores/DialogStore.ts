@@ -7,7 +7,7 @@ export enum DialogStatus {
   Confirmed = 'Confirmed',
 }
 
-export type DialogTriggerParams = {
+type DialogTriggerParams = {
   title: string;
   html: string;
   cancelText?: string;
@@ -16,7 +16,7 @@ export type DialogTriggerParams = {
   confirmIsHidden?: boolean;
 };
 
-export type DialogResult = {
+type DialogResult = {
   isDismissed: boolean;
   isCanceled: boolean;
   isConfirmed: boolean;

@@ -18,23 +18,23 @@ import ScoreCalculator from '@/domain/services/ScoreCalculator.ts';
 
 export type ValidatorContext = { board: Board; dictionary: Dictionary; inventory: Inventory; turnTracker: TurnTracker };
 
-export type PendingResult<State> = { status: ValidationStatus.Pending; state: State };
+type PendingResult<State> = { status: ValidationStatus.Pending; state: State };
 
-export type PipelineInput = { context: ValidatorContext };
+type PipelineInput = { context: ValidatorContext };
 
-export type PipelineThroughput<State> = PendingResult<State> | InvalidResult;
+type PipelineThroughput<State> = PendingResult<State> | InvalidResult;
 
-export type PipelineState<Output extends ComputedValue> = PipelineInput & Output;
+type PipelineState<Output extends ComputedValue> = PipelineInput & Output;
 
-export type PipelineOutput = InvalidResult | ValidResult;
+type PipelineOutput = InvalidResult | ValidResult;
 
-export type SequencesOutput = ComputedCells;
+type SequencesOutput = ComputedCells;
 
-export type ComputedTilesOutput = SequencesOutput & ComputedPlacements;
+type ComputedTilesOutput = SequencesOutput & ComputedPlacements;
 
-export type WordsOutput = ComputedTilesOutput & ComputedWords;
+type WordsOutput = ComputedTilesOutput & ComputedWords;
 
-export type ScoreOutput = WordsOutput & ComputedScore;
+type ScoreOutput = WordsOutput & ComputedScore;
 
 export default class CurrentTurnValidator {
   private static Pipeline = class Pipeline<State extends PipelineInput> {

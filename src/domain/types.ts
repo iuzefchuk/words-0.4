@@ -8,10 +8,6 @@ import type { InventoryView as GameInventoryView, TileId as GameTile } from '@/d
 import { MatchResult as GameMatchResult } from '@/domain/models/MatchTracker.ts';
 import type { MatchView as GameMatchView } from '@/domain/models/MatchTracker.ts';
 import type { TurnView as GameTurnView } from '@/domain/models/TurnTracker.ts';
-import type {
-  GeneratorContext as GameGeneratorContext,
-  GeneratorResult as GameGeneratorResult,
-} from '@/domain/services/TurnGenerator.ts';
 import { default as GameTurnGenerator } from '@/domain/services/TurnGenerator.ts';
 
 export type GameEvent =
@@ -25,17 +21,7 @@ export type GameEvent =
   | { type: GameEventType.MatchTied }
   | { type: GameEventType.MatchLost };
 
-export type {
-  Game,
-  GameCell,
-  GameBoardView,
-  GameDictionaryProps,
-  GameTile,
-  GameInventoryView,
-  GameTurnView,
-  GameGeneratorContext,
-  GameGeneratorResult,
-};
+export type { Game, GameCell, GameBoardView, GameDictionaryProps, GameTile, GameInventoryView, GameTurnView };
 export {
   GamePlayer,
   GameEventType,

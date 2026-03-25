@@ -127,10 +127,6 @@ export default class Game {
     };
   }
 
-  startTurnForNextPlayer(): void {
-    this.turnTracker.createNewTurnFor(this.turnTracker.nextPlayer);
-  }
-
   finishMatchByScore(): void {
     const { leaderByScore, loserByScore } = this.turnTracker;
     if (leaderByScore === null || loserByScore === null) {
@@ -140,14 +136,6 @@ export default class Game {
     }
     this.completeMatch(leaderByScore, loserByScore);
     this.events.record({ type: leaderByScore === GamePlayer.User ? GameEventType.MatchWon : GameEventType.MatchLost });
-  }
-
-  completeMatch(winner: GamePlayer, loser: GamePlayer): void {
-    this.matchTracker.recordCompletion(winner, loser);
-  }
-
-  tieMatch(): void {
-    this.matchTracker.recordTie(this.turnView.currentPlayer, this.turnView.nextPlayer);
   }
 
   resignMatch(): void {
@@ -165,6 +153,18 @@ export default class Game {
 
   clearAllEvents(): Array<GameEvent> {
     return this.events.clearAll();
+  }
+
+  private startTurnForNextPlayer(): void {
+    this.turnTracker.createNewTurnFor(this.turnTracker.nextPlayer);
+  }
+
+  private completeMatch(winner: GamePlayer, loser: GamePlayer): void {
+    this.matchTracker.recordCompletion(winner, loser);
+  }
+
+  private tieMatch(): void {
+    this.matchTracker.recordTie(this.turnView.currentPlayer, this.turnView.nextPlayer);
   }
 }
 

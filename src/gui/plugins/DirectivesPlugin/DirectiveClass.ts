@@ -9,6 +9,7 @@ export default abstract class Directive<DirectiveHtmlElement extends HTMLElement
 
   get directive(): ObjectDirective<DirectiveHtmlElement, BindingValue> {
     return {
+      beforeMount: this.beforeMount?.bind(this),
       mounted: this.mounted?.bind(this),
       beforeUpdate: this.beforeUpdate?.bind(this),
       updated: this.updated?.bind(this),
