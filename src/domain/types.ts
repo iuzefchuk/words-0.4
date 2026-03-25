@@ -10,15 +10,7 @@ import { ResolutionType as GameTurnResolutionType } from '@/domain/models/TurnTr
 import type { Resolution as GameTurnResolution } from '@/domain/models/TurnTracker.ts';
 
 export type { Game, GameCell, GameDictionaryProps, GameTile, GameTurnResolution };
-export {
-  GamePlayer,
-  GameEvent,
-  GameLetter,
-  GameBonus,
-  GameDictionary,
-  GameMatchResult,
-  GameTurnResolutionType,
-};
+export { GamePlayer, GameEvent, GameLetter, GameBonus, GameDictionary, GameMatchResult, GameTurnResolutionType };
 
 export type GameConfig = {
   readonly boardCells: ReadonlyArray<GameCell>;

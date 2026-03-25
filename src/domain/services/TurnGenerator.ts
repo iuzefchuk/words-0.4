@@ -4,7 +4,7 @@ import Dictionary, { NodeId } from '@/domain/models/Dictionary.ts';
 import Inventory, { TileCollection, TileId } from '@/domain/models/Inventory.ts';
 import TurnTracker, { ValidationStatus } from '@/domain/models/TurnTracker.ts';
 import CrossCheckComputer from '@/domain/services/CrossCheckComputer.ts';
-import TurnValidator, { ValidatorContext } from '@/domain/services/TurnValidator.ts';
+import CurrentTurnValidator, { ValidatorContext } from '@/domain/services/TurnValidator.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 enum GenerationDirection {
@@ -213,7 +213,9 @@ export default class TurnGenerator {
       if (traversal.direction === GenerationDirection.Right && placementIsUsable) {
         const placement = [...this.placement];
         const tiles = placement.map(link => link.tile);
-        const validationResult = TurnValidator.execute(this.context as ValidatorContext, tiles);
+        for (const tile of tiles) this.context.turnTracker.placeTileInCurrentTurn(tile);
+        const validationResult = CurrentTurnValidator.execute(this.context as ValidatorContext);
+        for (const tile of tiles) this.context.turnTracker.undoPlaceTileInCurrentTurn({ tile });
         if (validationResult.status === ValidationStatus.Valid) {
           for (const link of placement) this.board.undoPlaceTile(link.tile);
           return this.emitReturn({ tiles, cells: placement.map(link => link.cell) });

@@ -5,7 +5,7 @@ import Inventory from '@/domain/models/Inventory.ts';
 import MatchTracker from '@/domain/models/MatchTracker.ts';
 import TurnTracker from '@/domain/models/TurnTracker.ts';
 import TurnGenerator, { GeneratorContext, GeneratorResult } from '@/domain/services/TurnGenerator.ts';
-import TurnValidator, { ValidatorContext } from '@/domain/services/TurnValidator.ts';
+import CurrentTurnValidator, { ValidatorContext } from '@/domain/services/TurnValidator.ts';
 import {
   GameCell,
   GameTile,
@@ -164,7 +164,7 @@ export default class Game {
       inventory: this.inventory,
       turnTracker: this.turnTracker,
     } as ValidatorContext;
-    const result = TurnValidator.execute(context, this.state.currentTurnTiles);
+    const result = CurrentTurnValidator.execute(context);
     this.turnTracker.setCurrentTurnValidation(result);
   }
 

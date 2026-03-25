@@ -1,6 +1,6 @@
 import Board, { AnchorCoordinates, Placement } from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
-import Inventory, { TileId } from '@/domain/models/Inventory.ts';
+import Inventory from '@/domain/models/Inventory.ts';
 import TurnTracker, {
   ValidationStatus,
   ValidationError,
@@ -18,11 +18,9 @@ import ScoreCalculator from '@/domain/services/ScoreCalculator.ts';
 
 export type ValidatorContext = { board: Board; dictionary: Dictionary; inventory: Inventory; turnTracker: TurnTracker };
 
-export type ValidatorArguments = { tiles: ReadonlyArray<TileId> };
-
 export type PendingResult<State> = { status: ValidationStatus.Pending; state: State };
 
-export type PipelineInput = { context: ValidatorContext } & ValidatorArguments;
+export type PipelineInput = { context: ValidatorContext };
 
 export type PipelineThroughput<State> = PendingResult<State> | InvalidResult;
 
@@ -38,12 +36,12 @@ export type WordsOutput = ComputedTilesOutput & ComputedWords;
 
 export type ScoreOutput = WordsOutput & ComputedScore;
 
-export default class TurnValidator {
+export default class CurrentTurnValidator {
   private static Pipeline = class Pipeline<State extends PipelineInput> {
     private constructor(private throughput: PipelineThroughput<State>) {}
 
-    static start(context: ValidatorContext, args: ValidatorArguments): Pipeline<PipelineInput> {
-      return new Pipeline({ status: ValidationStatus.Pending, state: { context, ...args } });
+    static start(context: ValidatorContext): Pipeline<PipelineInput> {
+      return new Pipeline({ status: ValidationStatus.Pending, state: { context } });
     }
 
     static pass<State extends PipelineInput, NewValue extends ComputedValue>(
@@ -71,9 +69,8 @@ export default class TurnValidator {
     }
   };
 
-  static execute(context: ValidatorContext, tiles: ReadonlyArray<TileId>): ValidationResult {
-    const args: ValidatorArguments = { tiles };
-    return this.Pipeline.start(context, args)
+  static execute(context: ValidatorContext): ValidationResult {
+    return this.Pipeline.start(context)
       .continue(state => this.computeAndValidateCells(state))
       .continue(state => this.computeAndValidatePlacements(state))
       .continue(state => this.computeAndValidateWords(state))
@@ -82,10 +79,11 @@ export default class TurnValidator {
   }
 
   private static computeAndValidateCells(state: PipelineInput): PipelineThroughput<PipelineState<SequencesOutput>> {
-    if (state.tiles.length === 0) return this.Pipeline.fail(ValidationError.InvalidTilePlacement);
-    const placement = state.context.board.resolvePlacement(state.tiles);
-    const cells = placement.map(link => link.cell);
     const { board, turnTracker } = state.context;
+    const tiles = turnTracker.currentTurnTiles;
+    if (tiles.length === 0) return this.Pipeline.fail(ValidationError.InvalidTilePlacement);
+    const placement = board.resolvePlacement(tiles);
+    const cells = placement.map(link => link.cell);
     const placementCells = new Set(cells);
     const someCellsAreAnchor = cells.some(cell => {
       if (board.isCellCenter(cell)) return true;
@@ -100,8 +98,8 @@ export default class TurnValidator {
   private static computeAndValidatePlacements(
     state: PipelineState<SequencesOutput>,
   ): PipelineThroughput<PipelineState<ComputedTilesOutput>> {
-    const { tiles, context } = state;
-    const { board } = context;
+    const { board, turnTracker } = state.context;
+    const tiles = turnTracker.currentTurnTiles;
     const primaryAxis = board.calculateAxis(state.cells);
     const coords = { axis: primaryAxis, cell: state.cells[0] };
     const primaryPlacement = PlacementBuilder.execute(board, { coords, tiles });
