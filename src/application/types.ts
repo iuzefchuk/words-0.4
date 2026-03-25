@@ -1,4 +1,13 @@
-import type { GameCell, GameTile, GameConfig, GameTurnResolution, GameDictionaryProps } from '@/domain/types.ts';
+import type {
+  GameCell,
+  GameBoardView,
+  GameTile,
+  GameInventoryView,
+  GameTurnResolution,
+  GameDictionaryProps,
+  GameMatchView,
+  GameTurnView,
+} from '@/domain/types.ts';
 import {
   GameBonus,
   GameEvent,
@@ -10,23 +19,49 @@ import {
 } from '@/domain/types.ts';
 import { IdGenerator, Clock, Scheduler } from '@/shared/ports.ts';
 
-export type { GameCell, GameTile, GameTurnResolution, GameDictionaryProps };
+export type {
+  GameCell,
+  GameBoardView,
+  GameTile,
+  GameInventoryView,
+  GameTurnResolution,
+  GameDictionaryProps,
+  GameMatchView,
+  GameTurnView,
+};
 export { GameBonus, GameEvent, GameLetter, GamePlayer, GameMatchResult, GameTurnResolutionType, GameDictionary };
 
-export type AppConfig = GameConfig;
+export type AppConfig = {
+  boardCells: ReadonlyArray<GameCell>;
+  boardCellsPerAxis: number;
+};
 
 export type AppState = {
   tilesRemaining: number;
-  matchIsFinished: boolean;
+  userTiles: ReadonlyArray<GameTile>;
+  userScore: number;
+  opponentScore: number;
   currentPlayerIsUser: boolean;
   currentTurnScore?: number;
   currentTurnIsValid: boolean;
-  userScore: number;
-  opponentScore: number;
   userPassWillBeResign: boolean;
-  userTiles: ReadonlyArray<GameTile>;
   turnResolutionHistory: ReadonlyArray<AppTurnResolution>;
+  matchIsFinished: boolean;
   matchResult?: GameMatchResult;
+};
+
+export type AppQueries = {
+  areTilesSame: (firstTile: GameTile, secondTile: GameTile) => boolean;
+  getTileLetter: (tile: GameTile) => GameLetter;
+  isCellCenter: (cell: GameCell) => boolean;
+  getCellBonus: (cell: GameCell) => GameBonus | null;
+  getCellRowIndex: (cell: GameCell) => number;
+  getCellColumnIndex: (cell: GameCell) => number;
+  findTileOnCell: (cell: GameCell) => GameTile | undefined;
+  findCellWithTile: (tile: GameTile) => GameCell | undefined;
+  isTilePlaced: (tile: GameTile) => boolean;
+  isCellTopRightInCurrentTurn: (cell: GameCell) => boolean;
+  wasTileUsedInPreviousTurn: (tile: GameTile) => boolean;
 };
 
 export type AppDependencies = {

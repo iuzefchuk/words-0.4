@@ -6,6 +6,14 @@ export type TileId = Brand<string, 'TileId'>;
 
 export type TileCollection = ReadonlyMap<Letter, ReadonlyArray<TileId>>;
 
+export type InventoryView = {
+  readonly unusedTilesCount: number;
+  getTilesFor(player: Player): ReadonlyArray<TileId>;
+  hasTilesFor(player: Player): boolean;
+  areTilesEqual(firstTile: TileId, secondTile: TileId): boolean;
+  getTileLetter(tile: TileId): Letter;
+};
+
 export default class Inventory {
   private static readonly PLAYER_POOL_CAPACITY = 7;
 

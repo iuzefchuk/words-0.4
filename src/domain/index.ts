@@ -8,33 +8,18 @@ import CurrentTurnValidator, { ValidatorContext } from '@/domain/services/Curren
 import TurnGenerator, { GeneratorContext, GeneratorResult } from '@/domain/services/TurnGenerator.ts';
 import {
   GameCell,
+  GameBoardView,
   GameTile,
   GamePlayer,
   GameTurnResolutionType,
-  GameState,
-  GameConfig,
-  GameMatchResult,
-  GameBonus,
-  GameLetter,
+  GameInventoryView,
+  GameTurnView,
+  GameMatchView,
 } from '@/domain/types.ts';
 import { IdGenerator } from '@/shared/ports.ts';
 
 export default class Game {
-  private static Events = class {
-    private readonly events: Array<Event> = [];
-
-    record(event: Event): void {
-      this.events.push(event);
-    }
-
-    clearAll(): Array<Event> {
-      const copy = [...this.events];
-      this.events.length = 0;
-      return copy;
-    }
-  };
-
-  private readonly events = new Game.Events();
+  private readonly events = new Events();
 
   private constructor(
     private readonly board: Board,
@@ -55,153 +40,88 @@ export default class Game {
     return game;
   }
 
-  get config(): GameConfig {
-    return {
-      boardCells: this.board.cells,
-      boardCellsPerAxis: this.board.cellsPerAxis,
-    };
+  get boardView(): Readonly<GameBoardView> {
+    return this.board;
   }
 
-  get state(): GameState {
-    return {
-      unusedTilesCount: this.inventory.unusedTilesCount,
-      matchIsFinished: this.matchTracker.matchIsFinished,
-      hasPriorTurns: this.turnTracker.hasPriorTurns,
-      currentPlayer: this.turnTracker.currentPlayer,
-      nextPlayer: this.turnTracker.nextPlayer,
-      currentTurnTiles: this.turnTracker.currentTurnTiles,
-      currentTurnCells: this.turnTracker.currentTurnCells,
-      currentTurnScore: this.turnTracker.currentTurnScore,
-      currentTurnWords: this.turnTracker.currentTurnWords,
-      currentTurnIsValid: this.turnTracker.currentTurnIsValid,
-      previousTurnTiles: this.turnTracker.previousTurnTiles,
-      turnResolutionHistory: this.turnTracker.resolutionHistory,
-    };
+  get inventoryView(): Readonly<GameInventoryView> {
+    return this.inventory;
   }
 
-  isCellCenter(cell: GameCell): boolean {
-    return this.board.isCellCenter(cell);
+  get turnView(): Readonly<GameTurnView> {
+    return this.turnTracker;
   }
 
-  getBonusForCell(cell: GameCell): GameBonus | null {
-    return this.board.getBonusForCell(cell);
+  get matchView(): Readonly<GameMatchView> {
+    return this.matchTracker;
   }
 
-  findTileByCell(cell: GameCell): GameTile | undefined {
-    return this.board.findTileByCell(cell);
-  }
-
-  findCellByTile(tile: GameTile): GameCell | undefined {
-    return this.board.findCellByTile(tile);
-  }
-
-  isTilePlaced(tile: GameTile): boolean {
-    return this.board.isTilePlaced(tile);
-  }
-
-  getRowIndex(cell: GameCell): number {
-    return this.board.getRowIndex(cell);
-  }
-
-  getColumnIndex(cell: GameCell): number {
-    return this.board.getColumnIndex(cell);
-  }
-
-  findTopRightCell(cells: ReadonlyArray<GameCell>): GameCell | undefined {
-    return this.board.findTopRightCell(cells);
-  }
-
-  areTilesEqual(firstTile: GameTile, secondTile: GameTile): boolean {
-    return this.inventory.areTilesEqual(firstTile, secondTile);
-  }
-
-  getTileLetter(tile: GameTile): GameLetter {
-    return this.inventory.getTileLetter(tile);
-  }
-
-  getTilesFor(player: GamePlayer): ReadonlyArray<GameTile> {
-    return this.inventory.getTilesFor(player);
-  }
-
-  hasTilesFor(player: GamePlayer): boolean {
-    return this.inventory.hasTilesFor(player);
-  }
-
-  getMatchResultFor(player: GamePlayer): GameMatchResult | undefined {
-    return this.matchTracker.getResultFor(player);
-  }
-
-  getScoreFor(player: GamePlayer): number {
-    return this.turnTracker.getScoreFor(player);
-  }
-
-  willPlayerPassBeResign(player: GamePlayer): boolean {
-    return this.turnTracker.willPlayerPassBeResign(player);
-  }
-
-  placeTile({ cell, tile }: { cell: GameCell; tile: GameTile }): void {
+  placeTile(input: { cell: GameCell; tile: GameTile }): void {
     this.matchTracker.ensureMutability();
-    this.board.placeTile(cell, tile);
-    this.turnTracker.placeTileInCurrentTurn(tile);
+    this.board.placeTile(input.cell, input.tile);
+    this.turnTracker.placeTileInCurrentTurn(input.tile);
     this.events.record(Event.TilePlaced);
   }
 
-  undoPlaceTile({ tile }: { tile: GameTile }): void {
+  undoPlaceTile(input: { tile: GameTile }): void {
     this.matchTracker.ensureMutability();
-    this.turnTracker.undoPlaceTileInCurrentTurn({ tile });
-    this.board.undoPlaceTile(tile);
+    this.turnTracker.undoPlaceTileInCurrentTurn(input);
+    this.board.undoPlaceTile(input.tile);
     this.events.record(Event.TileUndoPlaced);
   }
 
-  resetCurrentTurn(): void {
+  clearTiles(): void {
     this.matchTracker.ensureMutability();
     for (const tile of this.turnTracker.currentTurnTiles) this.board.undoPlaceTile(tile);
     this.turnTracker.resetCurrentTurn();
   }
 
-  validateCurrentTurn(): void {
-    const context = {
+  validateTurn(): void {
+    const result = CurrentTurnValidator.execute({
       board: this.board,
       dictionary: this.dictionary,
       inventory: this.inventory,
       turnTracker: this.turnTracker,
-    } as ValidatorContext;
-    const result = CurrentTurnValidator.execute(context);
+    } as ValidatorContext);
     this.turnTracker.setCurrentTurnValidation(result);
   }
 
-  saveCurrentTurn(): { words: ReadonlyArray<string> } {
+  saveTurn(): { words: ReadonlyArray<string> } {
     this.matchTracker.ensureMutability();
-    if (!this.state.currentTurnIsValid) throw new Error('Turn is not valid');
-    const { currentPlayer: player, currentTurnTiles: tiles, currentTurnWords: words } = this.state;
+    if (!this.turnView.currentTurnIsValid) throw new Error('Turn is not valid');
+    const { currentPlayer: player, currentTurnTiles: tiles, currentTurnWords: words } = this.turnView;
     if (!words) throw new Error('Current turn words do not exist');
     this.turnTracker.recordCurrentTurnResolution(GameTurnResolutionType.Save);
-    tiles.forEach((tile: GameTile) => this.inventory.discardTile({ player, tile }));
+    tiles.forEach(tile => this.inventory.discardTile({ player, tile }));
     this.inventory.replenishTilesFor(player);
     this.startTurnForNextPlayer();
-    const newEvent = player === GamePlayer.User ? Event.UserTurnSaved : Event.OpponentTurnSaved;
-    this.events.record(newEvent);
+    this.events.record(player === GamePlayer.User ? Event.UserTurnSaved : Event.OpponentTurnSaved);
     return { words };
   }
 
-  passCurrentTurn(): void {
-    const { currentPlayer: player } = this.state;
+  passTurn(): void {
+    const { currentPlayer: player } = this.turnView;
     this.matchTracker.ensureMutability();
     this.turnTracker.recordCurrentTurnResolution(GameTurnResolutionType.Pass);
     this.startTurnForNextPlayer();
-    const newEvent = player === GamePlayer.User ? Event.UserTurnPassed : Event.OpponentTurnPassed;
-    this.events.record(newEvent);
+    this.events.record(player === GamePlayer.User ? Event.UserTurnPassed : Event.OpponentTurnPassed);
   }
 
   async *generateTurnFor(player: GamePlayer, yieldControl: () => Promise<void>): AsyncGenerator<GeneratorResult> {
-    const context = {
-      board: Board.clone(this.board),
-      dictionary: this.dictionary,
-      inventory: this.inventory,
-      turnTracker: this.turnTracker,
-      yieldControl,
-    } as GeneratorContext;
-    yield* TurnGenerator.execute(context, player);
+    yield* TurnGenerator.execute(
+      {
+        board: Board.clone(this.board),
+        dictionary: this.dictionary,
+        inventory: this.inventory,
+        turnTracker: this.turnTracker,
+        yieldControl,
+      } as GeneratorContext,
+      player,
+    );
+  }
+
+  startTurnForNextPlayer(): void {
+    this.turnTracker.createNewTurnFor(this.turnTracker.nextPlayer);
   }
 
   endMatchByScore(): void {
@@ -209,10 +129,10 @@ export default class Game {
     if (leaderByScore === null || loserByScore === null) {
       this.tieMatch();
       this.events.record(Event.MatchTied);
-    } else {
-      this.completeMatch(leaderByScore, loserByScore);
-      this.events.record(leaderByScore === GamePlayer.User ? Event.MatchWon : Event.MatchLost);
+      return;
     }
+    this.completeMatch(leaderByScore, loserByScore);
+    this.events.record(leaderByScore === GamePlayer.User ? Event.MatchWon : Event.MatchLost);
   }
 
   completeMatch(winner: GamePlayer, loser: GamePlayer): void {
@@ -220,11 +140,11 @@ export default class Game {
   }
 
   tieMatch(): void {
-    this.matchTracker.recordTie(this.state.currentPlayer, this.state.nextPlayer);
+    this.matchTracker.recordTie(this.turnView.currentPlayer, this.turnView.nextPlayer);
   }
 
-  resignMatchForCurrentPlayer(): void {
-    const { currentPlayer, nextPlayer } = this.state;
+  resignMatch(): void {
+    const { currentPlayer, nextPlayer } = this.turnView;
     this.matchTracker.recordCompletion(nextPlayer, currentPlayer);
     this.events.record(currentPlayer === GamePlayer.User ? Event.MatchLost : Event.MatchWon);
   }
@@ -232,8 +152,18 @@ export default class Game {
   clearAllEvents(): Array<Event> {
     return this.events.clearAll();
   }
+}
 
-  private startTurnForNextPlayer(): void {
-    this.turnTracker.createNewTurnFor(this.turnTracker.nextPlayer);
+class Events {
+  private readonly events: Array<Event> = [];
+
+  record(event: Event): void {
+    this.events.push(event);
+  }
+
+  clearAll(): Array<Event> {
+    const copy = [...this.events];
+    this.events.length = 0;
+    return copy;
   }
 }

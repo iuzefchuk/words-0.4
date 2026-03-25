@@ -10,7 +10,7 @@ export default class UseButtons {
   async handleResign(): Promise<void> {
     const { isConfirmed } = await this.triggerResignDialog();
     if (!isConfirmed) return;
-    this.matchStore.resignMatch();
+    this.matchStore.resign();
   }
 
   async handlePass(): Promise<void> {
@@ -18,7 +18,7 @@ export default class UseButtons {
       const { isConfirmed } = await this.triggerResignDialog();
       if (!isConfirmed) return;
     }
-    this.matchStore.passTurn();
+    this.matchStore.pass();
   }
 
   handleShuffle(): void {
@@ -27,13 +27,13 @@ export default class UseButtons {
   }
 
   handleClear(): void {
-    this.matchStore.resetTurn();
+    this.matchStore.clearTiles();
     this.rackStore.initialize();
     SoundPlayer.play(Sound.SystemClear);
   }
 
   handlePlay(): void {
-    this.matchStore.saveTurn();
+    this.matchStore.save();
     this.rackStore.initialize();
   }
 

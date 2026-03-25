@@ -18,7 +18,7 @@ const isTileSaturated = computed(() => tile.value != null && matchStore.wasTileU
   <li
     :class="{
       cell: true,
-      'cell--center': matchStore.isCellInCenterOfLayout(cell),
+      'cell--center': matchStore.isCellCenter(cell),
       'cell--has-tile': tile,
     }"
     @click.stop="rackStore.handleClickBoardCell(cell)"

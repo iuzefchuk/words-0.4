@@ -51,6 +51,21 @@ export type ResolutionResign = { type: ResolutionType.Resign; player: Player };
 
 export type Resolution = ResolutionSave | ResolutionPass | ResolutionResign;
 
+export type TurnView = {
+  readonly hasPriorTurns: boolean;
+  readonly currentPlayer: Player;
+  readonly nextPlayer: Player;
+  readonly currentTurnTiles: ReadonlyArray<TileId>;
+  readonly currentTurnCells: ReadonlyArray<CellIndex> | undefined;
+  readonly currentTurnScore: number | undefined;
+  readonly currentTurnWords: ReadonlyArray<string> | undefined;
+  readonly currentTurnIsValid: boolean;
+  readonly previousTurnTiles: ReadonlyArray<TileId> | undefined;
+  readonly resolutionHistory: ReadonlyArray<Resolution>;
+  getScoreFor(player: Player): number;
+  willPassBeResignFor(player: Player): boolean;
+};
+
 export default class TurnTracker {
   private static readonly FIRST_PLAYER: Player = Player.User;
 
@@ -127,7 +142,7 @@ export default class TurnTracker {
       .reduce((sum, turn) => sum + (turn.score ?? 0), 0);
   }
 
-  willPlayerPassBeResign(player: Player): boolean {
+  willPassBeResignFor(player: Player): boolean {
     const lastTurn = this.completedTurns.findLast(turn => turn.player === player);
     return lastTurn?.resolutionType === ResolutionType.Pass;
   }

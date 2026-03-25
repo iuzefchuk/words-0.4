@@ -6,6 +6,11 @@ export enum MatchResult {
   Tie = 'Tie',
 }
 
+export type MatchView = {
+  readonly matchIsFinished: boolean;
+  getResultFor(player: Player): MatchResult | undefined;
+};
+
 export default class MatchTracker {
   private constructor(private readonly results: Map<Player, MatchResult | undefined>) {}
 

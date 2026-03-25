@@ -20,6 +20,19 @@ export type Link = { readonly cell: CellIndex; readonly tile: TileId };
 
 export type Placement = ReadonlyArray<Link>;
 
+export type BoardView = {
+  readonly cells: ReadonlyArray<CellIndex>;
+  readonly cellsPerAxis: number;
+  isCellCenter(cell: CellIndex): boolean;
+  getBonus(cell: CellIndex): Bonus | null;
+  getRowIndex(cell: CellIndex): number;
+  getColumnIndex(cell: CellIndex): number;
+  findTopRightCell(cells: ReadonlyArray<CellIndex>): CellIndex | undefined;
+  findTileByCell(cell: CellIndex): TileId | undefined;
+  findCellByTile(tile: TileId): CellIndex | undefined;
+  isTilePlaced(tile: TileId): boolean;
+};
+
 export default class Board {
   private static readonly DEFAULT_AXIS = Axis.X;
 
@@ -48,8 +61,8 @@ export default class Board {
     return Layout.isCellCenter(cell);
   }
 
-  getBonusForCell(cell: CellIndex): Bonus | null {
-    return Layout.getBonusForCell(cell);
+  getBonus(cell: CellIndex): Bonus | null {
+    return Layout.getBonus(cell);
   }
 
   getLetterMultiplier(cell: CellIndex): number {
@@ -203,14 +216,14 @@ class Layout {
     return cell === this.centerCell;
   }
 
-  static getBonusForCell(cell: CellIndex): Bonus | null {
+  static getBonus(cell: CellIndex): Bonus | null {
     this.validateCell(cell);
     return this.BONUS_BY_CELL.get(cell) ?? null;
   }
 
   static getLetterMultiplier(cell: CellIndex): number {
     this.validateCell(cell);
-    const bonus = this.getBonusForCell(cell);
+    const bonus = this.getBonus(cell);
     if (bonus === Bonus.DoubleLetter) return 2;
     if (bonus === Bonus.TripleLetter) return 3;
     return 1;
@@ -218,7 +231,7 @@ class Layout {
 
   static getWordMultiplier(cell: CellIndex): number {
     this.validateCell(cell);
-    const bonus = this.getBonusForCell(cell);
+    const bonus = this.getBonus(cell);
     if (bonus === Bonus.DoubleWord) return 2;
     if (bonus === Bonus.TripleWord) return 3;
     return 1;

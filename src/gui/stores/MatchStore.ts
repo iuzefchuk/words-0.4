@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, markRaw, Ref, shallowRef } from 'vue';
 import Application from '@/application/index.ts';
-import { GameCell, GameTile, AppState } from '@/application/types.ts';
+import { GameCell, GameTile, AppState, AppQueries } from '@/application/types.ts';
 import { EVENT_SOUNDS } from '@/gui/constants.ts';
 import SoundPlayer from '@/gui/services/SoundPlayer.ts';
 
@@ -22,41 +22,38 @@ export default class MatchStore {
     };
   });
 
-  private readonly state: State;
-  private readonly queries: Queries;
-  private readonly commands: Commands;
+  private readonly state: MatchState;
+  private readonly queries: MatchQueries;
+  private readonly commands: MatchCommands;
 
   private constructor(app: Application) {
-    this.state = new State(app);
-    this.queries = new Queries(app, this.state);
-    this.commands = new Commands(app, this.state);
+    this.state = new MatchState(() => app.state);
+    this.queries = new MatchQueries(app.queries, this.state);
+    this.commands = new MatchCommands(app, this.state);
   }
 }
 
-class State {
-  readonly matchIsFinished = computed(() => this.state.matchIsFinished);
-  readonly matchResult = computed(() => this.state.matchResult);
-  readonly tilesRemaining = computed(() => this.state.tilesRemaining);
-  readonly userTiles = computed(() => this.state.userTiles);
-  readonly currentTurnScore = computed(() => this.state.currentTurnScore);
-  readonly userScore = computed(() => this.state.userScore);
-  readonly opponentScore = computed(() => this.state.opponentScore);
-  readonly currentTurnIsValid = computed(() => this.state.currentTurnIsValid);
-  readonly currentPlayerIsUser = computed(() => this.state.currentPlayerIsUser);
-  readonly userPassWillBeResign = computed(() => this.state.userPassWillBeResign);
-  readonly turnResolutionHistory = computed(() => {
-    void this.stateRef.value;
-    return this.app.state.turnResolutionHistory;
-  });
+class MatchState {
+  readonly tilesRemaining = computed(() => this.appStateRef.value.tilesRemaining);
+  readonly userTiles = computed(() => this.appStateRef.value.userTiles);
+  readonly userScore = computed(() => this.appStateRef.value.userScore);
+  readonly opponentScore = computed(() => this.appStateRef.value.opponentScore);
+  readonly currentPlayerIsUser = computed(() => this.appStateRef.value.currentPlayerIsUser);
+  readonly currentTurnScore = computed(() => this.appStateRef.value.currentTurnScore);
+  readonly currentTurnIsValid = computed(() => this.appStateRef.value.currentTurnIsValid);
+  readonly userPassWillBeResign = computed(() => this.appStateRef.value.userPassWillBeResign);
+  readonly turnResolutionHistory = computed(() => this.appStateRef.value.turnResolutionHistory);
+  readonly matchIsFinished = computed(() => this.appStateRef.value.matchIsFinished);
+  readonly matchResult = computed(() => this.appStateRef.value.matchResult);
 
-  private readonly stateRef: Ref<AppState>;
+  private readonly appStateRef: Ref<AppState>;
 
-  constructor(private readonly app: Application) {
-    this.stateRef = shallowRef(app.state);
+  constructor(private readonly getAppState: () => AppState) {
+    this.appStateRef = shallowRef(getAppState());
   }
 
   read<T>(fn: () => T): T {
-    void this.stateRef.value;
+    void this.appStateRef.value;
     return fn();
   }
 
@@ -70,37 +67,35 @@ class State {
   }
 
   sync(): void {
-    this.stateRef.value = this.app.state;
-  }
-
-  private get state(): AppState {
-    return this.stateRef.value;
+    this.appStateRef.value = this.getAppState();
   }
 }
 
-class Queries {
+class MatchQueries {
   constructor(
-    private readonly app: Application,
-    private readonly state: State,
+    private readonly appQueries: AppQueries,
+    private readonly matchState: MatchState,
   ) {}
 
-  findTileOnCell = (cell: GameCell) => this.state.read(() => this.app.findTileByCell(cell));
-  findCellWithTile = (tile: GameTile) => this.state.read(() => this.app.findCellByTile(tile));
-  isTilePlaced = (tile: GameTile) => this.state.read(() => this.app.isTilePlaced(tile));
-  isCellTopRightInTurn = (cell: GameCell) => this.state.read(() => this.app.isCellTopRightInTurn(cell));
-  wasTileUsedInPreviousTurn = (tile: GameTile) => this.state.read(() => this.app.wasTileUsedInPreviousTurn(tile));
-  isCellInCenterOfLayout = (cell: GameCell) => this.app.isCellInCenterOfLayout(cell);
-  getCellBonus = (cell: GameCell) => this.app.getCellBonus(cell);
-  getCellRowIndex = (cell: GameCell) => this.app.getCellRowIndex(cell);
-  getCellColumnIndex = (cell: GameCell) => this.app.getCellColumnIndex(cell);
-  areTilesSame = (firstTile: GameTile, secondTile: GameTile) => this.app.areTilesSame(firstTile, secondTile);
-  getTileLetter = (tile: GameTile) => this.app.getTileLetter(tile);
+  areTilesSame = (firstTile: GameTile, secondTile: GameTile) => this.appQueries.areTilesSame(firstTile, secondTile);
+  getTileLetter = (tile: GameTile) => this.appQueries.getTileLetter(tile);
+  isCellCenter = (cell: GameCell) => this.appQueries.isCellCenter(cell);
+  getCellBonus = (cell: GameCell) => this.appQueries.getCellBonus(cell);
+  getCellRowIndex = (cell: GameCell) => this.appQueries.getCellRowIndex(cell);
+  getCellColumnIndex = (cell: GameCell) => this.appQueries.getCellColumnIndex(cell);
+  findTileOnCell = (cell: GameCell) => this.matchState.read(() => this.appQueries.findTileOnCell(cell));
+  findCellWithTile = (tile: GameTile) => this.matchState.read(() => this.appQueries.findCellWithTile(tile));
+  isTilePlaced = (tile: GameTile) => this.matchState.read(() => this.appQueries.isTilePlaced(tile));
+  isCellTopRightInCurrentTurn = (cell: GameCell) =>
+    this.matchState.read(() => this.appQueries.isCellTopRightInCurrentTurn(cell));
+  wasTileUsedInPreviousTurn = (tile: GameTile) =>
+    this.matchState.read(() => this.appQueries.wasTileUsedInPreviousTurn(tile));
 }
 
-class Commands {
+class MatchCommands {
   constructor(
     private readonly app: Application,
-    private readonly state: State,
+    private readonly matchState: MatchState,
   ) {}
 
   placeTile = (args: { cell: GameCell; tile: GameTile }): void => {
@@ -111,31 +106,31 @@ class Commands {
     return this.writeAndPlaySound(() => this.app.undoPlaceTile(tile));
   };
 
-  resetTurn = (): void => {
-    return this.state.write(() => this.app.resetTurn());
+  clearTiles = (): void => {
+    return this.matchState.write(() => this.app.clearTiles());
   };
 
-  saveTurn = (): void => {
+  save = (): void => {
     const { opponentTurn } = this.writeAndPlaySound(() => this.app.handleSaveTurn());
     opponentTurn?.then(() => this.syncAndPlaySound());
   };
 
-  passTurn = (): void => {
+  pass = (): void => {
     const { opponentTurn } = this.writeAndPlaySound(() => this.app.handlePassTurn());
     opponentTurn?.then(() => this.syncAndPlaySound());
   };
 
-  resignMatch = (): void => {
+  resign = (): void => {
     return this.writeAndPlaySound(() => this.app.handleResignMatch());
   };
 
   private syncAndPlaySound(): void {
-    this.state.sync();
+    this.matchState.sync();
     this.playPendingSounds();
   }
 
   private writeAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
-    const response = this.state.write(callback);
+    const response = this.matchState.write(callback);
     this.playPendingSounds();
     return response;
   }

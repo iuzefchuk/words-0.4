@@ -1,15 +1,18 @@
 import {
   AppConfig,
   AppState,
+  AppQueries,
   AppTurnResponse,
   AppTurnResolution,
   GamePlayer,
   GameCell,
-  GameBonus,
+  GameBoardView,
   GameTile,
-  GameLetter,
+  GameInventoryView,
   GameTurnResolution,
   GameTurnResolutionType,
+  GameMatchView,
+  GameTurnView,
   GameEvent,
 } from '@/application/types.ts';
 import Game from '@/domain/index.ts';
@@ -33,125 +36,128 @@ export default class Application {
   }
 
   get config(): AppConfig {
-    return this.game.config;
+    return {
+      boardCells: this.boardView.cells,
+      boardCellsPerAxis: this.boardView.cellsPerAxis,
+    };
   }
 
   get state(): AppState {
     return {
-      tilesRemaining: this.game.state.unusedTilesCount,
-      matchIsFinished: this.game.state.matchIsFinished,
-      currentPlayerIsUser: this.game.state.currentPlayer === GamePlayer.User,
-      currentTurnScore: this.game.state.currentTurnScore,
-      currentTurnIsValid: this.game.state.currentTurnIsValid,
-      userScore: this.game.getScoreFor(GamePlayer.User),
-      opponentScore: this.game.getScoreFor(GamePlayer.Opponent),
-      userPassWillBeResign: this.game.willPlayerPassBeResign(GamePlayer.User),
-      userTiles: this.game.getTilesFor(GamePlayer.User),
-      turnResolutionHistory: this.game.state.turnResolutionHistory.map(r => this.simplifyTurnResolution(r)),
-      matchResult: this.game.getMatchResultFor(GamePlayer.User),
+      tilesRemaining: this.inventoryView.unusedTilesCount,
+      userTiles: this.inventoryView.getTilesFor(GamePlayer.User),
+      userScore: this.turnView.getScoreFor(GamePlayer.User),
+      opponentScore: this.turnView.getScoreFor(GamePlayer.Opponent),
+      currentPlayerIsUser: this.turnView.currentPlayer === GamePlayer.User,
+      currentTurnScore: this.turnView.currentTurnScore,
+      currentTurnIsValid: this.turnView.currentTurnIsValid,
+      userPassWillBeResign: this.turnView.willPassBeResignFor(GamePlayer.User),
+      turnResolutionHistory: this.turnView.resolutionHistory.map(r => this.simplifyTurnResolution(r)),
+      matchIsFinished: this.matchView.matchIsFinished,
+      matchResult: this.matchView.getResultFor(GamePlayer.User),
     };
   }
 
-  isCellInCenterOfLayout(cell: GameCell): boolean {
-    return this.game.isCellCenter(cell);
-  }
-
-  getCellBonus(cell: GameCell): GameBonus | null {
-    return this.game.getBonusForCell(cell);
-  }
-
-  findTileByCell(cell: GameCell): GameTile | undefined {
-    return this.game.findTileByCell(cell);
-  }
-
-  findCellByTile(tile: GameTile): GameCell | undefined {
-    return this.game.findCellByTile(tile);
-  }
-
-  isTilePlaced(tile: GameTile): boolean {
-    return this.game.isTilePlaced(tile);
-  }
-
-  getCellRowIndex(cell: GameCell): number {
-    return this.game.getRowIndex(cell);
-  }
-
-  getCellColumnIndex(cell: GameCell): number {
-    return this.game.getColumnIndex(cell);
-  }
-
-  areTilesSame(firstTile: GameTile, secondTile: GameTile): boolean {
-    return this.game.areTilesEqual(firstTile, secondTile);
-  }
-
-  getTileLetter(tile: GameTile): GameLetter {
-    return this.game.getTileLetter(tile);
-  }
-
-  isCellTopRightInTurn(cell: GameCell): boolean {
-    const { currentTurnCells: cells } = this.game.state;
-    if (cells === undefined || cells.length === 0) return false;
-    return cell === this.game.findTopRightCell(cells);
-  }
-
-  wasTileUsedInPreviousTurn(tile: GameTile): boolean {
-    const { previousTurnTiles: tiles } = this.game.state;
-    if (tiles === undefined || tiles.length === 0) return false;
-    return tiles.includes(tile);
+  get queries(): AppQueries {
+    return {
+      areTilesSame: (first: GameTile, second: GameTile) => this.inventoryView.areTilesEqual(first, second),
+      getTileLetter: (tile: GameTile) => this.inventoryView.getTileLetter(tile),
+      isCellCenter: (cell: GameCell) => this.boardView.isCellCenter(cell),
+      getCellBonus: (cell: GameCell) => this.boardView.getBonus(cell),
+      getCellRowIndex: (cell: GameCell) => this.boardView.getRowIndex(cell),
+      getCellColumnIndex: (cell: GameCell) => this.boardView.getColumnIndex(cell),
+      findTileOnCell: (cell: GameCell) => this.boardView.findTileByCell(cell),
+      findCellWithTile: (tile: GameTile) => this.boardView.findCellByTile(tile),
+      isTilePlaced: (tile: GameTile) => this.boardView.isTilePlaced(tile),
+      isCellTopRightInCurrentTurn: (cell: GameCell) => this.isCellTopRightInCurrentTurn(cell),
+      wasTileUsedInPreviousTurn: (tile: GameTile) => this.wasTileUsedInPreviousTurn(tile),
+    };
   }
 
   placeTile({ cell, tile }: { cell: GameCell; tile: GameTile }): void {
     this.game.placeTile({ cell, tile });
-    this.game.validateCurrentTurn();
+    this.game.validateTurn();
   }
 
   undoPlaceTile(tile: GameTile): void {
     this.game.undoPlaceTile({ tile });
-    this.game.validateCurrentTurn();
+    this.game.validateTurn();
   }
 
-  resetTurn(): void {
-    this.game.resetCurrentTurn();
+  clearTiles(): void {
+    this.game.clearTiles();
   }
 
   handleSaveTurn(): { userResponse: AppTurnResponse; opponentTurn?: Promise<AppTurnResponse> } {
-    const { currentPlayer: player } = this.game.state;
+    const player = this.currentPlayer;
     const userResponse = this.saveTurn();
     if (!userResponse.ok) {
       return { userResponse };
     }
-    if (!this.game.hasTilesFor(player)) {
+    if (!this.inventoryView.hasTilesFor(player)) {
       this.game.endMatchByScore();
       return { userResponse };
     }
-    if (this.game.state.matchIsFinished) {
+    if (this.game.matchView.matchIsFinished) {
       return { userResponse };
     }
-    const opponentTurn = this.game.state.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
+    const opponentTurn = this.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
     return { userResponse, opponentTurn };
   }
 
   handlePassTurn(): { opponentTurn?: Promise<AppTurnResponse> } {
-    if (this.game.willPlayerPassBeResign(GamePlayer.User)) {
-      this.game.resignMatchForCurrentPlayer();
+    if (this.turnView.willPassBeResignFor(GamePlayer.User)) {
+      this.game.resignMatch();
       return {};
     }
-    this.game.passCurrentTurn();
-    const opponentTurn = this.game.state.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
+    this.game.passTurn();
+    const opponentTurn = this.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
     return { opponentTurn };
   }
 
   handleResignMatch(): void {
-    this.game.resignMatchForCurrentPlayer();
+    this.game.resignMatch();
   }
 
   clearAllGameEvents(): Array<GameEvent> {
     return this.game.clearAllEvents();
   }
 
+  private get boardView(): Readonly<GameBoardView> {
+    return this.game.boardView;
+  }
+
+  private get inventoryView(): Readonly<GameInventoryView> {
+    return this.game.inventoryView;
+  }
+
+  private get turnView(): Readonly<GameTurnView> {
+    return this.game.turnView;
+  }
+
+  private get matchView(): Readonly<GameMatchView> {
+    return this.game.matchView;
+  }
+
+  private get currentPlayer(): GamePlayer {
+    return this.game.turnView.currentPlayer;
+  }
+
+  private isCellTopRightInCurrentTurn(cell: GameCell): boolean {
+    const { currentTurnCells: cells } = this.game.turnView;
+    if (cells === undefined || cells.length === 0) return false;
+    return cell === this.boardView.findTopRightCell(cells);
+  }
+
+  private wasTileUsedInPreviousTurn(tile: GameTile): boolean {
+    const { previousTurnTiles: tiles } = this.game.turnView;
+    if (tiles === undefined || tiles.length === 0) return false;
+    return tiles.includes(tile);
+  }
+
   private saveTurn(): AppTurnResponse {
-    if (!this.game.state.currentTurnIsValid) return { ok: false, error: 'Turn is not valid' };
-    const { words } = this.game.saveCurrentTurn();
+    if (!this.game.turnView.currentTurnIsValid) return { ok: false, error: 'Turn is not valid' };
+    const { words } = this.game.saveTurn();
     return { ok: true, value: { words } };
   }
 
@@ -159,12 +165,12 @@ export default class Application {
     const resolution = await this.ensureMinimumDuration(() => this.createOpponentTurn());
     switch (resolution.type) {
       case GameTurnResolutionType.Resign:
-        this.game.resignMatchForCurrentPlayer();
+        this.game.resignMatch();
         return { ok: true, value: { words: [] } };
       case GameTurnResolutionType.Pass:
         return { ok: true, value: { words: [] } };
       case GameTurnResolutionType.Save:
-        if (!this.game.hasTilesFor(GamePlayer.Opponent)) this.game.endMatchByScore();
+        if (!this.inventoryView.hasTilesFor(GamePlayer.Opponent)) this.game.endMatchByScore();
         return { ok: true, value: { words: resolution.words } };
       default:
         throw new Error(`Unexpected resolution type: ${(resolution as { type: string }).type}`);
@@ -179,16 +185,16 @@ export default class Application {
       break;
     }
     if (generatorResult === null) {
-      if (this.game.willPlayerPassBeResign(player)) return { type: GameTurnResolutionType.Resign, player };
-      this.game.passCurrentTurn();
+      if (this.turnView.willPassBeResignFor(player)) return { type: GameTurnResolutionType.Resign, player };
+      this.game.passTurn();
       return { type: GameTurnResolutionType.Pass, player };
     }
     for (let i = 0; i < generatorResult.tiles.length; i++) {
       this.game.placeTile({ cell: generatorResult.cells[i], tile: generatorResult.tiles[i] });
     }
-    this.game.validateCurrentTurn();
-    const words = this.game.state.currentTurnWords ?? [];
-    const score = this.game.state.currentTurnScore ?? 0;
+    this.game.validateTurn();
+    const words = this.game.turnView.currentTurnWords ?? [];
+    const score = this.game.turnView.currentTurnScore ?? 0;
     this.saveTurn();
     return { type: GameTurnResolutionType.Save, player, words, score };
   }
