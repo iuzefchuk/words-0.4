@@ -53,6 +53,9 @@ export type TurnView = {
 export default class TurnTracker {
   private static readonly FIRST_PLAYER: Player = Player.User;
 
+  private userScore = 0;
+  private opponentScore = 0;
+
   private constructor(
     private readonly idGenerator: IdGenerator,
     private turns: Array<Turn>,
@@ -113,9 +116,14 @@ export default class TurnTracker {
   }
 
   getScoreFor(player: Player): number {
-    return this.turns
-      .filter(turn => turn.player === player && turn.id !== this.currentTurn.id)
-      .reduce((sum, turn) => sum + (turn.score ?? 0), 0);
+    return player === Player.User ? this.userScore : this.opponentScore;
+  }
+
+  commitCurrentTurnScore(): void {
+    const { score, player } = this.currentTurn;
+    if (score === undefined) return;
+    if (player === Player.User) this.userScore += score;
+    else this.opponentScore += score;
   }
 
   placeTileInCurrentTurn(tile: TileId): void {
@@ -165,7 +173,7 @@ class Turn {
   }
 
   get tiles(): ReadonlyArray<TileId> {
-    return [...this._tiles];
+    return this._tiles;
   }
 
   get cells(): ReadonlyArray<CellIndex> | undefined {

@@ -17,7 +17,7 @@ const matchStore = MatchStore.INSTANCE();
   >
     <AppMainBoardCell v-for="cell in matchStore.boardCells" :key="cell" :cell="cell">
       <Transition name="fade" appear>
-        <AppMainBoardTooltip v-if="matchStore.isCellTopRightInCurrentTurn(cell)" />
+        <AppMainBoardTooltip v-if="cell === matchStore.currentTurnTopRightCell" />
       </Transition>
     </AppMainBoardCell>
     <AppOutline />

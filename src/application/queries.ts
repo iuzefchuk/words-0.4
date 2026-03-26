@@ -10,6 +10,9 @@ import {
 import Game from '@/domain/index.ts';
 
 export default class AppQueryBuilder {
+  private _previousTurnTilesRef: ReadonlyArray<GameTile> | undefined;
+  private _previousTurnTileSet: Set<GameTile> | undefined;
+
   constructor(private readonly game: Game) {}
 
   get queries(): AppQueries {
@@ -34,6 +37,7 @@ export default class AppQueryBuilder {
       findTileOnCell: (cell: GameCell) => this.boardView.findTileByCell(cell),
       findCellWithTile: (tile: GameTile) => this.boardView.findCellByTile(tile),
       isTilePlaced: (tile: GameTile) => this.boardView.isTilePlaced(tile),
+      getCurrentTurnTopRightCell: () => this.getCurrentTurnTopRightCell(),
       isCellTopRightInCurrentTurn: (cell: GameCell) => this.isCellTopRightInCurrentTurn(cell),
       wasTileUsedInPreviousTurn: (tile: GameTile) => this.wasTileUsedInPreviousTurn(tile),
     };
@@ -51,15 +55,23 @@ export default class AppQueryBuilder {
     return this.game.turnView;
   }
 
-  private isCellTopRightInCurrentTurn(cell: GameCell): boolean {
+  private getCurrentTurnTopRightCell(): GameCell | undefined {
     const { currentTurnCells: cells } = this.game.turnView;
-    if (cells === undefined || cells.length === 0) return false;
-    return cell === this.boardView.findTopRightCell(cells);
+    if (cells === undefined || cells.length === 0) return undefined;
+    return this.boardView.findTopRightCell(cells);
+  }
+
+  private isCellTopRightInCurrentTurn(cell: GameCell): boolean {
+    return cell === this.getCurrentTurnTopRightCell();
   }
 
   private wasTileUsedInPreviousTurn(tile: GameTile): boolean {
     const { previousTurnTiles: tiles } = this.game.turnView;
-    if (tiles === undefined || tiles.length === 0) return false;
-    return tiles.includes(tile);
+    if (!tiles?.length) return false;
+    if (tiles !== this._previousTurnTilesRef) {
+      this._previousTurnTilesRef = tiles;
+      this._previousTurnTileSet = new Set(tiles);
+    }
+    return this._previousTurnTileSet!.has(tile);
   }
 }

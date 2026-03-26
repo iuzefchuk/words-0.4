@@ -1,8 +1,7 @@
 <script lang="ts" setup>
-import { reactive } from 'vue';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 const matchStore = MatchStore.INSTANCE();
-const players = reactive([
+const players = [
   {
     name: window.t('game.player_user'),
     score: () => matchStore.userScore,
@@ -11,7 +10,7 @@ const players = reactive([
     name: window.t('game.player_opponent'),
     score: () => matchStore.opponentScore,
   },
-]);
+];
 </script>
 
 <template>

@@ -122,10 +122,9 @@ export default class CurrentTurnValidator {
     const { dictionary, inventory } = state.context;
     const words: Array<string> = [];
     for (let i = 0; i < state.placements.length; i++) {
-      const placement = state.placements[i];
-      let word = '';
-      for (const { tile } of placement) word += inventory.getTileLetter(tile);
-      words[i] = word;
+      const letters: Array<string> = [];
+      for (const { tile } of state.placements[i]) letters.push(inventory.getTileLetter(tile));
+      words[i] = letters.join('');
     }
     return dictionary.containsWords(words)
       ? this.Pipeline.pass(state, { words })

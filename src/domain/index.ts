@@ -103,6 +103,7 @@ export default class Game {
     if (score === undefined) throw new Error('Current turn score does not exist');
     tiles.forEach(tile => this.inventory.discardTile({ player, tile }));
     this.inventory.replenishTilesFor(player);
+    this.turnTracker.commitCurrentTurnScore();
     this.startTurnForNextPlayer();
     const type = player === GamePlayer.User ? GameEventType.UserTurnSaved : GameEventType.OpponentTurnSaved;
     this.events.record({ type, words, score });

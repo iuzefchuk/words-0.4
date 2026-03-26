@@ -78,6 +78,7 @@ class MatchQueries {
   readonly eventLog = computed(() => this.readState(() => this.appQueries.getEventLog()));
   readonly matchIsFinished = computed(() => this.readState(() => this.appQueries.isMatchFinished()));
   readonly matchResult = computed(() => this.readState(() => this.appQueries.getMatchResult()));
+  readonly currentTurnTopRightCell = computed(() => this.readBoard(() => this.appQueries.getCurrentTurnTopRightCell()));
 
   constructor(
     private readonly appQueries: AppQueries,

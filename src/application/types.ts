@@ -57,6 +57,7 @@ export type AppQueries = {
   findTileOnCell: (cell: GameCell) => GameTile | undefined;
   findCellWithTile: (tile: GameTile) => GameCell | undefined;
   isTilePlaced: (tile: GameTile) => boolean;
+  getCurrentTurnTopRightCell: () => GameCell | undefined;
   isCellTopRightInCurrentTurn: (cell: GameCell) => boolean;
   wasTileUsedInPreviousTurn: (tile: GameTile) => boolean;
 };

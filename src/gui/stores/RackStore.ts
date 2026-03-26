@@ -73,7 +73,7 @@ export default class RackStore {
   }
 
   private getTileIdx(tile: GameTile): number {
-    return this.tiles.findIndex(item => this.matchStore.areTilesSame(item, tile));
+    return this.tiles.indexOf(tile);
   }
 
   private isTileInRack(tile: GameTile): boolean {

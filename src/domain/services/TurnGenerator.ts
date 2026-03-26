@@ -316,7 +316,7 @@ export default class TurnGenerator {
       const { cell } = task.candidate;
       const { tile } = task.resolution;
       const { letterTiles } = task.resolutionComputeds;
-      letterTiles.splice(letterTiles.indexOf(tile), 1);
+      letterTiles.pop();
       this.placement.push({ cell, tile } as Link);
       this.board.placeTile(cell, tile);
       return this.emitContinue();

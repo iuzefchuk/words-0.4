@@ -136,10 +136,14 @@ export default class Inventory {
 }
 
 class TilePool {
+  private readonly _tileIds: Array<TileId>;
+
   private constructor(
     private readonly capacity: number | undefined,
     private readonly tiles: Array<Tile>,
-  ) {}
+  ) {
+    this._tileIds = tiles.map(t => t.id);
+  }
 
   static create({ capacity, tiles }: { capacity?: number; tiles?: Array<Tile> } = {}): TilePool {
     return new TilePool(capacity, tiles ?? []);
@@ -150,31 +154,30 @@ class TilePool {
   }
 
   get tileIds(): ReadonlyArray<TileId> {
-    return this.tiles.map(tile => tile.id);
+    return this._tileIds;
   }
 
   get tileCollection(): TileCollection {
-    const collection = new Map<Letter, ReadonlyArray<TileId>>();
+    const collection = new Map<Letter, Array<TileId>>();
     for (const tile of this.tiles) {
-      const existing = collection.get(tile.letter);
-      if (existing) {
-        collection.set(tile.letter, [...existing, tile.id]);
-      } else {
-        collection.set(tile.letter, [tile.id]);
-      }
+      let arr = collection.get(tile.letter);
+      if (!arr) collection.set(tile.letter, (arr = []));
+      arr.push(tile.id);
     }
     return collection;
   }
 
   addTile(tile: Tile): void {
-    this.ensureTileAbsence(tile);
+    if (this._tileIds.includes(tile.id)) throw new Error(`Tile ${tile} is already present`);
     this.validateCapacity({ newTileCount: this.tiles.length + 1 });
     this.tiles.push(tile);
+    this._tileIds.push(tile.id);
   }
 
   discardTile(tileId: TileId): Tile {
-    const index = this.tiles.findIndex(tile => tile.id === tileId);
+    const index = this._tileIds.indexOf(tileId);
     if (index === -1) throw new Error('Tile absent');
+    this._tileIds.splice(index, 1);
     const [removedTile] = this.tiles.splice(index, 1);
     return removedTile;
   }
@@ -182,17 +185,12 @@ class TilePool {
   popTile(): Tile {
     const tile = this.tiles.pop();
     if (!tile) throw new Error('No tiles left to draw');
+    this._tileIds.pop();
     return tile;
   }
 
   private validateCapacity({ newTileCount }: { newTileCount: number }): void {
     if (this.capacity !== undefined && newTileCount > this.capacity) throw new Error('Rack limit exceeded');
-  }
-
-  private ensureTileAbsence(tile: Tile): void {
-    if (this.tiles.some(tileInArray => tile.equals(tileInArray))) {
-      throw new Error(`Tile ${tile} is already present`);
-    }
   }
 }
 
