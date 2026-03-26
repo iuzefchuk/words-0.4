@@ -32,14 +32,20 @@ export default class MatchStore {
 }
 
 class MatchState {
-  private readonly version = ref(0);
+  private readonly boardVersion = ref(0);
+  private readonly stateVersion = ref(0);
 
-  read<T>(fn: () => T): T {
-    void this.version.value;
+  readState<T>(fn: () => T): T {
+    void this.stateVersion.value;
     return fn();
   }
 
-  write<T>(fn: () => T): T {
+  readBoard<T>(fn: () => T): T {
+    void this.boardVersion.value;
+    return fn();
+  }
+
+  writeState<T>(fn: () => T): T {
     const result = fn();
     this.sync();
     if (result instanceof Promise) {
@@ -48,23 +54,30 @@ class MatchState {
     return result;
   }
 
+  writeBoard<T>(fn: () => T): T {
+    const result = fn();
+    this.boardVersion.value++;
+    return result;
+  }
+
   sync(): void {
-    this.version.value++;
+    this.boardVersion.value++;
+    this.stateVersion.value++;
   }
 }
 
 class MatchQueries {
-  readonly tilesRemaining = computed(() => this.read(() => this.appQueries.getTilesRemaining()));
-  readonly userTiles = computed(() => this.read(() => this.appQueries.getUserTiles()));
-  readonly userScore = computed(() => this.read(() => this.appQueries.getUserScore()));
-  readonly opponentScore = computed(() => this.read(() => this.appQueries.getOpponentScore()));
-  readonly currentPlayerIsUser = computed(() => this.read(() => this.appQueries.isCurrentPlayerUser()));
-  readonly currentTurnScore = computed(() => this.read(() => this.appQueries.getCurrentTurnScore()));
-  readonly currentTurnIsValid = computed(() => this.read(() => this.appQueries.isCurrentTurnValid()));
-  readonly userPassWillBeResign = computed(() => this.read(() => this.appQueries.willUserPassBeResign()));
-  readonly eventLog = computed(() => this.read(() => this.appQueries.getEventLog()));
-  readonly matchIsFinished = computed(() => this.read(() => this.appQueries.isMatchFinished()));
-  readonly matchResult = computed(() => this.read(() => this.appQueries.getMatchResult()));
+  readonly tilesRemaining = computed(() => this.readState(() => this.appQueries.getTilesRemaining()));
+  readonly userTiles = computed(() => this.readState(() => this.appQueries.getUserTiles()));
+  readonly userScore = computed(() => this.readState(() => this.appQueries.getUserScore()));
+  readonly opponentScore = computed(() => this.readState(() => this.appQueries.getOpponentScore()));
+  readonly currentPlayerIsUser = computed(() => this.readState(() => this.appQueries.isCurrentPlayerUser()));
+  readonly currentTurnScore = computed(() => this.readBoard(() => this.appQueries.getCurrentTurnScore()));
+  readonly currentTurnIsValid = computed(() => this.readBoard(() => this.appQueries.isCurrentTurnValid()));
+  readonly userPassWillBeResign = computed(() => this.readState(() => this.appQueries.willUserPassBeResign()));
+  readonly eventLog = computed(() => this.readState(() => this.appQueries.getEventLog()));
+  readonly matchIsFinished = computed(() => this.readState(() => this.appQueries.isMatchFinished()));
+  readonly matchResult = computed(() => this.readState(() => this.appQueries.getMatchResult()));
 
   constructor(
     private readonly appQueries: AppQueries,
@@ -77,14 +90,19 @@ class MatchQueries {
   getCellBonus = (cell: GameCell) => this.appQueries.getCellBonus(cell);
   getCellRowIndex = (cell: GameCell) => this.appQueries.getCellRowIndex(cell);
   getCellColumnIndex = (cell: GameCell) => this.appQueries.getCellColumnIndex(cell);
-  findTileOnCell = (cell: GameCell) => this.read(() => this.appQueries.findTileOnCell(cell));
-  findCellWithTile = (tile: GameTile) => this.read(() => this.appQueries.findCellWithTile(tile));
-  isTilePlaced = (tile: GameTile) => this.read(() => this.appQueries.isTilePlaced(tile));
-  isCellTopRightInCurrentTurn = (cell: GameCell) => this.read(() => this.appQueries.isCellTopRightInCurrentTurn(cell));
-  wasTileUsedInPreviousTurn = (tile: GameTile) => this.read(() => this.appQueries.wasTileUsedInPreviousTurn(tile));
+  findTileOnCell = (cell: GameCell) => this.readBoard(() => this.appQueries.findTileOnCell(cell));
+  findCellWithTile = (tile: GameTile) => this.readBoard(() => this.appQueries.findCellWithTile(tile));
+  isTilePlaced = (tile: GameTile) => this.readBoard(() => this.appQueries.isTilePlaced(tile));
+  isCellTopRightInCurrentTurn = (cell: GameCell) =>
+    this.readBoard(() => this.appQueries.isCellTopRightInCurrentTurn(cell));
+  wasTileUsedInPreviousTurn = (tile: GameTile) => this.readBoard(() => this.appQueries.wasTileUsedInPreviousTurn(tile));
 
-  private read<T>(fn: () => T): T {
-    return this.matchState.read(fn);
+  private readBoard<T>(fn: () => T): T {
+    return this.matchState.readBoard(fn);
+  }
+
+  private readState<T>(fn: () => T): T {
+    return this.matchState.readState(fn);
   }
 }
 
@@ -95,29 +113,29 @@ class MatchCommands {
   ) {}
 
   placeTile = (args: { cell: GameCell; tile: GameTile }): void => {
-    return this.writeAndPlaySound(() => this.appCommands.placeTile(args));
+    return this.writeBoardAndPlaySound(() => this.appCommands.placeTile(args));
   };
 
   undoPlaceTile = (tile: GameTile): void => {
-    return this.writeAndPlaySound(() => this.appCommands.undoPlaceTile(tile));
+    return this.writeBoardAndPlaySound(() => this.appCommands.undoPlaceTile(tile));
   };
 
   clearTiles = (): void => {
-    return this.matchState.write(() => this.appCommands.clearTiles());
+    return this.matchState.writeBoard(() => this.appCommands.clearTiles());
   };
 
   save = (): void => {
-    const { opponentTurn } = this.writeAndPlaySound(() => this.appCommands.handleSaveTurn());
+    const { opponentTurn } = this.writeStateAndPlaySound(() => this.appCommands.handleSaveTurn());
     opponentTurn?.then(() => this.syncAndPlaySound());
   };
 
   pass = (): void => {
-    const { opponentTurn } = this.writeAndPlaySound(() => this.appCommands.handlePassTurn());
+    const { opponentTurn } = this.writeStateAndPlaySound(() => this.appCommands.handlePassTurn());
     opponentTurn?.then(() => this.syncAndPlaySound());
   };
 
   resign = (): void => {
-    return this.writeAndPlaySound(() => this.appCommands.handleResignMatch());
+    return this.writeStateAndPlaySound(() => this.appCommands.handleResignMatch());
   };
 
   private syncAndPlaySound(): void {
@@ -125,8 +143,14 @@ class MatchCommands {
     this.playPendingSounds();
   }
 
-  private writeAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
-    const response = this.matchState.write(callback);
+  private writeBoardAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
+    const response = this.matchState.writeBoard(callback);
+    this.playPendingSounds();
+    return response;
+  }
+
+  private writeStateAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
+    const response = this.matchState.writeState(callback);
     this.playPendingSounds();
     return response;
   }

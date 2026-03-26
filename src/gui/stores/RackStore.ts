@@ -58,7 +58,8 @@ export default class RackStore {
   }
 
   private initialize(userTiles: ReadonlyArray<GameTile>): void {
-    this.tiles = [...userTiles];
+    this.tiles.splice(0, this.tiles.length, ...userTiles);
+    triggerRef(this.tilesRef);
     this.selectedTile = null;
   }
 

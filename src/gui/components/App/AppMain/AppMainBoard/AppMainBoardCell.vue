@@ -8,6 +8,7 @@ import RackStore from '@/gui/stores/RackStore.ts';
 const props = defineProps({ cell: { type: Number as unknown as PropType<GameCell>, required: true } });
 const matchStore = MatchStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
+const isCellCenter = computed(() => matchStore.isCellCenter(props.cell));
 const bonus = computed(() => matchStore.getCellBonus(props.cell));
 const bonusName = computed(() => (bonus.value ? getBonusName(bonus.value) : ''));
 const tile = computed(() => matchStore.findTileOnCell(props.cell));
@@ -18,7 +19,7 @@ const isTileSaturated = computed(() => tile.value != null && matchStore.wasTileU
   <li
     :class="{
       cell: true,
-      'cell--center': matchStore.isCellCenter(cell),
+      'cell--center': isCellCenter,
       'cell--has-tile': tile,
     }"
     @click.stop="rackStore.handleClickBoardCell(cell)"

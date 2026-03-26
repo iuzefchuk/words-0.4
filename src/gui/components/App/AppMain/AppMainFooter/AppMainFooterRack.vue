@@ -16,7 +16,7 @@ const { allActionsAreDisabled } = buttons;
   <ul class="rack app__width-content app__grid--footer">
     <li
       v-for="(tile, idx) in tiles"
-      :key="idx"
+      :key="tile"
       :class="{ rack__cell: true, 'rack__cell--disabled': allActionsAreDisabled }"
       @click.stop="rackStore.handleClickFooterCell(idx)"
     >
