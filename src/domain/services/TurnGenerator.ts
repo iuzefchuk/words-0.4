@@ -2,7 +2,7 @@ import { Letter, Player } from '@/domain/enums.ts';
 import Board, { AnchorCoordinates, Axis, CellIndex, Link } from '@/domain/models/Board.ts';
 import Dictionary, { NodeId } from '@/domain/models/Dictionary.ts';
 import Inventory, { TileCollection, TileId } from '@/domain/models/Inventory.ts';
-import TurnTracker, { ValidationStatus } from '@/domain/models/TurnTracker.ts';
+import Turns, { ValidationStatus } from '@/domain/models/Turns.ts';
 import CrossCheckComputer from '@/domain/services/CrossCheckComputer.ts';
 import CurrentTurnValidator, { ValidatorContext } from '@/domain/services/CurrentTurnValidator.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
@@ -31,7 +31,7 @@ export type GeneratorContext = {
   board: Board;
   dictionary: Dictionary;
   inventory: Inventory;
-  turnTracker: TurnTracker;
+  turns: Turns;
   yieldControl: () => Promise<void>;
 };
 
@@ -213,9 +213,9 @@ export default class TurnGenerator {
       if (traversal.direction === GenerationDirection.Right && placementIsUsable) {
         const placement = [...this.placement];
         const tiles = placement.map(link => link.tile);
-        for (const tile of tiles) this.context.turnTracker.placeTileInCurrentTurn(tile);
+        for (const tile of tiles) this.context.turns.recordPlacedTile(tile);
         const validationResult = CurrentTurnValidator.execute(this.context as ValidatorContext);
-        for (const tile of tiles) this.context.turnTracker.undoPlaceTileInCurrentTurn({ tile });
+        for (const tile of tiles) this.context.turns.undoRecordPlacedTile({ tile });
         if (validationResult.status === ValidationStatus.Valid) {
           for (const link of placement) this.board.undoPlaceTile(link.tile);
           return this.emitReturn({ tiles, cells: placement.map(link => link.cell) });
@@ -333,10 +333,10 @@ export default class TurnGenerator {
   };
 
   static async *execute(context: GeneratorContext, player: Player): AsyncGenerator<GeneratorResult> {
-    const { inventory, board, dictionary, turnTracker } = context;
+    const { inventory, board, dictionary, turns } = context;
     const playerTileCollection = inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;
-    const anchorCells = board.getAnchorCells(turnTracker.hasPriorTurns);
+    const anchorCells = board.getAnchorCells(turns.historyHasPriorTurns);
     if (anchorCells.size === 0) return;
     const lettersComputer = new CrossCheckComputer(board, dictionary, inventory);
     for (const cell of anchorCells) {

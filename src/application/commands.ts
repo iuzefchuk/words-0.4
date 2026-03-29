@@ -47,7 +47,7 @@ export default class AppCommandBuilder {
   }
 
   private get currentPlayer(): GamePlayer {
-    return this.game.turnView.currentPlayer;
+    return this.game.turnsView.currentPlayer;
   }
 
   private persist(): void {
@@ -77,7 +77,7 @@ export default class AppCommandBuilder {
       this.persist();
       return { userResponse };
     }
-    if (this.game.matchView.matchIsFinished) {
+    if (this.game.matchView.isFinished) {
       this.persist();
       return { userResponse };
     }
@@ -99,7 +99,7 @@ export default class AppCommandBuilder {
   }
 
   private saveTurn(): AppTurnResponse {
-    if (!this.game.turnView.currentTurnIsValid) return { ok: false, error: 'Turn is not valid' };
+    if (!this.game.turnsView.currentTurnIsValid) return { ok: false, error: 'Turn is not valid' };
     const { words } = this.game.saveTurn();
     return { ok: true, value: { words } };
   }
@@ -145,8 +145,8 @@ export default class AppCommandBuilder {
       this.game.placeTile({ cell: generatorResult.cells[i], tile: generatorResult.tiles[i] });
     }
     this.game.validateTurn();
-    const words = this.game.turnView.currentTurnWords ?? [];
-    const score = this.game.turnView.currentTurnScore ?? 0;
+    const words = this.game.turnsView.currentTurnWords ?? [];
+    const score = this.game.turnsView.currentTurnScore ?? 0;
     this.saveTurn();
     return { type: GameEventType.OpponentTurnSaved, words, score };
   }

@@ -169,11 +169,11 @@ export default class Board {
       .sort((a, b) => a.cell - b.cell);
   }
 
-  getAnchorCells(hasPriorTurns: boolean): ReadonlySet<CellIndex> {
+  getAnchorCells(historyHasPriorTurns: boolean): ReadonlySet<CellIndex> {
     return new Set(
       Layout.cells.filter((cell: CellIndex) => {
         const isCenter = Layout.isCellCenter(cell);
-        if (!hasPriorTurns) return isCenter;
+        if (!historyHasPriorTurns) return isCenter;
         if (this.isCellOccupied(cell)) return false;
         const hasUsedAdjacentCells = Layout.getAdjacentCells(cell).some((adjacentCell: CellIndex) =>
           this.isCellOccupied(adjacentCell),

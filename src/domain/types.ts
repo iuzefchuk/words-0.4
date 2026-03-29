@@ -8,9 +8,9 @@ import type {
   TileId as GameTile,
   InventorySnapshot,
 } from '@/domain/models/Inventory.ts';
-import { MatchResult as GameMatchResult } from '@/domain/models/MatchTracker.ts';
-import type { MatchView as GameMatchView, MatchTrackerSnapshot } from '@/domain/models/MatchTracker.ts';
-import type { TurnView as GameTurnView, TurnTrackerSnapshot } from '@/domain/models/TurnTracker.ts';
+import { MatchResult as GameMatchResult } from '@/domain/models/Match.ts';
+import type { MatchView as GameMatchView, MatchSnapshot } from '@/domain/models/Match.ts';
+import type { TurnsView as GameTurnsView, TurnsSnapshot } from '@/domain/models/Turns.ts';
 import { default as GameTurnGenerator } from '@/domain/services/TurnGenerator.ts';
 
 export type EventsSnapshot = {
@@ -22,8 +22,8 @@ export type GameSnapshot = {
   board: BoardSnapshot;
   dictionary: DictionarySnapshot;
   inventory: InventorySnapshot;
-  matchTracker: MatchTrackerSnapshot;
-  turnTracker: TurnTrackerSnapshot;
+  match: MatchSnapshot;
+  turns: TurnsSnapshot;
   events: EventsSnapshot;
 };
 
@@ -38,5 +38,5 @@ export type GameEvent =
   | { type: GameEventType.MatchTied }
   | { type: GameEventType.MatchLost };
 
-export type { Game, GameCell, GameBoardView, GameTile, GameInventoryView, GameTurnView };
+export type { Game, GameCell, GameBoardView, GameTile, GameInventoryView, GameTurnsView };
 export { GamePlayer, GameEventType, GameLetter, GameBonus, GameMatchResult, GameMatchView, GameTurnGenerator };

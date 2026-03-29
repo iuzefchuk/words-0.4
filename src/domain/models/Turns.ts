@@ -37,8 +37,8 @@ export type ValidResult = { status: ValidationStatus.Valid } & AllComputeds;
 
 export type ValidationResult = UnvalidatedResult | InvalidResult | ValidResult;
 
-export type TurnView = {
-  readonly hasPriorTurns: boolean;
+export type TurnsView = {
+  readonly historyHasPriorTurns: boolean;
   readonly currentPlayer: Player;
   readonly nextPlayer: Player;
   readonly currentTurnTiles: ReadonlyArray<TileId>;
@@ -47,13 +47,10 @@ export type TurnView = {
   readonly currentTurnWords: ReadonlyArray<string> | undefined;
   readonly currentTurnIsValid: boolean;
   readonly previousTurnTiles: ReadonlyArray<TileId> | undefined;
-  getScoreFor(player: Player): number;
 };
 
-export type TurnTrackerSnapshot = {
+export type TurnsSnapshot = {
   readonly turns: Array<TurnSnapshot>;
-  readonly userScore: number;
-  readonly opponentScore: number;
 };
 
 export type TurnSnapshot = {
@@ -63,35 +60,31 @@ export type TurnSnapshot = {
   readonly validationResult: ValidationResult;
 };
 
-export default class TurnTracker {
+export default class Turns {
   private static readonly FIRST_PLAYER: Player = Player.User;
 
   private constructor(
     private readonly idGenerator: IdGenerator,
-    private turns: Array<Turn>,
-    private userScore: number,
-    private opponentScore: number,
+    private history: Array<Turn>,
   ) {}
 
-  static create(idGenerator: IdGenerator): TurnTracker {
-    return new TurnTracker(idGenerator, [], 0, 0);
+  static create(idGenerator: IdGenerator): Turns {
+    return new Turns(idGenerator, []);
   }
 
-  static restoreFromSnapshot(snapshot: TurnTrackerSnapshot, idGenerator: IdGenerator): TurnTracker {
+  static restoreFromSnapshot(snapshot: TurnsSnapshot, idGenerator: IdGenerator): Turns {
     const turns = snapshot.turns.map(turn => Turn.restoreFromSnapshot(turn));
-    return new TurnTracker(idGenerator, turns, snapshot.userScore, snapshot.opponentScore);
+    return new Turns(idGenerator, turns);
   }
 
-  get snapshot(): TurnTrackerSnapshot {
+  get snapshot(): TurnsSnapshot {
     return {
-      turns: this.turns.map(turn => turn.snapshot),
-      userScore: this.userScore,
-      opponentScore: this.opponentScore,
+      turns: this.history.map(turn => turn.snapshot),
     };
   }
 
-  get hasPriorTurns(): boolean {
-    return this.turns.length > 1;
+  get historyHasPriorTurns(): boolean {
+    return this.history.length > 1;
   }
 
   get currentPlayer(): Player {
@@ -99,7 +92,7 @@ export default class TurnTracker {
   }
 
   get nextPlayer(): Player {
-    if (this.turns.length === 0) return TurnTracker.FIRST_PLAYER;
+    if (this.history.length === 0) return Turns.FIRST_PLAYER;
     return this.currentPlayer === Player.User ? Player.Opponent : Player.User;
   }
 
@@ -124,42 +117,18 @@ export default class TurnTracker {
   }
 
   get previousTurnTiles(): ReadonlyArray<TileId> | undefined {
-    return this.turns.at(-2)?.tilesView;
+    return this.history.at(-2)?.tilesView;
   }
 
-  get leaderByScore(): Player | null {
-    const userScore = this.getScoreFor(Player.User);
-    const opponentScore = this.getScoreFor(Player.Opponent);
-    const scoresAreTied = userScore === opponentScore;
-    if (scoresAreTied) return null;
-    return userScore > opponentScore ? Player.User : Player.Opponent;
+  recordPlacedTile(tile: TileId): void {
+    this.currentTurn.addTile(tile);
   }
 
-  get loserByScore(): Player | null {
-    if (this.leaderByScore === null) return null;
-    return this.leaderByScore === Player.User ? Player.Opponent : Player.User;
+  undoRecordPlacedTile({ tile }: { tile: TileId }): void {
+    this.currentTurn.removeTile({ tile });
   }
 
-  getScoreFor(player: Player): number {
-    return player === Player.User ? this.userScore : this.opponentScore;
-  }
-
-  commitCurrentTurnScore(): void {
-    const { score, player } = this.currentTurn;
-    if (score === undefined) return;
-    if (player === Player.User) this.userScore += score;
-    else this.opponentScore += score;
-  }
-
-  placeTileInCurrentTurn(tile: TileId): void {
-    this.currentTurn.placeTile(tile);
-  }
-
-  undoPlaceTileInCurrentTurn({ tile }: { tile: TileId }): void {
-    this.currentTurn.undoPlaceTile({ tile });
-  }
-
-  setCurrentTurnValidation(result: ValidationResult): void {
+  recordValidationResult(result: ValidationResult): void {
     this.currentTurn.setValidationResult(result);
   }
 
@@ -167,13 +136,13 @@ export default class TurnTracker {
     this.currentTurn.reset();
   }
 
-  createNewTurnFor(player: Player): void {
+  startTurnFor(player: Player): void {
     if (player !== this.nextPlayer) throw new Error(`Expected next player to be ${this.nextPlayer}, but got ${player}`);
-    this.turns.push(Turn.create({ player, idGenerator: this.idGenerator }));
+    this.history.push(Turn.create({ player, idGenerator: this.idGenerator }));
   }
 
   private get currentTurn(): Turn {
-    const last = this.turns.at(-1);
+    const last = this.history.at(-1);
     if (!last) throw new Error('Current turn does not exist');
     return last;
   }
@@ -228,12 +197,12 @@ class Turn {
     this.validationResult = result;
   }
 
-  placeTile(tile: TileId): void {
+  addTile(tile: TileId): void {
     if (this.tiles.includes(tile)) throw new Error(`Tile ${tile} already connected`);
     this.tiles.push(tile);
   }
 
-  undoPlaceTile({ tile }: { tile: TileId }): void {
+  removeTile({ tile }: { tile: TileId }): void {
     const index = this.tiles.indexOf(tile);
     if (index === -1) throw new Error(`Tile ${tile} not found`);
     this.tiles.splice(index, 1);

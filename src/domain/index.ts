@@ -1,8 +1,8 @@
 import Board from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
 import Inventory from '@/domain/models/Inventory.ts';
-import MatchTracker from '@/domain/models/MatchTracker.ts';
-import TurnTracker from '@/domain/models/TurnTracker.ts';
+import Match from '@/domain/models/Match.ts';
+import Turns from '@/domain/models/Turns.ts';
 import { IdGenerator } from '@/domain/ports.ts';
 import CurrentTurnValidator, { ValidatorContext } from '@/domain/services/CurrentTurnValidator.ts';
 import { GeneratorContext } from '@/domain/services/TurnGenerator.ts';
@@ -17,7 +17,7 @@ import {
   GamePlayer,
   GameSnapshot,
   GameTile,
-  GameTurnView,
+  GameTurnsView,
 } from '@/domain/types.ts';
 
 const GAME_SNAPSHOT_VERSION = 1; //TODO connect to .env version
@@ -27,8 +27,8 @@ export default class Game {
     private readonly board: Board,
     private readonly dictionary: Dictionary,
     private readonly inventory: Inventory,
-    private readonly matchTracker: MatchTracker,
-    private readonly turnTracker: TurnTracker,
+    private readonly match: Match,
+    private readonly turns: Turns,
     private readonly events: Events,
   ) {}
 
@@ -37,10 +37,10 @@ export default class Game {
     const board = Board.create();
     const dictionary = Dictionary.create();
     const inventory = Inventory.create(players);
-    const matchTracker = MatchTracker.create(players);
-    const turnTracker = TurnTracker.create(idGenerator);
+    const match = Match.create(players);
+    const turns = Turns.create(idGenerator);
     const events = Events.create();
-    const game = new Game(board, dictionary, inventory, matchTracker, turnTracker, events);
+    const game = new Game(board, dictionary, inventory, match, turns, events);
     game.startTurnForNextPlayer();
     return game;
   }
@@ -50,10 +50,10 @@ export default class Game {
     const board = Board.restoreFromSnapshot(snapshot.board);
     const dictionary = Dictionary.restoreFromSnapshot(snapshot.dictionary);
     const inventory = Inventory.restoreFromSnapshot(snapshot.inventory);
-    const matchTracker = MatchTracker.restoreFromSnapshot(snapshot.matchTracker);
-    const turnTracker = TurnTracker.restoreFromSnapshot(snapshot.turnTracker, idGenerator);
+    const match = Match.restoreFromSnapshot(snapshot.match);
+    const turns = Turns.restoreFromSnapshot(snapshot.turns, idGenerator);
     const events = Events.restoreFromSnapshot(snapshot.events);
-    return new Game(board, dictionary, inventory, matchTracker, turnTracker, events);
+    return new Game(board, dictionary, inventory, match, turns, events);
   }
 
   get snapshot(): GameSnapshot {
@@ -62,8 +62,8 @@ export default class Game {
       board: this.board.snapshot,
       dictionary: this.dictionary.snapshot,
       inventory: this.inventory.snapshot,
-      turnTracker: this.turnTracker.snapshot,
-      matchTracker: this.matchTracker.snapshot,
+      turns: this.turns.snapshot,
+      match: this.match.snapshot,
       events: this.events.snapshot,
     };
   }
@@ -76,12 +76,12 @@ export default class Game {
     return this.inventory;
   }
 
-  get turnView(): Readonly<GameTurnView> {
-    return this.turnTracker;
+  get turnsView(): Readonly<GameTurnsView> {
+    return this.turns;
   }
 
   get matchView(): Readonly<GameMatchView> {
-    return this.matchTracker;
+    return this.match;
   }
 
   get eventLog(): ReadonlyArray<GameEvent> {
@@ -89,23 +89,23 @@ export default class Game {
   }
 
   placeTile(input: { cell: GameCell; tile: GameTile }): void {
-    this.matchTracker.ensureMutability();
+    this.match.ensureMutability();
     this.board.placeTile(input.cell, input.tile);
-    this.turnTracker.placeTileInCurrentTurn(input.tile);
+    this.turns.recordPlacedTile(input.tile);
     this.events.record({ type: GameEventType.TilePlaced });
   }
 
   undoPlaceTile(input: { tile: GameTile }): void {
-    this.matchTracker.ensureMutability();
-    this.turnTracker.undoPlaceTileInCurrentTurn(input);
+    this.match.ensureMutability();
+    this.turns.undoRecordPlacedTile(input);
     this.board.undoPlaceTile(input.tile);
     this.events.record({ type: GameEventType.TileUndoPlaced });
   }
 
   clearTiles(): void {
-    this.matchTracker.ensureMutability();
-    for (const tile of this.turnTracker.currentTurnTiles) this.board.undoPlaceTile(tile);
-    this.turnTracker.resetCurrentTurn();
+    this.match.ensureMutability();
+    for (const tile of this.turns.currentTurnTiles) this.board.undoPlaceTile(tile);
+    this.turns.resetCurrentTurn();
   }
 
   validateTurn(): void {
@@ -113,25 +113,25 @@ export default class Game {
       board: this.board,
       dictionary: this.dictionary,
       inventory: this.inventory,
-      turnTracker: this.turnTracker,
+      turns: this.turns,
     } as ValidatorContext);
-    this.turnTracker.setCurrentTurnValidation(result);
+    this.turns.recordValidationResult(result);
   }
 
   saveTurn(): { words: ReadonlyArray<string> } {
-    this.matchTracker.ensureMutability();
-    if (!this.turnView.currentTurnIsValid) throw new Error('Turn is not valid');
+    this.match.ensureMutability();
+    if (!this.turnsView.currentTurnIsValid) throw new Error('Turn is not valid');
     const {
       currentPlayer: player,
       currentTurnTiles: tiles,
       currentTurnWords: words,
       currentTurnScore: score,
-    } = this.turnView;
+    } = this.turnsView;
     if (words === undefined) throw new Error('Current turn words do not exist');
     if (score === undefined) throw new Error('Current turn score does not exist');
     tiles.forEach(tile => this.inventory.discardTile({ player, tile }));
     this.inventory.replenishTilesFor(player);
-    this.turnTracker.commitCurrentTurnScore();
+    this.match.incrementScore(player, score);
     this.startTurnForNextPlayer();
     const type = player === GamePlayer.User ? GameEventType.UserTurnSaved : GameEventType.OpponentTurnSaved;
     this.events.record({ type, words, score });
@@ -139,8 +139,8 @@ export default class Game {
   }
 
   passTurn(): void {
-    const { currentPlayer: player } = this.turnView;
-    this.matchTracker.ensureMutability();
+    const { currentPlayer: player } = this.turnsView;
+    this.match.ensureMutability();
     this.startTurnForNextPlayer();
     const type = player === GamePlayer.User ? GameEventType.UserTurnPassed : GameEventType.OpponentTurnPassed;
     this.events.record({ type });
@@ -151,13 +151,13 @@ export default class Game {
       board: Board.clone(this.board),
       dictionary: this.dictionary,
       inventory: this.inventory,
-      turnTracker: this.turnTracker,
+      turns: this.turns,
       yieldControl,
     };
   }
 
   finishMatchByScore(): void {
-    const { leaderByScore, loserByScore } = this.turnTracker;
+    const { leaderByScore, loserByScore } = this.match;
     if (leaderByScore === null || loserByScore === null) {
       this.tieMatch();
       this.events.record({ type: GameEventType.MatchTied });
@@ -168,8 +168,8 @@ export default class Game {
   }
 
   resignMatch(): void {
-    const { currentPlayer, nextPlayer } = this.turnView;
-    this.matchTracker.recordCompletion(nextPlayer, currentPlayer);
+    const { currentPlayer, nextPlayer } = this.turnsView;
+    this.match.recordCompletion(nextPlayer, currentPlayer);
     this.events.record({ type: currentPlayer === GamePlayer.User ? GameEventType.MatchLost : GameEventType.MatchWon });
   }
 
@@ -185,15 +185,15 @@ export default class Game {
   }
 
   private startTurnForNextPlayer(): void {
-    this.turnTracker.createNewTurnFor(this.turnTracker.nextPlayer);
+    this.turns.startTurnFor(this.turns.nextPlayer);
   }
 
   private completeMatch(winner: GamePlayer, loser: GamePlayer): void {
-    this.matchTracker.recordCompletion(winner, loser);
+    this.match.recordCompletion(winner, loser);
   }
 
   private tieMatch(): void {
-    this.matchTracker.recordTie(this.turnView.currentPlayer, this.turnView.nextPlayer);
+    this.match.recordTie(this.turnsView.currentPlayer, this.turnsView.nextPlayer);
   }
 }
 

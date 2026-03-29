@@ -1,7 +1,7 @@
 import Board, { AnchorCoordinates, Placement } from '@/domain/models/Board.ts';
 import Dictionary from '@/domain/models/Dictionary.ts';
 import Inventory from '@/domain/models/Inventory.ts';
-import TurnTracker, {
+import Turns, {
   ComputedCells,
   ComputedPlacements,
   ComputedScore,
@@ -12,11 +12,11 @@ import TurnTracker, {
   ValidationError,
   ValidationResult,
   ValidationStatus,
-} from '@/domain/models/TurnTracker.ts';
+} from '@/domain/models/Turns.ts';
 import PlacementBuilder from '@/domain/services/PlacementBuilder.ts';
 import ScoreCalculator from '@/domain/services/ScoreCalculator.ts';
 
-export type ValidatorContext = { board: Board; dictionary: Dictionary; inventory: Inventory; turnTracker: TurnTracker };
+export type ValidatorContext = { board: Board; dictionary: Dictionary; inventory: Inventory; turns: Turns };
 
 type PendingResult<State> = { status: ValidationStatus.Pending; state: State };
 
@@ -79,15 +79,15 @@ export default class CurrentTurnValidator {
   }
 
   private static computeAndValidateCells(state: PipelineInput): PipelineThroughput<PipelineState<SequencesOutput>> {
-    const { board, turnTracker } = state.context;
-    const tiles = turnTracker.currentTurnTiles;
+    const { board, turns } = state.context;
+    const tiles = turns.currentTurnTiles;
     if (tiles.length === 0) return this.Pipeline.fail(ValidationError.InvalidTilePlacement);
     const placement = board.resolvePlacement(tiles);
     const cells = placement.map(link => link.cell);
     const placementCells = new Set(cells);
     const someCellsAreAnchor = cells.some(cell => {
       if (board.isCellCenter(cell)) return true;
-      if (!turnTracker.hasPriorTurns) return false;
+      if (!turns.historyHasPriorTurns) return false;
       return board.getAdjacentCells(cell).some(adj => board.isCellOccupied(adj) && !placementCells.has(adj));
     });
     return someCellsAreAnchor
@@ -98,8 +98,8 @@ export default class CurrentTurnValidator {
   private static computeAndValidatePlacements(
     state: PipelineState<SequencesOutput>,
   ): PipelineThroughput<PipelineState<ComputedTilesOutput>> {
-    const { board, turnTracker } = state.context;
-    const tiles = turnTracker.currentTurnTiles;
+    const { board, turns } = state.context;
+    const tiles = turns.currentTurnTiles;
     const primaryAxis = board.calculateAxis(state.cells);
     const coords = { axis: primaryAxis, cell: state.cells[0] };
     const primaryPlacement = PlacementBuilder.execute(board, { coords, tiles });

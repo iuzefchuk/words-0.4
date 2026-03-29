@@ -5,7 +5,7 @@ import {
   GameInventoryView,
   GamePlayer,
   GameTile,
-  GameTurnView,
+  GameTurnsView,
 } from '@/application/types.ts';
 import Game from '@/domain/index.ts';
 
@@ -19,14 +19,14 @@ export default class AppQueryBuilder {
     return {
       getTilesRemaining: () => this.inventoryView.unusedTilesCount,
       getUserTiles: () => this.inventoryView.getTilesFor(GamePlayer.User),
-      getUserScore: () => this.turnView.getScoreFor(GamePlayer.User),
-      getOpponentScore: () => this.turnView.getScoreFor(GamePlayer.Opponent),
-      isCurrentPlayerUser: () => this.turnView.currentPlayer === GamePlayer.User,
-      getCurrentTurnScore: () => this.turnView.currentTurnScore,
-      isCurrentTurnValid: () => this.turnView.currentTurnIsValid,
+      getUserScore: () => this.game.matchView.getScoreFor(GamePlayer.User),
+      getOpponentScore: () => this.game.matchView.getScoreFor(GamePlayer.Opponent),
+      isCurrentPlayerUser: () => this.turnsView.currentPlayer === GamePlayer.User,
+      getCurrentTurnScore: () => this.turnsView.currentTurnScore,
+      isCurrentTurnValid: () => this.turnsView.currentTurnIsValid,
       willUserPassBeResign: () => this.game.willPassBeResignFor(GamePlayer.User),
       getEventLog: () => this.game.eventLog,
-      isMatchFinished: () => this.game.matchView.matchIsFinished,
+      isMatchFinished: () => this.game.matchView.isFinished,
       getMatchResult: () => this.game.matchView.getResultFor(GamePlayer.User),
       areTilesSame: (first: GameTile, second: GameTile) => this.inventoryView.areTilesEqual(first, second),
       getTileLetter: (tile: GameTile) => this.inventoryView.getTileLetter(tile),
@@ -51,12 +51,12 @@ export default class AppQueryBuilder {
     return this.game.inventoryView;
   }
 
-  private get turnView(): Readonly<GameTurnView> {
-    return this.game.turnView;
+  private get turnsView(): Readonly<GameTurnsView> {
+    return this.game.turnsView;
   }
 
   private getCurrentTurnTopRightCell(): GameCell | undefined {
-    const { currentTurnCells: cells } = this.game.turnView;
+    const { currentTurnCells: cells } = this.game.turnsView;
     if (cells === undefined || cells.length === 0) return undefined;
     return this.boardView.findCellInTopmostRow(cells);
   }
@@ -66,7 +66,7 @@ export default class AppQueryBuilder {
   }
 
   private wasTileUsedInPreviousTurn(tile: GameTile): boolean {
-    const { previousTurnTiles: tiles } = this.game.turnView;
+    const { previousTurnTiles: tiles } = this.game.turnsView;
     if (!tiles?.length) return false;
     if (tiles !== this._previousTurnTilesRef) {
       this._previousTurnTilesRef = tiles;

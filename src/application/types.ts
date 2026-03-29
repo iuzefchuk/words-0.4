@@ -8,7 +8,7 @@ import type {
   GameInventoryView,
   GameMatchView,
   GameTile,
-  GameTurnView,
+  GameTurnsView,
 } from '@/domain/types.ts';
 import {
   GameBonus,
@@ -19,7 +19,7 @@ import {
   GameTurnGenerator,
 } from '@/domain/types.ts';
 
-export type { GameCell, GameBoardView, GameTile, GameInventoryView, GameEvent, GameMatchView, GameTurnView };
+export type { GameCell, GameBoardView, GameTile, GameInventoryView, GameEvent, GameMatchView, GameTurnsView };
 export { GameBonus, GameEventType, GameLetter, GamePlayer, GameMatchResult, GameTurnGenerator };
 
 export type AppConfig = {
