@@ -32,10 +32,9 @@ export default class Game {
     private readonly events: Events,
   ) {}
 
-  static create(idGenerator: IdGenerator): Game {
+  static create(idGenerator: IdGenerator, dictionary: Dictionary): Game {
     const players = Object.values(GamePlayer);
     const board = Board.create();
-    const dictionary = Dictionary.create();
     const inventory = Inventory.create(players);
     const match = Match.create(players);
     const turns = Turns.create(idGenerator);
@@ -45,10 +44,9 @@ export default class Game {
     return game;
   }
 
-  static restoreFromSnapshot(snapshot: GameSnapshot, idGenerator: IdGenerator): Game | null {
+  static restoreFromSnapshot(snapshot: GameSnapshot, idGenerator: IdGenerator, dictionary: Dictionary): Game | null {
     if (snapshot.version !== GAME_SNAPSHOT_VERSION) return null;
     const board = Board.restoreFromSnapshot(snapshot.board);
-    const dictionary = Dictionary.create();
     const inventory = Inventory.restoreFromSnapshot(snapshot.inventory);
     const match = Match.restoreFromSnapshot(snapshot.match);
     const turns = Turns.restoreFromSnapshot(snapshot.turns, idGenerator);

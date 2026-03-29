@@ -1,5 +1,6 @@
 import { AppDependencies } from '@/application/types.ts';
-import { GameRepository } from '@/domain/ports.ts';
+import type { DictionarySnapshot } from '@/domain/models/Dictionary.ts';
+import { DictionaryRepository, GameRepository } from '@/domain/ports.ts';
 import { GameSnapshot } from '@/domain/types.ts';
 import IdGenerator from '@/infrastructure/services/CryptoIdGenerator.ts';
 import DateApiClock from '@/infrastructure/services/DateApiClock.ts';
@@ -12,7 +13,29 @@ export default class Infrastructure {
     const clock = new DateApiClock();
     const scheduler = new WebScheduler();
     const gameRepository = new IndexedDbGameRepository();
-    return { idGenerator, clock, scheduler, gameRepository };
+    const dictionaryRepository = new IndexedDbDictionaryRepository();
+    return { idGenerator, clock, scheduler, gameRepository, dictionaryRepository };
+  }
+}
+
+class IndexedDbDictionaryRepository implements DictionaryRepository {
+  private static readonly DB_VERSION = 1;
+  private static readonly DB_NAME = 'words-dictionary';
+  private static readonly STORE_NAME = 'state';
+  private static readonly CACHE_KEY = 'dictionary';
+
+  private readonly db = new IndexedDb<DictionarySnapshot>(
+    IndexedDbDictionaryRepository.DB_NAME,
+    IndexedDbDictionaryRepository.STORE_NAME,
+    IndexedDbDictionaryRepository.CACHE_KEY,
+  );
+
+  async save(snapshot: DictionarySnapshot): Promise<void> {
+    await this.db.save(IndexedDbDictionaryRepository.DB_VERSION, snapshot);
+  }
+
+  async load(): Promise<DictionarySnapshot | null> {
+    return this.db.load(IndexedDbDictionaryRepository.DB_VERSION);
   }
 }
 

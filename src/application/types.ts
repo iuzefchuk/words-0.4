@@ -1,5 +1,5 @@
 import { Clock, Scheduler } from '@/application/ports.ts';
-import type { GameRepository } from '@/domain/ports.ts';
+import type { DictionaryRepository, GameRepository } from '@/domain/ports.ts';
 import { IdGenerator } from '@/domain/ports.ts';
 import type {
   GameBoardView,
@@ -68,6 +68,7 @@ export type AppDependencies = {
   clock: Clock;
   scheduler: Scheduler;
   gameRepository: GameRepository;
+  dictionaryRepository: DictionaryRepository;
 };
 
 export type AppTurnResponse = Result<{ words: ReadonlyArray<string> }, string>;
