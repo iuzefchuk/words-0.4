@@ -1,4 +1,4 @@
-import { Clock, Scheduler } from '@/application/ports.ts';
+import { Clock, PersistentStorage, Scheduler } from '@/application/ports.ts';
 import type { DictionaryRepository, GameRepository } from '@/domain/ports.ts';
 import { IdGenerator } from '@/domain/ports.ts';
 import type {
@@ -7,11 +7,14 @@ import type {
   GameEvent,
   GameInventoryView,
   GameMatchView,
+  GameSettings,
   GameTile,
   GameTurnsView,
 } from '@/domain/types.ts';
 import {
   GameBonus,
+  GameBonusDistribution,
+  GameDictionary,
   GameEventType,
   GameLetter,
   GameMatchResult,
@@ -19,8 +22,26 @@ import {
   GameTurnGenerator,
 } from '@/domain/types.ts';
 
-export type { GameCell, GameBoardView, GameTile, GameInventoryView, GameEvent, GameMatchView, GameTurnsView };
-export { GameBonus, GameEventType, GameLetter, GamePlayer, GameMatchResult, GameTurnGenerator };
+export type {
+  GameCell,
+  GameBoardView,
+  GameTile,
+  GameInventoryView,
+  GameEvent,
+  GameMatchView,
+  GameTurnsView,
+  GameSettings,
+};
+export {
+  GameBonus,
+  GameEventType,
+  GameLetter,
+  GamePlayer,
+  GameMatchResult,
+  GameTurnGenerator,
+  GameDictionary,
+  GameBonusDistribution,
+};
 
 export type AppConfig = {
   boardCells: ReadonlyArray<GameCell>;
@@ -28,6 +49,7 @@ export type AppConfig = {
 };
 
 export type AppQueries = {
+  getBonusDistribution: () => GameBonusDistribution;
   getTilesRemaining: () => number;
   getUserTiles: () => ReadonlyArray<GameTile>;
   getUserScore: () => number;
@@ -54,6 +76,7 @@ export type AppQueries = {
 };
 
 export type AppCommands = {
+  changeBonusDistribution: (bonusDistribution: GameBonusDistribution) => void;
   placeTile: (args: { cell: GameCell; tile: GameTile }) => void;
   undoPlaceTile: (tile: GameTile) => void;
   clearTiles: () => void;

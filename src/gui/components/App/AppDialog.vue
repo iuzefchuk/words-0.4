@@ -8,19 +8,16 @@ const dialogStore = DialogStore.INSTANCE();
 const { title, html, cancelText, confirmText, cancelIsHidden, confirmIsHidden } = storeToRefs(dialogStore);
 const exitAnimation = ref(false);
 const isRendered = ref(false);
-
 function toggleExitAnimation() {
   exitAnimation.value = true;
   setTimeout(() => {
     exitAnimation.value = false;
   }, transitionDurationMs);
 }
-
 function respond(status: DialogStatus): void {
   isRendered.value = false;
   dialogStore.resolve({ status });
 }
-
 watch(title, newValue => {
   if (newValue) isRendered.value = true;
 });

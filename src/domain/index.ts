@@ -9,12 +9,14 @@ import { GeneratorContext, GeneratorResult } from '@/domain/services/TurnGenerat
 import {
   EventsSnapshot,
   GameBoardView,
+  GameBonusDistribution,
   GameCell,
   GameEvent,
   GameEventType,
   GameInventoryView,
   GameMatchView,
   GamePlayer,
+  GameSettings,
   GameSnapshot,
   GameTile,
   GameTurnsView,
@@ -32,9 +34,9 @@ export default class Game {
     private readonly events: Events,
   ) {}
 
-  static create(idGenerator: IdGenerator, dictionary: Dictionary): Game {
+  static create(idGenerator: IdGenerator, dictionary: Dictionary, settings: GameSettings): Game {
     const players = Object.values(GamePlayer);
-    const board = Board.create();
+    const board = Board.create(settings.bonusDistribution);
     const inventory = Inventory.create(players);
     const match = Match.create(players);
     const turns = Turns.create(idGenerator);
@@ -83,6 +85,10 @@ export default class Game {
 
   get eventLog(): ReadonlyArray<GameEvent> {
     return this.events.logView;
+  }
+
+  changeBonusDistribution(bonusDistribution: GameBonusDistribution): void {
+    this.board.changeBonusDistribution(bonusDistribution);
   }
 
   placeTile(input: { cell: GameCell; tile: GameTile }): void {

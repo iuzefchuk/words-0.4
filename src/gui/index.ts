@@ -4,14 +4,14 @@ import App from '@/gui/components/App/App.vue';
 import DirectivesPlugin from '@/gui/plugins/DirectivesPlugin/DirectivesPlugin.ts';
 import LocalesPlugin from '@/gui/plugins/LocalesPlugin/LocalesPlugin.ts';
 import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
-import { startMatch } from '@/gui/stores/MatchStore.ts';
+import MatchStore from '@/gui/stores/MatchStore.ts';
 
 class Application {
   private app = createApp(App);
 
   async start(): Promise<void> {
     try {
-      await Promise.allSettled([this.installAsyncPlugins(), startMatch()]);
+      await Promise.allSettled([this.installAsyncPlugins(), MatchStore.start()]);
       this.installPlugins();
       this.mount();
     } catch (error) {

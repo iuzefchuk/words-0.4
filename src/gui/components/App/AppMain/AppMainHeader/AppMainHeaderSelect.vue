@@ -1,15 +1,15 @@
-<script lang="ts" setup>
-import { ref } from 'vue';
-const selected = ref('A');
-const options = ref([
-  { text: 'One', value: 'A' },
-  { text: 'Two', value: 'B' },
-  { text: 'Three', value: 'C' },
-]);
+<script lang="ts" setup generic="T extends string">
+import { computed } from 'vue';
+const props = defineProps<{ modelValue: T; options: Array<{ text: string; value: T }> }>();
+const emit = defineEmits<{ change: [value: T] }>();
+const selectedOption = computed({
+  get: () => props.modelValue,
+  set: value => emit('change', value),
+});
 </script>
 
 <template>
-  <select v-model="selected" class="select">
+  <select v-model="selectedOption" class="select">
     <option v-for="option in options" :key="option.text" :value="option.value">
       {{ option.text }}
     </option>

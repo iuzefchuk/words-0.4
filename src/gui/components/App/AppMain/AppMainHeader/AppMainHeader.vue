@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { GameBonusDistribution } from '@/application/types.ts';
 import AppMainHeaderSelect from '@/gui/components/App/AppMain/AppMainHeader/AppMainHeaderSelect.vue';
 import MatchStore from '@/gui/stores/MatchStore.ts';
 const matchStore = MatchStore.INSTANCE();
@@ -12,18 +13,26 @@ const players = [
     score: () => matchStore.opponentScore,
   },
 ];
+const options = [
+  { text: window.t('game.bonus_distribution_classic'), value: GameBonusDistribution.Classic },
+  { text: window.t('game.bonus_distribution_random'), value: GameBonusDistribution.Random },
+];
 </script>
 
 <template>
   <header class="header">
     <p>
       {{ t('game.settings_bonuses') }}:
-      <AppMainHeaderSelect :text="t('game.bonus_distribution_classic')" />
+      <AppMainHeaderSelect
+        :model-value="matchStore.bonusDistribution"
+        :options="options"
+        @change="matchStore.changeBonusDistribution"
+      />
     </p>
-    <p>
+    <!-- <p>
       {{ t('game.settings_difficulty') }}:
       <AppMainHeaderSelect :text="t('game.difficulty_low')" />
-    </p>
+    </p> -->
     <p v-for="player in players" :key="player.name">
       {{ player.name }}: <span v-animate-number="{ number: player.score() }" class="header__player-score" />
     </p>

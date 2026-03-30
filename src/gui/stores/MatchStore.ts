@@ -1,26 +1,29 @@
 import { defineStore } from 'pinia';
 import { computed, markRaw, ref } from 'vue';
 import Application from '@/application/index.ts';
-import { AppCommands, AppQueries, GameCell, GameTile } from '@/application/types.ts';
-import { GAME_EVENT_SOUNDS } from '@/gui/constants.ts';
+import {
+  AppCommands,
+  AppQueries,
+  GameBonusDistribution,
+  GameCell,
+  GameSettings,
+  GameTile,
+} from '@/application/types.ts';
+import { DEFAULT_SETTINGS, GAME_EVENT_SOUNDS } from '@/gui/constants.ts';
+import LocalStorage from '@/gui/services/LocalStorage.ts';
 import SoundPlayer from '@/gui/services/SoundPlayer.ts';
-
-let app: Application;
-
-export async function startMatch(): Promise<void> {
-  app = markRaw(await Application.create());
-}
 
 export default class MatchStore {
   static readonly INSTANCE = defineStore('match', () => {
-    const store = new MatchStore(app);
+    const store = new MatchStore(MatchStore.app);
     return {
-      ...app.config,
+      ...MatchStore.app.config,
       ...store.queries,
       ...store.commands,
     };
   });
 
+  private static app: Application;
   private readonly queries: MatchQueries;
   private readonly commands: MatchCommands;
 
@@ -28,6 +31,16 @@ export default class MatchStore {
     const matchState = new MatchState();
     this.queries = new MatchQueries(app.queries, matchState);
     this.commands = new MatchCommands(app.commands, matchState);
+  }
+
+  static async start(): Promise<void> {
+    const settings = MatchStore.loadSettings();
+    MatchStore.app = markRaw(await Application.create(settings));
+  }
+
+  private static loadSettings(): GameSettings {
+    const cache = LocalStorage.load('settings') as Partial<GameSettings> | null;
+    return cache?.bonusDistribution ? { bonusDistribution: cache.bonusDistribution } : DEFAULT_SETTINGS;
   }
 }
 
@@ -67,6 +80,7 @@ class MatchState {
 }
 
 class MatchQueries {
+  readonly bonusDistribution = computed(() => this.readBoard(() => this.appQueries.getBonusDistribution()));
   readonly tilesRemaining = computed(() => this.readState(() => this.appQueries.getTilesRemaining()));
   readonly userTiles = computed(() => this.readState(() => this.appQueries.getUserTiles()));
   readonly userScore = computed(() => this.readState(() => this.appQueries.getUserScore()));
@@ -88,7 +102,7 @@ class MatchQueries {
   areTilesSame = (firstTile: GameTile, secondTile: GameTile) => this.appQueries.areTilesSame(firstTile, secondTile);
   getTileLetter = (tile: GameTile) => this.appQueries.getTileLetter(tile);
   isCellCenter = (cell: GameCell) => this.appQueries.isCellCenter(cell);
-  getCellBonus = (cell: GameCell) => this.appQueries.getCellBonus(cell);
+  getCellBonus = (cell: GameCell) => this.readBoard(() => this.appQueries.getCellBonus(cell));
   getCellRowIndex = (cell: GameCell) => this.appQueries.getCellRowIndex(cell);
   getCellColumnIndex = (cell: GameCell) => this.appQueries.getCellColumnIndex(cell);
   findTileOnCell = (cell: GameCell) => this.readBoard(() => this.appQueries.findTileOnCell(cell));
@@ -112,6 +126,11 @@ class MatchCommands {
     private readonly appCommands: AppCommands,
     private readonly matchState: MatchState,
   ) {}
+
+  changeBonusDistribution = (bonusDistribution: GameBonusDistribution): void => {
+    LocalStorage.save('settings', { bonusDistribution });
+    return this.matchState.writeBoard(() => this.appCommands.changeBonusDistribution(bonusDistribution));
+  };
 
   placeTile = (args: { cell: GameCell; tile: GameTile }): void => {
     return this.writeBoardAndPlaySound(() => this.appCommands.placeTile(args));

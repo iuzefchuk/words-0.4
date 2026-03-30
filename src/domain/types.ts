@@ -1,6 +1,7 @@
 import { EventType as GameEventType, Letter as GameLetter, Player as GamePlayer } from '@/domain/enums.ts';
-import { Bonus as GameBonus } from '@/domain/models/Board.ts';
+import { Bonus as GameBonus, BonusDistribution as GameBonusDistribution } from '@/domain/models/Board.ts';
 import type { BoardSnapshot, BoardView as GameBoardView, CellIndex as GameCell } from '@/domain/models/Board.ts';
+import { default as GameDictionary } from '@/domain/models/Dictionary.ts';
 import type {
   InventoryView as GameInventoryView,
   TileId as GameTile,
@@ -13,6 +14,10 @@ import { default as GameTurnGenerator } from '@/domain/services/TurnGenerator.ts
 
 export type EventsSnapshot = {
   readonly log: Array<GameEvent>;
+};
+
+export type GameSettings = {
+  bonusDistribution: GameBonusDistribution;
 };
 
 export type GameSnapshot = {
@@ -36,4 +41,14 @@ export type GameEvent =
   | { type: GameEventType.MatchLost };
 
 export type { GameCell, GameBoardView, GameTile, GameInventoryView, GameTurnsView };
-export { GamePlayer, GameEventType, GameLetter, GameBonus, GameMatchResult, GameMatchView, GameTurnGenerator };
+export {
+  GamePlayer,
+  GameEventType,
+  GameLetter,
+  GameBonus,
+  GameBonusDistribution,
+  GameMatchResult,
+  GameMatchView,
+  GameTurnGenerator,
+  GameDictionary,
+};

@@ -2,6 +2,7 @@ import { Clock, Scheduler } from '@/application/ports.ts';
 import {
   AppCommands,
   AppTurnResponse,
+  GameBonusDistribution,
   GameCell,
   GameEvent,
   GameEventType,
@@ -29,6 +30,9 @@ export default class AppCommandBuilder {
 
   get commands(): AppCommands {
     return {
+      changeBonusDistribution: (bonusDistribution: GameBonusDistribution) => {
+        this.game.changeBonusDistribution(bonusDistribution);
+      },
       placeTile: (args: { cell: GameCell; tile: GameTile }) => this.placeTile(args),
       undoPlaceTile: (tile: GameTile) => this.undoPlaceTile(tile),
       clearTiles: () => {
