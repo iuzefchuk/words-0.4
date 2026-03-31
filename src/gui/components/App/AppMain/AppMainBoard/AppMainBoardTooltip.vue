@@ -31,7 +31,6 @@ const SHIMMER_THRESHOLD_SCORE = 29;
     font-weight: var(--font-weight);
     background: var(--color-red);
     color: var(--color-white);
-    border-radius: var(--primary-border-radius);
     font-size: var(--font-size-small);
     &--shimmer {
       background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet, red);
