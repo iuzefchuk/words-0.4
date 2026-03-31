@@ -86,7 +86,6 @@ class MatchQueries {
   readonly currentPlayerIsUser = computed(() => this.readState(() => this.appQueries.isCurrentPlayerUser()));
   readonly currentTurnIsValid = computed(() => this.readBoard(() => this.appQueries.isCurrentTurnValid()));
   readonly currentTurnScore = computed(() => this.readBoard(() => this.appQueries.getCurrentTurnScore()));
-  readonly currentTurnTopRightCell = computed(() => this.readBoard(() => this.appQueries.getCurrentTurnTopRightCell()));
   readonly difficulty = computed(() => this.readState(() => this.appQueries.getDifficulty()));
   readonly eventLog = computed(() => this.readState(() => this.appQueries.getEventLog()));
   readonly hasPriorTurns = computed(() => this.readState(() => this.appQueries.hasPriorTurns()));
@@ -112,8 +111,6 @@ class MatchQueries {
   getCellRowIndex = (cell: GameCell) => this.appQueries.getCellRowIndex(cell);
   getTileLetter = (tile: GameTile) => this.appQueries.getTileLetter(tile);
   isCellCenter = (cell: GameCell) => this.appQueries.isCellCenter(cell);
-  isCellTopRightInCurrentTurn = (cell: GameCell) =>
-    this.readBoard(() => this.appQueries.isCellTopRightInCurrentTurn(cell));
   isTilePlaced = (tile: GameTile) => this.readBoard(() => this.appQueries.isTilePlaced(tile));
   wasTileUsedInPreviousTurn = (tile: GameTile) => this.readBoard(() => this.appQueries.wasTileUsedInPreviousTurn(tile));
 

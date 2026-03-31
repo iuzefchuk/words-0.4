@@ -1,10 +1,13 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
+import AppMainBoardTooltip from '@/gui/components/App/AppMain/AppMainBoard/AppMainBoardTooltip.vue';
 import UseOutline from '@/gui/composables/UseOutline.ts';
+import MatchStore from '@/gui/stores/MatchStore.ts';
 import RackStore from '@/gui/stores/RackStore.ts';
-const outline = new UseOutline();
+const matchStore = MatchStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
+const outline = new UseOutline();
 const { tiles } = storeToRefs(rackStore);
 const outlineGroups = computed(() => outline.createGroups(tiles.value));
 const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axis))';
@@ -21,7 +24,11 @@ const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axi
       width: `calc(${CELL_STEP} * ${group.colSpan} - var(--cell-tile-gap) - 1px)`,
       height: `calc(${CELL_STEP} * ${group.rowSpan} - var(--cell-tile-gap) - 1px)`,
     }"
-  />
+  >
+    <Transition name="fade" appear>
+      <AppMainBoardTooltip v-if="matchStore.currentTurnScore !== undefined" />
+    </Transition>
+  </div>
 </template>
 
 <style lang="scss" scoped>

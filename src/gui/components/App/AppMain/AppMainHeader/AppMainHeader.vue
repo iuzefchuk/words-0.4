@@ -53,9 +53,11 @@ const players = [
         @change="onChange"
       />
     </p>
-    <p v-for="player in players" :key="player.name">
-      {{ player.name }}: <span v-animate-number="{ number: player.score() }" />
-    </p>
+    <template v-if="optionsAreDisabled">
+      <p v-for="player in players" :key="player.name">
+        {{ player.name }}: <span v-animate-number="{ number: player.score() }" />
+      </p>
+    </template>
   </header>
 </template>
 

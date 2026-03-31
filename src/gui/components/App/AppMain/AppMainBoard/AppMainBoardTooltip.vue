@@ -17,9 +17,8 @@ const SHIMMER_THRESHOLD_SCORE = 29;
 <style lang="scss" scoped>
 .tooltip {
   position: absolute;
-  inset: auto;
-  bottom: var(--space-xl);
-  left: var(--space-xl);
+  top: calc(-1 * var(--space-xl));
+  right: calc(-1 * var(--space-xl));
   width: var(--space-3xl);
   height: var(--space-3xl);
   z-index: var(--z-index-level-2);

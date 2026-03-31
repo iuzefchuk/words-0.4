@@ -30,7 +30,6 @@ export type BoardView = {
   readonly cells: ReadonlyArray<CellIndex>;
   readonly cellsPerAxis: number;
   findCellByTile(tile: TileId): CellIndex | undefined;
-  findCellInTopmostRow(cells: ReadonlyArray<CellIndex>): CellIndex | undefined;
   findTileByCell(cell: CellIndex): TileId | undefined;
   getBonus(cell: CellIndex): Bonus | null;
   getColumnIndex(cell: CellIndex): number;
@@ -277,18 +276,6 @@ export default class Board {
 
   findCellByTile(tile: TileId): CellIndex | undefined {
     return this.cellByTile.get(tile);
-  }
-
-  findCellInTopmostRow(cells: ReadonlyArray<CellIndex>): CellIndex | undefined {
-    if (cells.length === 0) return undefined;
-    return cells.reduce((best, current) => {
-      const bestRow = this.layout.getRowIndex(best);
-      const currentRow = this.layout.getRowIndex(current);
-      if (currentRow < bestRow) return current;
-      if (currentRow === bestRow && this.layout.getColumnIndex(current) > this.layout.getColumnIndex(best))
-        return current;
-      return best;
-    });
   }
 
   findTileByCell(cell: CellIndex): TileId | undefined {

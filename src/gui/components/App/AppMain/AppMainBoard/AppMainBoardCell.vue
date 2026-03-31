@@ -54,27 +54,31 @@ const isTileSaturated = computed(() => tile.value != null && matchStore.wasTileU
         @dblclick.stop="rackStore.handleDoubleClickBoardTile(tile)"
       />
     </Transition>
-    <slot />
   </li>
 </template>
 
 <style lang="scss" scoped>
 .cell {
   max-width: var(--cell-tile-width);
-  border-radius: var(--primary-border-radius);
-  background: var(--cell-bg);
   user-select: none;
-  box-shadow: var(--cell-shadow);
   cursor: pointer;
-  &--center {
+  filter: drop-shadow(0 1px 2px var(--color-gray-faint));
+  &::before {
+    content: '';
+    background: var(--cell-bg);
+    clip-path: inset(0 round var(--primary-border-radius));
+    grid-area: 1 / 1;
+  }
+  &--center::before {
     background: var(--cell-bg-center);
   }
   &--center,
   &--has-tile {
-    box-shadow: none;
+    filter: drop-shadow(1px transparent);
   }
   &__bonus {
     font-weight: var(--font-weight-bigger);
+    z-index: var(--z-index-level-1);
     $bonuses: 'dw', 'tw', 'dl', 'tl';
     @each $bonus in $bonuses {
       &--#{$bonus} text {

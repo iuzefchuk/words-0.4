@@ -38,11 +38,16 @@ const { allActionsAreDisabled } = buttons;
 
 <style lang="scss" scoped>
 .rack {
+  --tile-radius: calc(var(--primary-border-radius) * 2);
   &__cell {
     cursor: pointer;
-    background: var(--cell-bg-footer);
-    border-radius: calc(var(--primary-border-radius) * 2);
-    box-shadow: var(--cell-shadow-footer);
+    filter: drop-shadow(0 1px transparent);
+    &::before {
+      content: '';
+      background: var(--cell-bg-footer);
+      grid-area: 1 / 1;
+      clip-path: inset(0 round var(--tile-radius));
+    }
     &--disabled {
       opacity: var(--opacity-disabled);
       cursor: not-allowed;
