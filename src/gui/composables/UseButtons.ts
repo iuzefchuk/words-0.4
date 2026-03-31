@@ -35,11 +35,8 @@ export default class UseButtons {
   }
 
   async handlePass(): Promise<void> {
-    if (this.matchStore.userPassWillBeResign) {
-      const { isConfirmed } = await this.triggerResignDialog();
-      if (!isConfirmed) return;
-    }
-    this.matchStore.pass();
+    if (!this.matchStore.userPassWillBeResign) return this.matchStore.pass();
+    this.handleResign();
   }
 
   handlePlay(): void {

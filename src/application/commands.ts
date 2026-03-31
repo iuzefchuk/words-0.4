@@ -30,15 +30,9 @@ export default class AppCommandBuilder {
         this.changeBonusDistribution(bonusDistribution),
       changeDifficulty: (difficulty: GameDifficulty) => this.changeDifficulty(difficulty),
       clearAllEvents: () => this.drainNewEvents(),
-      clearTiles: () => {
-        this.game.clearTiles();
-        this.syncPersistence();
-      },
+      clearTiles: () => this.clearTiles(),
       handlePassTurn: () => this.handlePassTurn(),
-      handleResignMatch: () => {
-        this.game.resignMatch();
-        this.clearPersistence();
-      },
+      handleResignMatch: () => this.handleResignMatch(),
       handleSaveTurn: () => this.handleSaveTurn(),
       placeTile: (args: { cell: GameCell; tile: GameTile }) => this.placeTile(args),
       undoPlaceTile: (tile: GameTile) => this.undoPlaceTile(tile),
@@ -74,6 +68,11 @@ export default class AppCommandBuilder {
 
   private clearPersistence(): void {
     this.gameRepository.delete();
+  }
+
+  private clearTiles(): void {
+    this.game.clearTiles();
+    this.syncPersistence();
   }
 
   private async createOpponentTurn(): Promise<GameEvent> {
@@ -149,6 +148,7 @@ export default class AppCommandBuilder {
   }
 
   private handlePassTurn(): { opponentTurn?: Promise<AppTurnResponse> } {
+    this.clearTiles();
     if (this.game.willPassBeResignFor(GamePlayer.User)) {
       this.game.resignMatch();
       this.clearPersistence();
@@ -158,6 +158,12 @@ export default class AppCommandBuilder {
     this.syncPersistence();
     const opponentTurn = this.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
     return { opponentTurn };
+  }
+
+  private handleResignMatch(): void {
+    this.clearTiles();
+    this.game.resignMatch();
+    this.clearPersistence();
   }
 
   private handleSaveTurn(): { opponentTurn?: Promise<AppTurnResponse>; userResponse: AppTurnResponse } {
