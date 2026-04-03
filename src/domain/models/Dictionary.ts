@@ -108,7 +108,8 @@ export default class Dictionary {
     }
   }
 
-  containsWords(words: ReadonlyArray<string>): boolean {
+  containsAllWords(words: ReadonlyArray<string>): boolean {
+    if (words.length === 0) throw new Error('Words array is empty');
     return words.every(word => this.containsWord(word));
   }
 

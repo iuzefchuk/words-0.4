@@ -34,7 +34,7 @@ export default class Match {
   }
 
   get opponentScore(): number {
-    return this.scores.get(Player.Opponent)!;
+    return this.getScoreFor(Player.Opponent);
   }
 
   get snapshot(): MatchSnapshot {
@@ -42,7 +42,7 @@ export default class Match {
   }
 
   get userScore(): number {
-    return this.scores.get(Player.User)!;
+    return this.getScoreFor(Player.User);
   }
 
   private constructor(
@@ -65,12 +65,14 @@ export default class Match {
   }
 
   getScoreFor(player: Player): number {
-    return this.scores.get(player)!;
+    const score = this.scores.get(player);
+    if (score === undefined) throw new ReferenceError('Score for player must be defined');
+    return score;
   }
 
   incrementScore(player: Player, incrementation: number): void {
     if (incrementation < 0) throw new Error('Score incrementation must be positive');
-    const currentScore = this.scores.get(player)!;
+    const currentScore = this.getScoreFor(player);
     const newScore = currentScore + incrementation;
     this.scores.set(player, newScore);
   }

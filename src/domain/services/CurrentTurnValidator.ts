@@ -134,6 +134,6 @@ export default class CurrentTurnValidator {
       for (const { tile } of placement) letters.push(inventory.getTileLetter(tile));
       words[i] = letters.join('');
     }
-    return dictionary.containsWords(words) ? this.Pipeline.pass(state, { words }) : this.Pipeline.fail(ValidationError.WordNotInDictionary);
+    return dictionary.containsAllWords(words) ? this.Pipeline.pass(state, { words }) : this.Pipeline.fail(ValidationError.WordNotInDictionary);
   }
 }

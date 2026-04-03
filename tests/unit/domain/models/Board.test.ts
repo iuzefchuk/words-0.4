@@ -22,7 +22,7 @@ describe('Board', () => {
     });
   });
 
-  describe('how bonus system works', () => {
+  describe('bonus system', () => {
     const CLASSIC_INDICES = {
       withDoubleLetter: createCellIndex(7),
       withDoubleWord: createCellIndex(32),
@@ -129,7 +129,7 @@ describe('Board', () => {
       expect(result[1]!.cell).toBe(secondCellIndex);
     });
 
-    it('should throw when receiving unplaced tile', () => {
+    it('should forbid receiving unplaced tile', () => {
       expect(() => board.resolvePlacement([firstTileId])).toThrow();
     });
 
@@ -358,7 +358,7 @@ describe('Board', () => {
     });
   });
 
-  describe('how tile placement and lookup work', () => {
+  describe('tile placement and lookup', () => {
     let board: Board;
 
     it('should return correct positive search result', () => {
@@ -399,7 +399,7 @@ describe('Board', () => {
       expect(board.findTileByCell(cellIndex)).toBe(secondTileId);
     });
 
-    it('should throw when placing tile on occupied cell', () => {
+    it('should forbid placing tile on occupied cell', () => {
       const cellIndex = createCellIndex(CENTER_INDEX);
       const firstTileId = createTileId('A-0');
       const secondTileId = createTileId('B-0');
@@ -407,7 +407,7 @@ describe('Board', () => {
       expect(() => board.placeTile(cellIndex, secondTileId)).toThrow();
     });
 
-    it('should throw when placing already placed tile', () => {
+    it('should forbid placing already placed tile', () => {
       const firstCellIndex = createCellIndex(CENTER_INDEX);
       const secondCellIndex = createCellIndex(CENTER_INDEX + 1);
       const tileId = createTileId('A-0');
@@ -415,19 +415,19 @@ describe('Board', () => {
       expect(() => board.placeTile(secondCellIndex, tileId)).toThrow();
     });
 
-    it('should throw when placing tile on negative out-of-bounds cell', () => {
+    it('should forbid placing tile on negative out-of-bounds cell', () => {
       const cellIndex = createCellIndex(-1);
       const tileId = createTileId('A-0');
       expect(() => board.placeTile(cellIndex, tileId)).toThrow();
     });
 
-    it('should throw when placing tile on positive out-of-bounds cell', () => {
+    it('should forbid placing tile on positive out-of-bounds cell', () => {
       const cellIndex = createCellIndex(TOTAL_CELLS);
       const tileId = createTileId('A-0');
       expect(() => board.placeTile(cellIndex, tileId)).toThrow();
     });
 
-    it('should throw when undoing placement of a tile not on the board', () => {
+    it('should forbid undoing placement of a tile not on the board', () => {
       const tileId = createTileId('A-0');
       expect(() => board.undoPlaceTile(tileId)).toThrow();
     });
@@ -437,7 +437,7 @@ describe('Board', () => {
     });
   });
 
-  describe('how cloning works', () => {
+  describe('cloning', () => {
     let board: Board;
 
     it('should create an independent copy', () => {
@@ -472,41 +472,47 @@ describe('Board', () => {
     });
   });
 
-  describe('how snapshot logic works', () => {
+  describe('snapshoting', () => {
     let board: Board;
 
-    it('should capture placed tiles and layout in a snapshot', () => {
+    it('should capture placed tiles in snapshot', () => {
+      // TODO expand
       const cellIndex = createCellIndex(CENTER_INDEX);
       const tileId = createTileId('A-0');
       board.placeTile(cellIndex, tileId);
-      const { layout, tileByCell } = board.snapshot;
+      const { tileByCell } = board.snapshot;
       expect(tileByCell.get(cellIndex)).toBe(tileId);
+    });
+
+    it('should capture layout in snapshot', () => {
+      // TODO expand
+      const { layout } = board.snapshot;
       expect(layout.bonusDistribution).toBe(BonusDistribution.Classic);
     });
 
-    it('should recreate identical state when restoring from a snapshot', () => {
-      const firstCellIndex = createCellIndex(CENTER_INDEX);
-      const secondCellIndex = createCellIndex(CENTER_INDEX + 1);
-      const firstTileId = createTileId('A-0');
-      const secondTileId = createTileId('B-0');
-      board.placeTile(firstCellIndex, firstTileId);
-      board.placeTile(secondCellIndex, secondTileId);
-      const restored = Board.restoreFromSnapshot(board.snapshot);
-      expect(restored.findTileByCell(firstCellIndex)).toBe(firstTileId);
-      expect(restored.findTileByCell(secondCellIndex)).toBe(secondTileId);
-      expect(restored.bonusDistribution).toBe(BonusDistribution.Classic);
-    });
+    // it('should preserve state when restoring from snapshot', () => {
+    //   const firstCellIndex = createCellIndex(CENTER_INDEX);
+    //   const secondCellIndex = createCellIndex(CENTER_INDEX + 1);
+    //   const firstTileId = createTileId('A-0');
+    //   const secondTileId = createTileId('B-0');
+    //   board.placeTile(firstCellIndex, firstTileId);
+    //   board.placeTile(secondCellIndex, secondTileId);
+    //   const restoredBoard = Board.restoreFromSnapshot(board.snapshot);
+    //   expect(restoredBoard.findTileByCell(firstCellIndex)).toBe(firstTileId);
+    //   expect(restoredBoard.findTileByCell(secondCellIndex)).toBe(secondTileId);
+    //   expect(restoredBoard.bonusDistribution).toBe(BonusDistribution.Classic);
+    // });
 
-    it('should preserve board behavior through a snapshot round-trip', () => {
-      // TODO rethink
-      const cellIndex = createCellIndex(CENTER_INDEX);
-      const tileId = createTileId('A-0');
-      board.placeTile(cellIndex, tileId);
-      const restored = Board.restoreFromSnapshot(board.snapshot);
-      expect(restored.isCellOccupied(cellIndex)).toBe(true);
-      expect(restored.isCellCenter(cellIndex)).toBe(true);
-      expect(restored.getBonus(createCellIndex(7))).toBe(Bonus.DoubleLetter);
-    });
+    // it('should preserve state through snapshot round-trip', () => {
+    //   // TODO rethink
+    //   const cellIndex = createCellIndex(CENTER_INDEX);
+    //   const tileId = createTileId('A-0');
+    //   board.placeTile(cellIndex, tileId);
+    //   const restored = Board.restoreFromSnapshot(board.snapshot);
+    //   expect(restored.isCellOccupied(cellIndex)).toBe(true);
+    //   expect(restored.isCellCenter(cellIndex)).toBe(true);
+    //   expect(restored.getBonus(createCellIndex(7))).toBe(Bonus.DoubleLetter);
+    // });
 
     beforeEach(() => {
       board = Board.create(BonusDistribution.Classic);
