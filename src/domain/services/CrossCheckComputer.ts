@@ -26,7 +26,9 @@ export default class CrossCheckComputer {
   private collectAdjacentTileLetters(axisCells: ReadonlyArray<CellIndex>, startPosition: number, direction: -1 | 1): string {
     let result = '';
     for (let i = startPosition + direction; i >= 0 && i < axisCells.length; i += direction) {
-      const tile = this.board.findTileByCell(axisCells[i]);
+      const cell = axisCells[i];
+      if (cell === undefined) throw new ReferenceError('Cell must be defined');
+      const tile = this.board.findTileByCell(cell);
       if (!tile) break;
       const letter = this.inventory.getTileLetter(tile);
       result = direction === -1 ? letter + result : result + letter;

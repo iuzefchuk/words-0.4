@@ -146,12 +146,12 @@ export default class AppCommandBuilder {
     return response;
   }
 
-  private handlePassTurn(): { opponentTurn?: Promise<AppTurnResponse> } {
+  private handlePassTurn(): { opponentTurn?: Promise<AppTurnResponse> | undefined } {
     this.clearTiles();
     if (this.game.willPassBeResignFor(GamePlayer.User)) {
       this.game.resignMatch();
       this.clearPersistence();
-      return {};
+      return { opponentTurn: undefined };
     }
     this.game.passTurn();
     this.syncPersistence();
@@ -165,20 +165,20 @@ export default class AppCommandBuilder {
     this.clearPersistence();
   }
 
-  private handleSaveTurn(): { opponentTurn?: Promise<AppTurnResponse>; userResponse: AppTurnResponse } {
+  private handleSaveTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined; userResponse: AppTurnResponse } {
     const player = this.currentPlayer;
     const userResponse = this.saveTurn();
     if (!userResponse.ok) {
-      return { userResponse };
+      return { opponentTurn: undefined, userResponse };
     }
     if (!this.inventoryView.hasTilesFor(player)) {
       this.game.finishMatchByScore();
       this.clearPersistence();
-      return { userResponse };
+      return { opponentTurn: undefined, userResponse };
     }
     if (this.game.matchView.isFinished) {
       this.clearPersistence();
-      return { userResponse };
+      return { opponentTurn: undefined, userResponse };
     }
     this.syncPersistence();
     const opponentTurn = this.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;

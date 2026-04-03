@@ -29,25 +29,24 @@ class DictionaryTreeBuilder {
   private build(sortedWords: ReadonlyArray<string>): Node {
     const rootNode = this.createNode();
     const stack: Array<Node> = [rootNode];
+    const lastNodeInStack = (): Node => {
+      const node = stack.at(-1);
+      if (!node) throw new ReferenceError('Last node in stack must exist');
+      return node;
+    };
     let previousWord = '';
     for (const word of sortedWords) {
       const commonPrefixLength = this.getCommonPrefixLength(previousWord, word);
-      if (previousWord.length > 0) {
-        stack[stack.length - 1].isFinal = true;
-      }
-      while (stack.length > commonPrefixLength + 1) {
-        stack.pop();
-      }
+      if (previousWord.length > 0) lastNodeInStack().isFinal = true;
+      while (stack.length > commonPrefixLength + 1) stack.pop();
       for (let i = commonPrefixLength; i < word.length; i++) {
         const childNode = this.createNode();
-        stack[stack.length - 1].children.set(word[i] as Letter, childNode);
+        lastNodeInStack().children.set(word[i] as Letter, childNode);
         stack.push(childNode);
       }
       previousWord = word;
     }
-    if (stack.length > 1) {
-      stack[stack.length - 1].isFinal = true;
-    }
+    if (stack.length > 1) lastNodeInStack().isFinal = true;
     return rootNode;
   }
 

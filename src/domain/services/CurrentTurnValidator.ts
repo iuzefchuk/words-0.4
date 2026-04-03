@@ -94,7 +94,9 @@ export default class CurrentTurnValidator {
     const { board, turns } = state.context;
     const tiles = turns.currentTurnTiles;
     const primaryAxis = board.calculateAxis(state.cells);
-    const coords = { axis: primaryAxis, cell: state.cells[0] };
+    const cell = state.cells[0];
+    if (cell === undefined) throw new ReferenceError('Cell must be defined');
+    const coords = { axis: primaryAxis, cell };
     const primaryPlacement = PlacementBuilder.execute(board, { coords, tiles });
     const areLinksUsable = (placement: Placement): boolean => placement.length > 1;
     if (!areLinksUsable(primaryPlacement)) return this.Pipeline.fail(ValidationError.InvalidTilePlacement);
@@ -126,8 +128,10 @@ export default class CurrentTurnValidator {
     const { dictionary, inventory } = state.context;
     const words: Array<string> = [];
     for (let i = 0; i < state.placements.length; i++) {
+      const placement = state.placements[i];
+      if (placement === undefined) throw new ReferenceError('Placement must be defined');
       const letters: Array<string> = [];
-      for (const { tile } of state.placements[i]) letters.push(inventory.getTileLetter(tile));
+      for (const { tile } of placement) letters.push(inventory.getTileLetter(tile));
       words[i] = letters.join('');
     }
     return dictionary.containsWords(words) ? this.Pipeline.pass(state, { words }) : this.Pipeline.fail(ValidationError.WordNotInDictionary);

@@ -54,10 +54,7 @@ class Layout {
 
   private static readonly TOTAL_CELLS = Layout.CELLS_PER_AXIS ** 2;
 
-  private static readonly CELL_BY_INDEX: ReadonlyArray<CellIndex> = Array.from(
-    { length: Layout.TOTAL_CELLS },
-    (_, i) => i as CellIndex,
-  );
+  private static readonly CELL_BY_INDEX: ReadonlyArray<CellIndex> = Array.from({ length: Layout.TOTAL_CELLS }, (_, i) => i as CellIndex);
 
   private static readonly CENTER_CELL: CellIndex = (() => {
     const mid = Math.floor(Layout.CELLS_PER_AXIS / 2);
@@ -85,8 +82,7 @@ class Layout {
   ) {}
 
   static create(bonusDistribution: BonusDistribution): Layout {
-    const bonusByCell =
-      bonusDistribution === BonusDistribution.Classic ? Layout.createClassicBonusMap() : Layout.createRandomBonusMap();
+    const bonusByCell = bonusDistribution === BonusDistribution.Classic ? Layout.createClassicBonusMap() : Layout.createRandomBonusMap();
     return new Layout(bonusByCell, bonusDistribution);
   }
 
@@ -108,15 +104,13 @@ class Layout {
 
   private static createClassicBonusMap(): ReadonlyMap<CellIndex, Bonus> {
     return new Map([
-      ...[
-        7, 16, 28, 36, 38, 66, 68, 92, 94, 100, 102, 105, 119, 122, 124, 130, 132, 156, 158, 186, 188, 196, 208, 217,
-      ].map(int => [int as CellIndex, Bonus.DoubleLetter] as const),
+      ...[7, 16, 28, 36, 38, 66, 68, 92, 94, 100, 102, 105, 119, 122, 124, 130, 132, 156, 158, 186, 188, 196, 208, 217].map(
+        int => [int as CellIndex, Bonus.DoubleLetter] as const,
+      ),
       ...[0, 14, 20, 24, 48, 56, 76, 80, 84, 88, 136, 140, 144, 148, 168, 176, 200, 204, 210, 224].map(
         int => [int as CellIndex, Bonus.TripleLetter] as const,
       ),
-      ...[32, 42, 52, 64, 70, 108, 116, 154, 160, 172, 182, 192].map(
-        int => [int as CellIndex, Bonus.DoubleWord] as const,
-      ),
+      ...[32, 42, 52, 64, 70, 108, 116, 154, 160, 172, 182, 192].map(int => [int as CellIndex, Bonus.DoubleWord] as const),
       ...[4, 10, 60, 74, 150, 164, 214, 220].map(int => [int as CellIndex, Bonus.TripleWord] as const),
     ]);
   }
@@ -145,7 +139,12 @@ class Layout {
     shuffleWithFisherYates(availableCells);
     const result = new Map<CellIndex, Bonus>();
     let offset = 0;
-    for (const { bonus, count } of counts) for (let i = 0; i < count; i++) result.set(availableCells[offset++], bonus);
+    for (const { bonus, count } of counts)
+      for (let i = 0; i < count; i++) {
+        const cell = availableCells[offset++];
+        if (cell === undefined) throw new ReferenceError('Cell must be defined');
+        result.set(cell, bonus);
+      }
     return result;
   }
 
@@ -166,10 +165,7 @@ class Layout {
     this.validateCell(cell);
     return Array.from(
       { length: Layout.CELLS_PER_AXIS },
-      (_, i) =>
-        (axis === Axis.X
-          ? cell - this.getColumnIndex(cell) + i
-          : this.getColumnIndex(cell) + i * Layout.CELLS_PER_AXIS) as CellIndex,
+      (_, i) => (axis === Axis.X ? cell - this.getColumnIndex(cell) + i : this.getColumnIndex(cell) + i * Layout.CELLS_PER_AXIS) as CellIndex,
     );
   }
 
@@ -260,11 +256,14 @@ export default class Board {
     let normalizedSequence = cells;
     if (cells.length === 1) {
       const [firstCell] = cells;
+      if (firstCell === undefined) throw new ReferenceError('First cell must be defined');
       const connectedAdjacents = this.getAdjacentCells(firstCell).filter(cell => this.isCellOccupied(cell));
-      normalizedSequence = connectedAdjacents.length === 0 ? [] : [connectedAdjacents[0], firstCell];
+      const firstConnectedAdjacent = connectedAdjacents[0];
+      normalizedSequence = !firstConnectedAdjacent ? [] : [firstConnectedAdjacent, firstCell];
     }
     if (normalizedSequence.length === 0) return Board.DEFAULT_AXIS;
     const [firstIndex] = normalizedSequence;
+    if (firstIndex === undefined) throw new ReferenceError('First index must be defined');
     const firstColumn = this.getColumnIndex(firstIndex);
     const isVertical = normalizedSequence.every(cell => this.getColumnIndex(cell) === firstColumn);
     return isVertical ? Axis.Y : Axis.X;
@@ -292,9 +291,7 @@ export default class Board {
         const isCenter = this.layout.isCellCenter(cell);
         if (!historyHasPriorTurns) return isCenter;
         if (this.isCellOccupied(cell)) return false;
-        const hasUsedAdjacentCells = this.layout
-          .getAdjacentCells(cell)
-          .some((adjacentCell: CellIndex) => this.isCellOccupied(adjacentCell));
+        const hasUsedAdjacentCells = this.layout.getAdjacentCells(cell).some((adjacentCell: CellIndex) => this.isCellOccupied(adjacentCell));
         return isCenter || hasUsedAdjacentCells;
       }),
     );

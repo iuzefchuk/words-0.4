@@ -50,7 +50,7 @@ type ApplyTask = {
 
 type CalculateTask = { traversal: Traversal; type: GenerationTask.CalculateCandidate };
 
-type Candidate = { cell: CellIndex; position: number; resolution?: Resolution };
+type Candidate = { cell: CellIndex; position: number; resolution: Resolution | undefined };
 
 type ContinueTaskCommand = { newTasks: Array<Task>; type: GenerationCommandType.ContinueExecute };
 
@@ -136,7 +136,11 @@ export default class TurnGenerator {
     }
 
     private pushToStack(tasks: Array<Task>): void {
-      for (let i = tasks.length - 1; i >= 0; i--) this.stack.push(tasks[i]);
+      for (let i = tasks.length - 1; i >= 0; i--) {
+        const task = tasks[i];
+        if (task === undefined) throw new ReferenceError('Task must be defined');
+        this.stack.push(task);
+      }
     }
   };
 

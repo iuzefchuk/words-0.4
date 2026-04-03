@@ -14,16 +14,16 @@ class MatchCommands {
 
   changeBonusDistribution = (bonusDistribution: GameBonusDistribution): void => {
     MatchStore.saveSettings({ bonusDistribution });
-    return this.matchState.writeBoard(() => this.appCommands.changeBonusDistribution(bonusDistribution));
+    return this.matchState.writeOnlyBoard(() => this.appCommands.changeBonusDistribution(bonusDistribution));
   };
 
   changeDifficulty = (difficulty: GameDifficulty): void => {
     MatchStore.saveSettings({ difficulty });
-    return this.matchState.writeState(() => this.appCommands.changeDifficulty(difficulty));
+    return this.matchState.write(() => this.appCommands.changeDifficulty(difficulty));
   };
 
   clearTiles = (): void => {
-    return this.matchState.writeBoard(() => this.appCommands.clearTiles());
+    return this.matchState.writeOnlyBoard(() => this.appCommands.clearTiles());
   };
 
   pass = (): void => {
@@ -56,18 +56,18 @@ class MatchCommands {
   }
 
   private syncAndPlaySound(): void {
-    this.matchState.sync();
+    this.matchState.incrementVersions();
     this.playPendingSounds();
   }
 
   private writeBoardAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
-    const response = this.matchState.writeBoard(callback);
+    const response = this.matchState.writeOnlyBoard(callback);
     this.playPendingSounds();
     return response;
   }
 
   private writeStateAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
-    const response = this.matchState.writeState(callback);
+    const response = this.matchState.write(callback);
     this.playPendingSounds();
     return response;
   }
@@ -107,11 +107,11 @@ class MatchQueries {
   wasTileUsedInPreviousTurn = (tile: GameTile) => this.readBoard(() => this.appQueries.wasTileUsedInPreviousTurn(tile));
 
   private readBoard<T>(fn: () => T): T {
-    return this.matchState.readBoard(fn);
+    return this.matchState.readOnlyBoard(fn);
   }
 
   private readState<T>(fn: () => T): T {
-    return this.matchState.readState(fn);
+    return this.matchState.read(fn);
   }
 }
 
@@ -119,33 +119,33 @@ class MatchState {
   private readonly boardVersion = ref(0);
   private readonly stateVersion = ref(0);
 
-  readBoard<T>(fn: () => T): T {
-    void this.boardVersion.value;
-    return fn();
-  }
-
-  readState<T>(fn: () => T): T {
-    void this.stateVersion.value;
-    return fn();
-  }
-
-  sync(): void {
+  incrementVersions(): void {
     this.boardVersion.value++;
     this.stateVersion.value++;
   }
 
-  writeBoard<T>(fn: () => T): T {
+  read<T>(fn: () => T): T {
+    void this.stateVersion.value;
+    return fn();
+  }
+
+  readOnlyBoard<T>(fn: () => T): T {
+    void this.boardVersion.value;
+    return fn();
+  }
+
+  write<T>(fn: () => T): T {
     const result = fn();
-    this.boardVersion.value++;
+    this.incrementVersions();
+    if (result instanceof Promise) {
+      result.then(() => this.incrementVersions());
+    }
     return result;
   }
 
-  writeState<T>(fn: () => T): T {
+  writeOnlyBoard<T>(fn: () => T): T {
     const result = fn();
-    this.sync();
-    if (result instanceof Promise) {
-      result.then(() => this.sync());
-    }
+    this.boardVersion.value++;
     return result;
   }
 }

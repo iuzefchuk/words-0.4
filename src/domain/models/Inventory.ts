@@ -19,10 +19,7 @@ export type TileCollection = ReadonlyMap<Letter, ReadonlyArray<TileId>>;
 
 export type TileId = Brand<string, 'TileId'>;
 
-type TilePoolSnapshot = {
-  readonly capacity?: number;
-  readonly tiles: Array<Tile>;
-};
+type TilePoolSnapshot = { readonly capacity: number | undefined; readonly tiles: Array<Tile> };
 
 class Tile {
   private constructor(
@@ -58,18 +55,14 @@ class TilePool {
     return this.tiles.length;
   }
 
-  get tileIdsView(): ReadonlyArray<TileId> {
-    return this.tileIds;
+  get tileIds(): ReadonlyArray<TileId> {
+    return this.tiles.map(tile => tile.id);
   }
-
-  private readonly tileIds: Array<TileId>;
 
   private constructor(
     private readonly capacity: number | undefined,
     private readonly tiles: Array<Tile>,
-  ) {
-    this.tileIds = tiles.map(tile => tile.id);
-  }
+  ) {}
 
   static create({ capacity, tiles }: { capacity?: number; tiles?: Array<Tile> } = {}): TilePool {
     return new TilePool(capacity, tiles ?? []);
@@ -83,21 +76,18 @@ class TilePool {
     if (this.tileIds.includes(tile.id)) throw new Error(`Tile ${tile} is already present`);
     this.validateCapacity({ newTileCount: this.tiles.length + 1 });
     this.tiles.push(tile);
-    this.tileIds.push(tile.id);
   }
 
   discardTile(tileId: TileId): Tile {
     const index = this.tileIds.indexOf(tileId);
-    if (index === -1) throw new Error('Tile absent');
-    this.tileIds.splice(index, 1);
     const [removedTile] = this.tiles.splice(index, 1);
+    if (removedTile === undefined) throw new Error(`Tile ${tileId} absent`);
     return removedTile;
   }
 
   popTile(): Tile {
     const tile = this.tiles.pop();
     if (!tile) throw new Error('No tiles left to draw');
-    this.tileIds.pop();
     return tile;
   }
 

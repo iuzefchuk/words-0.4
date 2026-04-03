@@ -6,7 +6,7 @@ type BindingValue = { callback: () => void };
 type ClickOutsideHtmlElement = { _clickOutside: (event: Event) => void } & HTMLElement;
 
 export default class ClickOutside extends Directive<ClickOutsideHtmlElement, BindingValue> {
-  beforeMount(element: ClickOutsideHtmlElement, binding: DirectiveBinding<BindingValue>): void {
+  override beforeMount(element: ClickOutsideHtmlElement, binding: DirectiveBinding<BindingValue>): void {
     const { callback } = binding.value || {};
     element._clickOutside = (event: Event): void => {
       const target = event.target as Node;
@@ -18,7 +18,7 @@ export default class ClickOutside extends Directive<ClickOutsideHtmlElement, Bin
     });
   }
 
-  unmounted(element: ClickOutsideHtmlElement): void {
+  override unmounted(element: ClickOutsideHtmlElement): void {
     document.removeEventListener('click', element._clickOutside);
     document.removeEventListener('touchstart', element._clickOutside);
     element._clickOutside = () => {};

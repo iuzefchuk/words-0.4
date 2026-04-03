@@ -122,8 +122,12 @@ export default class Game {
   applyGeneratedTurn(result: GeneratorResult): { score: number; words: ReadonlyArray<string> } {
     this.ensureMutability();
     for (let i = 0; i < result.tiles.length; i++) {
-      this.board.placeTile(result.cells[i], result.tiles[i]);
-      this.turns.recordPlacedTile(result.tiles[i]);
+      const cell = result.cells[i];
+      if (cell === undefined) throw new ReferenceError('Cell must be defined');
+      const tile = result.tiles[i];
+      if (tile === undefined) throw new ReferenceError('Tile must be defined');
+      this.board.placeTile(cell, tile);
+      this.turns.recordPlacedTile(tile);
     }
     this.turns.recordValidationResult(result.validationResult);
     const { score } = result.validationResult;

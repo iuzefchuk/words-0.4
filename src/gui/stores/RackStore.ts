@@ -102,6 +102,7 @@ export default class RackStore {
 
   private handleClickFooterCell(idx: number): void {
     const tile = this.tiles[idx];
+    if (tile === undefined) throw new ReferenceError('Tile must ne defined');
     if (!this.selectedTile) {
       if (this.matchStore.isTilePlaced(tile)) this.matchStore.undoPlaceTile(tile);
       return;
@@ -159,8 +160,12 @@ export default class RackStore {
   private switchTiles(firstTile: GameTile, secondTile: GameTile): void {
     const firstIdx = this.getTileIdx(firstTile);
     const secondIdx = this.getTileIdx(secondTile);
-    if (firstIdx === -1 || secondIdx === -1) throw new Error('Can`t find tile indexes');
-    [this.tiles[firstIdx], this.tiles[secondIdx]] = [this.tiles[secondIdx], this.tiles[firstIdx]];
+    if (firstIdx < 0 || secondIdx < 0) throw new Error('Can`t find tile indexes');
+    const first = this.tiles[firstIdx];
+    const second = this.tiles[secondIdx];
+    if (!first || !second) throw new Error('Invalid tile index');
+    this.tiles[firstIdx] = second;
+    this.tiles[secondIdx] = first;
     triggerRef(this.tilesRef);
   }
 }
