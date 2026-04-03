@@ -32,8 +32,8 @@ export type BoardView = {
   findCellByTile(tile: TileId): CellIndex | undefined;
   findTileByCell(cell: CellIndex): TileId | undefined;
   getBonus(cell: CellIndex): Bonus | null;
-  getColumnIndex(cell: CellIndex): number;
-  getRowIndex(cell: CellIndex): number;
+  getIndexInColumn(cell: CellIndex): number;
+  getIndexInRow(cell: CellIndex): number;
   isCellCenter(cell: CellIndex): boolean;
   isTilePlaced(tile: TileId): boolean;
 };
@@ -151,8 +151,8 @@ class Layout {
   getAdjacentCells(cell: CellIndex): ReadonlyArray<CellIndex> {
     this.validateCell(cell);
     const result: Array<CellIndex> = [];
-    const row = this.getRowIndex(cell);
-    const column = this.getColumnIndex(cell);
+    const row = this.getIndexInRow(cell);
+    const column = this.getIndexInColumn(cell);
     if (column > 0) result.push((cell - 1) as CellIndex);
     if (column < Layout.CELLS_PER_AXIS - 1) result.push((cell + 1) as CellIndex);
     if (row > 0) result.push((cell - Layout.CELLS_PER_AXIS) as CellIndex);
@@ -165,7 +165,7 @@ class Layout {
     this.validateCell(cell);
     return Array.from(
       { length: Layout.CELLS_PER_AXIS },
-      (_, i) => (axis === Axis.X ? cell - this.getColumnIndex(cell) + i : this.getColumnIndex(cell) + i * Layout.CELLS_PER_AXIS) as CellIndex,
+      (_, i) => (axis === Axis.X ? cell - this.getIndexInColumn(cell) + i : this.getIndexInColumn(cell) + i * Layout.CELLS_PER_AXIS) as CellIndex,
     );
   }
 
@@ -174,11 +174,15 @@ class Layout {
     return this.bonusByCell.get(cell) ?? null;
   }
 
-  getColumnIndex(cell: CellIndex): number {
+  getIndexInColumn(cell: CellIndex): number {
     return cell % Layout.CELLS_PER_AXIS;
   }
 
-  getLetterMultiplier(cell: CellIndex): number {
+  getIndexInRow(cell: CellIndex): number {
+    return Math.floor(cell / Layout.CELLS_PER_AXIS);
+  }
+
+  getMultiplierForLetter(cell: CellIndex): number {
     this.validateCell(cell);
     const bonus = this.getBonus(cell);
     if (bonus === Bonus.DoubleLetter) return 2;
@@ -186,11 +190,7 @@ class Layout {
     return 1;
   }
 
-  getRowIndex(cell: CellIndex): number {
-    return Math.floor(cell / Layout.CELLS_PER_AXIS);
-  }
-
-  getWordMultiplier(cell: CellIndex): number {
+  getMultiplierForWord(cell: CellIndex): number {
     this.validateCell(cell);
     const bonus = this.getBonus(cell);
     if (bonus === Bonus.DoubleWord) return 2;
@@ -264,8 +264,8 @@ export default class Board {
     if (normalizedSequence.length === 0) return Board.DEFAULT_AXIS;
     const [firstIndex] = normalizedSequence;
     if (firstIndex === undefined) throw new ReferenceError('First index must be defined');
-    const firstColumn = this.getColumnIndex(firstIndex);
-    const isVertical = normalizedSequence.every(cell => this.getColumnIndex(cell) === firstColumn);
+    const firstColumn = this.getIndexInColumn(firstIndex);
+    const isVertical = normalizedSequence.every(cell => this.getIndexInColumn(cell) === firstColumn);
     return isVertical ? Axis.Y : Axis.X;
   }
 
@@ -305,24 +305,24 @@ export default class Board {
     return this.layout.getBonus(cell);
   }
 
-  getColumnIndex(cell: CellIndex): number {
-    return this.layout.getColumnIndex(cell);
+  getIndexInColumn(cell: CellIndex): number {
+    return this.layout.getIndexInColumn(cell);
   }
 
-  getLetterMultiplier(cell: CellIndex): number {
-    return this.layout.getLetterMultiplier(cell);
+  getIndexInRow(cell: CellIndex): number {
+    return this.layout.getIndexInRow(cell);
+  }
+
+  getMultiplierForLetter(cell: CellIndex): number {
+    return this.layout.getMultiplierForLetter(cell);
+  }
+
+  getMultiplierForWord(cell: CellIndex): number {
+    return this.layout.getMultiplierForWord(cell);
   }
 
   getOppositeAxis(axis: Axis): Axis {
     return Layout.getOppositeAxis(axis);
-  }
-
-  getRowIndex(cell: CellIndex): number {
-    return this.layout.getRowIndex(cell);
-  }
-
-  getWordMultiplier(cell: CellIndex): number {
-    return this.layout.getWordMultiplier(cell);
   }
 
   isCellCenter(cell: CellIndex): boolean {

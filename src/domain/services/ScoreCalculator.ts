@@ -6,8 +6,8 @@ export default class ScoreCalculator {
     placements: ReadonlyArray<Placement>,
     newCells: ReadonlySet<CellIndex>,
     getTilePoints: (tile: TileId) => number,
-    getLetterMultiplier: (cell: CellIndex) => number,
-    getWordMultiplier: (cell: CellIndex) => number,
+    getMultiplierForLetter: (cell: CellIndex) => number,
+    getMultiplierForWord: (cell: CellIndex) => number,
   ): number {
     let totalScore = 0;
     for (const placement of placements) {
@@ -15,8 +15,8 @@ export default class ScoreCalculator {
       let multiplier = 1;
       for (const { cell, tile } of placement) {
         const tileIsNew = newCells.has(cell);
-        score += getTilePoints(tile) * (tileIsNew ? getLetterMultiplier(cell) : 1);
-        multiplier *= tileIsNew ? getWordMultiplier(cell) : 1;
+        score += getTilePoints(tile) * (tileIsNew ? getMultiplierForLetter(cell) : 1);
+        multiplier *= tileIsNew ? getMultiplierForWord(cell) : 1;
       }
       totalScore += score * multiplier;
     }

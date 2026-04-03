@@ -118,8 +118,8 @@ export default class CurrentTurnValidator {
       state.placements,
       newCells,
       tile => inventory.getTilePoints(tile),
-      cell => board.getLetterMultiplier(cell),
-      cell => board.getWordMultiplier(cell),
+      cell => board.getMultiplierForLetter(cell),
+      cell => board.getMultiplierForWord(cell),
     );
     return this.Pipeline.pass(state, { score });
   }
