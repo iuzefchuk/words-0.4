@@ -61,7 +61,7 @@ export default class CurrentTurnValidator {
     end(): PipelineOutput {
       if (this.throughput.status === ValidationStatus.Invalid) return this.throughput;
       const { cells, placements, score, words } = this.throughput.state as unknown as PipelineState<ScoreOutput>;
-      if (score === undefined) throw new Error('Can`t show end result when pipeline wasn`t completed');
+      if (score === undefined) throw new Error('Can`t end pipeline until it`s completed');
       return { cells, placements, score, status: ValidationStatus.Valid, words } as ValidResult;
     }
   };

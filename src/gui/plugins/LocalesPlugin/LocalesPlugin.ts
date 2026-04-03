@@ -58,9 +58,10 @@ export default class LocalesPlugin {
 
   private getLocalizedText: LocaleTextGetter = (string: string, props?: object) => {
     const [file, key] = string.split('.');
+    if (file === undefined || key === undefined) throw new ReferenceError('File and key must be defined');
     if (!this.content.value) throw new Error('Locales didn`t fetch content');
-    let localizedText = this.content.value[file as LocaleFile]?.[key];
-    if (!localizedText) throw new Error(`Locales file ${file} or key ${key} are incorrect`);
+    let localizedText = this.content.value[file as LocaleFile][key];
+    if (!localizedText) throw new ReferenceError(`Locales file ${file} or key ${key} are incorrect`);
     if (props) {
       for (const [key, value] of Object.entries(props)) {
         localizedText = localizedText.replaceAll(`{${key}}`, String(value));

@@ -131,7 +131,7 @@ export default class TurnGenerator {
 
     private popFromStack(): Task {
       const lastTask = this.stack.pop();
-      if (!lastTask) throw new Error('Task has to exist');
+      if (lastTask === undefined) throw new ReferenceError('Task has to exist');
       return lastTask;
     }
 
@@ -251,7 +251,7 @@ export default class TurnGenerator {
       const { traversal } = task;
       const position = traversal.position + traversal.direction;
       const cell = this.computeds.axisCells[position];
-      if (cell === undefined) throw new Error('Axis cell position is wrong');
+      if (cell === undefined) throw new ReferenceError('Cell must be defined');
       const tile = this.board.findTileByCell(cell);
       const resolution: Resolution | undefined = tile ? { tile } : undefined;
       const candidate: Candidate = { cell, position, resolution };
@@ -260,9 +260,9 @@ export default class TurnGenerator {
 
     private createTraversalFromCandidate(traversal: Traversal, candidate: Candidate): ContinueTaskCommand | StopTaskCommand {
       const { position, resolution } = candidate;
-      if (!resolution) throw new Error('Resolution has to exist');
+      if (resolution === undefined) throw new ReferenceError('Resolution must be defined');
       const nextNode = this.dictionary.getNode(this.inventory.getTileLetter(resolution.tile), traversal.node);
-      if (!nextNode) return this.emitStop();
+      if (nextNode === null) return this.emitStop();
       const traversalFromCandidate: Traversal = { ...traversal, node: nextNode, position };
       return this.emitContinue([{ traversal: traversalFromCandidate, type: GenerationTask.EvaluateTraversal }]);
     }

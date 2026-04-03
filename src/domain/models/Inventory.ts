@@ -81,13 +81,13 @@ class TilePool {
   discardTile(tileId: TileId): Tile {
     const index = this.tileIds.indexOf(tileId);
     const [removedTile] = this.tiles.splice(index, 1);
-    if (removedTile === undefined) throw new Error(`Tile ${tileId} absent`);
+    if (removedTile === undefined) throw new ReferenceError(`Tile ${tileId} absent`);
     return removedTile;
   }
 
   popTile(): Tile {
     const tile = this.tiles.pop();
-    if (!tile) throw new Error('No tiles left to draw');
+    if (tile === undefined) throw new Error('No tiles left to draw');
     return tile;
   }
 
@@ -196,7 +196,7 @@ export default class Inventory {
   }
 
   getTilesFor(player: Player): ReadonlyArray<TileId> {
-    return this.getTilePoolFor(player).tileIdsView;
+    return this.getTilePoolFor(player).tileIds;
   }
 
   hasTilesFor(player: Player): boolean {
@@ -210,13 +210,13 @@ export default class Inventory {
 
   private getTileById(tileId: TileId): Tile {
     const tile = Inventory.TILE_BY_ID.get(tileId);
-    if (!tile) throw new Error(`Can't find tile ${tileId}`);
+    if (tile === undefined) throw new ReferenceError(`Can't find tile ${tileId}`);
     return tile;
   }
 
   private getTilePoolFor(player: Player): TilePool {
     const pool = this.playerPools.get(player);
-    if (!pool) throw new Error('Player pool not found');
+    if (pool === undefined) throw new ReferenceError('Tile pool not found');
     return pool;
   }
 

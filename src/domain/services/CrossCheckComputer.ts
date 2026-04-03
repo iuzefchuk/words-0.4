@@ -15,7 +15,7 @@ export default class CrossCheckComputer {
   getFor(coords: AnchorCoordinates): ReadonlySet<Letter> {
     const { axis, cell } = coords;
     const axisCache = this.cache.get(axis);
-    if (!axisCache) throw new Error('Axis cache has to exist');
+    if (axisCache === undefined) throw new ReferenceError('Axis cache has to exist');
     const cachedResult = axisCache.get(cell);
     if (cachedResult) return cachedResult;
     const newResult = this.computeFor(coords);

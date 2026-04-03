@@ -138,7 +138,7 @@ export default class Dictionary {
 
   private findNodeById(nodeId: NodeId): FrozenNode {
     const node = this.nodeById.get(nodeId);
-    if (!node) throw new Error(`Node not found: ${nodeId}`);
+    if (!node) throw new ReferenceError(`Node not found: ${nodeId}`);
     return node;
   }
 

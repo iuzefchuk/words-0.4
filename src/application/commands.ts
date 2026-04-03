@@ -136,7 +136,7 @@ export default class AppCommandBuilder {
         response = { ok: true, value: { words: event.words } };
         break;
       default:
-        throw new Error(`Unexpected event type: ${(event as { type: string }).type}`);
+        throw new ReferenceError(`Unexpected event type: ${(event as { type: string }).type}`);
     }
     if (this.game.matchView.isFinished) {
       this.clearPersistence();

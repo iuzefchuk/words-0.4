@@ -204,7 +204,7 @@ class Layout {
   }
 
   validateCell(cell: CellIndex): void {
-    if (cell < 0 || cell >= Layout.TOTAL_CELLS) throw new Error('Cell out of bounds');
+    if (cell < 0 || cell >= Layout.TOTAL_CELLS) throw new RangeError('Cell out of bounds');
   }
 }
 

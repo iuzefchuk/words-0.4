@@ -116,7 +116,7 @@ class Turn {
 
   removeTile({ tile }: { tile: TileId }): void {
     const index = this.tiles.indexOf(tile);
-    if (index === -1) throw new Error(`Tile ${tile} not found`);
+    if (index === -1) throw new ReferenceError(`Tile ${tile} not found`);
     this.tiles.splice(index, 1);
   }
 
@@ -178,7 +178,7 @@ export default class Turns {
 
   private get currentTurn(): Turn {
     const last = this.history.at(-1);
-    if (!last) throw new Error('Current turn does not exist');
+    if (last === undefined) throw new ReferenceError('Current turn does not exist');
     return last;
   }
 

@@ -196,8 +196,8 @@ export default class Game {
     this.ensureMutability();
     if (!this.turnsView.currentTurnIsValid) throw new Error('Turn is not valid');
     const { currentPlayer: player, currentTurnScore: score, currentTurnTiles: tiles, currentTurnWords: words } = this.turnsView;
-    if (words === undefined) throw new Error('Current turn words do not exist');
-    if (score === undefined) throw new Error('Current turn score does not exist');
+    if (words === undefined) throw new ReferenceError('Current turn words do not exist');
+    if (score === undefined) throw new ReferenceError('Current turn score does not exist');
     tiles.forEach(tile => this.inventory.discardTile({ player, tile }));
     this.inventory.replenishTilesFor(player);
     this.match.incrementScore(player, score);
