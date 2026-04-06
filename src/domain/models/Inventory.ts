@@ -19,7 +19,10 @@ export type TileCollection = ReadonlyMap<Letter, ReadonlyArray<TileId>>;
 
 export type TileId = Brand<string, 'TileId'>;
 
-type TilePoolSnapshot = { readonly capacity: number | undefined; readonly tiles: Array<Tile> };
+type TilePoolSnapshot = {
+  readonly capacity: number | undefined;
+  readonly tiles: Array<Tile>;
+};
 
 class Tile {
   private constructor(

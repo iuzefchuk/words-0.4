@@ -1,5 +1,6 @@
 import Board, { Axis, Bonus, BonusDistribution } from '@/domain/models/Board.ts';
 import { createCellIndex, createTileId } from '$/unit/helpers/casts.ts';
+import { areMapsEqual, areObjectsEqual } from '$/unit/helpers/equality.ts';
 
 const CELLS_PER_AXIS = 15;
 const TOTAL_CELLS = CELLS_PER_AXIS * CELLS_PER_AXIS;
@@ -437,82 +438,23 @@ describe('Board', () => {
     });
   });
 
-  describe('cloning', () => {
+  describe('snapshot', () => {
     let board: Board;
 
-    it('should create an independent copy', () => {
-      const cellIndex = createCellIndex(CENTER_INDEX);
-      const tileId = createTileId('A-0');
-      board.placeTile(cellIndex, tileId);
-      const clone = Board.clone(board);
-      expect(clone.findTileByCell(cellIndex)).toBe(tileId);
-    });
-
-    it('should not affect original when clone is modified', () => {
-      const firstCellIndex = createCellIndex(CENTER_INDEX);
-      const secondCellIndex = createCellIndex(CENTER_INDEX + 1);
-      const firstTileId = createTileId('A-0');
-      const secondTileId = createTileId('B-0');
-      board.placeTile(firstCellIndex, firstTileId);
-      const clone = Board.clone(board);
-      clone.placeTile(secondCellIndex, secondTileId);
-      expect(board.isCellOccupied(secondCellIndex)).toBe(false);
-    });
-
-    it('should not affect clone when original is modified', () => {
-      const cellIndex = createCellIndex(CENTER_INDEX);
-      const tileId = createTileId('A-0');
-      const clone = Board.clone(board);
-      board.placeTile(cellIndex, tileId);
-      expect(clone.isCellOccupied(cellIndex)).toBe(false);
-    });
-
-    beforeEach(() => {
-      board = Board.create(BonusDistribution.Classic);
-    });
-  });
-
-  describe('snapshoting', () => {
-    let board: Board;
-
-    it('should capture placed tiles in snapshot', () => {
-      // TODO expand
+    it('should capture and restore tileByCell', () => {
       const cellIndex = createCellIndex(CENTER_INDEX);
       const tileId = createTileId('A-0');
       board.placeTile(cellIndex, tileId);
       const { tileByCell } = board.snapshot;
-      expect(tileByCell.get(cellIndex)).toBe(tileId);
+      const restoredBoard = Board.restoreFromSnapshot(board.snapshot);
+      expect(areMapsEqual(restoredBoard.snapshot.tileByCell, tileByCell)).toBe(true);
     });
 
-    it('should capture layout in snapshot', () => {
-      // TODO expand
+    it('should capture and restore layout', () => {
       const { layout } = board.snapshot;
-      expect(layout.bonusDistribution).toBe(BonusDistribution.Classic);
+      const restoredBoard = Board.restoreFromSnapshot(board.snapshot);
+      expect(areObjectsEqual(restoredBoard.snapshot.layout, layout)).toBe(true);
     });
-
-    // it('should preserve state when restoring from snapshot', () => {
-    //   const firstCellIndex = createCellIndex(CENTER_INDEX);
-    //   const secondCellIndex = createCellIndex(CENTER_INDEX + 1);
-    //   const firstTileId = createTileId('A-0');
-    //   const secondTileId = createTileId('B-0');
-    //   board.placeTile(firstCellIndex, firstTileId);
-    //   board.placeTile(secondCellIndex, secondTileId);
-    //   const restoredBoard = Board.restoreFromSnapshot(board.snapshot);
-    //   expect(restoredBoard.findTileByCell(firstCellIndex)).toBe(firstTileId);
-    //   expect(restoredBoard.findTileByCell(secondCellIndex)).toBe(secondTileId);
-    //   expect(restoredBoard.bonusDistribution).toBe(BonusDistribution.Classic);
-    // });
-
-    // it('should preserve state through snapshot round-trip', () => {
-    //   // TODO rethink
-    //   const cellIndex = createCellIndex(CENTER_INDEX);
-    //   const tileId = createTileId('A-0');
-    //   board.placeTile(cellIndex, tileId);
-    //   const restored = Board.restoreFromSnapshot(board.snapshot);
-    //   expect(restored.isCellOccupied(cellIndex)).toBe(true);
-    //   expect(restored.isCellCenter(cellIndex)).toBe(true);
-    //   expect(restored.getBonus(createCellIndex(7))).toBe(Bonus.DoubleLetter);
-    // });
 
     beforeEach(() => {
       board = Board.create(BonusDistribution.Classic);

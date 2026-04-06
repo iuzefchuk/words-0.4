@@ -39,7 +39,7 @@ export type TurnSnapshot = {
 };
 
 export type TurnsSnapshot = {
-  readonly turns: Array<TurnSnapshot>;
+  readonly history: Array<TurnSnapshot>;
 };
 
 export type TurnsView = {
@@ -172,7 +172,7 @@ export default class Turns {
 
   get snapshot(): TurnsSnapshot {
     return {
-      turns: this.history.map(turn => turn.snapshot),
+      history: this.history.map(turn => turn.snapshot),
     };
   }
 
@@ -196,9 +196,9 @@ export default class Turns {
     return new Turns(idGenerator, []);
   }
 
-  static restoreFromSnapshot(snapshot: TurnsSnapshot, idGenerator: IdGenerator): Turns {
-    const turns = snapshot.turns.map(turn => Turn.restoreFromSnapshot(turn));
-    return new Turns(idGenerator, turns);
+  static restoreFromSnapshot( idGenerator: IdGenerator, snapshot: TurnsSnapshot): Turns {
+    const history = snapshot.history.map(turn => Turn.restoreFromSnapshot(turn));
+    return new Turns(idGenerator, history);
   }
 
   recordPlacedTile(tile: TileId): void {

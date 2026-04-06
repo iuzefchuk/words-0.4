@@ -114,7 +114,7 @@ export default class Game {
     const board = Board.restoreFromSnapshot(snapshot.board);
     const inventory = Inventory.restoreFromSnapshot(snapshot.inventory);
     const match = Match.restoreFromSnapshot(snapshot.match);
-    const turns = Turns.restoreFromSnapshot(snapshot.turns, idGenerator);
+    const turns = Turns.restoreFromSnapshot(idGenerator, snapshot.turns);
     const events = Events.restoreFromSnapshot(snapshot.events);
     return new Game(version, board, dictionary, inventory, match, turns, events, snapshot.difficulty);
   }

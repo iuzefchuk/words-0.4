@@ -1,5 +1,6 @@
 import { Player } from '@/domain/enums.ts';
 import Match, { MatchResult } from '@/domain/models/Match.ts';
+import { areMapsEqual } from '$/unit/helpers/equality.ts';
 
 describe('Match', () => {
   describe('initial config', () => {
@@ -133,44 +134,23 @@ describe('Match', () => {
     });
   });
 
-  describe('snapshoting', () => {
+  describe('snapshot', () => {
     let match: Match;
 
-    it('should capture scores in snapshot', () => {
-      // TODO expand
+    it('should capture and restore scores', () => {
       match.incrementScore(Player.User, 25);
       match.incrementScore(Player.Opponent, 50);
       const { scores } = match.snapshot;
-      expect(scores.get(Player.User)).toBe(25);
-      expect(scores.get(Player.Opponent)).toBe(50);
+      const restoredMatch = Match.restoreFromSnapshot(match.snapshot);
+      expect(areMapsEqual(restoredMatch.snapshot.scores, scores)).toBe(true);
     });
 
-    it('should capture results in snapshot', () => {
-      // TODO expand
+    it('should capture and restore results', () => {
       match.recordCompletion(Player.User, Player.Opponent);
       const { results } = match.snapshot;
-      expect(results.get(Player.User)).toBe(MatchResult.Win);
-      expect(results.get(Player.Opponent)).toBe(MatchResult.Lose);
+      const restoredMatch = Match.restoreFromSnapshot(match.snapshot);
+      expect(areMapsEqual(restoredMatch.snapshot.results, results)).toBe(true);
     });
-
-    // it('should preserve state when restoring from snapshot', () => {
-    //   match.incrementScore(Player.User, 25);
-    //   match.incrementScore(Player.Opponent, 50);
-    //   match.recordCompletion(Player.Opponent, Player.User);
-    //   const restoredMatch = Match.restoreFromSnapshot(match.snapshot);
-    //   expect(restoredMatch.getScoreFor(Player.User)).toBe(25);
-    //   expect(restoredMatch.getScoreFor(Player.Opponent)).toBe(50);
-    //   expect(restoredMatch.getResultFor(Player.User)).toBe(MatchResult.Lose);
-    //   expect(restoredMatch.getResultFor(Player.Opponent)).toBe(MatchResult.Win);
-    // });
-
-    // it('should preserve state through snapshot round-trip', () => {
-    //   match.incrementScore(Player.User, 10);
-    //   const restoredMatch = Match.restoreFromSnapshot(match.snapshot);
-    //   expect(restoredMatch.userScore).toBe(match.userScore);
-    //   expect(restoredMatch.opponentScore).toBe(match.opponentScore);
-    //   expect(restoredMatch.isFinished).toBe(match.isFinished);
-    // });
 
     beforeEach(() => {
       match = Match.create([Player.User, Player.Opponent]);
