@@ -1,5 +1,5 @@
-import type { CellIndex, Link } from '@/domain/models/Board.ts';
-import type { TileId } from '@/domain/models/Inventory.ts';
+import type { CellIndex, Link } from '@/domain/models/board/Board.ts';
+import type { TileId } from '@/domain/models/inventory/Inventory.ts';
 
 export function castCellIndex(number: number): CellIndex {
   return number as CellIndex;

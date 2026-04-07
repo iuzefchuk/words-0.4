@@ -1,5 +1,5 @@
 import type { Clock, Scheduler, VersionProvider } from '@/application/ports.ts';
-import type { DictionarySnapshot } from '@/domain/models/Dictionary.ts';
+import type { DictionarySnapshot } from '@/domain/models/dictionary/Dictionary.ts';
 import type { DictionaryRepository, GameRepository, IdGenerator } from '@/domain/ports.ts';
 import type { GameSnapshot } from '@/domain/types.ts';
 

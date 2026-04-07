@@ -1,17 +1,17 @@
 import { createPinia } from 'pinia';
 import { createApp } from 'vue';
-import App from '@/gui/components/App/App.vue';
+import Index from '@/gui/components/by-hierarchy/index.vue';
 import DirectivesPlugin from '@/gui/plugins/DirectivesPlugin/DirectivesPlugin.ts';
 import LocalesPlugin from '@/gui/plugins/LocalesPlugin/LocalesPlugin.ts';
 import ProvidesPlugin from '@/gui/plugins/ProvidesPlugin.ts';
-import MatchStore from '@/gui/stores/MatchStore.ts';
+import MainStore from '@/gui/stores/MainStore.ts';
 
-class Application {
-  private app = createApp(App);
+class Presentation {
+  private app = createApp(Index);
 
   async start(): Promise<void> {
     try {
-      await Promise.allSettled([this.installAsyncPlugins(), MatchStore.start()]);
+      await Promise.allSettled([this.installAsyncPlugins(), MainStore.start()]);
       this.installPlugins();
       this.mount();
     } catch (error) {
@@ -34,4 +34,4 @@ class Application {
   }
 }
 
-new Application().start();
+new Presentation().start();

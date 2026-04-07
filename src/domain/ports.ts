@@ -1,4 +1,4 @@
-import type { DictionarySnapshot } from '@/domain/models/Dictionary.ts';
+import type { DictionarySnapshot } from '@/domain/models/dictionary/Dictionary.ts';
 import type { GameSnapshot } from '@/domain/types.ts';
 
 export type DictionaryRepository = {

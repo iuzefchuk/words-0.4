@@ -1,7 +1,7 @@
 import AppCommandBuilder from '@/application/commands.ts';
 import AppQueryBuilder from '@/application/queries.ts';
 import { AppCommands, AppConfig, AppQueries, GameDictionary, GameSettings } from '@/application/types.ts';
-import Game from '@/domain/index.ts';
+import Game from '@/domain/Game.ts';
 import { DictionaryRepository, GameRepository, IdGenerator } from '@/domain/ports.ts';
 import Infrastructure from '@/infrastructure/index.ts';
 

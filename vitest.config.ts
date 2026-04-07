@@ -17,7 +17,7 @@ export default defineConfig({
       include: ['src'],
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      reportsDirectory: './tests/coverage',
+      reportsDirectory: 'tests/.coverage',
     },
     environment: 'happy-dom',
     exclude: ['node_modules', 'dist'],

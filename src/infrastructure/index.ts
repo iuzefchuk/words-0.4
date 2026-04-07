@@ -6,7 +6,7 @@ import IdGenerator from '@/infrastructure/services/CryptoIdGenerator.ts';
 import DateApiClock from '@/infrastructure/services/DateApiClock.ts';
 import IndexedDb from '@/infrastructure/services/IndexedDb.ts';
 import WebScheduler from '@/infrastructure/services/WebScheduler.ts';
-import type { DictionarySnapshot } from '@/domain/models/Dictionary.ts';
+import type { DictionarySnapshot } from '@/domain/models/dictionary/Dictionary.ts';
 
 class IndexedDbDictionaryRepository implements DictionaryRepository {
   private static readonly CACHE_KEY = 'state';

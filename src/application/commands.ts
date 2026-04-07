@@ -13,7 +13,7 @@ import {
   GameTile,
   GameTurnGenerator,
 } from '@/application/types.ts';
-import Game from '@/domain/index.ts';
+import Game from '@/domain/Game.ts';
 import { TIME } from '@/shared/constants.ts';
 import type { GameRepository } from '@/domain/ports.ts';
 
