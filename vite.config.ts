@@ -26,7 +26,7 @@ export default defineConfig({
       $: path.resolve(__dirname, './tests'),
     },
   },
-  root: 'src/gui',
+  root: 'src/presentation',
   server: {
     port: Number(process.env.VITE_PORT) || 5173,
   },
