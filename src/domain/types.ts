@@ -1,12 +1,21 @@
 import { Difficulty as GameDifficulty, EventType as GameEventType, Letter as GameLetter, Player as GamePlayer } from '@/domain/enums.ts';
-import { Bonus as GameBonus, BonusDistribution as GameBonusDistribution } from '@/domain/models/board/Board.ts';
+import { Bonus as GameBonus, BoardType as GameBonusDistribution } from '@/domain/models/board/enums.ts';
 import { default as GameDictionary } from '@/domain/models/dictionary/Dictionary.ts';
-import { MatchResult as GameMatchResult } from '@/domain/models/match/Match.ts';
-import { type GeneratorResult as GameGeneratorResult, default as GameTurnGenerator } from '@/domain/services/turn-generator/TurnGenerator.ts';
-import type { BoardSnapshot, BoardView as GameBoardView, CellIndex as GameCell } from '@/domain/models/board/Board.ts';
-import type { InventoryView as GameInventoryView, TileId as GameTile, InventorySnapshot } from '@/domain/models/inventory/Inventory.ts';
-import type { MatchView as GameMatchView, MatchSnapshot } from '@/domain/models/match/Match.ts';
-import type { TurnsView as GameTurnsView, TurnsSnapshot } from '@/domain/models/turns/Turns.ts';
+import { DictionarySnapshot } from '@/domain/models/dictionary/types.ts';
+import { MatchResult as GameMatchResult } from '@/domain/models/match/enums.ts';
+import {
+  type GeneratorResult as GameGeneratorResult,
+  default as GameTurnGenerator,
+} from '@/domain/services/turn-generation/TurnGenerationService.ts';
+import type { BoardSnapshot, BoardView as GameBoardView, Cell as GameCell } from '@/domain/models/board/types.ts';
+import type { InventoryView as GameInventoryView, Tile as GameTile, InventorySnapshot } from '@/domain/models/inventory/types.ts';
+import type { MatchView as GameMatchView, MatchSnapshot } from '@/domain/models/match/types.ts';
+import type { TurnsView as GameTurnsView, TurnsSnapshot } from '@/domain/models/turns/types.ts';
+
+export type DictionaryRepository = {
+  load(): Promise<DictionarySnapshot | null>;
+  save(snapshot: DictionarySnapshot): Promise<void>;
+};
 
 export type EventsSnapshot = {
   readonly log: Array<GameEvent>;
@@ -23,8 +32,14 @@ export type GameEvent =
   | { type: GameEventType.TileUndoPlaced }
   | { type: GameEventType.UserTurnPassed };
 
+export type GameRepository = {
+  delete(): Promise<void>;
+  load(): Promise<GameSnapshot | null>;
+  save(snapshot: GameSnapshot): Promise<void>;
+};
+
 export type GameSettings = {
-  bonusDistribution: GameBonusDistribution;
+  boardType: GameBonusDistribution;
   difficulty: GameDifficulty;
 };
 
@@ -35,7 +50,10 @@ export type GameSnapshot = {
   inventory: InventorySnapshot;
   match: MatchSnapshot;
   turns: TurnsSnapshot;
-  version: string;
+};
+
+export type IdGenerator = {
+  execute(): string;
 };
 
 export type { GameBoardView, GameCell, GameGeneratorResult, GameInventoryView, GameMatchView, GameTile, GameTurnsView };

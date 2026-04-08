@@ -1,20 +1,20 @@
-import Board, { AnchorCoordinates, Placement } from '@/domain/models/board/Board.ts';
+import Board from '@/domain/models/board/Board.ts';
+import { AnchorCoordinates, Placement } from '@/domain/models/board/types.ts';
 import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
-import Turns, {
+import { ValidationError, ValidationStatus } from '@/domain/models/turns/enums.ts';
+import Turns from '@/domain/models/turns/Turns.ts';
+import {
   ComputedCells,
   ComputedPlacements,
   ComputedScore,
   ComputedValue,
   ComputedWords,
   InvalidResult,
-  ValidationError,
   ValidationResult,
-  ValidationStatus,
   ValidResult,
-} from '@/domain/models/turns/Turns.ts';
-import PlacementBuilder from '@/domain/services/placement-builder/PlacementBuilder.ts';
-import ScoreCalculator from '@/domain/services/score-calculator/ScoreCalculator.ts';
+} from '@/domain/models/turns/types.ts';
+import ScoringService from '@/domain/services/scoring/ScoringService.ts';
 
 export type ValidatorContext = { board: Board; dictionary: Dictionary; inventory: Inventory; turns: Turns };
 
@@ -36,7 +36,7 @@ type SequencesOutput = ComputedCells;
 
 type WordsOutput = ComputedTilesOutput & ComputedWords;
 
-export default class CurrentTurnValidator {
+export default class TurnValidationService {
   private static Pipeline = class Pipeline<State extends PipelineInput> {
     private constructor(private throughput: PipelineThroughput<State>) {}
 
@@ -76,6 +76,7 @@ export default class CurrentTurnValidator {
   }
 
   private static computeAndValidateCells(state: PipelineInput): PipelineThroughput<PipelineState<SequencesOutput>> {
+    // TODO to separate service
     const { board, turns } = state.context;
     const tiles = turns.currentTurnTiles;
     if (tiles.length === 0) return this.Pipeline.fail(ValidationError.InvalidTilePlacement);
@@ -85,19 +86,20 @@ export default class CurrentTurnValidator {
     const someCellsAreAnchor = cells.some(cell => {
       if (board.isCellCenter(cell)) return true;
       if (!turns.historyHasPriorTurns) return false;
-      return board.getAdjacentCells(cell).some(adj => board.isCellOccupied(adj) && !placementCells.has(adj));
+      return board.calculateAdjacentCells(cell).some(adj => board.isCellOccupied(adj) && !placementCells.has(adj));
     });
     return someCellsAreAnchor ? this.Pipeline.pass(state, { cells }) : this.Pipeline.fail(ValidationError.NoCellsUsableAsFirst);
   }
 
   private static computeAndValidatePlacements(state: PipelineState<SequencesOutput>): PipelineThroughput<PipelineState<ComputedTilesOutput>> {
+    // TODO to separate service
     const { board, turns } = state.context;
     const tiles = turns.currentTurnTiles;
     const primaryAxis = board.calculateAxis(state.cells);
     const cell = state.cells[0];
     if (cell === undefined) throw new ReferenceError('Cell must be defined');
     const coords = { axis: primaryAxis, cell };
-    const primaryPlacement = PlacementBuilder.execute(board, { coords, tiles });
+    const primaryPlacement = board.buildPlacement(coords, tiles);
     const areLinksUsable = (placement: Placement): boolean => placement.length > 1;
     if (!areLinksUsable(primaryPlacement)) return this.Pipeline.fail(ValidationError.InvalidTilePlacement);
     const result: Array<Placement> = [primaryPlacement];
@@ -105,7 +107,7 @@ export default class CurrentTurnValidator {
       const coords: AnchorCoordinates = { axis: board.getOppositeAxis(primaryAxis), cell };
       const tile = board.findTileByCell(cell);
       if (!tile) continue;
-      const secondaryPlacement = PlacementBuilder.execute(board, { coords, tiles: [tile] });
+      const secondaryPlacement = board.buildPlacement(coords, [tile]);
       if (areLinksUsable(secondaryPlacement)) result.push(secondaryPlacement);
     }
     return this.Pipeline.pass(state, { placements: result });
@@ -114,7 +116,7 @@ export default class CurrentTurnValidator {
   private static computeAndValidateScore(state: PipelineState<WordsOutput>): PipelineThroughput<PipelineState<ScoreOutput>> {
     const { board, inventory } = state.context;
     const newCells = new Set(state.cells);
-    const score = ScoreCalculator.execute(
+    const score = ScoringService.execute(
       state.placements,
       newCells,
       tile => inventory.getTilePoints(tile),
@@ -125,6 +127,7 @@ export default class CurrentTurnValidator {
   }
 
   private static computeAndValidateWords(state: PipelineState<ComputedTilesOutput>): PipelineThroughput<PipelineState<WordsOutput>> {
+    // TODO to separate service
     const { dictionary, inventory } = state.context;
     const words: Array<string> = [];
     for (let i = 0; i < state.placements.length; i++) {

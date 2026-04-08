@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { GameBonusDistribution, GameDifficulty } from '@/application/types.ts';
-import AppSelect from '@/presentation/components/by-hierarchy/Main/MainHeader/AppSelect/AppSelect.vue';
+import AppSelect from '@/presentation/components/shared/AppSelect/AppSelect.vue';
 import MainStore from '@/presentation/stores/MainStore.ts';
 type OptionValue = GameBonusDistribution | GameDifficulty;
 const mainStore = MainStore.INSTANCE();
@@ -13,8 +13,8 @@ const options = [
       { text: window.t('game.bonus_distribution_random'), value: GameBonusDistribution.Random },
     ],
     label: window.t('game.settings_bonuses'),
-    modelValue: () => mainStore.bonusDistribution,
-    onChange: (value: OptionValue) => mainStore.changeBonusDistribution(value as GameBonusDistribution),
+    modelValue: () => mainStore.boardType,
+    onChange: (value: OptionValue) => mainStore.changeBoardType(value as GameBonusDistribution),
   },
   {
     items: [

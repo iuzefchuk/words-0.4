@@ -2,8 +2,8 @@
 import { storeToRefs } from 'pinia';
 import UseButtons from '@/presentation/components/by-hierarchy/Main/MainFooter/MainFooterButtons/UseButtons.ts';
 import GameTile from '@/presentation/components/shared/AppTile/AppTile.vue';
-import RackStore from '@/presentation/stores/RackStore.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
+import RackStore from '@/presentation/stores/RackStore.ts';
 const mainStore = MainStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
 const { tilesRemaining } = storeToRefs(mainStore);

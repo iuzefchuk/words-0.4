@@ -1,10 +1,16 @@
 import { Letter, Player } from '@/domain/enums.ts';
-import Board, { AnchorCoordinates, Axis, CellIndex, Link } from '@/domain/models/board/Board.ts';
-import Dictionary, { NodeId } from '@/domain/models/dictionary/Dictionary.ts';
-import Inventory, { TileCollection, TileId } from '@/domain/models/inventory/Inventory.ts';
-import Turns, { ValidationStatus, ValidResult } from '@/domain/models/turns/Turns.ts';
-import CrossCheckComputer from '@/domain/services/cross-check-computer/CrossCheckComputer.ts';
-import CurrentTurnValidator, { ValidatorContext } from '@/domain/services/current-turn-validator/CurrentTurnValidator.ts';
+import Board from '@/domain/models/board/Board.ts';
+import { Axis } from '@/domain/models/board/enums.ts';
+import { AnchorCoordinates, Cell, Link } from '@/domain/models/board/types.ts';
+import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
+import { NodeId } from '@/domain/models/dictionary/types.ts';
+import Inventory from '@/domain/models/inventory/Inventory.ts';
+import { Tile, TileCollection } from '@/domain/models/inventory/types.ts';
+import { ValidationStatus } from '@/domain/models/turns/enums.ts';
+import Turns from '@/domain/models/turns/Turns.ts';
+import { ValidResult } from '@/domain/models/turns/types.ts';
+import CrossCheckService from '@/domain/services/cross-check/CrossCheckService.ts';
+import TurnValidationService, { ValidatorContext } from '@/domain/services/turn-validation/TurnValidationService.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 enum GenerationCommandType {
@@ -35,8 +41,8 @@ export type GeneratorContext = {
 };
 
 export type GeneratorResult = {
-  cells: ReadonlyArray<CellIndex>;
-  tiles: ReadonlyArray<TileId>;
+  cells: ReadonlyArray<Cell>;
+  tiles: ReadonlyArray<Tile>;
   validationResult: ValidResult;
 };
 
@@ -50,11 +56,11 @@ type ApplyTask = {
 
 type CalculateTask = { traversal: Traversal; type: GenerationTask.CalculateCandidate };
 
-type Candidate = { cell: CellIndex; position: number; resolution: Resolution | undefined };
+type Candidate = { cell: Cell; position: number; resolution: Resolution | undefined };
 
 type ContinueTaskCommand = { newTasks: Array<Task>; type: GenerationCommandType.ContinueExecute };
 
-type DispatcherComputeds = { axisCells: ReadonlyArray<CellIndex>; oppositeAxis: Axis };
+type DispatcherComputeds = { axisCells: ReadonlyArray<Cell>; oppositeAxis: Axis };
 
 type DispatcherState = { placement: Array<Link>; tiles: MutableTileCollection };
 
@@ -63,16 +69,16 @@ type EvaluateTask = { traversal: Traversal; type: GenerationTask.EvaluateTravers
 type GeneratorArguments = {
   context: GeneratorContext;
   coords: AnchorCoordinates;
-  lettersComputer: CrossCheckComputer;
+  crossChecker: CrossCheckService;
   playerTileCollection: TileCollection;
   yieldControl: () => Promise<void>;
 };
 
-type MutableTileCollection = Map<Letter, Array<TileId>>;
+type MutableTileCollection = Map<Letter, Array<Tile>>;
 
-type Resolution = { tile: TileId };
+type Resolution = { tile: Tile };
 
-type ResolutionComputeds = { letterTiles: Array<TileId> };
+type ResolutionComputeds = { letterTiles: Array<Tile> };
 
 type ResolveTask = { candidate: Candidate; traversal: Traversal; type: GenerationTask.ResolveCandidate };
 
@@ -99,6 +105,7 @@ export default class TurnGenerator {
   private static readonly YIELD_INTERVAL = 100;
 
   private static TaskCommandResolver = class TaskCommandResolver {
+    // TODO separate
     private constructor(private readonly stack: Array<Task>) {}
 
     static continueExecute(newTasks: Array<Task>): ContinueTaskCommand {
@@ -145,6 +152,7 @@ export default class TurnGenerator {
   };
 
   private static TaskDispatcher = class TaskDispatcher {
+    // TODO separate
     private get board(): Board {
       return this.context.board;
     }
@@ -167,20 +175,20 @@ export default class TurnGenerator {
 
     private constructor(
       private readonly context: GeneratorContext,
-      private readonly lettersComputer: CrossCheckComputer,
+      private readonly crossChecker: CrossCheckService,
       private state: DispatcherState,
       public computeds: DispatcherComputeds,
     ) {}
 
-    static create({ context, coords, lettersComputer, playerTileCollection }: GeneratorArguments): TaskDispatcher {
+    static create({ context, coords, crossChecker, playerTileCollection }: GeneratorArguments): TaskDispatcher {
       const tiles: MutableTileCollection = new Map();
       for (const [letter, tileIds] of playerTileCollection) tiles.set(letter, [...tileIds]);
       const state: DispatcherState = { placement: [], tiles };
       const computeds: DispatcherComputeds = {
-        axisCells: context.board.getAxisCells(coords),
+        axisCells: context.board.calculateAxisCells(coords),
         oppositeAxis: context.board.getOppositeAxis(coords.axis),
       };
-      return new TaskDispatcher(context, lettersComputer, state, computeds);
+      return new TaskDispatcher(context, crossChecker, state, computeds);
     }
 
     execute(task: Task): TaskCommand {
@@ -213,10 +221,10 @@ export default class TurnGenerator {
     private calculateAndExploreResolution(traversal: Traversal, candidate: Candidate): ContinueTaskCommand | StopTaskCommand {
       const { cell, position } = candidate;
       const generator = this.dictionary.createNextNodeGenerator({ startNode: traversal.node });
-      const anchorLetters = this.lettersComputer.getFor({ axis: this.computeds.oppositeAxis, cell });
+      const anchorLetters = this.crossChecker.execute({ axis: this.computeds.oppositeAxis, cell });
       const newTasks: Array<Task> = [];
       for (const [possibleNextLetter, nodeWithPossibleNextLetter] of generator) {
-        const letterTiles = this.tiles.get(possibleNextLetter) as Array<TileId>;
+        const letterTiles = this.tiles.get(possibleNextLetter) as Array<Tile>;
         if (!anchorLetters.has(possibleNextLetter)) continue;
         if (!letterTiles) continue;
         const tile = letterTiles.at(-1);
@@ -286,7 +294,7 @@ export default class TurnGenerator {
         const placement = [...this.placement];
         const tiles = placement.map(link => link.tile);
         for (const tile of tiles) this.context.turns.recordPlacedTile(tile);
-        const validationResult = CurrentTurnValidator.execute(this.context as ValidatorContext);
+        const validationResult = TurnValidationService.execute(this.context as ValidatorContext);
         for (const tile of tiles) this.context.turns.undoRecordPlacedTile({ tile });
         if (validationResult.status === ValidationStatus.Valid) {
           return this.emitReturn({ cells: placement.map(link => link.cell), tiles, validationResult });
@@ -324,8 +332,8 @@ export default class TurnGenerator {
       const { traversal } = task;
       const isEdge =
         traversal.direction === GenerationDirection.Left
-          ? this.board.isCellPositionOnLeftEdge(traversal.position)
-          : this.board.isCellPositionOnRightEdge(traversal.position);
+          ? this.board.isCellPositionAtAxisStart(traversal.position)
+          : this.board.isCellPositionAtAxisEnd(traversal.position);
       if (isEdge) return this.emitStop();
       return this.emitContinue([{ ...task, type: GenerationTask.CalculateCandidate }]);
     }
@@ -335,13 +343,13 @@ export default class TurnGenerator {
     const { board, dictionary, inventory, turns } = context;
     const playerTileCollection = inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;
-    const anchorCells = board.getAnchorCells(turns.historyHasPriorTurns);
+    const anchorCells = board.calculateAnchorCells(turns.historyHasPriorTurns);
     if (anchorCells.size === 0) return;
-    const lettersComputer = new CrossCheckComputer(board, dictionary, inventory);
+    const crossChecker = new CrossCheckService(board, dictionary, inventory);
     for (const cell of anchorCells) {
       for (const axis of Object.values(Axis)) {
         const coords: AnchorCoordinates = { axis, cell };
-        yield* this.generate({ context, coords, lettersComputer, playerTileCollection, yieldControl });
+        yield* this.generate({ context, coords, crossChecker, playerTileCollection, yieldControl });
       }
     }
   }
@@ -353,7 +361,7 @@ export default class TurnGenerator {
     const firstTask: EvaluateTask = {
       traversal: {
         direction: GenerationDirection.Left,
-        node: dictionary.firstNode,
+        node: dictionary.rootNodeId,
         position: dispatcher.computeds.axisCells.indexOf(coords.cell),
       },
       type: GenerationTask.EvaluateTraversal,

@@ -1,4 +1,4 @@
-import { Clock } from '@/application/ports.ts';
+import { Clock } from '@/application/types.ts';
 
 export default class DateApiClock implements Clock {
   now(): number {

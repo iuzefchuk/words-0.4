@@ -2,7 +2,7 @@ import AppCommandBuilder from '@/application/commands.ts';
 import AppQueryBuilder from '@/application/queries.ts';
 import { AppCommands, AppConfig, AppQueries, GameDictionary, GameSettings } from '@/application/types.ts';
 import Game from '@/domain/Game.ts';
-import { DictionaryRepository, GameRepository, IdGenerator } from '@/domain/ports.ts';
+import { DictionaryRepository, GameRepository, IdGenerator } from '@/domain/types.ts';
 import Infrastructure from '@/infrastructure/index.ts';
 
 export default class Application {
@@ -28,11 +28,10 @@ export default class Application {
   ) {}
 
   static async create(settings: GameSettings): Promise<Application> {
-    const { clock, idGenerator, repositories, scheduler, versionProvider } = await Infrastructure.createAppDependencies();
-    const version = versionProvider.version;
-    const game = await this.fetchGameInstance(version, idGenerator, repositories, settings);
+    const { clock, idGenerator, repositories, scheduler } = await Infrastructure.createAppDependencies();
+    const game = await this.fetchGameInstance(idGenerator, repositories, settings);
     const queryBuilder = new AppQueryBuilder(game);
-    const commandBuilder = new AppCommandBuilder(game, clock, scheduler, repositories.game);
+    const commandBuilder = new AppCommandBuilder(game, clock, idGenerator, scheduler, repositories.game);
     return new Application(queryBuilder, commandBuilder, game);
   }
 
@@ -45,7 +44,6 @@ export default class Application {
   }
 
   private static async fetchGameInstance(
-    version: string,
     idGenerator: IdGenerator,
     repositories: { dictionary: DictionaryRepository; game: GameRepository },
     settings: GameSettings,
@@ -53,9 +51,9 @@ export default class Application {
     const dictionary = await this.fetchDictionary(repositories.dictionary);
     const snapshot = await repositories.game.load();
     if (snapshot) {
-      const restoredGame = Game.restoreFromSnapshot(version, snapshot, idGenerator, dictionary);
+      const restoredGame = Game.restoreFromSnapshot(snapshot, idGenerator, dictionary);
       if (restoredGame) return restoredGame;
     }
-    return Game.create(version, idGenerator, dictionary, settings);
+    return Game.create(idGenerator, dictionary, settings);
   }
 }

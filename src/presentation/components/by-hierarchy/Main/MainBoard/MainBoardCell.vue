@@ -3,8 +3,8 @@ import { computed } from 'vue';
 import { GameBonus, GameCell } from '@/application/types.ts';
 import GameTile from '@/presentation/components/shared/AppTile/AppTile.vue';
 import { getBonusName } from '@/presentation/mappings.ts';
-import RackStore from '@/presentation/stores/RackStore.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
+import RackStore from '@/presentation/stores/RackStore.ts';
 const props = defineProps<{
   cell: GameCell;
 }>();

@@ -1,23 +1,23 @@
 import { computed, inject } from 'vue';
 import ProvidesPlugin from '@/presentation/plugins/ProvidesPlugin.ts';
 import SoundPlayer, { Sound } from '@/presentation/services/SoundPlayer.ts';
-import RackStore from '@/presentation/stores/RackStore.ts';
-import MainStore from '@/presentation/stores/MainStore.ts';
 import DialogStore from '@/presentation/stores/DialogStore.ts';
+import MainStore from '@/presentation/stores/MainStore.ts';
+import RackStore from '@/presentation/stores/RackStore.ts';
 
 export default class UseButtons {
   readonly allActionsAreDisabled = computed(() => !MainStore.INSTANCE().currentPlayerIsUser);
 
-  private get rackStore() {
-    return RackStore.INSTANCE();
+  private get dialogStore() {
+    return DialogStore.INSTANCE();
   }
 
   private get mainStore() {
     return MainStore.INSTANCE();
   }
 
-  private get dialogStore() {
-    return DialogStore.INSTANCE();
+  private get rackStore() {
+    return RackStore.INSTANCE();
   }
 
   private constructor(private readonly resignDelayMs: number) {}

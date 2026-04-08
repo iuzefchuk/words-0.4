@@ -1,25 +1,10 @@
 import { Player } from '@/domain/enums.ts';
-
-export enum MatchResult {
-  Lose = 'Lose',
-  Tie = 'Tie',
-  Win = 'Win',
-}
-
-export type MatchSnapshot = {
-  readonly results: Map<Player, MatchResult | undefined>;
-  readonly scores: Map<Player, number>;
-};
-
-export type MatchView = {
-  getResultFor(player: Player): MatchResult | undefined;
-  getScoreFor(player: Player): number;
-  readonly isFinished: boolean;
-};
+import { MatchResult } from '@/domain/models/match/enums.ts';
+import { MatchSnapshot } from '@/domain/models/match/types.ts';
 
 export default class Match {
   get isFinished(): boolean {
-    return this.results.values().some(Boolean);
+    return [...this.results.values()].some(Boolean);
   }
 
   get leaderByScore(): null | Player {

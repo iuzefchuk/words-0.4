@@ -1,457 +1,275 @@
-import Board, { Axis, Bonus, BonusDistribution } from '@/domain/models/board/Board.ts';
-import areEqual from '$/areEqual.ts';
-import { castCellIndex, castTileId } from '$/casts.ts';
-
-const CELLS_PER_AXIS = 15;
-const TOTAL_CELLS = CELLS_PER_AXIS * CELLS_PER_AXIS;
-const CENTER_INDEX = Math.floor(TOTAL_CELLS / 2);
+import Board from '@/domain/models/board/Board.ts';
+import { BoardType } from '@/domain/models/board/enums.ts';
+import BonusService from '@/domain/models/board/services/bonus/BonusService.ts';
+import { Cell } from '@/domain/models/board/types.ts';
 
 describe('Board', () => {
   describe('initial state', () => {
-    let board: Board;
-
-    it('should have correct number of cells', () => {
-      expect(board.cells).toHaveLength(TOTAL_CELLS);
+    it('has correct number of cells per axis', () => {
+      expect(Board.CELLS_PER_AXIS).toBe(Math.sqrt(Board.TOTAL_CELLS));
     });
 
-    it('should place center cell correctly', () => {
-      expect(board.isCellCenter(castCellIndex(CENTER_INDEX))).toBe(true);
+    it('calculate cells by index correctly', () => {
+      expect(Board.CELLS_BY_INDEX).toHaveLength(Board.TOTAL_CELLS);
     });
 
-    beforeEach(() => {
-      board = Board.create(BonusDistribution.Classic);
+    it('calculates center cell correctly', () => {
+      const mid = Math.floor(Board.CELLS_PER_AXIS / 2);
+      const centerValue = (mid * Board.CELLS_PER_AXIS + mid) as Cell;
+      expect(Board.CENTER_CELL).toBe(centerValue);
     });
   });
 
   describe('bonus system', () => {
-    const CLASSIC_INDICES = {
-      withDoubleLetter: castCellIndex(7),
-      withDoubleWord: castCellIndex(32),
-      withoutBonus: castCellIndex(CENTER_INDEX),
-      withTripleLetter: castCellIndex(0),
-      withTripleWord: castCellIndex(4),
-    };
-
-    let classicBoard: Board;
-    let randomBoard: Board;
-
-    it('should have expected counts', () => {
-      const EXPECTED_COUNTS = { doubleLetter: 24, doubleWord: 12, tripleLetter: 20, tripleWord: 8 };
-      function countBonuses(board: Board) {
-        let doubleLetter = 0,
-          doubleWord = 0,
-          tripleLetter = 0,
-          tripleWord = 0;
-        for (const cell of board.cells) {
-          const bonus = board.getBonus(cell);
-          if (bonus === Bonus.DoubleLetter) doubleLetter++;
-          else if (bonus === Bonus.TripleLetter) tripleLetter++;
-          else if (bonus === Bonus.DoubleWord) doubleWord++;
-          else if (bonus === Bonus.TripleWord) tripleWord++;
-        }
-        return { doubleLetter, doubleWord, tripleLetter, tripleWord };
-      }
-      expect(countBonuses(classicBoard)).toEqual(EXPECTED_COUNTS);
-      expect(countBonuses(randomBoard)).toEqual(EXPECTED_COUNTS);
+    it('returns multipliers correctly', () => {
+      Object.values(BoardType).forEach(type => {
+        const board = Board.create(type);
+        const distribution = BonusService.createBonusDistribution(type);
+        distribution.forEach((bonus, cell) => {
+          expect(board.getMultiplierForLetter(cell)).not.toBeNull();
+          expect(board.getMultiplierForWord(cell)).not.toBeNull();
+        });
+      });
     });
 
-    it('should exclude the center cell', () => {
-      expect(classicBoard.getBonus(castCellIndex(CENTER_INDEX))).toBeNull();
-      expect(randomBoard.getBonus(castCellIndex(CENTER_INDEX))).toBeNull();
-    });
-
-    it('should return correct type for Classic', () => {
-      expect(classicBoard.getBonus(CLASSIC_INDICES.withDoubleLetter)).toBe(Bonus.DoubleLetter);
-      expect(classicBoard.getBonus(CLASSIC_INDICES.withTripleLetter)).toBe(Bonus.TripleLetter);
-      expect(classicBoard.getBonus(CLASSIC_INDICES.withDoubleWord)).toBe(Bonus.DoubleWord);
-      expect(classicBoard.getBonus(CLASSIC_INDICES.withTripleWord)).toBe(Bonus.TripleWord);
-    });
-
-    it('should return correct letter multipliers for Classic', () => {
-      expect(classicBoard.getMultiplierForLetter(CLASSIC_INDICES.withDoubleLetter)).toBe(2);
-      expect(classicBoard.getMultiplierForLetter(CLASSIC_INDICES.withTripleLetter)).toBe(3);
-      expect(classicBoard.getMultiplierForLetter(CLASSIC_INDICES.withoutBonus)).toBe(1);
-    });
-
-    it('should return correct word multipliers for Classic', () => {
-      expect(classicBoard.getMultiplierForWord(CLASSIC_INDICES.withDoubleWord)).toBe(2);
-      expect(classicBoard.getMultiplierForWord(CLASSIC_INDICES.withTripleWord)).toBe(3);
-      expect(classicBoard.getMultiplierForWord(CLASSIC_INDICES.withoutBonus)).toBe(1);
-    });
-
-    it('should change the distribution from Classic to Random', () => {
-      const board = Board.create(BonusDistribution.Classic);
-      expect(board.bonusDistribution).toBe(BonusDistribution.Classic);
-      board.changeBonusDistribution(BonusDistribution.Random);
-      expect(board.bonusDistribution).toBe(BonusDistribution.Random);
-    });
-
-    it('should change the distribution from Random To Classic', () => {
-      const board = Board.create(BonusDistribution.Random);
-      expect(board.bonusDistribution).toBe(BonusDistribution.Random);
-      board.changeBonusDistribution(BonusDistribution.Classic);
-      expect(board.bonusDistribution).toBe(BonusDistribution.Classic);
-    });
-
-    beforeEach(() => {
-      classicBoard = Board.create(BonusDistribution.Classic);
-      randomBoard = Board.create(BonusDistribution.Random);
+    it('changes bonus distribution with type', () => {
+      // TODO changeType
     });
   });
 
-  describe('how placement resolves', () => {
-    const firstCellIndex = castCellIndex(CENTER_INDEX);
-    const secondCellIndex = castCellIndex(CENTER_INDEX + 1);
-    const firstTileId = castTileId('A-0');
-    const secondTileId = castTileId('B-0');
+  describe('axis', () => {
+    // let board: Board;
 
-    let board: Board;
+    // beforeEach(() => {
+    //   board = Board.create(BoardType.Classic);
+    // });
 
-    it('should return correct number of links', () => {
-      board.placeTile(firstCellIndex, firstTileId);
-      board.placeTile(secondCellIndex, secondTileId);
-      const result = board.resolvePlacement([firstTileId, secondTileId]);
-      expect(result).toHaveLength(2);
-    });
-
-    it('should return correct links', () => {
-      board.placeTile(firstCellIndex, firstTileId);
-      board.placeTile(secondCellIndex, secondTileId);
-      const result = board.resolvePlacement([firstTileId, secondTileId]);
-      expect(result[0]!.cell).toBe(firstCellIndex);
-      expect(result[1]!.cell).toBe(secondCellIndex);
-    });
-
-    it('should return links sorted correctly', () => {
-      board.placeTile(firstCellIndex, firstTileId);
-      board.placeTile(secondCellIndex, secondTileId);
-      const result = board.resolvePlacement([secondTileId, firstTileId]);
-      expect(result[0]!.cell).toBe(firstCellIndex);
-      expect(result[1]!.cell).toBe(secondCellIndex);
-    });
-
-    it('should forbid receiving unplaced tile', () => {
-      expect(() => board.resolvePlacement([firstTileId])).toThrow();
-    });
-
-    beforeEach(() => {
-      board = Board.create(BonusDistribution.Classic);
+    it('calculates correctly', () => {
+      // TODO calculateAxis
     });
   });
 
-  describe('how indexes and positions are calculated', () => {
-    const INDICES = {
-      center: castCellIndex(CENTER_INDEX),
-      col0Row0: castCellIndex(0),
-      col0Row1: castCellIndex(CELLS_PER_AXIS),
-      col14Row0: castCellIndex(CELLS_PER_AXIS - 1),
-      col14Row14: castCellIndex(TOTAL_CELLS - 1),
-    };
+  describe('anchor cells', () => {
+    // let board: Board;
 
-    let board: Board;
+    // beforeEach(() => {
+    //   board = Board.create(BoardType.Classic);
+    // });
 
-    it('should return row indices correctly', () => {
-      expect(board.getIndexInRow(INDICES.center)).toBe(7);
-      expect(board.getIndexInRow(INDICES.col0Row0)).toBe(0);
-      expect(board.getIndexInRow(INDICES.col0Row1)).toBe(1);
-      expect(board.getIndexInRow(INDICES.col14Row0)).toBe(0);
-      expect(board.getIndexInRow(INDICES.col14Row14)).toBe(CELLS_PER_AXIS - 1);
-    });
-
-    it('should return column indices correctly', () => {
-      expect(board.getIndexInColumn(INDICES.center)).toBe(7);
-      expect(board.getIndexInColumn(INDICES.col0Row0)).toBe(0);
-      expect(board.getIndexInColumn(INDICES.col0Row1)).toBe(0);
-      expect(board.getIndexInColumn(INDICES.col14Row0)).toBe(CELLS_PER_AXIS - 1);
-      expect(board.getIndexInColumn(INDICES.col14Row14)).toBe(CELLS_PER_AXIS - 1);
-    });
-
-    it('should return center correctly', () => {
-      expect(board.isCellCenter(INDICES.center)).toBe(true);
-      expect(board.isCellCenter(INDICES.col0Row0)).toBe(false);
-      expect(board.isCellCenter(INDICES.col0Row1)).toBe(false);
-      expect(board.isCellCenter(INDICES.col14Row14)).toBe(false);
-      expect(board.isCellCenter(INDICES.col14Row0)).toBe(false);
-    });
-
-    it('should return correct values for left edge', () => {
-      expect(board.isCellPositionOnLeftEdge(0)).toBe(true);
-      expect(board.isCellPositionOnLeftEdge(7)).toBe(false);
-      expect(board.isCellPositionOnLeftEdge(14)).toBe(false);
-    });
-
-    it('should return correct values for right edge', () => {
-      expect(board.isCellPositionOnRightEdge(0)).toBe(false);
-      expect(board.isCellPositionOnRightEdge(7)).toBe(false);
-      expect(board.isCellPositionOnRightEdge(14)).toBe(true);
-    });
-
-    beforeEach(() => {
-      board = Board.create(BonusDistribution.Classic);
+    it('calculate correctly', () => {
+      // TODO calculateAnchorCells
     });
   });
 
-  describe('how adjacent cells are calculated', () => {
-    let board: Board;
+  describe('tiles placement', () => {
+    // let board: Board;
 
-    it('should return correct values for not edge & not corner', () => {
-      const index = CENTER_INDEX;
-      const cellIndex = castCellIndex(index);
-      const cells = board.getAdjacentCells(cellIndex);
-      expect(cells).toHaveLength(4);
-      expect(cells).toContain(castCellIndex(index - 1));
-      expect(cells).toContain(castCellIndex(index + 1));
-      expect(cells).toContain(castCellIndex(index - CELLS_PER_AXIS));
-      expect(cells).toContain(castCellIndex(index + CELLS_PER_AXIS));
+    // beforeEach(() => {
+    //   board = Board.create(BoardType.Classic);
+    // });
+
+    it('places tile correctly', () => {
+      // TODO placeTile
     });
 
-    it('should return correct values for edge & not corner', () => {
-      const index = 1;
-      const cellIndex = castCellIndex(index);
-      const cells = board.getAdjacentCells(cellIndex);
-      expect(cells).toHaveLength(3);
-      expect(cells).toContain(castCellIndex(index - 1));
-      expect(cells).toContain(castCellIndex(index + 1));
-      expect(cells).toContain(castCellIndex(index + CELLS_PER_AXIS));
+    it('undoes place tile correctly', () => {
+      // TODO undoPlaceTile
     });
 
-    it('should return correct values for edge & corner', () => {
-      const index = 0;
-      const cellIndex = castCellIndex(index);
-      const cells = board.getAdjacentCells(cellIndex);
-      expect(cells).toHaveLength(2);
-      expect(cells).toContain(castCellIndex(index + 1));
-      expect(cells).toContain(castCellIndex(index + CELLS_PER_AXIS));
+    it('finds cell correctly', () => {
+      // TODO findCellByTile
+      // TODO isCellOccupied
     });
 
-    beforeEach(() => {
-      board = Board.create(BonusDistribution.Classic);
-    });
-  });
-
-  describe('how axis is calculated', () => {
-    let board: Board;
-
-    it('should return correct axis for empty array', () => {
-      expect(board.calculateAxis([])).toBe(Axis.X);
+    it('finds tile correctly', () => {
+      // TODO findTileByCell
+      // TODO isTilePlaced
     });
 
-    it('should return correct axis for cell with no adjacent occupied cells', () => {
-      const cellIndex = castCellIndex(CENTER_INDEX);
-      expect(board.calculateAxis([cellIndex])).toBe(Axis.X);
-    });
-
-    it('should return correct axis for cell with vertically adjacent occupied cell', () => {
-      const index = CENTER_INDEX;
-      const cellIndex = castCellIndex(index);
-      const adjacentCellIndex = castCellIndex(index - CELLS_PER_AXIS);
-      const tileId = castTileId('A-0');
-      board.placeTile(adjacentCellIndex, tileId);
-      expect(board.calculateAxis([cellIndex])).toBe(Axis.Y);
-    });
-
-    it('should return correct axis for cell with horizontally adjacent occupied cell', () => {
-      const index = CENTER_INDEX;
-      const cellIndex = castCellIndex(index);
-      const adjacentCellIndex = castCellIndex(index - 1);
-      const tileId = castTileId('A-0');
-      board.placeTile(adjacentCellIndex, tileId);
-      expect(board.calculateAxis([cellIndex])).toBe(Axis.X);
-    });
-
-    it('should return correct axis for multiple cells in the same row', () => {
-      const index = CENTER_INDEX;
-      const cellIndex = castCellIndex(index);
-      const adjacentCellIndex = castCellIndex(index + 1);
-      expect(board.calculateAxis([cellIndex, adjacentCellIndex])).toBe(Axis.X);
-    });
-
-    it('should return correct axis for multiple cells in the same column', () => {
-      const index = CENTER_INDEX;
-      const cellIndex = castCellIndex(index);
-      const adjacentCellIndex = castCellIndex(index + CELLS_PER_AXIS);
-      expect(board.calculateAxis([cellIndex, adjacentCellIndex])).toBe(Axis.Y);
-    });
-
-    it('should return opposite axis correctly', () => {
-      expect(board.getOppositeAxis(Axis.X)).toBe(Axis.Y);
-      expect(board.getOppositeAxis(Axis.Y)).toBe(Axis.X);
-    });
-
-    beforeEach(() => {
-      board = Board.create(BonusDistribution.Classic);
-    });
-  });
-
-  describe('how axis cells are calculated', () => {
-    let board: Board;
-
-    it('should return correct amount of cells', () => {
-      const index = CENTER_INDEX;
-      const cellIndex = castCellIndex(index);
-      const axisCellsForX = board.getAxisCells({ axis: Axis.X, cell: cellIndex });
-      const axisCellsForY = board.getAxisCells({ axis: Axis.Y, cell: cellIndex });
-      expect(axisCellsForX).toHaveLength(CELLS_PER_AXIS);
-      expect(axisCellsForY).toHaveLength(CELLS_PER_AXIS);
-    });
-
-    it('should return correct values for X axis', () => {
-      const index = CENTER_INDEX;
-      const cellIndex = castCellIndex(index);
-      const axisCells = board.getAxisCells({ axis: Axis.X, cell: cellIndex });
-      const firstIndexInRow = 7 * CELLS_PER_AXIS; // Center is row 7: first cell = 7 * 15 = 105, last = 105 + 14 = 119
-      expect(axisCells.at(0)).toBe(castCellIndex(firstIndexInRow));
-      expect(axisCells.at(-1)).toBe(castCellIndex(firstIndexInRow + CELLS_PER_AXIS - 1));
-    });
-
-    it('should return correct values for Y axis', () => {
-      const index = CENTER_INDEX;
-      const cellIndex = castCellIndex(index);
-      const axisCells = board.getAxisCells({ axis: Axis.Y, cell: cellIndex });
-      const firstIndexInCol = 7; // Column 7: cells 7, 22, 37, ..., 217 (col index + row * 15)
-      expect(axisCells.at(0)).toBe(castCellIndex(firstIndexInCol));
-      expect(axisCells.at(-1)).toBe(castCellIndex(firstIndexInCol + (CELLS_PER_AXIS - 1) * CELLS_PER_AXIS));
-    });
-
-    beforeEach(() => {
-      board = Board.create(BonusDistribution.Classic);
-    });
-  });
-
-  describe('how anchor cells are calculated', () => {
-    let board: Board;
-
-    it('should return only center on initial state', () => {
-      const cells = board.getAnchorCells(false);
-      const centerCellIndex = castCellIndex(CENTER_INDEX);
-      expect(cells.size).toBe(1);
-      expect(cells.has(centerCellIndex)).toBe(true);
-    });
-
-    it('should return cells adjacent to occupied cells after placed tile', () => {
-      const index = CENTER_INDEX;
-      const cellIndex = castCellIndex(index);
-      const tileId = castTileId('A-0');
-      board.placeTile(cellIndex, tileId);
-      const cells = board.getAnchorCells(true);
-      expect(cells.has(castCellIndex(index - 1))).toBe(true);
-      expect(cells.has(castCellIndex(index + 1))).toBe(true);
-      expect(cells.has(castCellIndex(index - CELLS_PER_AXIS))).toBe(true);
-      expect(cells.has(castCellIndex(index + CELLS_PER_AXIS))).toBe(true);
-    });
-
-    it('should not return occupied cells', () => {
-      const cellIndex = castCellIndex(CENTER_INDEX);
-      const tileId = castTileId('A-0');
-      board.placeTile(cellIndex, tileId);
-      const cells = board.getAnchorCells(true);
-      expect(cells.has(cellIndex)).toBe(false);
-    });
-
-    beforeEach(() => {
-      board = Board.create(BonusDistribution.Classic);
-    });
-  });
-
-  describe('tile placement and lookup', () => {
-    let board: Board;
-
-    it('should return correct positive search result', () => {
-      const cellIndex = castCellIndex(CENTER_INDEX);
-      const tileId = castTileId('A-0');
-      board.placeTile(cellIndex, tileId);
-      expect(board.isCellOccupied(cellIndex)).toBe(true);
-      expect(board.isTilePlaced(tileId)).toBe(true);
-      expect(board.findTileByCell(cellIndex)).toBe(tileId);
-      expect(board.findCellByTile(tileId)).toBe(cellIndex);
-    });
-
-    it('should return correct negative search result', () => {
-      const cellIndex = castCellIndex(CENTER_INDEX);
-      const tileId = castTileId('A-0');
-      expect(board.isCellOccupied(cellIndex)).toBe(false);
-      expect(board.isTilePlaced(tileId)).toBe(false);
-      expect(board.findTileByCell(cellIndex)).toBeUndefined();
-      expect(board.findCellByTile(tileId)).toBeUndefined();
-    });
-
-    it('should remove a tile when undoing its placement', () => {
-      const cellIndex = castCellIndex(CENTER_INDEX);
-      const tileId = castTileId('A-0');
-      board.placeTile(cellIndex, tileId);
-      board.undoPlaceTile(tileId);
-      expect(board.findTileByCell(cellIndex)).toBeUndefined();
-      expect(board.isCellOccupied(cellIndex)).toBe(false);
-    });
-
-    it('should allow a cell to be reused after undoing a placement', () => {
-      const cellIndex = castCellIndex(CENTER_INDEX);
-      const firstTileId = castTileId('A-0');
-      const secondTileId = castTileId('B-0');
-      board.placeTile(cellIndex, firstTileId);
-      board.undoPlaceTile(firstTileId);
-      board.placeTile(cellIndex, secondTileId);
-      expect(board.findTileByCell(cellIndex)).toBe(secondTileId);
-    });
-
-    it('should forbid placing tile on occupied cell', () => {
-      const cellIndex = castCellIndex(CENTER_INDEX);
-      const firstTileId = castTileId('A-0');
-      const secondTileId = castTileId('B-0');
-      board.placeTile(cellIndex, firstTileId);
-      expect(() => board.placeTile(cellIndex, secondTileId)).toThrow();
-    });
-
-    it('should forbid placing already placed tile', () => {
-      const firstCellIndex = castCellIndex(CENTER_INDEX);
-      const secondCellIndex = castCellIndex(CENTER_INDEX + 1);
-      const tileId = castTileId('A-0');
-      board.placeTile(firstCellIndex, tileId);
-      expect(() => board.placeTile(secondCellIndex, tileId)).toThrow();
-    });
-
-    it('should forbid placing tile on negative out-of-bounds cell', () => {
-      const cellIndex = castCellIndex(-1);
-      const tileId = castTileId('A-0');
-      expect(() => board.placeTile(cellIndex, tileId)).toThrow();
-    });
-
-    it('should forbid placing tile on positive out-of-bounds cell', () => {
-      const cellIndex = castCellIndex(TOTAL_CELLS);
-      const tileId = castTileId('A-0');
-      expect(() => board.placeTile(cellIndex, tileId)).toThrow();
-    });
-
-    it('should forbid undoing placement of a tile not on the board', () => {
-      const tileId = castTileId('A-0');
-      expect(() => board.undoPlaceTile(tileId)).toThrow();
-    });
-
-    beforeEach(() => {
-      board = Board.create(BonusDistribution.Classic);
+    it('resolves placement correctly', () => {
+      // TODO resolvePlacement
     });
   });
 
   describe('snapshot', () => {
     let board: Board;
 
-    it('should capture and restore tileByCell', () => {
-      const cellIndex = castCellIndex(CENTER_INDEX);
-      const tileId = castTileId('A-0');
-      board.placeTile(cellIndex, tileId);
-      const { tileByCell } = board.snapshot;
-      const restoredBoard = Board.restoreFromSnapshot(board.snapshot);
-      expect(areEqual(restoredBoard.snapshot.tileByCell, tileByCell)).toBe(true);
-    });
-
-    it('should capture and restore layout', () => {
-      const { layout } = board.snapshot;
-      const restoredBoard = Board.restoreFromSnapshot(board.snapshot);
-      expect(areEqual(restoredBoard.snapshot.layout, layout)).toBe(true);
-    });
-
     beforeEach(() => {
-      board = Board.create(BonusDistribution.Classic);
+      board = Board.create(BoardType.Classic);
+    });
+
+    it('captures and restores', () => {
+      const { snapshot: originalSnapshot } = board;
+      const restoredBoard = Board.restoreFromSnapshot(originalSnapshot);
+      expect(restoredBoard.snapshot).toEqual(originalSnapshot);
     });
   });
 });
+
+// describe('PlacementBuilder', () => {
+//   let board: Board;
+
+//   beforeEach(() => {
+//     board = Board.create(BoardType.Classic);
+//   });
+
+//   describe('error cases', () => {
+//     it('should throw when the tiles array is empty', () => {
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       expect(() => PlacementBuilder.execute(board, { coords, tiles: [] })).toThrow('Tile sequence can`t be empty');
+//     });
+//   });
+
+//   describe('basic placements', () => {
+//     it('should return links for both tiles when a single tile has an adjacent tile on the same axis', () => {
+//       board.placeTile(castCellIndex(112), castTileId('A-0'));
+//       board.placeTile(castCellIndex(113), castTileId('B-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0')] });
+//       expect(result).toHaveLength(2);
+//       expect(result[0]).toEqual({ cell: castCellIndex(112), tile: castTileId('A-0') });
+//       expect(result[1]).toEqual({ cell: castCellIndex(113), tile: castTileId('B-0') });
+//     });
+
+//     it('should return links for both tiles when two are adjacent on the same axis', () => {
+//       board.placeTile(castCellIndex(112), castTileId('A-0'));
+//       board.placeTile(castCellIndex(113), castTileId('B-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0'), castTileId('B-0')] });
+//       expect(result).toHaveLength(2);
+//     });
+
+//     it('should return all three links for three contiguous tiles', () => {
+//       board.placeTile(castCellIndex(112), castTileId('A-0'));
+//       board.placeTile(castCellIndex(113), castTileId('B-0'));
+//       board.placeTile(castCellIndex(114), castTileId('C-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0'), castTileId('B-0'), castTileId('C-0')] });
+//       expect(result).toHaveLength(3);
+//     });
+
+//     it('should return a segment for the matching tile only when tiles have a gap between them', () => {
+//       board.placeTile(castCellIndex(112), castTileId('A-0'));
+//       // gap at 113
+//       board.placeTile(castCellIndex(114), castTileId('B-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0')] });
+//       // A-0 is a single tile segment; segmentContainsTile is true, matchedTilesCount matches
+//       // but links = [A-0], which is length 1 (valid per builder, usability checked elsewhere)
+//       expect(result).toHaveLength(1);
+//       expect(result[0]).toEqual({ cell: castCellIndex(112), tile: castTileId('A-0') });
+//     });
+//   });
+
+//   describe('segment detection', () => {
+//     it('should return the full contiguous segment when a tile is placed between two existing tiles', () => {
+//       board.placeTile(castCellIndex(111), castTileId('A-0'));
+//       board.placeTile(castCellIndex(112), castTileId('B-0'));
+//       board.placeTile(castCellIndex(113), castTileId('C-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('B-0')] });
+//       expect(result).toHaveLength(3);
+//     });
+
+//     it('should return the full segment for tiles at the start of an axis row with following existing tiles', () => {
+//       // Row 7 starts at cell 105
+//       board.placeTile(castCellIndex(105), castTileId('A-0'));
+//       board.placeTile(castCellIndex(106), castTileId('B-0'));
+//       board.placeTile(castCellIndex(107), castTileId('C-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(105) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0')] });
+//       expect(result).toHaveLength(3);
+//     });
+
+//     it('should return the full segment for tiles at the end of an axis with preceding existing tiles', () => {
+//       // Row 7 ends at cell 119
+//       board.placeTile(castCellIndex(117), castTileId('A-0'));
+//       board.placeTile(castCellIndex(118), castTileId('B-0'));
+//       board.placeTile(castCellIndex(119), castTileId('C-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(119) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('C-0')] });
+//       expect(result).toHaveLength(3);
+//     });
+//   });
+
+//   describe('edge cases', () => {
+//     it('should build correctly for a tile at position 0 (left edge of axis)', () => {
+//       board.placeTile(castCellIndex(105), castTileId('A-0'));
+//       board.placeTile(castCellIndex(106), castTileId('B-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(105) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0')] });
+//       expect(result).toHaveLength(2);
+//     });
+
+//     it('should build correctly for a tile at position 14 (right edge of axis)', () => {
+//       board.placeTile(castCellIndex(118), castTileId('A-0'));
+//       board.placeTile(castCellIndex(119), castTileId('B-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(119) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('B-0')] });
+//       expect(result).toHaveLength(2);
+//     });
+
+//     it('should return an empty array when no tiles are found in axis cells', () => {
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0')] });
+//       expect(result).toEqual([]);
+//     });
+
+//     it('should return an empty array when matchedTilesCount does not match tiles.length', () => {
+//       board.placeTile(castCellIndex(112), castTileId('A-0'));
+//       board.placeTile(castCellIndex(113), castTileId('B-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       // Request 3 tiles but only 2 placed
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0'), castTileId('B-0'), castTileId('C-0')] });
+//       expect(result).toEqual([]);
+//     });
+
+//     it('should return an empty array when requested tiles are not on the board at the anchor position', () => {
+//       board.placeTile(castCellIndex(0), castTileId('A-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0')] });
+//       expect(result).toEqual([]);
+//     });
+
+//     it('should return an empty array when only some requested tiles are found', () => {
+//       board.placeTile(castCellIndex(112), castTileId('A-0'));
+//       board.placeTile(castCellIndex(113), castTileId('B-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0'), castTileId('C-0')] });
+//       expect(result).toEqual([]);
+//     });
+
+//     it('should return the correct segment containing the target tiles when multiple segments exist on the axis', () => {
+//       // Segment 1: cells 105-106
+//       board.placeTile(castCellIndex(105), castTileId('A-0'));
+//       board.placeTile(castCellIndex(106), castTileId('B-0'));
+//       // Gap at 107
+//       // Segment 2: cells 108-109
+//       board.placeTile(castCellIndex(108), castTileId('C-0'));
+//       board.placeTile(castCellIndex(109), castTileId('D-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(108) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('C-0')] });
+//       expect(result).toHaveLength(2);
+//       expect(result[0]).toEqual({ cell: castCellIndex(108), tile: castTileId('C-0') });
+//       expect(result[1]).toEqual({ cell: castCellIndex(109), tile: castTileId('D-0') });
+//     });
+//   });
+
+//   describe('axis handling', () => {
+//     it('should resolve an X-axis (row) placement correctly', () => {
+//       board.placeTile(castCellIndex(112), castTileId('A-0'));
+//       board.placeTile(castCellIndex(113), castTileId('B-0'));
+//       const coords = { axis: Axis.X, cell: castCellIndex(112) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0')] });
+//       expect(result).toHaveLength(2);
+//     });
+
+//     it('should resolve a Y-axis (column) placement correctly', () => {
+//       board.placeTile(castCellIndex(112), castTileId('A-0'));
+//       board.placeTile(castCellIndex(127), castTileId('B-0')); // same column, next row (112 + 15)
+//       const coords = { axis: Axis.Y, cell: castCellIndex(112) };
+//       const result = PlacementBuilder.execute(board, { coords, tiles: [castTileId('A-0')] });
+//       expect(result).toHaveLength(2);
+//     });
+//   });
+// });

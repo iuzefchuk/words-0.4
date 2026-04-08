@@ -1,5 +1,3 @@
-import { Clock, Scheduler, VersionProvider } from '@/application/ports.ts';
-import { IdGenerator } from '@/domain/ports.ts';
 import {
   GameBonus,
   GameBonusDistribution,
@@ -11,17 +9,19 @@ import {
   GamePlayer,
   GameTurnGenerator,
 } from '@/domain/types.ts';
-import type { DictionaryRepository, GameRepository } from '@/domain/ports.ts';
 import type {
+  DictionaryRepository,
   GameBoardView,
   GameCell,
   GameEvent,
   GameGeneratorResult,
   GameInventoryView,
   GameMatchView,
+  GameRepository,
   GameSettings,
   GameTile,
   GameTurnsView,
+  IdGenerator,
 } from '@/domain/types.ts';
 
 export type { GameBoardView, GameCell, GameEvent, GameGeneratorResult, GameInventoryView, GameMatchView, GameSettings, GameTile, GameTurnsView };
@@ -38,13 +38,13 @@ export {
 };
 
 export type AppCommands = {
-  changeBonusDistribution: (bonusDistribution: GameBonusDistribution) => void;
+  changeBoardType: (boardType: GameBonusDistribution) => void;
   changeDifficulty: (difficulty: GameDifficulty) => void;
   clearAllEvents: () => Array<GameEvent>;
   clearTiles: () => void;
-  handlePassTurn: () => { opponentTurn?: Promise<AppTurnResponse> };
+  handlePassTurn: () => { opponentTurn: Promise<AppTurnResponse> | undefined };
   handleResignMatch: () => void;
-  handleSaveTurn: () => { opponentTurn?: Promise<AppTurnResponse>; userResponse: AppTurnResponse };
+  handleSaveTurn: () => { opponentTurn: Promise<AppTurnResponse> | undefined; userResponse: AppTurnResponse };
   placeTile: (args: { cell: GameCell; tile: GameTile }) => void;
   undoPlaceTile: (tile: GameTile) => void;
 };
@@ -62,14 +62,13 @@ export type AppDependencies = {
     game: GameRepository;
   };
   scheduler: Scheduler;
-  versionProvider: VersionProvider;
 };
 
 export type AppQueries = {
   areTilesSame: (firstTile: GameTile, secondTile: GameTile) => boolean;
   findCellWithTile: (tile: GameTile) => GameCell | undefined;
   findTileOnCell: (cell: GameCell) => GameTile | undefined;
-  getBonusDistribution: () => GameBonusDistribution;
+  getBoardType: () => GameBonusDistribution;
   getCellBonus: (cell: GameCell) => GameBonus | null;
   getCellColumnIndex: (cell: GameCell) => number;
   getCellRowIndex: (cell: GameCell) => number;
@@ -94,3 +93,12 @@ export type AppQueries = {
 };
 
 export type AppTurnResponse = Result<{ words: ReadonlyArray<string> }, string>;
+
+export type Clock = {
+  now(): number;
+  wait(ms: number): Promise<void>;
+};
+
+export type Scheduler = {
+  yield(): Promise<void>;
+};

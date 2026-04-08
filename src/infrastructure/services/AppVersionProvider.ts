@@ -1,7 +1,5 @@
-import { VersionProvider } from '@/application/ports.ts';
-
-export default class AppVersionProvider implements VersionProvider {
-  get version(): string {
+export default class AppVersionProvider {
+  execute(): string {
     return APP_VERSION;
   }
 }

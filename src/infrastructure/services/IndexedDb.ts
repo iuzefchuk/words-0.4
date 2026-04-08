@@ -1,4 +1,4 @@
-type VersionedCache<T> = { data: T; version: number };
+type VersionedCache<T> = { data: T; version: string };
 
 export default class IndexedDb<T> {
   private dbPromise: null | Promise<IDBDatabase> = null;
@@ -18,7 +18,7 @@ export default class IndexedDb<T> {
     }
   }
 
-  async load(version: number): Promise<null | T> {
+  async load(version: string): Promise<null | T> {
     try {
       const db = await this.openDatabase();
       const cache = await this.getCache(db);
@@ -29,7 +29,7 @@ export default class IndexedDb<T> {
     }
   }
 
-  async save(version: number, data: T): Promise<void> {
+  async save(version: string, data: T): Promise<void> {
     try {
       const db = await this.openDatabase();
       await this.setCache(db, { data, version });

@@ -1,65 +1,18 @@
 import { Letter, Player } from '@/domain/enums.ts';
+import { InventorySnapshot, Tile, TileCollection, TilePoolSnapshot } from '@/domain/models/inventory/types.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
-
-export type InventorySnapshot = {
-  readonly discardPool: TilePoolSnapshot;
-  readonly drawPool: TilePoolSnapshot;
-  readonly playerPools: Map<Player, TilePoolSnapshot>;
-};
-
-export type InventoryView = {
-  areTilesEqual(firstTile: TileId, secondTile: TileId): boolean;
-  getTileLetter(tile: TileId): Letter;
-  getTilesFor(player: Player): ReadonlyArray<TileId>;
-  hasTilesFor(player: Player): boolean;
-  readonly unusedTilesCount: number;
-};
-
-export type TileCollection = ReadonlyMap<Letter, ReadonlyArray<TileId>>;
-
-export type TileId = Brand<string, 'TileId'>;
-
-type TilePoolSnapshot = {
-  readonly capacity: number | undefined;
-  readonly tiles: Array<Tile>;
-};
-
-class Tile {
-  private constructor(
-    readonly id: TileId,
-    readonly letter: Letter,
-  ) {}
-
-  static create(id: TileId, letter: Letter): Tile {
-    return new Tile(id, letter);
-  }
-
-  equals(other: Tile): boolean {
-    return this.id === other.id;
-  }
-}
 
 class TilePool {
   get snapshot(): TilePoolSnapshot {
     return { capacity: this.capacity, tiles: [...this.tiles] };
   }
 
-  get tileCollection(): TileCollection {
-    const collection = new Map<Letter, Array<TileId>>();
-    for (const tile of this.tiles) {
-      let arr = collection.get(tile.letter);
-      if (!arr) collection.set(tile.letter, (arr = []));
-      arr.push(tile.id);
-    }
-    return collection;
-  }
-
   get tileCount(): number {
     return this.tiles.length;
   }
 
-  get tileIds(): ReadonlyArray<TileId> {
-    return this.tiles.map(tile => tile.id);
+  get tilesView(): ReadonlyArray<Tile> {
+    return this.tiles;
   }
 
   private constructor(
@@ -76,69 +29,69 @@ class TilePool {
   }
 
   addTile(tile: Tile): void {
-    if (this.tileIds.includes(tile.id)) throw new Error(`Tile ${tile} is already present`);
+    if (this.tiles.includes(tile)) throw new Error(`Tile ${tile} is already present`);
     this.validateCapacity({ newTileCount: this.tiles.length + 1 });
     this.tiles.push(tile);
   }
 
-  discardTile(tileId: TileId): Tile {
-    const index = this.tileIds.indexOf(tileId);
-    const [removedTile] = this.tiles.splice(index, 1);
-    if (removedTile === undefined) throw new ReferenceError(`Tile ${tileId} absent`);
-    return removedTile;
-  }
-
   popTile(): Tile {
     const tile = this.tiles.pop();
-    if (tile === undefined) throw new Error('No tiles left to draw');
+    if (tile === undefined) throw new Error('No tiles left');
     return tile;
   }
 
+  removeTile(tile: Tile): Tile {
+    const index = this.tiles.indexOf(tile);
+    const [removedTile] = this.tiles.splice(index, 1);
+    if (removedTile === undefined) throw new ReferenceError(`Tile ${tile} absent`);
+    return removedTile;
+  }
+
   private validateCapacity({ newTileCount }: { newTileCount: number }): void {
-    if (this.capacity !== undefined && newTileCount > this.capacity) throw new Error('Rack limit exceeded');
+    if (this.capacity !== undefined && newTileCount > this.capacity) throw new Error('Tiles limit exceeded');
   }
 }
 
 export default class Inventory {
-  private static readonly LETTER_CONFIG: Record<Letter, { distribution: number; points: number }> = {
-    [Letter.A]: { distribution: 9, points: 1 },
-    [Letter.B]: { distribution: 2, points: 4 },
-    [Letter.C]: { distribution: 2, points: 4 },
-    [Letter.D]: { distribution: 4, points: 2 },
-    [Letter.E]: { distribution: 12, points: 1 },
-    [Letter.F]: { distribution: 2, points: 4 },
-    [Letter.G]: { distribution: 3, points: 3 },
-    [Letter.H]: { distribution: 2, points: 4 },
-    [Letter.I]: { distribution: 9, points: 1 },
-    [Letter.J]: { distribution: 1, points: 10 },
-    [Letter.K]: { distribution: 1, points: 5 },
-    [Letter.L]: { distribution: 4, points: 1 },
-    [Letter.M]: { distribution: 2, points: 3 },
-    [Letter.N]: { distribution: 6, points: 1 },
-    [Letter.O]: { distribution: 8, points: 1 },
-    [Letter.P]: { distribution: 2, points: 4 },
-    [Letter.Q]: { distribution: 1, points: 10 },
-    [Letter.R]: { distribution: 6, points: 1 },
-    [Letter.S]: { distribution: 4, points: 1 },
-    [Letter.T]: { distribution: 6, points: 1 },
-    [Letter.U]: { distribution: 4, points: 2 },
-    [Letter.V]: { distribution: 2, points: 4 },
-    [Letter.W]: { distribution: 2, points: 4 },
-    [Letter.X]: { distribution: 1, points: 8 },
-    [Letter.Y]: { distribution: 2, points: 4 },
-    [Letter.Z]: { distribution: 1, points: 10 },
+  private static readonly LETTER_CONFIG: Record<Letter, { count: number; points: number }> = {
+    [Letter.A]: { count: 9, points: 1 },
+    [Letter.B]: { count: 2, points: 4 },
+    [Letter.C]: { count: 2, points: 4 },
+    [Letter.D]: { count: 4, points: 2 },
+    [Letter.E]: { count: 12, points: 1 },
+    [Letter.F]: { count: 2, points: 4 },
+    [Letter.G]: { count: 3, points: 3 },
+    [Letter.H]: { count: 2, points: 4 },
+    [Letter.I]: { count: 9, points: 1 },
+    [Letter.J]: { count: 1, points: 10 },
+    [Letter.K]: { count: 1, points: 5 },
+    [Letter.L]: { count: 4, points: 1 },
+    [Letter.M]: { count: 2, points: 3 },
+    [Letter.N]: { count: 6, points: 1 },
+    [Letter.O]: { count: 8, points: 1 },
+    [Letter.P]: { count: 2, points: 4 },
+    [Letter.Q]: { count: 1, points: 10 },
+    [Letter.R]: { count: 6, points: 1 },
+    [Letter.S]: { count: 4, points: 1 },
+    [Letter.T]: { count: 6, points: 1 },
+    [Letter.U]: { count: 4, points: 2 },
+    [Letter.V]: { count: 2, points: 4 },
+    [Letter.W]: { count: 2, points: 4 },
+    [Letter.X]: { count: 1, points: 8 },
+    [Letter.Y]: { count: 2, points: 4 },
+    [Letter.Z]: { count: 1, points: 10 },
   };
 
-  private static readonly PLAYER_POOL_CAPACITY = 7;
-
-  private static readonly TILE_BY_ID: ReadonlyMap<TileId, Tile> = new Map(
+  private static readonly LETTER_BY_TILE: ReadonlyMap<Tile, Letter> = new Map(
     Object.values(Letter).flatMap(letter =>
-      Array.from({ length: Inventory.LETTER_CONFIG[letter].distribution }, (_, i) => {
-        const id = `${letter}-${i}` as TileId;
-        return [id, Tile.create(id, letter)] as const;
+      Array.from({ length: Inventory.LETTER_CONFIG[letter].count }, (_, i) => {
+        const tile = `${letter}-${i}` as Tile;
+        return [tile, letter] as const;
       }),
     ),
   );
+
+  private static readonly PLAYER_POOL_CAPACITY = 7;
 
   get snapshot(): InventorySnapshot {
     return {
@@ -159,7 +112,7 @@ export default class Inventory {
   ) {}
 
   static create(players: ReadonlyArray<Player>): Inventory {
-    const tiles = [...Inventory.TILE_BY_ID.values()];
+    const tiles = [...Inventory.LETTER_BY_TILE.keys()];
     shuffleWithFisherYates(tiles);
     const drawPool = TilePool.create({ tiles });
     const playerPools = new Map(players.map(player => [player, TilePool.create({ capacity: this.PLAYER_POOL_CAPACITY })]));
@@ -176,30 +129,40 @@ export default class Inventory {
     return new Inventory(drawPool, playerPools, discardPool);
   }
 
-  areTilesEqual(firstTile: TileId, secondTile: TileId): boolean {
-    return this.getTileById(firstTile).equals(this.getTileById(secondTile));
+  areTilesEqual(firstTile: Tile, secondTile: Tile): boolean {
+    return firstTile === secondTile;
   }
 
-  discardTile({ player, tile }: { player: Player; tile: TileId }): void {
-    const removedTile = this.getTilePoolFor(player).discardTile(tile);
+  discardTile({ player, tile }: { player: Player; tile: Tile }): void {
+    const removedTile = this.getTilePoolFor(player).removeTile(tile);
     this.discardPool.addTile(removedTile);
   }
 
   getTileCollectionFor(player: Player): TileCollection {
-    return this.getTilePoolFor(player).tileCollection;
+    const tiles = this.getTilesFor(player);
+    const collection = new Map<Letter, Array<Tile>>();
+    for (const tile of tiles) {
+      const letter = this.getTileLetter(tile);
+      let arr = collection.get(letter);
+      if (!arr) collection.set(letter, (arr = []));
+      arr.push(tile);
+    }
+    return collection;
   }
 
-  getTileLetter(tileId: TileId): Letter {
-    return this.getTileById(tileId).letter;
+  getTileLetter(tile: Tile): Letter {
+    const letter = Inventory.LETTER_BY_TILE.get(tile);
+    if (letter === undefined) throw new ReferenceError('Letter must be defined');
+    return letter;
   }
 
-  getTilePoints(tileId: TileId): number {
-    const letter = this.getTileLetter(tileId);
+  getTilePoints(tile: Tile): number {
+    const letter = this.getTileLetter(tile);
     return Inventory.LETTER_CONFIG[letter].points;
   }
 
-  getTilesFor(player: Player): ReadonlyArray<TileId> {
-    return this.getTilePoolFor(player).tileIds;
+  getTilesFor(player: Player): ReadonlyArray<Tile> {
+    return this.getTilePoolFor(player).tilesView;
   }
 
   hasTilesFor(player: Player): boolean {
@@ -209,12 +172,6 @@ export default class Inventory {
   replenishTilesFor(player: Player): void {
     const pool = this.getTilePoolFor(player);
     this.replenishPlayerPool(pool);
-  }
-
-  private getTileById(tileId: TileId): Tile {
-    const tile = Inventory.TILE_BY_ID.get(tileId);
-    if (tile === undefined) throw new ReferenceError(`Can't find tile ${tileId}`);
-    return tile;
   }
 
   private getTilePoolFor(player: Player): TilePool {

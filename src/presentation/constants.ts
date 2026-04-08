@@ -14,7 +14,7 @@ export const GAME_EVENT_SOUNDS: Partial<Record<GameEventType, Sound>> = {
 };
 
 export const DEFAULT_SETTINGS: GameSettings = {
-  bonusDistribution: GameBonusDistribution.Classic,
+  boardType: GameBonusDistribution.Classic,
   difficulty: GameDifficulty.Low,
 };
 

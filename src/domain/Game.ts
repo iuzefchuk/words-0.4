@@ -3,9 +3,8 @@ import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 import Match from '@/domain/models/match/Match.ts';
 import Turns from '@/domain/models/turns/Turns.ts';
-import { IdGenerator } from '@/domain/ports.ts';
-import CurrentTurnValidator, { ValidatorContext } from '@/domain/services/current-turn-validator/CurrentTurnValidator.ts';
-import { GeneratorContext, GeneratorResult } from '@/domain/services/turn-generator/TurnGenerator.ts';
+import { GeneratorContext, GeneratorResult } from '@/domain/services/turn-generation/TurnGenerationService.ts';
+import TurnValidationService, { ValidatorContext } from '@/domain/services/turn-validation/TurnValidationService.ts';
 import {
   EventsSnapshot,
   GameBoardView,
@@ -21,6 +20,7 @@ import {
   GameSnapshot,
   GameTile,
   GameTurnsView,
+  IdGenerator,
 } from '@/domain/types.ts';
 
 class Events {
@@ -78,7 +78,6 @@ export default class Game {
       inventory: this.inventory.snapshot,
       match: this.match.snapshot,
       turns: this.turns.snapshot,
-      version: this.version,
     };
   }
 
@@ -87,8 +86,7 @@ export default class Game {
   }
 
   private constructor(
-    private readonly version: string,
-    private readonly board: Board,
+    private board: Board,
     private readonly dictionary: Dictionary,
     private readonly inventory: Inventory,
     private readonly match: Match,
@@ -97,26 +95,25 @@ export default class Game {
     public difficulty: GameDifficulty,
   ) {}
 
-  static create(version: string, idGenerator: IdGenerator, dictionary: Dictionary, settings: GameSettings): Game {
+  static create(idGenerator: IdGenerator, dictionary: Dictionary, settings: GameSettings): Game {
     const players = Object.values(GamePlayer);
-    const board = Board.create(settings.bonusDistribution);
+    const board = Board.create(settings.boardType);
     const inventory = Inventory.create(players);
     const match = Match.create(players);
     const turns = Turns.create(idGenerator);
     const events = Events.create();
-    const game = new Game(version, board, dictionary, inventory, match, turns, events, settings.difficulty);
+    const game = new Game(board, dictionary, inventory, match, turns, events, settings.difficulty);
     game.startTurnForNextPlayer();
     return game;
   }
 
-  static restoreFromSnapshot(version: string, snapshot: GameSnapshot, idGenerator: IdGenerator, dictionary: Dictionary): Game | null {
-    if (snapshot.version !== version) return null;
+  static restoreFromSnapshot(snapshot: GameSnapshot, idGenerator: IdGenerator, dictionary: Dictionary): Game | null {
     const board = Board.restoreFromSnapshot(snapshot.board);
     const inventory = Inventory.restoreFromSnapshot(snapshot.inventory);
     const match = Match.restoreFromSnapshot(snapshot.match);
     const turns = Turns.restoreFromSnapshot(idGenerator, snapshot.turns);
     const events = Events.restoreFromSnapshot(snapshot.events);
-    return new Game(version, board, dictionary, inventory, match, turns, events, snapshot.difficulty);
+    return new Game(board, dictionary, inventory, match, turns, events, snapshot.difficulty);
   }
 
   applyGeneratedTurn(result: GeneratorResult): { score: number; words: ReadonlyArray<string> } {
@@ -135,10 +132,10 @@ export default class Game {
     return { score, words };
   }
 
-  changeBonusDistribution(bonusDistribution: GameBonusDistribution): void {
+  changeBoardType(boardType: GameBonusDistribution): void {
     this.ensureMutability();
     this.ensureSettingsMutability();
-    this.board.changeBonusDistribution(bonusDistribution);
+    this.board = Board.create(boardType);
   }
 
   changeDifficulty(newValue: GameDifficulty) {
@@ -153,12 +150,12 @@ export default class Game {
     this.turns.resetCurrentTurn();
   }
 
-  createGeneratorContext(): GeneratorContext {
+  createGeneratorContext(idGenerator: IdGenerator): GeneratorContext {
     return {
-      board: Board.clone(this.board),
+      board: Board.restoreFromSnapshot(this.board.snapshot),
       dictionary: this.dictionary,
       inventory: this.inventory,
-      turns: Turns.clone(this.turns),
+      turns: Turns.restoreFromSnapshot(idGenerator, this.turns.snapshot),
     };
   }
 
@@ -220,7 +217,7 @@ export default class Game {
 
   validateTurn(): void {
     this.ensureMutability();
-    const result = CurrentTurnValidator.execute({
+    const result = TurnValidationService.execute({
       board: this.board,
       dictionary: this.dictionary,
       inventory: this.inventory,

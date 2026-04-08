@@ -1,359 +1,179 @@
-import { TileId } from '@/domain/models/inventory/Inventory.ts';
-import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
-
-export enum Axis {
-  X = 'X',
-  Y = 'Y',
-}
-
-export enum Bonus {
-  DoubleLetter = 'DoubleLetter',
-  DoubleWord = 'DoubleWord',
-  TripleLetter = 'TripleLetter',
-  TripleWord = 'TripleWord',
-}
-
-export enum BonusDistribution {
-  Classic = 'Classic',
-  Random = 'Random',
-}
-
-export type AnchorCoordinates = { readonly axis: Axis; readonly cell: CellIndex };
-
-export type BoardSnapshot = {
-  readonly layout: LayoutSnapshot;
-  readonly tileByCell: Map<CellIndex, TileId>;
-};
-
-export type BoardView = {
-  readonly bonusDistribution: BonusDistribution;
-  readonly cells: ReadonlyArray<CellIndex>;
-  readonly cellsPerAxis: number;
-  findCellByTile(tile: TileId): CellIndex | undefined;
-  findTileByCell(cell: CellIndex): TileId | undefined;
-  getBonus(cell: CellIndex): Bonus | null;
-  getIndexInColumn(cell: CellIndex): number;
-  getIndexInRow(cell: CellIndex): number;
-  isCellCenter(cell: CellIndex): boolean;
-  isTilePlaced(tile: TileId): boolean;
-};
-
-export type CellIndex = Brand<number, 'CellIndex'>;
-
-export type LayoutSnapshot = {
-  readonly bonusByCell: ReadonlyMap<CellIndex, Bonus>;
-  readonly bonusDistribution: BonusDistribution;
-};
-
-export type Link = { readonly cell: CellIndex; readonly tile: TileId };
-
-export type Placement = ReadonlyArray<Link>;
-
-class Layout {
-  private static readonly CELLS_PER_AXIS = 15;
-
-  private static readonly TOTAL_CELLS = Layout.CELLS_PER_AXIS ** 2;
-
-  private static readonly CELL_BY_INDEX: ReadonlyArray<CellIndex> = Array.from({ length: Layout.TOTAL_CELLS }, (_, i) => i as CellIndex);
-
-  private static readonly CENTER_CELL: CellIndex = (() => {
-    const mid = Math.floor(Layout.CELLS_PER_AXIS / 2);
-    return (mid * Layout.CELLS_PER_AXIS + mid) as CellIndex;
-  })();
-
-  get cells(): ReadonlyArray<CellIndex> {
-    return Layout.CELL_BY_INDEX;
-  }
-
-  get cellsPerAxis(): number {
-    return Layout.CELLS_PER_AXIS;
-  }
-
-  get snapshot(): LayoutSnapshot {
-    return {
-      bonusByCell: new Map(this.bonusByCell),
-      bonusDistribution: this.bonusDistribution,
-    };
-  }
-
-  private constructor(
-    private readonly bonusByCell: ReadonlyMap<CellIndex, Bonus>,
-    readonly bonusDistribution: BonusDistribution,
-  ) {}
-
-  static create(bonusDistribution: BonusDistribution): Layout {
-    const bonusByCell = bonusDistribution === BonusDistribution.Classic ? Layout.createClassicBonusMap() : Layout.createRandomBonusMap();
-    return new Layout(bonusByCell, bonusDistribution);
-  }
-
-  static getOppositeAxis(axis: Axis): Axis {
-    return axis === Axis.X ? Axis.Y : Axis.X;
-  }
-
-  static isCellPositionOnLeftEdge(cellPosition: number): boolean {
-    return cellPosition === 0;
-  }
-
-  static isCellPositionOnRightEdge(cellPosition: number): boolean {
-    return cellPosition === Layout.CELLS_PER_AXIS - 1;
-  }
-
-  static restoreFromSnapshot(snapshot: LayoutSnapshot): Layout {
-    return new Layout(snapshot.bonusByCell, snapshot.bonusDistribution);
-  }
-
-  private static createClassicBonusMap(): ReadonlyMap<CellIndex, Bonus> {
-    return new Map([
-      ...[7, 16, 28, 36, 38, 66, 68, 92, 94, 100, 102, 105, 119, 122, 124, 130, 132, 156, 158, 186, 188, 196, 208, 217].map(
-        int => [int as CellIndex, Bonus.DoubleLetter] as const,
-      ),
-      ...[0, 14, 20, 24, 48, 56, 76, 80, 84, 88, 136, 140, 144, 148, 168, 176, 200, 204, 210, 224].map(
-        int => [int as CellIndex, Bonus.TripleLetter] as const,
-      ),
-      ...[32, 42, 52, 64, 70, 108, 116, 154, 160, 172, 182, 192].map(int => [int as CellIndex, Bonus.DoubleWord] as const),
-      ...[4, 10, 60, 74, 150, 164, 214, 220].map(int => [int as CellIndex, Bonus.TripleWord] as const),
-    ]);
-  }
-
-  private static createRandomBonusMap(): ReadonlyMap<CellIndex, Bonus> {
-    const classicMap = Layout.createClassicBonusMap();
-    const counts = [
-      {
-        bonus: Bonus.DoubleLetter,
-        count: [...classicMap.values()].filter(bonus => bonus === Bonus.DoubleLetter).length,
-      },
-      {
-        bonus: Bonus.TripleLetter,
-        count: [...classicMap.values()].filter(bonus => bonus === Bonus.TripleLetter).length,
-      },
-      {
-        bonus: Bonus.DoubleWord,
-        count: [...classicMap.values()].filter(bonus => bonus === Bonus.DoubleWord).length,
-      },
-      {
-        bonus: Bonus.TripleWord,
-        count: [...classicMap.values()].filter(bonus => bonus === Bonus.TripleWord).length,
-      },
-    ];
-    const availableCells = Layout.CELL_BY_INDEX.filter(cell => cell !== Layout.CENTER_CELL);
-    shuffleWithFisherYates(availableCells);
-    const result = new Map<CellIndex, Bonus>();
-    let offset = 0;
-    for (const { bonus, count } of counts)
-      for (let i = 0; i < count; i++) {
-        const cell = availableCells[offset++];
-        if (cell === undefined) throw new ReferenceError('Cell must be defined');
-        result.set(cell, bonus);
-      }
-    return result;
-  }
-
-  getAdjacentCells(cell: CellIndex): ReadonlyArray<CellIndex> {
-    this.validateCell(cell);
-    const result: Array<CellIndex> = [];
-    const row = this.getIndexInRow(cell);
-    const column = this.getIndexInColumn(cell);
-    if (column > 0) result.push((cell - 1) as CellIndex);
-    if (column < Layout.CELLS_PER_AXIS - 1) result.push((cell + 1) as CellIndex);
-    if (row > 0) result.push((cell - Layout.CELLS_PER_AXIS) as CellIndex);
-    if (row < Layout.CELLS_PER_AXIS - 1) result.push((cell + Layout.CELLS_PER_AXIS) as CellIndex);
-    return result;
-  }
-
-  getAxisCells(coords: AnchorCoordinates): ReadonlyArray<CellIndex> {
-    const { axis, cell } = coords;
-    this.validateCell(cell);
-    return Array.from(
-      { length: Layout.CELLS_PER_AXIS },
-      (_, i) => (axis === Axis.X ? cell - this.getIndexInColumn(cell) + i : this.getIndexInColumn(cell) + i * Layout.CELLS_PER_AXIS) as CellIndex,
-    );
-  }
-
-  getBonus(cell: CellIndex): Bonus | null {
-    this.validateCell(cell);
-    return this.bonusByCell.get(cell) ?? null;
-  }
-
-  getIndexInColumn(cell: CellIndex): number {
-    return cell % Layout.CELLS_PER_AXIS;
-  }
-
-  getIndexInRow(cell: CellIndex): number {
-    return Math.floor(cell / Layout.CELLS_PER_AXIS);
-  }
-
-  getMultiplierForLetter(cell: CellIndex): number {
-    this.validateCell(cell);
-    const bonus = this.getBonus(cell);
-    if (bonus === Bonus.DoubleLetter) return 2;
-    if (bonus === Bonus.TripleLetter) return 3;
-    return 1;
-  }
-
-  getMultiplierForWord(cell: CellIndex): number {
-    this.validateCell(cell);
-    const bonus = this.getBonus(cell);
-    if (bonus === Bonus.DoubleWord) return 2;
-    if (bonus === Bonus.TripleWord) return 3;
-    return 1;
-  }
-
-  isCellCenter(cell: CellIndex): boolean {
-    this.validateCell(cell);
-    return cell === Layout.CENTER_CELL;
-  }
-
-  validateCell(cell: CellIndex): void {
-    if (cell < 0 || cell >= Layout.TOTAL_CELLS) throw new RangeError('Cell out of bounds');
-  }
-}
+import { Axis, BoardType, Bonus } from '@/domain/models/board/enums.ts';
+import BonusService from '@/domain/models/board/services/bonus/BonusService.ts';
+import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
+import { AnchorCoordinates, BoardSnapshot, BonusDistribution, Cell, Link, Placement } from '@/domain/models/board/types.ts';
+import { Tile } from '@/domain/models/inventory/types.ts';
 
 export default class Board {
+  static readonly CELLS_PER_AXIS = 15;
+  static readonly TOTAL_CELLS = Board.CELLS_PER_AXIS ** 2;
+  static readonly CELLS_BY_INDEX: ReadonlyArray<Cell> = Array.from({ length: Board.TOTAL_CELLS }, (_, i) => i as Cell);
+  static readonly CENTER_CELL = Math.floor(Board.TOTAL_CELLS / 2) as Cell;
   private static readonly DEFAULT_AXIS = Axis.X;
 
-  get bonusDistribution(): BonusDistribution {
-    return this.layout.bonusDistribution;
-  }
-
-  get cells(): ReadonlyArray<CellIndex> {
-    return this.layout.cells;
+  get cells(): ReadonlyArray<Cell> {
+    return Board.CELLS_BY_INDEX;
   }
 
   get cellsPerAxis(): number {
-    return this.layout.cellsPerAxis;
+    return Board.CELLS_PER_AXIS;
   }
 
   get snapshot(): BoardSnapshot {
     return {
-      layout: this.layout.snapshot,
+      bonusByCell: new Map(this.bonusByCell),
       tileByCell: new Map(this.tileByCell),
+      type: this.type,
     };
   }
 
   private constructor(
-    private readonly tileByCell: Map<CellIndex, TileId>,
-    private readonly cellByTile: Map<TileId, CellIndex>,
-    private layout: Layout,
+    private readonly bonusByCell: BonusDistribution,
+    public readonly type: BoardType,
+    private readonly tileByCell: Map<Cell, Tile>,
+    private readonly cellByTile: Map<Tile, Cell>,
   ) {}
 
-  static clone(board: Board): Board {
-    return new Board(new Map(board.tileByCell), new Map(board.cellByTile), board.layout);
-  }
-
-  static create(distribution: BonusDistribution = BonusDistribution.Classic): Board {
-    const layout = Layout.create(distribution);
-    return new Board(new Map(), new Map(), layout);
+  static create(type: BoardType): Board {
+    const bonusByCell = BonusService.createBonusDistribution(type);
+    return new Board(bonusByCell, type, new Map(), new Map());
   }
 
   static restoreFromSnapshot(snapshot: BoardSnapshot): Board {
-    const layout = Layout.restoreFromSnapshot(snapshot.layout);
-    const board = new Board(new Map(), new Map(), layout);
+    const board = new Board(snapshot.bonusByCell, snapshot.type, new Map(), new Map());
     snapshot.tileByCell.forEach((tile, cell) => board.placeTile(cell, tile));
     return board;
   }
 
-  calculateAxis(cells: ReadonlyArray<CellIndex>): Axis {
+  buildPlacement(coords: AnchorCoordinates, tiles: ReadonlyArray<Tile>): Placement {
+    if (tiles.length === 0) throw new Error('Tiles must not be empty');
+    const axisCells = LayoutService.calculateAxisCells(coords);
+    const tilesToPlace = new Set(tiles);
+    let links: Array<Link> = [];
+    let segmentContainsTile = false;
+    let matchedTilesCount = 0;
+    for (const cell of axisCells) {
+      const tile = this.findTileByCell(cell);
+      if (!tile) {
+        if (links.length === 0) continue;
+        if (segmentContainsTile) break;
+        links = [];
+        segmentContainsTile = false;
+        matchedTilesCount = 0;
+        continue;
+      }
+      links.push({ cell, tile });
+      if (tilesToPlace.has(tile)) {
+        segmentContainsTile = true;
+        matchedTilesCount++;
+      }
+    }
+    const isValid = segmentContainsTile && matchedTilesCount === tiles.length;
+    return isValid ? links : [];
+  }
+
+  calculateAdjacentCells(cell: Cell): ReadonlyArray<Cell> {
+    return LayoutService.calculateAdjacentCells(cell);
+  }
+
+  calculateAnchorCells(historyHasPriorTurns: boolean): ReadonlySet<Cell> {
+    return new Set(
+      Board.CELLS_BY_INDEX.filter((cell: Cell) => {
+        const isCenter = LayoutService.isCellCenter(cell);
+        if (!historyHasPriorTurns) return isCenter;
+        if (this.isCellOccupied(cell)) return false;
+        return LayoutService.calculateAdjacentCells(cell).some((adjacentCell: Cell) => this.isCellOccupied(adjacentCell));
+      }),
+    );
+  }
+
+  calculateAxis(cells: ReadonlyArray<Cell>): Axis {
     let normalizedSequence = cells;
     if (cells.length === 1) {
       const [firstCell] = cells;
       if (firstCell === undefined) throw new ReferenceError('First cell must be defined');
-      const connectedAdjacents = this.getAdjacentCells(firstCell).filter(cell => this.isCellOccupied(cell));
+      const connectedAdjacents = LayoutService.calculateAdjacentCells(firstCell).filter(cell => this.isCellOccupied(cell));
       const firstConnectedAdjacent = connectedAdjacents[0];
       normalizedSequence = !firstConnectedAdjacent ? [] : [firstConnectedAdjacent, firstCell];
     }
     if (normalizedSequence.length === 0) return Board.DEFAULT_AXIS;
     const [firstIndex] = normalizedSequence;
     if (firstIndex === undefined) throw new ReferenceError('First index must be defined');
-    const firstColumn = this.getIndexInColumn(firstIndex);
-    const isVertical = normalizedSequence.every(cell => this.getIndexInColumn(cell) === firstColumn);
+    const firstColumn = LayoutService.getCellPositionInColumn(firstIndex);
+    const isVertical = normalizedSequence.every(cell => LayoutService.getCellPositionInColumn(cell) === firstColumn);
     return isVertical ? Axis.Y : Axis.X;
   }
 
-  changeBonusDistribution(distribution: BonusDistribution): void {
-    this.layout = Layout.create(distribution);
+  calculateAxisCells(coords: AnchorCoordinates): ReadonlyArray<Cell> {
+    return LayoutService.calculateAxisCells(coords);
   }
 
-  findCellByTile(tile: TileId): CellIndex | undefined {
+  findCellByTile(tile: Tile): Cell | undefined {
     return this.cellByTile.get(tile);
   }
 
-  findTileByCell(cell: CellIndex): TileId | undefined {
+  findTileByCell(cell: Cell): Tile | undefined {
     return this.tileByCell.get(cell);
   }
 
-  getAdjacentCells(cell: CellIndex): ReadonlyArray<CellIndex> {
-    return this.layout.getAdjacentCells(cell);
+  getBonus(cell: Cell): Bonus | null {
+    return this.bonusByCell.get(cell) ?? null;
   }
 
-  getAnchorCells(historyHasPriorTurns: boolean): ReadonlySet<CellIndex> {
-    return new Set(
-      this.layout.cells.filter((cell: CellIndex) => {
-        const isCenter = this.layout.isCellCenter(cell);
-        if (!historyHasPriorTurns) return isCenter;
-        if (this.isCellOccupied(cell)) return false;
-        const hasUsedAdjacentCells = this.layout.getAdjacentCells(cell).some((adjacentCell: CellIndex) => this.isCellOccupied(adjacentCell));
-        return hasUsedAdjacentCells;
-      }),
-    );
+  getCellPositionInColumn(cell: Cell): number {
+    return LayoutService.getCellPositionInColumn(cell);
   }
 
-  getAxisCells(coords: AnchorCoordinates): ReadonlyArray<CellIndex> {
-    return this.layout.getAxisCells(coords);
+  getCellPositionInRow(cell: Cell): number {
+    return LayoutService.getCellPositionInRow(cell);
   }
 
-  getBonus(cell: CellIndex): Bonus | null {
-    return this.layout.getBonus(cell);
+  getMultiplierForLetter(cell: Cell): number {
+    const bonus = this.getBonus(cell);
+    if (bonus === Bonus.DoubleLetter) return 2;
+    if (bonus === Bonus.TripleLetter) return 3;
+    return 1;
   }
 
-  getIndexInColumn(cell: CellIndex): number {
-    return this.layout.getIndexInColumn(cell);
-  }
-
-  getIndexInRow(cell: CellIndex): number {
-    return this.layout.getIndexInRow(cell);
-  }
-
-  getMultiplierForLetter(cell: CellIndex): number {
-    return this.layout.getMultiplierForLetter(cell);
-  }
-
-  getMultiplierForWord(cell: CellIndex): number {
-    return this.layout.getMultiplierForWord(cell);
+  getMultiplierForWord(cell: Cell): number {
+    const bonus = this.getBonus(cell);
+    if (bonus === Bonus.DoubleWord) return 2;
+    if (bonus === Bonus.TripleWord) return 3;
+    return 1;
   }
 
   getOppositeAxis(axis: Axis): Axis {
-    return Layout.getOppositeAxis(axis);
+    return LayoutService.getOppositeAxis(axis);
   }
 
-  isCellCenter(cell: CellIndex): boolean {
-    return this.layout.isCellCenter(cell);
+  isCellCenter(cell: Cell): boolean {
+    return LayoutService.isCellCenter(cell);
   }
 
-  isCellOccupied(cell: CellIndex): boolean {
+  isCellOccupied(cell: Cell): boolean {
     return this.tileByCell.has(cell);
   }
 
-  isCellPositionOnLeftEdge(cellPosition: number): boolean {
-    return Layout.isCellPositionOnLeftEdge(cellPosition);
+  isCellPositionAtAxisEnd(position: number): boolean {
+    return LayoutService.isCellPositionAtAxisEnd(position);
   }
 
-  isCellPositionOnRightEdge(cellPosition: number): boolean {
-    return Layout.isCellPositionOnRightEdge(cellPosition);
+  isCellPositionAtAxisStart(position: number): boolean {
+    return LayoutService.isCellPositionAtAxisStart(position);
   }
 
-  isTilePlaced(tile: TileId): boolean {
+  isTilePlaced(tile: Tile): boolean {
     return this.cellByTile.has(tile);
   }
 
-  placeTile(cell: CellIndex, tile: TileId): void {
-    this.layout.validateCell(cell);
+  placeTile(cell: Cell, tile: Tile): void {
     if (this.tileByCell.has(cell)) throw new Error(`Cell ${cell} is already occupied`);
     if (this.cellByTile.has(tile)) throw new Error(`Tile ${tile} is already placed on the board`);
     this.tileByCell.set(cell, tile);
     this.cellByTile.set(tile, cell);
   }
 
-  resolvePlacement(tiles: ReadonlyArray<TileId>): Placement {
+  resolvePlacement(tiles: ReadonlyArray<Tile>): Placement {
     return tiles
       .map(tile => {
         const cell = this.cellByTile.get(tile);
@@ -363,7 +183,7 @@ export default class Board {
       .sort((a, b) => a.cell - b.cell);
   }
 
-  undoPlaceTile(tile: TileId): void {
+  undoPlaceTile(tile: Tile): void {
     const cell = this.cellByTile.get(tile);
     if (cell === undefined) throw new Error(`Tile ${tile} is not on the board`);
     this.tileByCell.delete(cell);

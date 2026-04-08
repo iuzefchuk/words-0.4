@@ -6,75 +6,8 @@ import { DEFAULT_SETTINGS, GAME_EVENT_SOUNDS, SETTINGS_STORAGE_KEY } from '@/pre
 import LocalStorage from '@/presentation/services/LocalStorage.ts';
 import SoundPlayer from '@/presentation/services/SoundPlayer.ts';
 
-class MatchCommands {
-  constructor(
-    private readonly appCommands: AppCommands,
-    private readonly matchState: MatchState,
-  ) {}
-
-  changeBonusDistribution = (bonusDistribution: GameBonusDistribution): void => {
-    MainStore.saveSettings({ bonusDistribution });
-    return this.matchState.writeOnlyBoard(() => this.appCommands.changeBonusDistribution(bonusDistribution));
-  };
-
-  changeDifficulty = (difficulty: GameDifficulty): void => {
-    MainStore.saveSettings({ difficulty });
-    return this.matchState.write(() => this.appCommands.changeDifficulty(difficulty));
-  };
-
-  clearTiles = (): void => {
-    return this.matchState.writeOnlyBoard(() => this.appCommands.clearTiles());
-  };
-
-  pass = (): void => {
-    const { opponentTurn } = this.writeStateAndPlaySound(() => this.appCommands.handlePassTurn());
-    opponentTurn?.then(() => this.syncAndPlaySound());
-  };
-
-  placeTile = (args: { cell: GameCell; tile: GameTile }): void => {
-    return this.writeBoardAndPlaySound(() => this.appCommands.placeTile(args));
-  };
-
-  resign = (): void => {
-    return this.writeStateAndPlaySound(() => this.appCommands.handleResignMatch());
-  };
-
-  save = (): void => {
-    const { opponentTurn } = this.writeStateAndPlaySound(() => this.appCommands.handleSaveTurn());
-    opponentTurn?.then(() => this.syncAndPlaySound());
-  };
-
-  undoPlaceTile = (tile: GameTile): void => {
-    return this.writeBoardAndPlaySound(() => this.appCommands.undoPlaceTile(tile));
-  };
-
-  private playPendingSounds(): void {
-    for (const event of this.appCommands.clearAllEvents()) {
-      const sound = GAME_EVENT_SOUNDS[event.type];
-      if (sound) SoundPlayer.play(sound);
-    }
-  }
-
-  private syncAndPlaySound(): void {
-    this.matchState.incrementVersions();
-    this.playPendingSounds();
-  }
-
-  private writeBoardAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
-    const response = this.matchState.writeOnlyBoard(callback);
-    this.playPendingSounds();
-    return response;
-  }
-
-  private writeStateAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
-    const response = this.matchState.write(callback);
-    this.playPendingSounds();
-    return response;
-  }
-}
-
-class MatchQueries {
-  readonly bonusDistribution = computed(() => this.readBoard(() => this.appQueries.getBonusDistribution()));
+class Getters {
+  readonly boardType = computed(() => this.readBoard(() => this.appQueries.getBoardType()));
   readonly currentPlayerIsUser = computed(() => this.readState(() => this.appQueries.isCurrentPlayerUser()));
   readonly currentTurnIsValid = computed(() => this.readBoard(() => this.appQueries.isCurrentTurnValid()));
   readonly currentTurnScore = computed(() => this.readBoard(() => this.appQueries.getCurrentTurnScore()));
@@ -92,7 +25,7 @@ class MatchQueries {
 
   constructor(
     private readonly appQueries: AppQueries,
-    private readonly matchState: MatchState,
+    private readonly state: State,
   ) {}
 
   areTilesSame = (firstTile: GameTile, secondTile: GameTile) => this.appQueries.areTilesSame(firstTile, secondTile);
@@ -107,15 +40,82 @@ class MatchQueries {
   wasTileUsedInPreviousTurn = (tile: GameTile) => this.readBoard(() => this.appQueries.wasTileUsedInPreviousTurn(tile));
 
   private readBoard<T>(fn: () => T): T {
-    return this.matchState.readOnlyBoard(fn);
+    return this.state.readBoard(fn);
   }
 
   private readState<T>(fn: () => T): T {
-    return this.matchState.read(fn);
+    return this.state.read(fn);
   }
 }
 
-class MatchState {
+class Setters {
+  constructor(
+    private readonly appCommands: AppCommands,
+    private readonly state: State,
+  ) {}
+
+  changeBoardType = (boardType: GameBonusDistribution): void => {
+    MainStore.saveSettings({ boardType });
+    return this.state.writeBoard(() => this.appCommands.changeBoardType(boardType));
+  };
+
+  changeDifficulty = (difficulty: GameDifficulty): void => {
+    MainStore.saveSettings({ difficulty });
+    return this.state.write(() => this.appCommands.changeDifficulty(difficulty));
+  };
+
+  clearTiles = (): void => {
+    return this.state.writeBoard(() => this.appCommands.clearTiles());
+  };
+
+  pass = (): void => {
+    const { opponentTurn } = this.writeAndPlaySound(() => this.appCommands.handlePassTurn());
+    opponentTurn?.then(() => this.syncAndPlaySound());
+  };
+
+  placeTile = (args: { cell: GameCell; tile: GameTile }): void => {
+    return this.writeBoardAndPlaySound(() => this.appCommands.placeTile(args));
+  };
+
+  resign = (): void => {
+    return this.writeAndPlaySound(() => this.appCommands.handleResignMatch());
+  };
+
+  save = (): void => {
+    const { opponentTurn } = this.writeAndPlaySound(() => this.appCommands.handleSaveTurn());
+    opponentTurn?.then(() => this.syncAndPlaySound());
+  };
+
+  undoPlaceTile = (tile: GameTile): void => {
+    return this.writeBoardAndPlaySound(() => this.appCommands.undoPlaceTile(tile));
+  };
+
+  private playPendingSounds(): void {
+    for (const event of this.appCommands.clearAllEvents()) {
+      const sound = GAME_EVENT_SOUNDS[event.type];
+      if (sound) SoundPlayer.play(sound);
+    }
+  }
+
+  private syncAndPlaySound(): void {
+    this.state.incrementVersions();
+    this.playPendingSounds();
+  }
+
+  private writeAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
+    const response = this.state.write(callback);
+    this.playPendingSounds();
+    return response;
+  }
+
+  private writeBoardAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
+    const response = this.state.writeBoard(callback);
+    this.playPendingSounds();
+    return response;
+  }
+}
+
+class State {
   private readonly boardVersion = ref(0);
   private readonly stateVersion = ref(0);
 
@@ -129,7 +129,7 @@ class MatchState {
     return fn();
   }
 
-  readOnlyBoard<T>(fn: () => T): T {
+  readBoard<T>(fn: () => T): T {
     void this.boardVersion.value;
     return fn();
   }
@@ -143,7 +143,7 @@ class MatchState {
     return result;
   }
 
-  writeOnlyBoard<T>(fn: () => T): T {
+  writeBoard<T>(fn: () => T): T {
     const result = fn();
     this.boardVersion.value++;
     return result;
@@ -157,37 +157,39 @@ export default class MainStore {
     const store = new MainStore(MainStore.app);
     return {
       ...MainStore.app.config,
-      ...store.queries,
-      ...store.commands,
+      ...store.getters,
+      ...store.setters,
     };
   });
-  private readonly commands: MatchCommands;
-  private readonly queries: MatchQueries;
+
+  private readonly getters: Getters;
+
+  private readonly setters: Setters;
 
   private constructor(app: Application) {
-    const matchState = new MatchState();
-    this.queries = new MatchQueries(app.queries, matchState);
-    this.commands = new MatchCommands(app.commands, matchState);
+    const state = new State();
+    this.getters = new Getters(app.queries, state);
+    this.setters = new Setters(app.commands, state);
   }
 
-  static saveSettings(data: { bonusDistribution?: GameBonusDistribution; difficulty?: GameDifficulty }): void {
+  static async initiate(): Promise<void> {
+    const settings = MainStore.loadSettings();
+    MainStore.app = markRaw(await Application.create(settings));
+  }
+
+  static saveSettings(data: { boardType?: GameBonusDistribution; difficulty?: GameDifficulty }): void {
     const existingCache = this.loadSettings();
     const newCache = {
-      bonusDistribution: data?.bonusDistribution ?? existingCache?.bonusDistribution,
+      boardType: data?.boardType ?? existingCache?.boardType,
       difficulty: data?.difficulty ?? existingCache?.difficulty,
     };
     LocalStorage.save(SETTINGS_STORAGE_KEY, newCache);
   }
 
-  static async start(): Promise<void> {
-    const settings = MainStore.loadSettings();
-    MainStore.app = markRaw(await Application.create(settings));
-  }
-
   private static loadSettings(): GameSettings {
     const cache = LocalStorage.load(SETTINGS_STORAGE_KEY) as null | Partial<GameSettings>;
     return {
-      bonusDistribution: cache?.bonusDistribution ?? DEFAULT_SETTINGS.bonusDistribution,
+      boardType: cache?.boardType ?? DEFAULT_SETTINGS.boardType,
       difficulty: cache?.difficulty ?? DEFAULT_SETTINGS.difficulty,
     };
   }

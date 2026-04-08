@@ -1,7 +1,7 @@
-import { Clock, Scheduler } from '@/application/ports.ts';
 import {
   AppCommands,
   AppTurnResponse,
+  Clock,
   GameBonusDistribution,
   GameCell,
   GameDifficulty,
@@ -12,10 +12,11 @@ import {
   GamePlayer,
   GameTile,
   GameTurnGenerator,
+  Scheduler,
 } from '@/application/types.ts';
 import Game from '@/domain/Game.ts';
 import { TIME } from '@/shared/constants.ts';
-import type { GameRepository } from '@/domain/ports.ts';
+import type { GameRepository, IdGenerator } from '@/domain/types.ts';
 
 export default class AppCommandBuilder {
   private static readonly DIFFICULTY_RESULT_LIMITS: Record<GameDifficulty, number> = {
@@ -23,10 +24,12 @@ export default class AppCommandBuilder {
     [GameDifficulty.Low]: 1,
     [GameDifficulty.Medium]: 20,
   };
+
   private static readonly OPPONENT_RESPONSE_MIN_TIME = TIME.ms_in_second * 2;
+
   get commands(): AppCommands {
     return {
-      changeBonusDistribution: (bonusDistribution: GameBonusDistribution) => this.changeBonusDistribution(bonusDistribution),
+      changeBoardType: (boardType: GameBonusDistribution) => this.changeBoardType(boardType),
       changeDifficulty: (difficulty: GameDifficulty) => this.changeDifficulty(difficulty),
       clearAllEvents: () => this.drainNewEvents(),
       clearTiles: () => this.clearTiles(),
@@ -51,14 +54,15 @@ export default class AppCommandBuilder {
   constructor(
     private readonly game: Game,
     private readonly clock: Clock,
+    private readonly idGenerator: IdGenerator,
     private readonly scheduler: Scheduler,
     private readonly gameRepository: GameRepository,
   ) {
     this.eventCursor = game.eventLog.length;
   }
 
-  private changeBonusDistribution(bonusDistribution: GameBonusDistribution): void {
-    this.game.changeBonusDistribution(bonusDistribution);
+  private changeBoardType(boardType: GameBonusDistribution): void {
+    this.game.changeBoardType(boardType);
   }
 
   private changeDifficulty(difficulty: GameDifficulty): void {
@@ -78,7 +82,7 @@ export default class AppCommandBuilder {
     const player = GamePlayer.Opponent;
     const { difficulty } = this.game;
     const attemptsLimit = AppCommandBuilder.DIFFICULTY_RESULT_LIMITS[difficulty];
-    const context = this.game.createGeneratorContext();
+    const context = this.game.createGeneratorContext(this.idGenerator);
     let bestResult: GameGeneratorResult | null = null;
     let bestScore = -1;
     let attemptsCount = 0;
@@ -146,7 +150,7 @@ export default class AppCommandBuilder {
     return response;
   }
 
-  private handlePassTurn(): { opponentTurn?: Promise<AppTurnResponse> | undefined } {
+  private handlePassTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined } {
     this.clearTiles();
     if (this.game.willPassBeResignFor(GamePlayer.User)) {
       this.game.resignMatchForCurrentPlayer();

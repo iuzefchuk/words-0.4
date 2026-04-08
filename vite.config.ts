@@ -6,27 +6,24 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1000,
     emptyOutDir: true,
-    outDir: 'dist',
+    outDir: path.resolve(__dirname, 'dist'),
     target: 'esnext',
   },
   define: {
     APP_VERSION: JSON.stringify(process.env.npm_package_version),
   },
-  esbuild: {
-    drop: ['console', 'debugger'],
-  },
   optimizeDeps: {
     include: ['vue', 'pinia'],
   },
   plugins: [vue()],
-  publicDir: 'public',
+  publicDir: path.resolve(__dirname, 'public'),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
       $: path.resolve(__dirname, './tests'),
     },
   },
-  root: 'src/presentation',
+  root: path.resolve(__dirname, 'src/presentation'),
   server: {
     port: Number(process.env.VITE_PORT) || 5173,
   },

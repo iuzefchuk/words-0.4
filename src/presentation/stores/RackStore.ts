@@ -5,7 +5,7 @@ import MainStore from '@/presentation/stores/MainStore.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 export default class RackStore {
-  static readonly INSTANCE = defineStore('items', () => {
+  static readonly INSTANCE = defineStore('rack', () => {
     const mainStore = MainStore.INSTANCE();
     const store = new RackStore(mainStore);
     store.initialize(mainStore.userTiles);

@@ -1,67 +1,12 @@
 import { Player } from '@/domain/enums.ts';
-import { type CellIndex, type Placement } from '@/domain/models/board/Board.ts';
-import { TileId } from '@/domain/models/inventory/Inventory.ts';
-import { IdGenerator } from '@/domain/ports.ts';
-
-export enum ValidationError {
-  InvalidCellPlacement = 'InvalidCellPlacement',
-  InvalidTilePlacement = 'InvalidTilePlacement',
-  NoCellsUsableAsFirst = 'NoCellsUsableAsFirst',
-  WordNotInDictionary = 'WordNotInDictionary',
-}
-
-export enum ValidationStatus {
-  Invalid = 'Invalid',
-  Pending = 'Pending',
-  Unvalidated = 'Unvalidated',
-  Valid = 'Valid',
-}
-
-export type AllComputeds = ComputedCells & ComputedPlacements & ComputedScore & ComputedWords;
-
-export type ComputedCells = { cells: ReadonlyArray<CellIndex> };
-
-export type ComputedPlacements = { placements: ReadonlyArray<Placement> };
-
-export type ComputedScore = { score: number };
-
-export type ComputedValue = ComputedCells | ComputedPlacements | ComputedScore | ComputedWords;
-
-export type ComputedWords = { words: ReadonlyArray<string> };
-
-export type InvalidResult = { error: ValidationError; status: ValidationStatus.Invalid };
-
-export type TurnSnapshot = {
-  readonly id: string;
-  readonly player: Player;
-  readonly tiles: Array<TileId>;
-  readonly validationResult: ValidationResult;
-};
-
-export type TurnsSnapshot = {
-  readonly history: Array<TurnSnapshot>;
-};
-
-export type TurnsView = {
-  readonly currentPlayer: Player;
-  readonly currentTurnCells: ReadonlyArray<CellIndex> | undefined;
-  readonly currentTurnIsValid: boolean;
-  readonly currentTurnScore: number | undefined;
-  readonly currentTurnTiles: ReadonlyArray<TileId>;
-  readonly currentTurnWords: ReadonlyArray<string> | undefined;
-  readonly historyHasPriorTurns: boolean;
-  readonly nextPlayer: Player;
-  readonly previousTurnTiles: ReadonlyArray<TileId> | undefined;
-};
-
-export type UnvalidatedResult = { status: ValidationStatus.Unvalidated };
-
-export type ValidationResult = InvalidResult | UnvalidatedResult | ValidResult;
-
-export type ValidResult = { status: ValidationStatus.Valid } & AllComputeds;
+import { Cell } from '@/domain/models/board/types.ts';
+import { Tile } from '@/domain/models/inventory/types.ts';
+import { ValidationError, ValidationStatus } from '@/domain/models/turns/enums.ts';
+import { TurnSnapshot, TurnsSnapshot, ValidationResult } from '@/domain/models/turns/types.ts';
+import { IdGenerator } from '@/domain/types.ts';
 
 class Turn {
-  get cells(): ReadonlyArray<CellIndex> | undefined {
+  get cells(): ReadonlyArray<Cell> | undefined {
     return this.validationResult.status === ValidationStatus.Valid ? this.validationResult.cells : undefined;
   }
 
@@ -81,7 +26,7 @@ class Turn {
     return { id: this.id, player: this.player, tiles: [...this.tiles], validationResult: this.validationResult };
   }
 
-  get tilesView(): ReadonlyArray<TileId> {
+  get tilesView(): ReadonlyArray<Tile> {
     return this.tiles;
   }
 
@@ -92,7 +37,7 @@ class Turn {
   private constructor(
     readonly id: string,
     readonly player: Player,
-    private tiles: Array<TileId>,
+    private tiles: Array<Tile>,
     private validationResult: ValidationResult = { status: ValidationStatus.Unvalidated },
   ) {}
 
@@ -109,12 +54,12 @@ class Turn {
     return new Turn(snapshot.id, snapshot.player, snapshot.tiles, snapshot.validationResult);
   }
 
-  addTile(tile: TileId): void {
+  addTile(tile: Tile): void {
     if (this.tiles.includes(tile)) throw new Error(`Tile ${tile} already connected`);
     this.tiles.push(tile);
   }
 
-  removeTile({ tile }: { tile: TileId }): void {
+  removeTile({ tile }: { tile: Tile }): void {
     const index = this.tiles.indexOf(tile);
     if (index === -1) throw new ReferenceError(`Tile ${tile} not found`);
     this.tiles.splice(index, 1);
@@ -137,7 +82,7 @@ export default class Turns {
     return this.currentTurn.player;
   }
 
-  get currentTurnCells(): ReadonlyArray<CellIndex> | undefined {
+  get currentTurnCells(): ReadonlyArray<Cell> | undefined {
     return this.currentTurn.cells;
   }
 
@@ -149,7 +94,7 @@ export default class Turns {
     return this.currentTurn.score;
   }
 
-  get currentTurnTiles(): ReadonlyArray<TileId> {
+  get currentTurnTiles(): ReadonlyArray<Tile> {
     return this.currentTurn.tilesView;
   }
 
@@ -166,7 +111,7 @@ export default class Turns {
     return this.currentPlayer === Player.User ? Player.Opponent : Player.User;
   }
 
-  get previousTurnTiles(): ReadonlyArray<TileId> | undefined {
+  get previousTurnTiles(): ReadonlyArray<Tile> | undefined {
     return this.history.at(-2)?.tilesView;
   }
 
@@ -196,12 +141,12 @@ export default class Turns {
     return new Turns(idGenerator, []);
   }
 
-  static restoreFromSnapshot( idGenerator: IdGenerator, snapshot: TurnsSnapshot): Turns {
+  static restoreFromSnapshot(idGenerator: IdGenerator, snapshot: TurnsSnapshot): Turns {
     const history = snapshot.history.map(turn => Turn.restoreFromSnapshot(turn));
     return new Turns(idGenerator, history);
   }
 
-  recordPlacedTile(tile: TileId): void {
+  recordPlacedTile(tile: Tile): void {
     this.currentTurn.addTile(tile);
   }
 
@@ -218,7 +163,7 @@ export default class Turns {
     this.history.push(Turn.create({ idGenerator: this.idGenerator, player }));
   }
 
-  undoRecordPlacedTile({ tile }: { tile: TileId }): void {
+  undoRecordPlacedTile({ tile }: { tile: Tile }): void {
     this.currentTurn.removeTile({ tile });
   }
 }

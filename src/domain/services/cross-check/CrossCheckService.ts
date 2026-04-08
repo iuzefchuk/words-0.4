@@ -1,10 +1,12 @@
 import { Letter } from '@/domain/enums.ts';
-import Board, { AnchorCoordinates, Axis, CellIndex } from '@/domain/models/board/Board.ts';
+import Board from '@/domain/models/board/Board.ts';
+import { Axis } from '@/domain/models/board/enums.ts';
+import { AnchorCoordinates, Cell } from '@/domain/models/board/types.ts';
 import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 
-export default class CrossCheckComputer {
-  private cache = new Map<Axis, Map<CellIndex, ReadonlySet<Letter>>>(Object.values(Axis).map(axis => [axis, new Map()]));
+export default class CrossCheckService {
+  private cache = new Map<Axis, Map<Cell, ReadonlySet<Letter>>>(Object.values(Axis).map(axis => [axis, new Map()]));
 
   constructor(
     private readonly board: Board,
@@ -12,7 +14,7 @@ export default class CrossCheckComputer {
     private readonly inventory: Inventory,
   ) {}
 
-  getFor(coords: AnchorCoordinates): ReadonlySet<Letter> {
+  execute(coords: AnchorCoordinates): ReadonlySet<Letter> {
     const { axis, cell } = coords;
     const axisCache = this.cache.get(axis);
     if (axisCache === undefined) throw new ReferenceError('Axis cache has to exist');
@@ -23,7 +25,7 @@ export default class CrossCheckComputer {
     return newResult;
   }
 
-  private collectAdjacentTileLetters(axisCells: ReadonlyArray<CellIndex>, startPosition: number, direction: -1 | 1): string {
+  private collectAdjacentTileLetters(axisCells: ReadonlyArray<Cell>, startPosition: number, direction: -1 | 1): string {
     let result = '';
     for (let i = startPosition + direction; i >= 0 && i < axisCells.length; i += direction) {
       const cell = axisCells[i];
@@ -37,13 +39,13 @@ export default class CrossCheckComputer {
   }
 
   private computeFor(coords: AnchorCoordinates): ReadonlySet<Letter> {
-    const axisCells = this.board.getAxisCells(coords);
+    const axisCells = this.board.calculateAxisCells(coords);
     const position = axisCells.indexOf(coords.cell);
     if (position === -1) throw new Error('Cell not found in axis cells');
     const prefix = this.collectAdjacentTileLetters(axisCells, position, -1);
     const suffix = this.collectAdjacentTileLetters(axisCells, position, 1);
     if (!prefix && !suffix) return this.dictionary.allLetters;
-    const prefixNode = prefix ? this.dictionary.getNode(prefix) : this.dictionary.firstNode;
+    const prefixNode = prefix ? this.dictionary.getNode(prefix) : this.dictionary.rootNodeId;
     if (!prefixNode) return new Set();
     const anchorLetters = new Set<Letter>();
     const generator = this.dictionary.createNextNodeGenerator({ startNode: prefixNode });

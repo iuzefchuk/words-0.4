@@ -1,97 +1,38 @@
 import { Letter } from '@/domain/enums.ts';
-
-export type DictionarySnapshot = {
-  readonly allLetters: ReadonlySet<Letter>;
-  readonly nodeById: ReadonlyMap<NodeId, FrozenNode>;
-  readonly rootNode: FrozenNode;
-};
-
-export type NodeId = number;
-
-type FrozenNode = {
-  readonly children: ReadonlyMap<Letter, FrozenNode>;
-  readonly id: NodeId;
-  readonly isFinal: boolean;
-};
-
-type NextNodeGenerator = Generator<[Letter, NodeId]>;
-
-type Node = { children: Map<Letter, Node>; id: NodeId; isFinal: boolean };
-
-class DictionaryTreeBuilder {
-  private currentId: NodeId = 0;
-
-  static execute(sortedWords: ReadonlyArray<string>): Node {
-    const builder = new DictionaryTreeBuilder();
-    return builder.build(sortedWords);
-  }
-
-  private build(sortedWords: ReadonlyArray<string>): Node {
-    const rootNode = this.createNode();
-    const stack: Array<Node> = [rootNode];
-    const lastNodeInStack = (): Node => {
-      const node = stack.at(-1);
-      if (!node) throw new ReferenceError('Last node in stack must exist');
-      return node;
-    };
-    let previousWord = '';
-    for (const word of sortedWords) {
-      const commonPrefixLength = this.getCommonPrefixLength(previousWord, word);
-      if (previousWord.length > 0) lastNodeInStack().isFinal = true;
-      while (stack.length > commonPrefixLength + 1) stack.pop();
-      for (let i = commonPrefixLength; i < word.length; i++) {
-        const childNode = this.createNode();
-        lastNodeInStack().children.set(word[i] as Letter, childNode);
-        stack.push(childNode);
-      }
-      previousWord = word;
-    }
-    if (stack.length > 1) lastNodeInStack().isFinal = true;
-    return rootNode;
-  }
-
-  private createNode(): Node {
-    return { children: new Map(), id: this.currentId++, isFinal: false };
-  }
-
-  private getCommonPrefixLength(a: string, b: string): number {
-    let i = 0;
-    while (i < a.length && i < b.length && a[i] === b[i]) i++;
-    return i;
-  }
-}
+import TrieService from '@/domain/models/dictionary/services/trie/TrieService.ts';
+import { DictionarySnapshot, FrozenNode, NextNodeGenerator, NodeId } from '@/domain/models/dictionary/types.ts';
 
 export default class Dictionary {
-  get firstNode(): NodeId {
-    return this.rootNode.id;
+  get rootNodeId(): NodeId {
+    return this.trie.id;
   }
 
   get snapshot(): DictionarySnapshot {
     return {
       allLetters: this.allLetters,
       nodeById: this.nodeById,
-      rootNode: this.rootNode,
+      trie: this.trie,
     };
   }
 
   private constructor(
-    public readonly rootNode: FrozenNode,
+    public readonly trie: FrozenNode,
     public readonly nodeById: ReadonlyMap<NodeId, FrozenNode>,
     public readonly allLetters: ReadonlySet<Letter>,
   ) {}
 
   static async create(): Promise<Dictionary> {
     const { DICTIONARY_DATA } = await import('@/domain/constants.ts');
-    const rootNode = DictionaryTreeBuilder.execute(DICTIONARY_DATA);
+    const trie = TrieService.createTrie(DICTIONARY_DATA);
     const nodeById = new Map<NodeId, FrozenNode>();
     const allLetters = new Set<Letter>();
-    this.freezeTree(rootNode);
-    this.traverseNode(nodeById, allLetters, rootNode);
-    return new Dictionary(rootNode, nodeById, allLetters);
+    this.freezeTree(trie);
+    this.traverseNode(nodeById, allLetters, trie);
+    return new Dictionary(trie, nodeById, allLetters);
   }
 
   static restoreFromSnapshot(snapshot: DictionarySnapshot): Dictionary {
-    return new Dictionary(snapshot.rootNode, snapshot.nodeById, snapshot.allLetters);
+    return new Dictionary(snapshot.trie, snapshot.nodeById, snapshot.allLetters);
   }
 
   private static freezeTree(node: FrozenNode): void {
@@ -123,7 +64,7 @@ export default class Dictionary {
     return generator(node);
   }
 
-  getNode(word: string, startNode: NodeId = this.firstNode): NodeId | null {
+  getNode(word: string, startNode: NodeId = this.rootNodeId): NodeId | null {
     const node = this.findNodeForWord(word, startNode);
     return node ? node.id : null;
   }
@@ -143,7 +84,7 @@ export default class Dictionary {
     return node;
   }
 
-  private findNodeForWord(word: string, startNodeId: NodeId = this.rootNode.id): FrozenNode | null {
+  private findNodeForWord(word: string, startNodeId: NodeId = this.rootNodeId): FrozenNode | null {
     let currentNode = this.findNodeById(startNodeId);
     for (let i = 0; i < word.length; i++) {
       const letter = word[i] as Letter;

@@ -1,4 +1,4 @@
-import { Scheduler } from '@/application/ports.ts';
+import { Scheduler } from '@/application/types.ts';
 
 export default class WebScheduler implements Scheduler {
   yield(): Promise<void> {

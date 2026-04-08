@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import GameTile from '@/presentation/components/shared/Tile/Tile.vue';
+import AppTile from '@/presentation/components/shared/AppTile/AppTile.vue';
 import UseLoader from './UseLoader.ts';
 const props = defineProps<{
   isActive: boolean;
@@ -14,7 +14,7 @@ const { isRendered } = loader;
     <div v-if="isRendered" class="loader">
       <div class="loader__logo">
         <template v-for="(letter, idx) in UseLoader.LETTERS" :key="idx">
-          <GameTile v-if="loader.isItemRendered(idx)" class="loader__tile" :letter="letter" :is-saturated="loader.isItemEmphasized()" />
+          <AppTile v-if="loader.isItemRendered(idx)" class="loader__tile" :letter="letter" :is-saturated="loader.isItemEmphasized()" />
         </template>
       </div>
     </div>

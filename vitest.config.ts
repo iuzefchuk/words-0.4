@@ -24,6 +24,7 @@ export default defineConfig({
     globals: true,
     include: ['**/*.test.ts'],
     restoreMocks: true,
+    setupFiles: ['./tests/setup.ts'],
     watch: false,
   },
 });

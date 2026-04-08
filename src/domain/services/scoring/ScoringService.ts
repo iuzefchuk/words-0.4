@@ -1,13 +1,13 @@
-import { CellIndex, Placement } from '@/domain/models/board/Board.ts';
-import { TileId } from '@/domain/models/inventory/Inventory.ts';
+import { Cell, Placement } from '@/domain/models/board/types.ts';
+import { Tile } from '@/domain/models/inventory/types.ts';
 
-export default class ScoreCalculator {
+export default class ScoringService {
   static execute(
     placements: ReadonlyArray<Placement>,
-    newCells: ReadonlySet<CellIndex>,
-    getTilePoints: (tile: TileId) => number,
-    getMultiplierForLetter: (cell: CellIndex) => number,
-    getMultiplierForWord: (cell: CellIndex) => number,
+    newCells: ReadonlySet<Cell>,
+    getTilePoints: (tile: Tile) => number,
+    getMultiplierForLetter: (cell: Cell) => number,
+    getMultiplierForWord: (cell: Cell) => number,
   ): number {
     let totalScore = 0;
     for (const placement of placements) {

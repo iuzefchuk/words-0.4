@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { inject, onMounted, ref, watch } from 'vue';
-import Dialog from '@/presentation/components/by-hierarchy/Dialog/Dialog.vue';
+import Dialog from '@/presentation/components/by-hierarchy/Dialog.vue';
 import Endscreen from '@/presentation/components/by-hierarchy/Endscreen.vue';
 import Loader from '@/presentation/components/by-hierarchy/Loader/Loader.vue';
 import Main from '@/presentation/components/by-hierarchy/Main/Main.vue';
