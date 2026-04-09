@@ -1,6 +1,6 @@
 type VersionedCache<T> = { data: T; version: string };
 
-export default class StorageService<T> {
+export default class IndexedDbService<T> {
   private dbPromise: null | Promise<IDBDatabase> = null;
 
   constructor(
