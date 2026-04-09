@@ -41,16 +41,14 @@ const players = [
 
 <template>
   <header class="header">
-    <p
-      v-for="{ items, label, modelValue, onChange } in options"
-      :key="label"
-      :class="{ header__item: true, 'header__item--disabled': optionsAreDisabled }"
-    >
-      {{ label }}:
-      <AppSelect :model-value="modelValue()" :options="items" :is-disabled="optionsAreDisabled" @change="onChange" />
-    </p>
     <template v-if="optionsAreDisabled">
       <p v-for="player in players" :key="player.name">{{ player.name }}: <span v-animate-number="{ number: player.score() }" /></p>
+    </template>
+    <template v-else>
+      <p v-for="{ items, label, modelValue, onChange } in options" :key="label">
+        {{ label }}:
+        <AppSelect :model-value="modelValue()" :options="items" :is-disabled="false" @change="onChange" />
+      </p>
     </template>
   </header>
 </template>
@@ -64,10 +62,5 @@ const players = [
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  &__item {
-    &--disabled {
-      color: var(--secondary-color);
-    }
-  }
 }
 </style>

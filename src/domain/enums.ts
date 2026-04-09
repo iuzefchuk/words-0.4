@@ -5,6 +5,8 @@ export enum Difficulty {
 }
 
 export enum EventType {
+  BoardTypeChanged = 'BoardTypeChanged',
+  DifficultyChanged = 'DifficultyChanged',
   MatchFinished = 'MatchFinished',
   MatchStarted = 'MatchStarted',
   TilePlaced = 'TilePlaced',

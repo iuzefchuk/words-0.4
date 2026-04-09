@@ -156,6 +156,14 @@ export default class Game {
 
   applyToState(event: GameEvent): void {
     switch (event.type) {
+      case GameEventType.BoardTypeChanged:
+        this.initialize(
+          Game.createInitParams(event.seed, { boardType: event.boardType, difficulty: this.difficulty }, this.seedingService, this.identityService),
+        );
+        break;
+      case GameEventType.DifficultyChanged:
+        this.difficulty = event.difficulty;
+        break;
       case GameEventType.MatchFinished:
         if (event.winner === null) {
           this.match.recordTie(this.turnsView.currentPlayer, this.turnsView.nextPlayer);
@@ -194,13 +202,14 @@ export default class Game {
   changeBoardType(boardType: GameBonusDistribution): void {
     this.ensureMutability();
     this.ensureSettingsMutability();
-    this.resetFromSettings({ boardType, difficulty: this.difficulty });
+    const newSeed = this.seedingService.createSeed();
+    this.applyEvent({ boardType, seed: newSeed, type: GameEventType.BoardTypeChanged });
   }
 
-  changeDifficulty(newValue: GameDifficulty) {
+  changeDifficulty(difficulty: GameDifficulty): void {
     this.ensureMutability();
     this.ensureSettingsMutability();
-    this.resetFromSettings({ boardType: this.board.type as GameBonusDistribution, difficulty: newValue });
+    this.applyEvent({ difficulty, type: GameEventType.DifficultyChanged });
   }
 
   clearTiles(): void {
@@ -304,12 +313,5 @@ export default class Game {
     this.match = params.match;
     this.turns = params.turns;
     this.turns.startTurnFor(this.turns.nextPlayer);
-  }
-
-  private resetFromSettings(settings: GameSettings): void {
-    const seed = this.seedingService.createSeed();
-    this.difficulty = settings.difficulty;
-    this.initialize(Game.createInitParams(seed, settings, this.seedingService, this.identityService));
-    this.eventLog.reset({ seed, settings, type: GameEventType.MatchStarted });
   }
 }

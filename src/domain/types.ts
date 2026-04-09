@@ -24,8 +24,10 @@ export type EventRepository = {
 };
 
 export type GameEvent =
+  | { boardType: GameBonusDistribution; seed: number; type: GameEventType.BoardTypeChanged }
   | { cell: GameCell; tile: GameTile; type: GameEventType.TilePlaced }
   | { cell: GameCell; tile: GameTile; type: GameEventType.TileUndoPlaced }
+  | { difficulty: GameDifficulty; type: GameEventType.DifficultyChanged }
   | { player: GamePlayer; score: number; type: GameEventType.TurnSaved; words: ReadonlyArray<string> }
   | { player: GamePlayer; type: GameEventType.TurnPassed }
   | { result: ValidationResult; type: GameEventType.TurnValidated }

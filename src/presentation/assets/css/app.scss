@@ -42,6 +42,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition-duration: var(--transition-duration);
+  transition-timing-function: var(--transition-timing-function);
+  transition-property: filter;
   &--blurred {
     filter: blur(0.5rem);
   }
