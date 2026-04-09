@@ -23,7 +23,7 @@ onMounted(() => {
 
 <template>
   <div
-    :class="{ app: true, 'app--blurred': showEndscreen }"
+    :class="{ index: true, 'index--blurred': showEndscreen }"
     :style="{
       ...(transitionDurationMs && {
         '--transition-duration': `${transitionDurationMs}ms`,
@@ -48,4 +48,16 @@ onMounted(() => {
 @use '@/presentation/assets/css/colors.scss';
 @use '@/presentation/assets/css/transitions.scss';
 @use '@/presentation/assets/css/variables.scss';
+
+.index {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition-duration: var(--transition-duration);
+  transition-timing-function: var(--transition-timing-function);
+  transition-property: filter;
+  &--blurred {
+    filter: blur(0.5rem);
+  }
+}
 </style>

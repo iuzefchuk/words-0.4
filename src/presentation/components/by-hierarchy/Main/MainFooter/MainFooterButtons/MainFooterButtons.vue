@@ -45,7 +45,7 @@ const items = reactive([
 
 <template>
   <div class="buttons">
-    <ul class="buttons__list app__width-content">
+    <ul class="buttons__list app__limit-max-width app__pop-text">
       <template v-for="{ name, action, isRendered, isDisabled } in items" :key="name">
         <li v-if="isRendered()" class="buttons__list-item">
           <button class="buttons__btn" :disabled="isDisabled()" @click="action()">
@@ -76,13 +76,15 @@ const items = reactive([
   }
   &__btn {
     cursor: pointer;
+    text-transform: uppercase;
     text-align: center;
-    border-radius: var(--primary-border-radius);
+    border-radius: var(--base-border-radius);
     width: 100%;
     height: 100%;
-    font-weight: var(--font-weight);
-    border: var(--primary-border);
+    border: var(--base-border);
     user-select: none;
+    letter-spacing: 0.5px;
+    box-shadow: var(--box-shadow-level-1);
     transition-property: box-shadow;
     transition-duration: var(--transition-duration-half);
     transition-timing-function: var(--transition-timing-function);
@@ -94,7 +96,7 @@ const items = reactive([
     }
     &:disabled {
       border-color: transparent;
-      color: var(--secondary-color);
+      box-shadow: none;
       cursor: not-allowed;
     }
   }

@@ -12,49 +12,39 @@ withDefaults(
 </script>
 
 <template>
-  <div
+  <svg
     :class="{
       tile: true,
       'tile--inverted': isInverted,
       'tile--saturated': isSaturated,
     }"
-  >
-    <svg class="tile__svg" viewBox="0 0 21 21" v-html="getLetterSvgHtml(letter)"></svg>
-  </div>
+    viewBox="0 0 21 21"
+    v-html="getLetterSvgHtml(letter)"
+  ></svg>
 </template>
 
 <style lang="scss">
 .tile {
   cursor: pointer;
+  fill: currentColor;
+  aspect-ratio: 1 / 1;
   color: var(--tile-color);
+  background: var(--tile-bg);
+  border-radius: inherit;
   transition-property: background, color, outline;
   transition-duration: var(--transition-duration-half);
   transition-timing-function: var(--transition-timing-function);
+  position: relative;
+  top: 0;
+  left: 0;
   z-index: var(--z-index-level-1);
-  display: grid;
-  filter: drop-shadow(0 1px transparent);
-  &::before {
-    content: '';
-    grid-area: 1 / 1;
-    background: var(--tile-bg);
-    clip-path: inset(0 round var(--tile-radius, var(--primary-border-radius)));
-  }
-  &--inverted:not(&--saturated)::before {
-    background: var(--tile-bg-inverted);
-  }
+  min-height: 100%;
   &--inverted:not(&--saturated) {
+    background: var(--tile-bg-inverted);
     color: var(--tile-color-inverted);
   }
-  &--saturated::before {
+  &--saturated {
     background: var(--tile-bg-saturated);
-  }
-  &__svg {
-    grid-area: 1 / 1;
-    display: block;
-    width: 100%;
-    height: 100%;
-    fill: currentColor;
-    z-index: 1;
   }
 }
 </style>

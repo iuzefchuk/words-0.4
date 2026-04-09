@@ -29,7 +29,7 @@ watch(title, newValue => {
       <Transition tag="div" name="fade-down-up" appear>
         <div
           v-on-click-outside="{ callback: () => respond(DialogStatus.Dismissed) }"
-          :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation, 'app__width-content': true }"
+          :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation, 'app__limit-max-width': true }"
           @mousedown.stop
         >
           <div class="dialog__content">
@@ -64,7 +64,7 @@ watch(title, newValue => {
   opacity: 0.95;
   &__window {
     padding: var(--space-l) var(--space-xl);
-    border-radius: var(--primary-border-radius);
+    border-radius: var(--base-border-radius);
     color: var(--dialog-color);
     background: var(--dialog-bg);
     width: max-content;
@@ -96,7 +96,7 @@ watch(title, newValue => {
     cursor: pointer;
     padding: var(--space-s);
     border: var(--dialog-button-border);
-    border-radius: var(--primary-border-radius);
+    border-radius: var(--base-border-radius);
     transition-property: box-shadow;
     transition-duration: var(--transition-duration-half);
     transition-timing-function: var(--transition-timing-function);

@@ -57,7 +57,7 @@ const players = [
 .header {
   width: 100%;
   z-index: var(--z-index-level-2);
-  padding: var(--primary-padding) 0;
+  padding: var(--base-padding) 0;
   align-self: start;
   display: flex;
   flex-direction: column;

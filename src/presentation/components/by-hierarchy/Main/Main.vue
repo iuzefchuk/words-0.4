@@ -12,7 +12,7 @@ const rackStore = RackStore.INSTANCE();
     <Transition name="fade-down-up" appear>
       <MainHeader />
     </Transition>
-    <div class="main__center app__width-content">
+    <div class="main__center app__limit-max-width">
       <MainAnnotation class="main__center-annotation" />
       <MainBoard />
     </div>
@@ -35,8 +35,8 @@ const rackStore = RackStore.INSTANCE();
   display: grid;
   grid-template-rows: 1fr auto 1fr;
   align-items: center;
-  padding-left: var(--primary-padding);
-  padding-right: var(--primary-padding);
+  padding-left: var(--base-padding);
+  padding-right: var(--base-padding);
   justify-items: center;
   &__center {
     position: relative;

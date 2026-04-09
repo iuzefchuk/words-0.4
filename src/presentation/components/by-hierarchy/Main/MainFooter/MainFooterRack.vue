@@ -13,7 +13,7 @@ const { allActionsAreDisabled } = buttons;
 </script>
 
 <template>
-  <ul class="rack app__width-content app__grid--footer">
+  <ul class="rack app__limit-max-width app__create-grid--for-rack">
     <li
       v-for="(tile, idx) in tiles"
       :key="tile"
@@ -28,7 +28,7 @@ const { allActionsAreDisabled } = buttons;
       />
     </li>
     <Transition name="fade">
-      <li v-if="tilesRemaining > 0" class="rack__count">
+      <li v-if="tilesRemaining > 0" class="rack__count app__hide-text">
         <p>
           <span v-animate-number="{ number: tilesRemaining }" class="rack__count-item" />
           {{ t('game.unassigned_count') }}
@@ -40,16 +40,11 @@ const { allActionsAreDisabled } = buttons;
 
 <style lang="scss" scoped>
 .rack {
-  --tile-radius: calc(var(--primary-border-radius) * 2);
   &__cell {
     cursor: pointer;
-    filter: drop-shadow(0 1px transparent);
-    &::before {
-      content: '';
-      background: var(--cell-bg-footer);
-      grid-area: 1 / 1;
-      clip-path: inset(0 round var(--tile-radius));
-    }
+    background: var(--cell-bg-footer);
+    border-radius: calc(var(--base-border-radius) * 2);
+    box-shadow: var(--cell-shadow-footer);
     &--disabled {
       opacity: var(--opacity-disabled);
       cursor: not-allowed;
@@ -63,8 +58,6 @@ const { allActionsAreDisabled } = buttons;
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
-    color: var(--secondary-color);
-    font-size: var(--font-size-small);
     user-select: none;
   }
 }

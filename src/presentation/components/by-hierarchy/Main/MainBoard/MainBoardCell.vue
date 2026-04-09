@@ -60,21 +60,18 @@ const isTileSaturated = computed(() => tile.value != null && mainStore.wasTileUs
 <style lang="scss" scoped>
 .cell {
   max-width: var(--cell-tile-width);
+  border-radius: var(--base-border-radius);
+  background: var(--cell-bg);
   user-select: none;
+  box-shadow: var(--cell-shadow);
   cursor: pointer;
-  filter: drop-shadow(0 1px 2px var(--color-gray-faint));
-  &::before {
-    content: '';
-    background: var(--cell-bg);
-    clip-path: inset(0 round var(--primary-border-radius));
-    grid-area: 1 / 1;
-  }
-  &--center::before {
+  // transform: translateZ(0);
+  &--center {
     background: var(--cell-bg-center);
   }
   &--center,
   &--has-tile {
-    filter: drop-shadow(1px transparent);
+    box-shadow: none;
   }
   &__bonus {
     font-weight: var(--font-weight-bigger);

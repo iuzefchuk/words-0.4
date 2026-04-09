@@ -1,11 +1,14 @@
-:root {
-  --primary-color: var(--color-gray-darkest);
-  --primary-bg: var(--color-gray-fainter);
-  --primary-padding: var(--space-s);
-  --primary-border-color: var(--color-gray);
-  --primary-border: 1.5px solid var(--primary-border-color);
-  --primary-border-radius: var(--space-xs);
-  --secondary-color: var(--color-gray-light);
+@mixin light-scheme() {
+  --base-font-weight: var(--font-weight-small);
+  --base-font-size: var(--font-size);
+  --base-color: var(--color-gray-darkest);
+  --base-bg: var(--color-gray-fainter);
+  --pop-border-color: var(--color-gray-lighter);
+  --pop-font-weight: var(--font-weight);
+  --pop-font-size: var(--font-size-small);
+  --pop-color: var(--base-color);
+  --hide-font-size: var(--font-size-small);
+  --hide-color: var(--color-gray-light);
   --cell-color-dw: var(--color-blue);
   --cell-color-tw: var(--color-red);
   --cell-color-dl: var(--color-green);
@@ -13,9 +16,9 @@
   --cell-bg: var(--color-white);
   --cell-bg-center: var(--color-purple-light);
   --cell-bg-footer: var(--color-gray-faint);
-  --cell-tile-width: var(--space-4xl);
-  --cell-tile-gap: var(--space-2xs);
-  --tile-color: var(--primary-color);
+  --cell-shadow: var(--box-shadow-level-0);
+  --cell-shadow-footer: var(--box-shadow-inner);
+  --tile-color: var(--base-color);
   --tile-color-inverted: var(--color-gray-fainter);
   --tile-bg: var(--color-pink);
   --tile-bg-inverted: var(--color-purple-dark);
@@ -28,31 +31,78 @@
   --dialog-button-border: 1px solid var(--color-gray-faintest);
   --dialog-button-bg-hover: var(--color-gray-dark);
   --dialog-button-bg-active: var(--color-gray-darkest);
+}
+
+@mixin dark-scheme() {
+  --base-font-weight: var(--font-weight-smaller);
+  --base-font-size: var(--font-size);
+  --base-color: var(--color-white);
+  --base-bg: var(--color-navy-dark);
+  --pop-border-color: var(--color-gray-lightest);
+  --pop-font-weight: var(--font-weight);
+  --pop-font-size: var(--font-size);
+  --pop-color: var(--base-color);
+  --hide-font-size: var(--font-size-small);
+  --hide-color: var(--color-gray-lighter);
+  --cell-color-dw: var(--color-cyan);
+  --cell-color-tw: var(--color-red);
+  --cell-color-dl: var(--color-green);
+  --cell-color-tl: var(--color-orange);
+  --cell-bg: var(--color-navy-darkest);
+  --cell-bg-center: var(--color-navy);
+  --cell-bg-footer: var(--color-navy-darker);
+  --cell-shadow: var(--box-shadow-inner-dark);
+  --cell-shadow-footer: var(--box-shadow-inner-dark);
+  --tile-color: var(--color-gray-darkest);
+  --tile-color-inverted: var(--color-gray-darkest);
+  --tile-bg: var(--color-green);
+  --tile-bg-inverted: var(--color-gray-faint);
+  --tile-bg-saturated: var(--color-purple-vivid);
+  --tile-outline-color: var(--color-white);
+  --button-bg-hover: var(--color-navy-light);
+  --button-bg-active: var(--color-navy-darkest);
+  --dialog-color: var(--color-gray-darkest);
+  --dialog-bg: var(--color-gray-fainter);
+  --dialog-button-border: 1px solid var(--color-gray-darkest);
+  --dialog-button-bg-hover: var(--color-white);
+  --dialog-button-bg-active: var(--color-gray-lightest);
+}
+
+:root {
+  --base-border: 1px solid var(--pop-border-color);
+  --base-padding: var(--space-s);
+  --base-border-radius: var(--space-xs);
+  --cell-tile-width: var(--space-4xl);
+  --cell-tile-gap: var(--space-2xs);
   --opacity-disabled: 0.7;
+  @include light-scheme;
+  @media (prefers-color-scheme: dark) {
+   //  @include dark-scheme;
+  }
 }
 
 #app {
-  background: var(--primary-bg);
-  color: var(--primary-color);
-  font-size: var(--font-size);
-  font-weight: var(--font-weight-small);
+  background: var(--base-bg);
+  color: var(--base-color);
+  font-size: var(--base-font-size);
+  font-weight: var(--base-font-weight);
 }
 
 .app {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition-duration: var(--transition-duration);
-  transition-timing-function: var(--transition-timing-function);
-  transition-property: filter;
-  &--blurred {
-    filter: blur(0.5rem);
-  }
-  &__width-content {
+  &__limit-max-width {
     max-width: calc(var(--cell-count-per-axis) * (var(--cell-tile-gap) + var(--cell-tile-width)) - var(--cell-tile-gap));
     width: 100%;
   }
-  &__grid {
+  &__pop-text {
+    font-size: var(--pop-font-size);
+    color: var(--pop-color);
+    font-weight: var(--pop-font-weight);
+  }
+  &__hide-text {
+    font-size: var(--hide-font-size);
+    color: var(--hide-color);
+  }
+  &__create-grid {
     @mixin grid($columns, $rows, $gap: var(--cell-tile-gap)) {
       display: grid;
       grid-template-columns: repeat($columns, minmax(0, 1fr));
@@ -66,45 +116,11 @@
         }
       }
     }
-    &--board {
+    &--for-board {
       @include grid(var(--cell-count-per-axis), var(--cell-count-per-axis));
     }
-    &--footer {
+    &--for-rack {
       @include grid(8, 1, calc(var(--cell-tile-gap) * 2));
     }
-  }
-}
-
-@mixin dark-mode() {
-  --primary-color: var(--color-gray-faint);
-  --primary-bg: var(--color-navy-dark);
-  --primary-border-color: var(--color-gray-lightest);
-  --secondary-color: var(--color-gray-lighter);
-  --cell-color-dw: var(--color-cyan);
-  --cell-color-tw: var(--color-red);
-  --cell-color-dl: var(--color-green);
-  --cell-color-tl: var(--color-orange);
-  --cell-bg: var(--color-navy-darkest);
-  --cell-bg-center: var(--color-navy);
-  --cell-bg-footer: var(--color-navy-darker);
-  --cell-shadow: var(--box-shadow-inner-dark);
-  --cell-shadow-footer: var(--box-shadow-inner-dark);
-  --tile-color-inverted: var(--color-gray-darkest);
-  --tile-bg: var(--color-purple-darkest);
-  --tile-bg-inverted: var(--color-gray-faint);
-  --tile-bg-saturated: var(--color-purple-vivid);
-  --tile-outline-color: var(--color-white);
-  --button-bg-hover: var(--color-navy-light);
-  --button-bg-active: var(--color-navy-darkest);
-  --dialog-color: var(--color-gray-darkest);
-  --dialog-bg: var(--color-gray-fainter);
-  --dialog-button-border: 1px solid var(--color-gray-darkest);
-  --dialog-button-bg-hover: var(--color-white);
-  --dialog-button-bg-active: var(--color-gray-lightest);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    // @include dark-mode;
   }
 }

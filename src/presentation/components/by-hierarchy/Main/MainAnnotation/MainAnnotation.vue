@@ -4,7 +4,7 @@ const { messages } = new UseAnnotation();
 </script>
 
 <template>
-  <TransitionGroup v-if="messages.length > 0" name="fade-from-right" tag="ul" class="annotation" appear>
+  <TransitionGroup v-if="messages.length > 0" name="fade-from-right" tag="ul" class="annotation app__hide-text" appear>
     <li v-for="{ key, html } in messages" :key="key" v-html="html" />
   </TransitionGroup>
 </template>
@@ -13,13 +13,11 @@ const { messages } = new UseAnnotation();
 .annotation {
   $padding-right: calc(var(--cell-tile-width) / 4);
   height: 6rem;
-  border-right: 1px solid var(--secondary-color);
+  border-right: 1px solid currentColor;
   padding-right: $padding-right;
   display: flex;
   flex-direction: column;
   gap: var(--space-s);
-  color: var(--secondary-color);
-  font-size: var(--font-size-small);
   overflow-y: auto;
   overflow-x: hidden;
   width: calc(100% - $padding-right);

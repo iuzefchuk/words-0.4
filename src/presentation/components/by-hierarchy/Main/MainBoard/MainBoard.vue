@@ -8,9 +8,9 @@ const mainStore = MainStore.INSTANCE();
 <template>
   <ul
     :class="{
-      app__grid: true,
-      'app__grid--board': true,
-      'app__width-content': true,
+      'app__create-grid': true,
+      'app__create-grid--for-board': true,
+      'app__limit-max-width': true,
       grid: true,
     }"
   >
