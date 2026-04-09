@@ -1,5 +1,4 @@
 import {
-  AppCommands,
   AppTurnResponse,
   GameBonusDistribution,
   GameCell,
@@ -17,7 +16,7 @@ import Game from '@/domain/Game.ts';
 import { TIME } from '@/shared/constants.ts';
 import type { EventRepository, IdentityService } from '@/domain/types.ts';
 
-export default class AppCommandBuilder {
+export default class CommandsService {
   private static readonly DIFFICULTY_RESULT_LIMITS: Record<GameDifficulty, number> = {
     [GameDifficulty.High]: Infinity,
     [GameDifficulty.Low]: 1,
@@ -25,20 +24,6 @@ export default class AppCommandBuilder {
   };
 
   private static readonly OPPONENT_RESPONSE_MIN_TIME = TIME.ms_in_second * 2;
-
-  get commands(): AppCommands {
-    return {
-      changeBoardType: (boardType: GameBonusDistribution) => this.changeBoardType(boardType),
-      changeDifficulty: (difficulty: GameDifficulty) => this.changeDifficulty(difficulty),
-      clearTiles: () => this.clearTiles(),
-      drainNewEvents: () => this.drainNewEvents(),
-      handlePassTurn: () => this.handlePassTurn(),
-      handleResignMatch: () => this.handleResignMatch(),
-      handleSaveTurn: () => this.handleSaveTurn(),
-      placeTile: (args: { cell: GameCell; tile: GameTile }) => this.placeTile(args),
-      undoPlaceTile: (tile: GameTile) => this.undoPlaceTile(tile),
-    };
-  }
 
   private get currentPlayer(): GamePlayer {
     return this.game.turnsView.currentPlayer;
@@ -55,27 +40,82 @@ export default class AppCommandBuilder {
     private readonly eventRepository: EventRepository,
   ) {}
 
-  private changeBoardType(boardType: GameBonusDistribution): void {
+  changeBoardType(boardType: GameBonusDistribution): void {
     this.game.changeBoardType(boardType);
   }
 
-  private changeDifficulty(difficulty: GameDifficulty): void {
+  changeDifficulty(difficulty: GameDifficulty): void {
     this.game.changeDifficulty(difficulty);
+  }
+
+  clearTiles(): void {
+    this.game.clearTiles();
+    this.syncPersistence();
+  }
+
+  drainNewEvents(): Array<GameEvent> {
+    return this.game.drainPendingEvents();
+  }
+
+  handlePassTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined } {
+    this.clearTiles();
+    if (this.game.willPassBeResignFor(GamePlayer.User)) {
+      this.game.resignMatchForCurrentPlayer();
+      this.clearPersistence();
+      return { opponentTurn: undefined };
+    }
+    this.game.passTurnForCurrentPlayer();
+    this.syncPersistence();
+    const opponentTurn = this.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
+    return { opponentTurn };
+  }
+
+  handleResignMatch(): void {
+    this.clearTiles();
+    this.game.resignMatchForCurrentPlayer();
+    this.clearPersistence();
+  }
+
+  handleSaveTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined; userResponse: AppTurnResponse } {
+    const player = this.currentPlayer;
+    const userResponse = this.saveTurnForCurrentPlayer();
+    if (!userResponse.ok) {
+      return { opponentTurn: undefined, userResponse };
+    }
+    if (!this.inventoryView.hasTilesFor(player)) {
+      this.game.finishMatchByScore();
+      this.clearPersistence();
+      return { opponentTurn: undefined, userResponse };
+    }
+    if (this.game.matchView.isFinished) {
+      this.clearPersistence();
+      return { opponentTurn: undefined, userResponse };
+    }
+    this.syncPersistence();
+    const opponentTurn = this.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
+    return { opponentTurn, userResponse };
+  }
+
+  placeTile({ cell, tile }: { cell: GameCell; tile: GameTile }): void {
+    this.game.placeTile({ cell, tile });
+    this.game.validateTurn();
+    this.syncPersistence();
+  }
+
+  undoPlaceTile(tile: GameTile): void {
+    this.game.undoPlaceTile({ tile });
+    this.game.validateTurn();
+    this.syncPersistence();
   }
 
   private clearPersistence(): void {
     this.eventRepository.delete();
   }
 
-  private clearTiles(): void {
-    this.game.clearTiles();
-    this.syncPersistence();
-  }
-
   private async createOpponentTurn(): Promise<GameEvent> {
     const player = GamePlayer.Opponent;
     const { difficulty } = this.game;
-    const attemptsLimit = AppCommandBuilder.DIFFICULTY_RESULT_LIMITS[difficulty];
+    const attemptsLimit = CommandsService.DIFFICULTY_RESULT_LIMITS[difficulty];
     const context = this.game.createGeneratorContext(this.identityService);
     let bestResult: GameGeneratorResult | null = null;
     let bestScore = -1;
@@ -103,15 +143,11 @@ export default class AppCommandBuilder {
     return { player: GamePlayer.Opponent, score, type: GameEventType.TurnSaved, words };
   }
 
-  private drainNewEvents(): Array<GameEvent> {
-    return this.game.drainPendingEvents();
-  }
-
   private async ensureMinimumDuration<T>(callback: () => Promise<T> | T): Promise<T> {
     const startTime = this.schedulingService.getCurrentTime();
     const result = await callback();
     const elapsed = this.schedulingService.getCurrentTime() - startTime;
-    const delay = AppCommandBuilder.OPPONENT_RESPONSE_MIN_TIME - elapsed;
+    const delay = CommandsService.OPPONENT_RESPONSE_MIN_TIME - elapsed;
     if (delay > 0) await this.schedulingService.wait(delay);
     return result;
   }
@@ -141,51 +177,6 @@ export default class AppCommandBuilder {
     return response;
   }
 
-  private handlePassTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined } {
-    this.clearTiles();
-    if (this.game.willPassBeResignFor(GamePlayer.User)) {
-      this.game.resignMatchForCurrentPlayer();
-      this.clearPersistence();
-      return { opponentTurn: undefined };
-    }
-    this.game.passTurnForCurrentPlayer();
-    this.syncPersistence();
-    const opponentTurn = this.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
-    return { opponentTurn };
-  }
-
-  private handleResignMatch(): void {
-    this.clearTiles();
-    this.game.resignMatchForCurrentPlayer();
-    this.clearPersistence();
-  }
-
-  private handleSaveTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined; userResponse: AppTurnResponse } {
-    const player = this.currentPlayer;
-    const userResponse = this.saveTurnForCurrentPlayer();
-    if (!userResponse.ok) {
-      return { opponentTurn: undefined, userResponse };
-    }
-    if (!this.inventoryView.hasTilesFor(player)) {
-      this.game.finishMatchByScore();
-      this.clearPersistence();
-      return { opponentTurn: undefined, userResponse };
-    }
-    if (this.game.matchView.isFinished) {
-      this.clearPersistence();
-      return { opponentTurn: undefined, userResponse };
-    }
-    this.syncPersistence();
-    const opponentTurn = this.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
-    return { opponentTurn, userResponse };
-  }
-
-  private placeTile({ cell, tile }: { cell: GameCell; tile: GameTile }): void {
-    this.game.placeTile({ cell, tile });
-    this.game.validateTurn();
-    this.syncPersistence();
-  }
-
   private saveTurnForCurrentPlayer(): AppTurnResponse {
     if (!this.game.turnsView.currentTurnIsValid) return { error: 'Turn is not valid', ok: false };
     const { words } = this.game.saveTurnForCurrentPlayer();
@@ -194,11 +185,5 @@ export default class AppCommandBuilder {
 
   private syncPersistence(): void {
     this.eventRepository.save(this.game.eventLogView);
-  }
-
-  private undoPlaceTile(tile: GameTile): void {
-    this.game.undoPlaceTile({ tile });
-    this.game.validateTurn();
-    this.syncPersistence();
   }
 }

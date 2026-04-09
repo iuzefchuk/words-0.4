@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia';
 import { computed, markRaw, ref } from 'vue';
 import Application from '@/application/index.ts';
-import { AppCommands, AppQueries, GameBonusDistribution, GameCell, GameDifficulty, GameSettings, GameTile } from '@/application/types.ts';
+import CommandsService from '@/application/services/CommandsService.ts';
+import QueriesService from '@/application/services/QueriesService.ts';
+import { GameBonusDistribution, GameCell, GameDifficulty, GameSettings, GameTile } from '@/application/types.ts';
 import { DEFAULT_SETTINGS } from '@/presentation/constants.ts';
 import { StorageKey } from '@/presentation/enums.ts';
 import { getEventSound } from '@/presentation/mappings.ts';
@@ -10,48 +12,48 @@ import SoundPlayer from '@/presentation/services/SoundPlayer.ts';
 
 class Actions {
   constructor(
-    private readonly appCommands: AppCommands,
+    private readonly commandsService: CommandsService,
     private readonly state: State,
   ) {}
 
   changeBoardType = (boardType: GameBonusDistribution): void => {
     MainStore.saveSettings({ boardType });
-    return this.state.writeBoard(() => this.appCommands.changeBoardType(boardType));
+    return this.state.writeBoard(() => this.commandsService.changeBoardType(boardType));
   };
 
   changeDifficulty = (difficulty: GameDifficulty): void => {
     MainStore.saveSettings({ difficulty });
-    return this.state.write(() => this.appCommands.changeDifficulty(difficulty));
+    return this.state.write(() => this.commandsService.changeDifficulty(difficulty));
   };
 
   clearTiles = (): void => {
-    return this.state.writeBoard(() => this.appCommands.clearTiles());
+    return this.state.writeBoard(() => this.commandsService.clearTiles());
   };
 
   pass = (): void => {
-    const { opponentTurn } = this.writeAndPlaySound(() => this.appCommands.handlePassTurn());
+    const { opponentTurn } = this.writeAndPlaySound(() => this.commandsService.handlePassTurn());
     opponentTurn?.then(() => this.syncAndPlaySound());
   };
 
   placeTile = (args: { cell: GameCell; tile: GameTile }): void => {
-    return this.writeBoardAndPlaySound(() => this.appCommands.placeTile(args));
+    return this.writeBoardAndPlaySound(() => this.commandsService.placeTile(args));
   };
 
   resign = (): void => {
-    return this.writeAndPlaySound(() => this.appCommands.handleResignMatch());
+    return this.writeAndPlaySound(() => this.commandsService.handleResignMatch());
   };
 
   save = (): void => {
-    const { opponentTurn } = this.writeAndPlaySound(() => this.appCommands.handleSaveTurn());
+    const { opponentTurn } = this.writeAndPlaySound(() => this.commandsService.handleSaveTurn());
     opponentTurn?.then(() => this.syncAndPlaySound());
   };
 
   undoPlaceTile = (tile: GameTile): void => {
-    return this.writeBoardAndPlaySound(() => this.appCommands.undoPlaceTile(tile));
+    return this.writeBoardAndPlaySound(() => this.commandsService.undoPlaceTile(tile));
   };
 
   private playPendingSounds(): void {
-    for (const event of this.appCommands.drainNewEvents()) {
+    for (const event of this.commandsService.drainNewEvents()) {
       const sound = getEventSound(event);
       if (sound) SoundPlayer.play(sound);
     }
@@ -76,37 +78,37 @@ class Actions {
 }
 
 class Getters {
-  readonly boardType = computed(() => this.readBoard(() => this.appQueries.getBoardType()));
-  readonly currentPlayerIsUser = computed(() => this.readState(() => this.appQueries.isCurrentPlayerUser()));
-  readonly currentTurnIsValid = computed(() => this.readBoard(() => this.appQueries.isCurrentTurnValid()));
-  readonly currentTurnScore = computed(() => this.readBoard(() => this.appQueries.getCurrentTurnScore()));
-  readonly difficulty = computed(() => this.readState(() => this.appQueries.getDifficulty()));
-  readonly eventLog = computed(() => this.readState(() => this.appQueries.getEventLog()));
-  readonly hasPriorTurns = computed(() => this.readState(() => this.appQueries.hasPriorTurns()));
-  readonly matchIsFinished = computed(() => this.readState(() => this.appQueries.isMatchFinished()));
-  readonly matchResult = computed(() => this.readState(() => this.appQueries.getMatchResult()));
-  readonly opponentScore = computed(() => this.readState(() => this.appQueries.getOpponentScore()));
-  readonly settingsChangeIsAllowed = computed(() => this.readState(() => this.appQueries.settingsChangeIsAllowed()));
-  readonly tilesRemaining = computed(() => this.readState(() => this.appQueries.getTilesRemaining()));
-  readonly userPassWillBeResign = computed(() => this.readState(() => this.appQueries.willUserPassBeResign()));
-  readonly userScore = computed(() => this.readState(() => this.appQueries.getUserScore()));
-  readonly userTiles = computed(() => this.readState(() => this.appQueries.getUserTiles()));
+  readonly boardType = computed(() => this.readBoard(() => this.queriesService.getBoardType()));
+  readonly currentPlayerIsUser = computed(() => this.readState(() => this.queriesService.isCurrentPlayerUser()));
+  readonly currentTurnIsValid = computed(() => this.readBoard(() => this.queriesService.isCurrentTurnValid()));
+  readonly currentTurnScore = computed(() => this.readBoard(() => this.queriesService.getCurrentTurnScore()));
+  readonly difficulty = computed(() => this.readState(() => this.queriesService.getDifficulty()));
+  readonly eventLog = computed(() => this.readState(() => this.queriesService.getEventLog()));
+  readonly hasPriorTurns = computed(() => this.readState(() => this.queriesService.hasPriorTurns()));
+  readonly matchIsFinished = computed(() => this.readState(() => this.queriesService.isMatchFinished()));
+  readonly matchResult = computed(() => this.readState(() => this.queriesService.getMatchResult()));
+  readonly opponentScore = computed(() => this.readState(() => this.queriesService.getOpponentScore()));
+  readonly settingsChangeIsAllowed = computed(() => this.readState(() => this.queriesService.settingsChangeIsAllowed()));
+  readonly tilesRemaining = computed(() => this.readState(() => this.queriesService.getTilesRemaining()));
+  readonly userPassWillBeResign = computed(() => this.readState(() => this.queriesService.willUserPassBeResign()));
+  readonly userScore = computed(() => this.readState(() => this.queriesService.getUserScore()));
+  readonly userTiles = computed(() => this.readState(() => this.queriesService.getUserTiles()));
 
   constructor(
-    private readonly appQueries: AppQueries,
+    private readonly queriesService: QueriesService,
     private readonly state: State,
   ) {}
 
-  areTilesSame = (firstTile: GameTile, secondTile: GameTile) => this.appQueries.areTilesSame(firstTile, secondTile);
-  findCellWithTile = (tile: GameTile) => this.readBoard(() => this.appQueries.findCellWithTile(tile));
-  findTileOnCell = (cell: GameCell) => this.readBoard(() => this.appQueries.findTileOnCell(cell));
-  getCellBonus = (cell: GameCell) => this.readBoard(() => this.appQueries.getCellBonus(cell));
-  getCellColumnIndex = (cell: GameCell) => this.appQueries.getCellColumnIndex(cell);
-  getCellRowIndex = (cell: GameCell) => this.appQueries.getCellRowIndex(cell);
-  getTileLetter = (tile: GameTile) => this.appQueries.getTileLetter(tile);
-  isCellCenter = (cell: GameCell) => this.appQueries.isCellCenter(cell);
-  isTilePlaced = (tile: GameTile) => this.readBoard(() => this.appQueries.isTilePlaced(tile));
-  wasTileUsedInPreviousTurn = (tile: GameTile) => this.readBoard(() => this.appQueries.wasTileUsedInPreviousTurn(tile));
+  areTilesSame = (firstTile: GameTile, secondTile: GameTile) => this.queriesService.areTilesSame(firstTile, secondTile);
+  findCellWithTile = (tile: GameTile) => this.readBoard(() => this.queriesService.findCellWithTile(tile));
+  findTileOnCell = (cell: GameCell) => this.readBoard(() => this.queriesService.findTileOnCell(cell));
+  getCellBonus = (cell: GameCell) => this.readBoard(() => this.queriesService.getCellBonus(cell));
+  getCellColumnIndex = (cell: GameCell) => this.queriesService.getCellColumnIndex(cell);
+  getCellRowIndex = (cell: GameCell) => this.queriesService.getCellRowIndex(cell);
+  getTileLetter = (tile: GameTile) => this.queriesService.getTileLetter(tile);
+  isCellCenter = (cell: GameCell) => this.queriesService.isCellCenter(cell);
+  isTilePlaced = (tile: GameTile) => this.readBoard(() => this.queriesService.isTilePlaced(tile));
+  wasTileUsedInPreviousTurn = (tile: GameTile) => this.readBoard(() => this.queriesService.wasTileUsedInPreviousTurn(tile));
 
   private readBoard<T>(fn: () => T): T {
     return this.state.readBoard(fn);
@@ -170,8 +172,8 @@ export default class MainStore {
 
   private constructor(app: Application) {
     const state = new State();
-    this.getters = new Getters(app.queries, state);
-    this.actions = new Actions(app.commands, state);
+    this.getters = new Getters(app.queriesService, state);
+    this.actions = new Actions(app.commandsService, state);
   }
 
   static async initiate(): Promise<void> {

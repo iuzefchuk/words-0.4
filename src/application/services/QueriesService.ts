@@ -1,0 +1,131 @@
+import {
+  GameBoardView,
+  GameBonus,
+  GameBonusDistribution,
+  GameCell,
+  GameDifficulty,
+  GameEvent,
+  GameInventoryView,
+  GameLetter,
+  GameMatchResult,
+  GamePlayer,
+  GameTile,
+  GameTurnsView,
+} from '@/application/types.ts';
+import Game from '@/domain/Game.ts';
+
+export default class QueriesService {
+  private get boardView(): Readonly<GameBoardView> {
+    return this.game.boardView;
+  }
+
+  private get inventoryView(): Readonly<GameInventoryView> {
+    return this.game.inventoryView;
+  }
+
+  private get turnsView(): Readonly<GameTurnsView> {
+    return this.game.turnsView;
+  }
+
+  constructor(private readonly game: Game) {}
+
+  areTilesSame(first: GameTile, second: GameTile): boolean {
+    return this.inventoryView.areTilesEqual(first, second);
+  }
+
+  findCellWithTile(tile: GameTile): GameCell | undefined {
+    return this.boardView.findCellByTile(tile);
+  }
+
+  findTileOnCell(cell: GameCell): GameTile | undefined {
+    return this.boardView.findTileByCell(cell);
+  }
+
+  getBoardType(): GameBonusDistribution {
+    return this.boardView.type;
+  }
+
+  getCellBonus(cell: GameCell): GameBonus | null {
+    return this.boardView.getBonus(cell);
+  }
+
+  getCellColumnIndex(cell: GameCell): number {
+    return this.boardView.getCellPositionInColumn(cell);
+  }
+
+  getCellRowIndex(cell: GameCell): number {
+    return this.boardView.getCellPositionInRow(cell);
+  }
+
+  getCurrentTurnScore(): number | undefined {
+    return this.turnsView.currentTurnScore;
+  }
+
+  getDifficulty(): GameDifficulty {
+    return this.game.difficulty;
+  }
+
+  getEventLog(): ReadonlyArray<GameEvent> {
+    return this.game.eventLogView;
+  }
+
+  getMatchResult(): GameMatchResult | undefined {
+    return this.game.matchView.getResultFor(GamePlayer.User);
+  }
+
+  getOpponentScore(): number {
+    return this.game.matchView.getScoreFor(GamePlayer.Opponent);
+  }
+
+  getTileLetter(tile: GameTile): GameLetter {
+    return this.inventoryView.getTileLetter(tile);
+  }
+
+  getTilesRemaining(): number {
+    return this.inventoryView.unusedTilesCount;
+  }
+
+  getUserScore(): number {
+    return this.game.matchView.getScoreFor(GamePlayer.User);
+  }
+
+  getUserTiles(): ReadonlyArray<GameTile> {
+    return this.inventoryView.getTilesFor(GamePlayer.User);
+  }
+
+  hasPriorTurns(): boolean {
+    return this.turnsView.historyHasPriorTurns;
+  }
+
+  isCellCenter(cell: GameCell): boolean {
+    return this.boardView.isCellCenter(cell);
+  }
+
+  isCurrentPlayerUser(): boolean {
+    return this.turnsView.currentPlayer === GamePlayer.User;
+  }
+
+  isCurrentTurnValid(): boolean {
+    return this.turnsView.currentTurnIsValid;
+  }
+
+  isMatchFinished(): boolean {
+    return this.game.matchView.isFinished;
+  }
+
+  isTilePlaced(tile: GameTile): boolean {
+    return this.boardView.isTilePlaced(tile);
+  }
+
+  settingsChangeIsAllowed(): boolean {
+    return this.game.settingsChangeIsAllowed;
+  }
+
+  wasTileUsedInPreviousTurn(tile: GameTile): boolean {
+    return this.game.wasTileUsedInPreviousTurn(tile);
+  }
+
+  willUserPassBeResign(): boolean {
+    return this.game.willPassBeResignFor(GamePlayer.User);
+  }
+}

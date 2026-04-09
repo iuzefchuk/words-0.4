@@ -1,14 +1,14 @@
-import AppCommandBuilder from '@/application/commands.ts';
-import AppQueryBuilder from '@/application/queries.ts';
-import { AppCommands, AppConfig, AppQueries, GameDictionary, GameSettings } from '@/application/types.ts';
+import CommandsService from '@/application/services/CommandsService.ts';
+import QueriesService from '@/application/services/QueriesService.ts';
+import { AppConfig, GameDictionary, GameSettings } from '@/application/types.ts';
 import Game from '@/domain/Game.ts';
 import { DictionaryRepository, EventRepository, IdentityService, SeedingService } from '@/domain/types.ts';
 import Infrastructure from '@/infrastructure/index.ts';
 
 export default class Application {
-  get commands(): AppCommands {
-    return this.commandBuilder.commands;
-  }
+  readonly commandsService: CommandsService;
+
+  readonly queriesService: QueriesService;
 
   get config(): AppConfig {
     return {
@@ -17,22 +17,21 @@ export default class Application {
     };
   }
 
-  get queries(): AppQueries {
-    return this.queryBuilder.queries;
-  }
-
   private constructor(
-    private readonly queryBuilder: AppQueryBuilder,
-    private readonly commandBuilder: AppCommandBuilder,
+    commandsService: CommandsService,
+    queriesService: QueriesService,
     private readonly game: Game,
-  ) {}
+  ) {
+    this.commandsService = commandsService;
+    this.queriesService = queriesService;
+  }
 
   static async create(settings: GameSettings): Promise<Application> {
     const { repositories, services } = await Infrastructure.createAppDependencies();
     const game = await this.fetchGameInstance(services.identity, services.seeding, repositories, settings);
-    const queryBuilder = new AppQueryBuilder(game);
-    const commandBuilder = new AppCommandBuilder(game, services.identity, services.scheduling, repositories.events);
-    return new Application(queryBuilder, commandBuilder, game);
+    const queriesService = new QueriesService(game);
+    const commandsService = new CommandsService(game, services.identity, services.scheduling, repositories.events);
+    return new Application(commandsService, queriesService, game);
   }
 
   private static async fetchDictionary(repository: DictionaryRepository): Promise<GameDictionary> {
