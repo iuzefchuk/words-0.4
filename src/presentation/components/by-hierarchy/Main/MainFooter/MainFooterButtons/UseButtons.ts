@@ -33,8 +33,10 @@ export default class UseButtons {
   }
 
   async handlePass(): Promise<void> {
-    if (!this.mainStore.userPassWillBeResign) return this.mainStore.pass();
-    this.handleResign();
+    if (this.mainStore.userPassWillBeResign) return this.handleResign();
+    const { isConfirmed } = await this.triggerPassDialog();
+    if (!isConfirmed) return;
+    this.mainStore.pass();
   }
 
   handlePlay(): void {
@@ -51,6 +53,16 @@ export default class UseButtons {
   handleShuffle(): void {
     this.rackStore.shuffle();
     SoundPlayer.play(Sound.SystemShuffle);
+  }
+
+  private async triggerPassDialog() {
+    SoundPlayer.play(Sound.SystemDialog);
+    return await this.dialogStore.trigger({
+      cancelText: window.t('game.dialog_cancel'),
+      confirmText: window.t('game.dialog_pass_confirm'),
+      html: window.t('game.dialog_pass_html'),
+      title: window.t('game.dialog_pass_title'),
+    });
   }
 
   private async triggerResignDialog() {

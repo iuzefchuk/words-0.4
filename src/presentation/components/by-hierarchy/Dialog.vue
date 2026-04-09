@@ -94,7 +94,7 @@ watch(title, newValue => {
   }
   &__button {
     cursor: pointer;
-    padding: var(--space-s);
+    padding: var(--space-s) var(--space-2xl);
     border: var(--dialog-btn-border);
     border-radius: var(--base-border-radius);
     transition-property: box-shadow;
