@@ -9,7 +9,7 @@ const rackStore = RackStore.INSTANCE();
 const { tilesRemaining } = storeToRefs(mainStore);
 const { tiles } = storeToRefs(rackStore);
 const buttons = UseButtons.create();
-const { allActionsAreDisabled } = buttons; // TODO move allActionsAreDisabled to main store
+const { allActionsAreDisabled } = buttons;
 </script>
 
 <template>
@@ -27,12 +27,14 @@ const { allActionsAreDisabled } = buttons; // TODO move allActionsAreDisabled to
         @click.stop="rackStore.handleClickFooterTile(tile)"
       />
     </li>
-    <li class="rack__count">
-      <p>
-        <span v-animate-number="{ number: tilesRemaining }" class="rack__count-item" />
-        {{ t('game.unassigned_count') }}
-      </p>
-    </li>
+    <Transition name="fade">
+      <li v-if="tilesRemaining > 0" class="rack__count">
+        <p>
+          <span v-animate-number="{ number: tilesRemaining }" class="rack__count-item" />
+          {{ t('game.unassigned_count') }}
+        </p>
+      </li>
+    </Transition>
   </ul>
 </template>
 
