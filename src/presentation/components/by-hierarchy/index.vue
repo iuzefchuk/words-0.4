@@ -1,7 +1,17 @@
 <script lang="ts" setup>
+import { computed, inject } from 'vue';
 import Dialog from '@/presentation/components/by-hierarchy/Dialog.vue';
 import Loader from '@/presentation/components/by-hierarchy/Loader.vue';
 import Main from '@/presentation/components/by-hierarchy/Main/Main.vue';
+import ProvidesPlugin from '@/presentation/plugins/ProvidesPlugin.ts';
+const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY);
+const style = computed(() => ({
+  ...(transitionDurationMs && {
+    '--transition-duration': `${transitionDurationMs}ms`,
+    '--transition-duration-half': `${transitionDurationMs / 2}ms`,
+  }),
+  '--cell-count-per-axis': 15, // TODO delete
+}));
 </script>
 
 <template>
@@ -10,7 +20,7 @@ import Main from '@/presentation/components/by-hierarchy/Main/Main.vue';
     <template #fallback><Loader /></template>
   </Suspense>
   <Transition name="fade" appear>
-    <Dialog />
+    <Dialog :style="style" />
   </Transition>
 </template>
 

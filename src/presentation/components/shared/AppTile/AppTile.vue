@@ -23,7 +23,7 @@ withDefaults(
   ></svg>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .tile {
   cursor: pointer;
   fill: currentColor;

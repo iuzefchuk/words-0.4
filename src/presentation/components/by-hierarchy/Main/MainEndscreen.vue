@@ -6,16 +6,20 @@ import MainStore from '@/presentation/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { matchResult, opponentScore, userScore } = storeToRefs(mainStore);
 const text = computed(() => getMatchResultText(matchResult.value, userScore.value - opponentScore.value));
+function reloadPage() {
+  // TODO delete when restartGame bug is fixed
+  window.location.reload();
+}
 </script>
 
 <template>
-  <button class="endscreen" @dblclick="mainStore.restartGame">
+  <button class="endscreen" @dblclick="reloadPage">
     <p class="endscreen__text">{{ text }}</p>
     <p class="endscreen__hint app__make-secondary">{{ t('game.action_new_match') }}</p>
   </button>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .endscreen {
   position: fixed;
   top: 0;
@@ -43,7 +47,6 @@ const text = computed(() => getMatchResultText(matchResult.value, userScore.valu
     user-select: none;
   }
 }
-
 @keyframes double-tap {
   0% {
     transform: scale(1);
