@@ -7,7 +7,6 @@ export {
   GameBoardType,
   GameBonus,
   GameDictionary,
-  GameDictionarySnapshot,
   GameDifficulty,
   GameEventType,
   GameLetter,
@@ -19,6 +18,7 @@ export {
 export type {
   GameBoardView,
   GameCell,
+  GameDictionarySnapshot,
   GameEvent,
   GameGeneratorResult,
   GameInventoryView,
