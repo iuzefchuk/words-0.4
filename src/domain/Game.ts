@@ -19,9 +19,8 @@ import {
   GameSettings,
   GameTile,
   GameTurnsView,
-  IdentityService,
-  SeedingService,
-} from '@/domain/types.ts';
+} from '@/domain/types/index.ts';
+import { IdentityService, SeedingService } from '@/domain/types/ports.ts';
 
 class EventLog {
   get logView(): ReadonlyArray<GameEvent> {
@@ -225,10 +224,10 @@ export default class Game {
 
   createGeneratorContext(identityService: IdentityService): GeneratorContext {
     return {
-      board: Board.restoreFromSnapshot(this.board.snapshot),
+      board: Board.createFromSnapshot(this.board.snapshot),
       dictionary: this.dictionary,
       inventory: this.inventory,
-      turns: Turns.restoreFromSnapshot(identityService, this.turns.snapshot),
+      turns: Turns.createFromSnapshot(identityService, this.turns.snapshot),
     };
   }
 

@@ -1,4 +1,4 @@
-import { GameTile } from '@/application/types.ts';
+import { GameTile } from '@/application/types/index.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
 
 type CellKey = number;

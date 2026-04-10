@@ -11,7 +11,7 @@ import {
   GamePlayer,
   GameTile,
   GameTurnsView,
-} from '@/application/types.ts';
+} from '@/application/types/index.ts';
 import Game from '@/domain/Game.ts';
 
 export default class QueriesService {

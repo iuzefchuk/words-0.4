@@ -3,7 +3,7 @@ import { computed, markRaw, ref } from 'vue';
 import Application from '@/application/index.ts';
 import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
-import { GameBoardType, GameCell, GameDifficulty, GameSettings, GameTile } from '@/application/types.ts';
+import { GameBoardType, GameCell, GameDifficulty, GameSettings, GameTile } from '@/application/types/index.ts';
 import { DEFAULT_SETTINGS } from '@/presentation/constants.ts';
 import { StorageKey } from '@/presentation/enums.ts';
 import { getEventSound } from '@/presentation/mappings.ts';

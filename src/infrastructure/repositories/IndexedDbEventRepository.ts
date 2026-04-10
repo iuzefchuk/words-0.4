@@ -1,4 +1,5 @@
-import { EventRepository, GameEvent } from '@/domain/types.ts';
+import { GameEvent } from '@/application/types/index.ts';
+import { EventRepository } from '@/application/types/repositories.ts';
 import IndexedDbService from '@/infrastructure/services/IndexedDbService.ts';
 
 export default class IndexedDbEventRepository implements EventRepository {

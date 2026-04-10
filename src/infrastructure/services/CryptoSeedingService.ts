@@ -1,4 +1,4 @@
-import { SeedingService } from '@/domain/types.ts';
+import { SeedingService } from '@/application/types/ports.ts';
 
 export default class CryptoSeedingService implements SeedingService {
   createRandomizer(seed: number): () => number {

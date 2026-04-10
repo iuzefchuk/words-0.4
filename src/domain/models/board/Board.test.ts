@@ -103,7 +103,7 @@ describe('Board', () => {
 
     it('captures and restores', () => {
       const { snapshot: originalSnapshot } = board;
-      const restoredBoard = Board.restoreFromSnapshot(originalSnapshot);
+      const restoredBoard = Board.createFromSnapshot(originalSnapshot);
       expect(restoredBoard.snapshot).toEqual(originalSnapshot);
     });
   });

@@ -1,5 +1,5 @@
 import { inject, ref, watch } from 'vue';
-import { GameLetter } from '@/application/types.ts';
+import { GameLetter } from '@/application/types/index.ts';
 import UseCounter from '@/presentation/composables/UseCounter.ts';
 import ProvidesPlugin from '@/presentation/plugins/ProvidesPlugin.ts';
 

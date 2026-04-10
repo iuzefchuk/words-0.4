@@ -1,4 +1,4 @@
-import { IdentityService } from '@/domain/types.ts';
+import { IdentityService } from '@/application/types/ports.ts';
 
 export default class CryptoIdentityService implements IdentityService {
   createUniqueId(): string {

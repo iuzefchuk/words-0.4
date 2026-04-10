@@ -19,16 +19,16 @@ export default class Dictionary {
     public readonly allLetters: ReadonlySet<Letter>,
   ) {}
 
-  static create(textData: string): Dictionary {
-    const trie = TrieService.createTrie(textData.split('\n') as ReadonlyArray<string>);
+  static createFromSnapshot(snapshot: DictionarySnapshot): Dictionary {
+    return new Dictionary(snapshot.trie, snapshot.allLetters);
+  }
+
+  static createFromText(text: string): Dictionary {
+    const trie = TrieService.createTrie(text.split('\n') as ReadonlyArray<string>);
     const allLetters = new Set<Letter>();
     this.freezeTree(trie);
     this.collectLetters(allLetters, trie);
     return new Dictionary(trie, allLetters);
-  }
-
-  static restoreFromSnapshot(snapshot: DictionarySnapshot): Dictionary {
-    return new Dictionary(snapshot.trie, snapshot.allLetters);
   }
 
   private static collectLetters(allLetters: Set<Letter>, node: FrozenNode): void {

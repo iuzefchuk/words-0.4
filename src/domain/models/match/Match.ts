@@ -1,6 +1,5 @@
 import { Player } from '@/domain/enums.ts';
 import { MatchResult } from '@/domain/models/match/enums.ts';
-import { MatchSnapshot } from '@/domain/models/match/types.ts';
 
 export default class Match {
   get isFinished(): boolean {
@@ -22,10 +21,6 @@ export default class Match {
     return this.getScoreFor(Player.Opponent);
   }
 
-  get snapshot(): MatchSnapshot {
-    return { results: new Map(this.results), scores: new Map(this.scores) };
-  }
-
   get userScore(): number {
     return this.getScoreFor(Player.User);
   }
@@ -39,10 +34,6 @@ export default class Match {
     const results = new Map(players.map(player => [player, undefined]));
     const scores = new Map(players.map(player => [player, 0]));
     return new Match(results, scores);
-  }
-
-  static restoreFromSnapshot(snapshot: MatchSnapshot): Match {
-    return new Match(new Map(snapshot.results), new Map(snapshot.scores));
   }
 
   getResultFor(player: Player): MatchResult | undefined {

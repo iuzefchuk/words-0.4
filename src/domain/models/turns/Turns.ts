@@ -3,7 +3,7 @@ import { Cell } from '@/domain/models/board/types.ts';
 import { Tile } from '@/domain/models/inventory/types.ts';
 import { ValidationError, ValidationStatus } from '@/domain/models/turns/enums.ts';
 import { TurnSnapshot, TurnsSnapshot, ValidationResult } from '@/domain/models/turns/types.ts';
-import { IdentityService } from '@/domain/types.ts';
+import { IdentityService } from '@/domain/types/ports.ts';
 
 class Turn {
   get cells(): ReadonlyArray<Cell> | undefined {
@@ -50,7 +50,7 @@ class Turn {
     return new Turn(id, player, []);
   }
 
-  static restoreFromSnapshot(snapshot: TurnSnapshot): Turn {
+  static createFromSnapshot(snapshot: TurnSnapshot): Turn {
     return new Turn(snapshot.id, snapshot.player, snapshot.tiles, snapshot.validationResult);
   }
 
@@ -141,8 +141,8 @@ export default class Turns {
     return new Turns(identityService, []);
   }
 
-  static restoreFromSnapshot(identityService: IdentityService, snapshot: TurnsSnapshot): Turns {
-    const history = snapshot.history.map(turn => Turn.restoreFromSnapshot(turn));
+  static createFromSnapshot(identityService: IdentityService, snapshot: TurnsSnapshot): Turns {
+    const history = snapshot.history.map(turn => Turn.createFromSnapshot(turn));
     return new Turns(identityService, history);
   }
 

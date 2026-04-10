@@ -43,7 +43,7 @@ export default class Board {
     return new Board(bonusByCell, type, new Map(), new Map());
   }
 
-  static restoreFromSnapshot(snapshot: BoardSnapshot): Board {
+  static createFromSnapshot(snapshot: BoardSnapshot): Board {
     const board = new Board(snapshot.bonusByCell, snapshot.type, new Map(), new Map());
     snapshot.tileByCell.forEach((tile, cell) => board.placeTile(cell, tile));
     return board;

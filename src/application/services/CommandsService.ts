@@ -10,11 +10,11 @@ import {
   GamePlayer,
   GameTile,
   GameTurnGenerator,
-  SchedulingService,
-} from '@/application/types.ts';
+} from '@/application/types/index.ts';
+import { IdentityService, SchedulingService } from '@/application/types/ports.ts';
+import { EventRepository } from '@/application/types/repositories.ts';
 import Game from '@/domain/Game.ts';
 import { TIME } from '@/shared/constants.ts';
-import type { EventRepository, IdentityService } from '@/domain/types.ts';
 
 export default class CommandsService {
   private static readonly DIFFICULTY_RESULT_LIMITS: Record<GameDifficulty, number> = {

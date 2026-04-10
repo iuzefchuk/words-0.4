@@ -1,12 +1,8 @@
 import { Letter, Player } from '@/domain/enums.ts';
-import { InventorySnapshot, Tile, TileCollection, TilePoolSnapshot } from '@/domain/models/inventory/types.ts';
+import { Tile, TileCollection } from '@/domain/models/inventory/types.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 class TilePool {
-  get snapshot(): TilePoolSnapshot {
-    return { capacity: this.capacity, tiles: [...this.tiles] };
-  }
-
   get tileCount(): number {
     return this.tiles.length;
   }
@@ -22,10 +18,6 @@ class TilePool {
 
   static create({ capacity, tiles }: { capacity?: number; tiles?: Array<Tile> } = {}): TilePool {
     return new TilePool(capacity, tiles ?? []);
-  }
-
-  static restoreFromSnapshot(snapshot: TilePoolSnapshot): TilePool {
-    return new TilePool(snapshot.capacity, snapshot.tiles);
   }
 
   addTile(tile: Tile): void {
@@ -93,14 +85,6 @@ export default class Inventory {
     ),
   );
 
-  get snapshot(): InventorySnapshot {
-    return {
-      discardPool: this.discardPool.snapshot,
-      drawPool: this.drawPool.snapshot,
-      playerPools: new Map([...this.playerPools].map(([player, pool]) => [player, pool.snapshot])),
-    };
-  }
-
   get tilesPerPlayer(): number {
     return Inventory.PLAYER_POOL_CAPACITY;
   }
@@ -124,13 +108,6 @@ export default class Inventory {
     const inventory = new Inventory(drawPool, playerPools, discardPool);
     inventory.initializePlayerPools();
     return inventory;
-  }
-
-  static restoreFromSnapshot(snapshot: InventorySnapshot): Inventory {
-    const drawPool = TilePool.restoreFromSnapshot(snapshot.drawPool);
-    const playerPools = new Map([...snapshot.playerPools].map(([player, pool]) => [player, TilePool.restoreFromSnapshot(pool)]));
-    const discardPool = TilePool.restoreFromSnapshot(snapshot.discardPool);
-    return new Inventory(drawPool, playerPools, discardPool);
   }
 
   areTilesEqual(firstTile: Tile, secondTile: Tile): boolean {

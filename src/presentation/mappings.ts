@@ -1,4 +1,4 @@
-import { GameBonus, GameEvent, GameEventType, GameLetter, GameMatchResult, GamePlayer } from '@/domain/types.ts';
+import { GameBonus, GameEvent, GameEventType, GameLetter, GameMatchResult, GamePlayer } from '@/application/types/index.ts';
 import { Sound } from '@/presentation/services/SoundPlayer.ts';
 
 export function getBonusName(bonus: GameBonus): string {

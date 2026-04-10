@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { computed, ref, shallowRef, triggerRef } from 'vue';
-import { GameCell, GameTile } from '@/application/types.ts';
+import { GameCell, GameTile } from '@/application/types/index.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { GameLetter } from '@/application/types.ts';
+import { GameLetter } from '@/application/types/index.ts';
 import { getLetterSvgHtml } from '@/presentation/mappings.ts';
 withDefaults(
   defineProps<{

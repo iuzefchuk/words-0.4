@@ -1,4 +1,4 @@
-import { AppDependencies } from '@/application/types.ts';
+import { AppDependencies } from '@/application/types/index.ts';
 import IndexedDbDictionaryRepository from '@/infrastructure/repositories/IndexedDbDictionaryRepository.ts';
 import IndexedDbEventRepository from '@/infrastructure/repositories/IndexedDbEventRepository.ts';
 import AsyncSchedulingService from '@/infrastructure/services/AsyncSchedulingService.ts';

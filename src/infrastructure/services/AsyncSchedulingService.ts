@@ -1,4 +1,4 @@
-import { SchedulingService } from '@/application/types.ts';
+import { SchedulingService } from '@/application/types/ports.ts';
 
 export default class AsyncSchedulingService implements SchedulingService {
   getCurrentTime(): number {

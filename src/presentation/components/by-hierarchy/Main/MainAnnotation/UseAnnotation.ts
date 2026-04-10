@@ -1,5 +1,5 @@
 import { computed } from 'vue';
-import { GameEvent, GameEventType, GamePlayer } from '@/application/types.ts';
+import { GameEvent, GameEventType, GamePlayer } from '@/application/types/index.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
 
 export default class UseAnnotation {

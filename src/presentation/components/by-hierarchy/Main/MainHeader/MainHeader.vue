@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { GameBoardType, GameDifficulty } from '@/application/types.ts';
+import { GameBoardType, GameDifficulty } from '@/application/types/index.ts';
 import AppSelect from '@/presentation/components/shared/AppSelect/AppSelect.vue';
 import MainStore from '@/presentation/stores/MainStore.ts';
 type OptionValue = GameBoardType | GameDifficulty;

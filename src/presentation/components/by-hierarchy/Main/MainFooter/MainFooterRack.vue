@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
+import { GameTile } from '@/application/types/index.ts';
 import AppTile from '@/presentation/components/shared/AppTile/AppTile.vue';
 import MainStore from '@/presentation/stores/MainStore.ts';
 import RackStore from '@/presentation/stores/RackStore.ts';
-import type { GameTile } from '@/application/types.ts';
 const mainStore = MainStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
 const { allActionsAreDisabled, tilesRemaining } = storeToRefs(mainStore);

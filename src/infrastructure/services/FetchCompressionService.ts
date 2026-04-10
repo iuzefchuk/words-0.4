@@ -1,4 +1,4 @@
-import { CompressionService } from '@/application/types.ts';
+import { CompressionService } from '@/application/types/ports.ts';
 
 export default class FetchCompressionService implements CompressionService {
   async fetchAndDecompress(url: string): Promise<string> {
