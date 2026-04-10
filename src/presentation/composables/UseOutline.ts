@@ -1,15 +1,9 @@
-import { GameTile } from '@/application/types/index.ts';
+import { GameCell, GameTile } from '@/application/types/index.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
-
-type CellKey = number;
 
 type OutlineGroup = { col: number; colSpan: number; row: number; rowSpan: number };
 
 export default class UseOutline {
-  private get boardCellsPerAxis(): number {
-    return this.mainStore.boardCellsPerAxis;
-  }
-
   private get mainStore() {
     return MainStore.INSTANCE();
   }
@@ -17,11 +11,11 @@ export default class UseOutline {
   createGroups(tiles: ReadonlyArray<GameTile>): ReadonlyArray<OutlineGroup> {
     const cells = this.collectCells(tiles);
     if (cells.size === 0) return [];
-    const visited = new Set<CellKey>();
+    const visited = new Set<GameCell>();
     const groups: Array<OutlineGroup> = [];
-    for (const key of cells) {
-      if (visited.has(key)) continue;
-      groups.push(this.buildGroup(key, cells, visited));
+    for (const cell of cells) {
+      if (visited.has(cell)) continue;
+      groups.push(this.buildGroup(cell, cells, visited));
     }
     return groups;
   }
@@ -29,7 +23,7 @@ export default class UseOutline {
   isTooltipFlipped(groups: ReadonlyArray<OutlineGroup>, idx: number): boolean {
     const group = groups[idx];
     if (!group) return false;
-    return group.col + group.colSpan >= this.boardCellsPerAxis;
+    return group.col + group.colSpan >= this.mainStore.boardCellsPerAxis;
   }
 
   isTooltipRendered(groups: ReadonlyArray<OutlineGroup>, idx: number): boolean {
@@ -40,74 +34,36 @@ export default class UseOutline {
     return idx === rightmost.i;
   }
 
-  private boundsToGroup(bounds: ReturnType<typeof this.createBounds>): OutlineGroup {
-    return {
-      col: bounds.minCol,
-      colSpan: bounds.maxCol - bounds.minCol + 1,
-      row: bounds.minRow,
-      rowSpan: bounds.maxRow - bounds.minRow + 1,
-    };
-  }
-
-  private buildGroup(start: CellKey, cells: Set<CellKey>, visited: Set<CellKey>): OutlineGroup {
-    const stack = [start];
+  private buildGroup(start: GameCell, cells: ReadonlySet<GameCell>, visited: Set<GameCell>): OutlineGroup {
+    const stack: Array<GameCell> = [start];
     visited.add(start);
-    const bounds = this.createBounds();
+    let minRow = Infinity;
+    let maxRow = -Infinity;
+    let minCol = Infinity;
+    let maxCol = -Infinity;
     while (stack.length > 0) {
-      const key = stack.pop()!;
-      const row = this.row(key);
-      const col = this.col(key);
-      this.expandBounds(bounds, row, col);
-      for (const neighbor of this.getNeighborKeys(row, col)) {
-        if (!cells.has(neighbor) || visited.has(neighbor)) continue;
-        visited.add(neighbor);
-        stack.push(neighbor);
-      }
-    }
-    return this.boundsToGroup(bounds);
-  }
-
-  private col(key: CellKey): number {
-    return key % this.boardCellsPerAxis;
-  }
-
-  private collectCells(tiles: ReadonlyArray<GameTile>): Set<CellKey> {
-    const cells = new Set<CellKey>();
-    for (const tile of tiles) {
-      const cell = this.mainStore.findCellWithTile(tile);
-      if (!cell) continue;
+      const cell = stack.pop()!;
       const row = this.mainStore.getCellRowIndex(cell);
       const col = this.mainStore.getCellColumnIndex(cell);
-      cells.add(this.toKey(row, col));
+      if (row < minRow) minRow = row;
+      if (row > maxRow) maxRow = row;
+      if (col < minCol) minCol = col;
+      if (col > maxCol) maxCol = col;
+      for (const adjacent of this.mainStore.calculateAdjacentCells(cell)) {
+        if (!cells.has(adjacent) || visited.has(adjacent)) continue;
+        visited.add(adjacent);
+        stack.push(adjacent);
+      }
+    }
+    return { col: minCol, colSpan: maxCol - minCol + 1, row: minRow, rowSpan: maxRow - minRow + 1 };
+  }
+
+  private collectCells(tiles: ReadonlyArray<GameTile>): Set<GameCell> {
+    const cells = new Set<GameCell>();
+    for (const tile of tiles) {
+      const cell = this.mainStore.findCellWithTile(tile);
+      if (cell !== undefined) cells.add(cell);
     }
     return cells;
-  }
-
-  private createBounds() {
-    return {
-      maxCol: -Infinity,
-      maxRow: -Infinity,
-      minCol: Infinity,
-      minRow: Infinity,
-    };
-  }
-
-  private expandBounds(bounds: ReturnType<typeof this.createBounds>, row: number, col: number) {
-    bounds.minRow = Math.min(bounds.minRow, row);
-    bounds.maxRow = Math.max(bounds.maxRow, row);
-    bounds.minCol = Math.min(bounds.minCol, col);
-    bounds.maxCol = Math.max(bounds.maxCol, col);
-  }
-
-  private getNeighborKeys(row: number, col: number): Array<CellKey> {
-    return [this.toKey(row, col + 1), this.toKey(row, col - 1), this.toKey(row + 1, col), this.toKey(row - 1, col)];
-  }
-
-  private row(key: CellKey): number {
-    return Math.floor(key / this.boardCellsPerAxis);
-  }
-
-  private toKey(row: number, col: number): CellKey {
-    return row * this.boardCellsPerAxis + col;
   }
 }

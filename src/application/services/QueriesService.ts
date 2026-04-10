@@ -33,6 +33,10 @@ export default class QueriesService {
     return this.inventoryView.areTilesEqual(first, second);
   }
 
+  calculateAdjacentCells(cell: GameCell): ReadonlyArray<GameCell> {
+    return this.boardView.calculateAdjacentCells(cell);
+  }
+
   findCellWithTile(tile: GameTile): GameCell | undefined {
     return this.boardView.findCellByTile(tile);
   }

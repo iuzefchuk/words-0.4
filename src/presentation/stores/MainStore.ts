@@ -121,6 +121,8 @@ class Getters {
 
   areTilesSame = (firstTile: GameTile, secondTile: GameTile) => this.queriesService.areTilesSame(firstTile, secondTile);
 
+  calculateAdjacentCells = (cell: GameCell) => this.queriesService.calculateAdjacentCells(cell);
+
   findCellWithTile = (tile: GameTile) => this.readBoard(() => this.queriesService.findCellWithTile(tile));
 
   findTileOnCell = (cell: GameCell) => this.readBoard(() => this.queriesService.findTileOnCell(cell));

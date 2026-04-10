@@ -4,6 +4,7 @@ import { Tile } from '@/domain/models/inventory/types.ts';
 export type AnchorCoordinates = { readonly axis: Axis; readonly cell: Cell };
 
 export type BoardView = {
+  calculateAdjacentCells(cell: Cell): ReadonlyArray<Cell>;
   readonly cells: ReadonlyArray<Cell>;
   readonly cellsPerAxis: number;
   findCellByTile(tile: Tile): Cell | undefined;
