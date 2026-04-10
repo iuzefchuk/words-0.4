@@ -6,15 +6,20 @@ export default class UseAnnotation {
   private static readonly MAX_DISPLAYED_MESSAGES = 3;
 
   readonly messages = computed(() => {
-    const events = this.getRecentAnnotationEvents();
-    return events.map((event, index) => ({
+    return this.displayedEvents.map((event, index) => ({
       html: this.createEventHtml(event),
-      key: this.getMessageKey(index),
+      key: this.createEventKey(index),
     }));
   });
 
-  private get annotationEvents(): ReadonlyArray<GameEvent> {
+  private get allDisplayedEvents(): ReadonlyArray<GameEvent> {
     return this.mainStore.eventLog.filter(event => this.isEventDisplayed(event));
+  }
+
+  private get displayedEvents(): ReadonlyArray<GameEvent> {
+    const events = this.allDisplayedEvents;
+    const start = Math.max(0, events.length - UseAnnotation.MAX_DISPLAYED_MESSAGES);
+    return events.slice(start);
   }
 
   private get mainStore() {
@@ -36,16 +41,10 @@ export default class UseAnnotation {
     }
   }
 
-  private getMessageKey(index: number): number {
-    const total = this.annotationEvents.length;
+  private createEventKey(index: number): number {
+    const total = this.allDisplayedEvents.length;
     const start = Math.max(0, total - UseAnnotation.MAX_DISPLAYED_MESSAGES);
     return start + index;
-  }
-
-  private getRecentAnnotationEvents(): ReadonlyArray<GameEvent> {
-    const events = this.annotationEvents;
-    const start = Math.max(0, events.length - UseAnnotation.MAX_DISPLAYED_MESSAGES);
-    return events.slice(start);
   }
 
   private isEventDisplayed(event: GameEvent): boolean {

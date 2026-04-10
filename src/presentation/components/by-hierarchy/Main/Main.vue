@@ -1,14 +1,32 @@
 <script lang="ts" setup>
-import MainAnnotation from '@/presentation/components/by-hierarchy/Main/MainAnnotation/MainAnnotation.vue';
+import { storeToRefs } from 'pinia';
+import { inject } from 'vue';
+import MainAnnotation from '@/presentation/components/by-hierarchy/Main/MainAnnotation.vue';
 import MainBoard from '@/presentation/components/by-hierarchy/Main/MainBoard/MainBoard.vue';
+import MainEndscreen from '@/presentation/components/by-hierarchy/Main/MainEndscreen.vue';
 import MainFooter from '@/presentation/components/by-hierarchy/Main/MainFooter/MainFooter.vue';
-import MainHeader from '@/presentation/components/by-hierarchy/Main/MainHeader/MainHeader.vue';
+import MainHeader from '@/presentation/components/by-hierarchy/Main/MainHeader.vue';
+import ProvidesPlugin from '@/presentation/plugins/ProvidesPlugin.ts';
+import MainStore from '@/presentation/stores/MainStore.ts';
 import RackStore from '@/presentation/stores/RackStore.ts';
+await MainStore.initiate();
+const { matchIsFinished } = storeToRefs(MainStore.INSTANCE());
 const rackStore = RackStore.INSTANCE();
+const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY);
 </script>
 
 <template>
-  <main class="main" @click="rackStore.deselectTile()">
+  <main
+    :style="{
+      ...(transitionDurationMs && {
+        '--transition-duration': `${transitionDurationMs}ms`,
+        '--transition-duration-half': `${transitionDurationMs / 2}ms`,
+      }),
+      '--cell-count-per-axis': 15,
+    }"
+    class="main"
+    @click="rackStore.deselectTile()"
+  >
     <Transition name="fade-down-up" appear>
       <MainHeader />
     </Transition>
@@ -20,6 +38,9 @@ const rackStore = RackStore.INSTANCE();
       <MainFooter />
     </Transition>
   </main>
+  <Transition name="fade" appear>
+    <MainEndscreen v-if="matchIsFinished" />
+  </Transition>
 </template>
 
 <style lang="scss" scoped>
@@ -44,6 +65,19 @@ const rackStore = RackStore.INSTANCE();
   &__center-annotation {
     position: absolute;
     top: -7rem;
+  }
+}
+
+.index {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition-duration: var(--transition-duration);
+  transition-timing-function: var(--transition-timing-function);
+  transition-property: filter;
+  &--blurred {
+    filter: blur(0.5rem);
+    opacity: var(--opacity-disabled);
   }
 }
 </style>

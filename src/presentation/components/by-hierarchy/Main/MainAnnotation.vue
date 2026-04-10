@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import UseAnnotation from './UseAnnotation.ts';
+import UseAnnotation from '@/presentation/composables/UseAnnotation.ts';
 const { messages } = new UseAnnotation();
 </script>
 

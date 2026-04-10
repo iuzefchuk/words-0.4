@@ -24,26 +24,24 @@ watch(html, newValue => {
 </script>
 
 <template>
-  <Transition name="fade" appear>
-    <section v-if="isRendered" class="dialog" @mousedown="toggleExitAnimation">
-      <Transition name="fade-down-up" appear>
-        <dialog open :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation, 'app__limit-max-width': true }" @mousedown.stop>
-          <div class="dialog__content">
-            <p v-if="title" class="dialog__content-title">{{ title }}</p>
-            <p v-html="html" />
-          </div>
-          <div class="dialog__footer">
-            <button v-if="!confirmIsHidden" class="dialog__button" @click="respond(DialogStatus.Confirmed)">
-              {{ confirmText }}
-            </button>
-            <button v-if="!cancelIsHidden" class="dialog__button" @click="respond(DialogStatus.Canceled)">
-              {{ cancelText }}
-            </button>
-          </div>
-        </dialog>
-      </Transition>
-    </section>
-  </Transition>
+  <section v-if="isRendered" class="dialog" @mousedown="toggleExitAnimation">
+    <Transition name="fade-down-up" appear>
+      <dialog open :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation, 'app__limit-max-width': true }" @mousedown.stop>
+        <div class="dialog__content">
+          <p v-if="title" class="dialog__content-title">{{ title }}</p>
+          <p v-html="html" />
+        </div>
+        <div class="dialog__footer">
+          <button v-if="!confirmIsHidden" class="dialog__button" @click="respond(DialogStatus.Confirmed)">
+            {{ confirmText }}
+          </button>
+          <button v-if="!cancelIsHidden" class="dialog__button" @click="respond(DialogStatus.Canceled)">
+            {{ cancelText }}
+          </button>
+        </div>
+      </dialog>
+    </Transition>
+  </section>
 </template>
 
 <style lang="scss" scoped>

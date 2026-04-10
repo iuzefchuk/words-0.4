@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
+import UseButtons from '@/presentation/composables/UseButtons.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
 import RackStore from '@/presentation/stores/RackStore.ts';
-import UseButtons from './UseButtons.ts';
 const mainStore = MainStore.INSTANCE();
 const rackStore = RackStore.INSTANCE();
 const buttons = UseButtons.create();

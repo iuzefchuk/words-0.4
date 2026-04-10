@@ -2,8 +2,8 @@
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import MainBoardTooltip from '@/presentation/components/by-hierarchy/Main/MainBoard/MainBoardTooltip.vue';
+import UseOutline from '@/presentation/composables/UseOutline.ts';
 import RackStore from '@/presentation/stores/RackStore.ts';
-import UseOutline from './UseOutline.ts';
 const rackStore = RackStore.INSTANCE();
 const outline = new UseOutline();
 const { tiles } = storeToRefs(rackStore);

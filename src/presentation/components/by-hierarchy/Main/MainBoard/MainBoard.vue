@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import MainBoardCell from '@/presentation/components/by-hierarchy/Main/MainBoard/MainBoardCell.vue';
-import MainBoardOutline from '@/presentation/components/by-hierarchy/Main/MainBoard/MainBoardOutline/MainBoardOutline.vue';
+import MainBoardOutline from '@/presentation/components/by-hierarchy/Main/MainBoard/MainBoardOutline.vue';
 import MainStore from '@/presentation/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 </script>
