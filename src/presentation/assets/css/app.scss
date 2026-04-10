@@ -18,7 +18,7 @@
   --tile-color-inverted: var(--color-gray-fainter);
   --tile-bg: var(--color-pink);
   --tile-bg-inverted: var(--color-purple-dark);
-  --tile-bg-saturated: var(--color-pink-saturated);
+  --tile-bg-saturated: var(--color-pink-complementary);
   --tile-outline-color: var(--color-purple);
   --btn-bg: transparent;
   --btn-bg-hover: var(--color-gray-faintest);
@@ -60,7 +60,7 @@
   --tile-color-inverted: var(--color-gray-darkest);
   --tile-bg: var(--color-green);
   --tile-bg-inverted: var(--color-gray-faint);
-  --tile-bg-saturated: var(--color-green-saturated);
+  --tile-bg-saturated: var(--color-green-complementary);
   --tile-outline-color: var(--color-white);
   --btn-bg: transparent;
   --btn-bg-hover: var(--color-navy);
@@ -85,9 +85,10 @@
 :root {
   --primary-border: 1px solid var(--btn-border-color);
   --primary-padding: var(--space-s);
-  --primary-border-radius: var(--space-xs);
+  --primary-border-radius: 2px;
   --cell-tile-width: var(--space-4xl);
   --cell-tile-gap: var(--space-2xs);
+  --cell-tile-border-radius: var(--space-xs);
   --opacity-disabled: 0.7;
   @include light-scheme;
   @media (prefers-color-scheme: dark) {

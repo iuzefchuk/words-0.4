@@ -89,13 +89,14 @@ export function getLetterSvgHtml(letter: GameLetter): string {
   );
 }
 
-export function getMatchResultText(result: GameMatchResult): string {
-  if (result === GameMatchResult.Undecided) throw new Error('Can`t display text for none result');
+export function getMatchResultText(result: GameMatchResult, scoreDiff: number): string {
+  if (result === GameMatchResult.Undecided) throw new Error('Can`t display text for undecided result');
   return window.t(
     {
-      [GameMatchResult.Lose]: 'game.end_lose',
+      [GameMatchResult.Lose]: scoreDiff < 0 ? 'game.end_lose_by' : 'game.end_lose',
       [GameMatchResult.Tie]: 'game.end_tie',
-      [GameMatchResult.Win]: 'game.end_win',
+      [GameMatchResult.Win]: scoreDiff > 0 ? 'game.end_win_by' : 'game.end_win',
     }[result] ?? '',
+    { points: Math.abs(scoreDiff) },
   );
 }

@@ -59,9 +59,8 @@ export default class UseButtons {
     SoundPlayer.play(Sound.SystemDialog);
     return await this.dialogStore.trigger({
       cancelText: window.t('game.dialog_cancel'),
-      confirmText: window.t('game.dialog_pass_confirm'),
-      html: window.t('game.dialog_pass_html'),
-      title: window.t('game.dialog_pass_title'),
+      confirmText: window.t('game.dialog_confirm'),
+      html: window.t('game.dialog_html_pass'),
     });
   }
 
@@ -70,8 +69,7 @@ export default class UseButtons {
     return await this.dialogStore.trigger({
       cancelText: window.t('game.dialog_cancel'),
       confirmText: window.t('game.dialog_confirm'),
-      html: window.t('game.dialog_html'),
-      title: window.t('game.dialog_title'),
+      html: window.t('game.dialog_html_resign'),
     });
   }
 }

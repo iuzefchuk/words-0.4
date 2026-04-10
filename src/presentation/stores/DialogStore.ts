@@ -19,7 +19,7 @@ type DialogTriggerParams = {
   confirmIsHidden?: boolean;
   confirmText?: string;
   html: string;
-  title: string;
+  title?: string;
 };
 
 export default class DialogStore {
@@ -108,8 +108,8 @@ export default class DialogStore {
   }
 
   private async trigger({ cancelIsHidden, cancelText, confirmIsHidden, confirmText, html, title }: DialogTriggerParams): Promise<DialogResult> {
-    this.title = title;
     this.html = html;
+    if (title) this.title = title;
     if (cancelText) this.cancelText = cancelText;
     if (confirmText) this.confirmText = confirmText;
     if (cancelIsHidden !== undefined) this.cancelIsHidden = cancelIsHidden;

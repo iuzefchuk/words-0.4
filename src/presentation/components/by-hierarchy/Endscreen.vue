@@ -5,14 +5,13 @@ import { getMatchResultText } from '@/presentation/mappings.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { matchResult, opponentScore, userScore } = storeToRefs(mainStore);
-const text = computed(() => getMatchResultText(matchResult.value));
+const text = computed(() => getMatchResultText(matchResult.value, userScore.value - opponentScore.value));
 </script>
 
 <template>
   <button class="endscreen" @dblclick="mainStore.restartGame">
-    <p class="endscreen__score">{{ userScore }} - {{ opponentScore }}</p>
-    <p>{{ text }}</p>
-    <p class="endscreen__hint">{{ t('game.action_new_match') }}</p>
+    <p class="endscreen__text">{{ text }}</p>
+    <p class="endscreen__hint app__make-secondary">{{ t('game.action_new_match') }}</p>
   </button>
 </template>
 
@@ -29,12 +28,19 @@ const text = computed(() => getMatchResultText(matchResult.value));
   gap: var(--space-m);
   align-content: center;
   font-size: var(--font-size-big);
-  &__score {
-    font-size: var(--font-size-bigger);
+  &__text {
+    position: relative;
+    user-select: none;
   }
   &__hint {
-    animation: double-tap 3s var(--transition-timing-function) infinite;
+    $ms: calc(var(--transition-duration) * 10);
+    animation: double-tap $ms var(--transition-timing-function) infinite;
+    animation-delay: $ms;
     transform-origin: center;
+    position: absolute;
+    bottom: 45%;
+    width: max-content;
+    user-select: none;
   }
 }
 

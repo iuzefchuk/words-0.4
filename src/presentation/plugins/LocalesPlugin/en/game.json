@@ -23,14 +23,13 @@
   "message_save_opponent": "Opponent played <em>{words}</em> for {score} pts",
   "message_pass_user": "You passed",
   "message_pass_opponent": "Opponent passed",
-  "dialog_title": "Resign",
-  "dialog_html": "Are you sure you want to resign?",
   "dialog_confirm": "Yes",
   "dialog_cancel": "No",
-  "dialog_pass_title": "Pass",
-  "dialog_pass_html": "Are you sure you want to pass?",
-  "dialog_pass_confirm": "Yes",
+  "dialog_html_pass": "Pass?",
+  "dialog_html_resign": "Resign?",
   "end_win": "You won 🏆",
+  "end_win_by": "You won by {points} pts 🏆",
   "end_lose": "You lost 🦨",
+  "end_lose_by": "You lost by {points} pts 🦨",
   "end_tie": "It's a tie 👔"
 }

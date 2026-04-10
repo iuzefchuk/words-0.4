@@ -11,13 +11,13 @@ const { isRendered } = loader;
 
 <template>
   <Transition name="fade">
-    <div v-if="isRendered" class="loader">
+    <section v-if="isRendered" class="loader">
       <div class="loader__logo">
         <template v-for="(letter, idx) in UseLoader.LETTERS" :key="idx">
           <AppTile v-if="loader.isItemRendered(idx)" class="loader__tile" :letter="letter" :is-saturated="loader.isItemEmphasized()" />
         </template>
       </div>
-    </div>
+    </section>
   </Transition>
 </template>
 
@@ -38,7 +38,7 @@ const { isRendered } = loader;
   &__tile {
     pointer-events: none;
     width: var(--cell-tile-width);
-    border-radius: var(--primary-border-radius);
+    border-radius: var(--cell-tile-border-radius);
   }
 }
 </style>

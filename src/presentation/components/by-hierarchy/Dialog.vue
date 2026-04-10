@@ -18,18 +18,18 @@ function toggleExitAnimation() {
     exitAnimation.value = false;
   }, transitionDurationMs);
 }
-watch(title, newValue => {
+watch(html, newValue => {
   if (newValue) isRendered.value = true;
 });
 </script>
 
 <template>
   <Transition name="fade" appear>
-    <div v-if="isRendered" class="dialog" @mousedown="toggleExitAnimation">
-      <Transition tag="div" name="fade-down-up" appear>
-        <div :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation, 'app__limit-max-width': true }" @mousedown.stop>
+    <section v-if="isRendered" class="dialog" @mousedown="toggleExitAnimation">
+      <Transition name="fade-down-up" appear>
+        <dialog open :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation, 'app__limit-max-width': true }" @mousedown.stop>
           <div class="dialog__content">
-            <p class="dialog__content-title">{{ title }}</p>
+            <p v-if="title" class="dialog__content-title">{{ title }}</p>
             <p v-html="html" />
           </div>
           <div class="dialog__footer">
@@ -40,9 +40,9 @@ watch(title, newValue => {
               {{ cancelText }}
             </button>
           </div>
-        </div>
+        </dialog>
       </Transition>
-    </div>
+    </section>
   </Transition>
 </template>
 
@@ -59,13 +59,12 @@ watch(title, newValue => {
   background: rgb(24 24 27 / 0.35);
   opacity: 0.95;
   &__window {
-    padding: var(--space-l) var(--space-xl);
+    padding: var(--space-xl) var(--space-2xl);
     border-radius: var(--primary-border-radius);
     color: var(--dialog-color);
     background: var(--dialog-bg);
     width: max-content;
-    min-width: 24rem;
-    margin-top: 17rem;
+    border: none;
     &--shaking {
       animation: horizontal-shake var(--transition-duration) linear forwards;
     }
@@ -83,19 +82,22 @@ watch(title, newValue => {
   &__footer {
     display: flex;
     flex-direction: row;
-    justify-content: flex-end;
+    justify-content: center;
     gap: var(--space-m);
-    padding-top: var(--space-xl);
+    padding-top: var(--space-2xl);
     padding-bottom: var(--space-xs);
   }
   &__button {
     cursor: pointer;
-    padding: var(--space-s) var(--space-2xl);
+    padding: var(--space-s) var(--space-6xl);
     border: var(--dialog-btn-border);
     border-radius: var(--primary-border-radius);
     transition-property: box-shadow;
     transition-duration: var(--transition-duration-half);
     transition-timing-function: var(--transition-timing-function);
+    text-transform: uppercase;
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight);
     &:last-child {
       color: var(--color-red);
     }

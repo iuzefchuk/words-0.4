@@ -47,7 +47,7 @@ const paddedTiles = computed<Array<GameTile | null>>(() => {
   &__cell {
     cursor: pointer;
     background: var(--cell-bg-footer);
-    border-radius: calc(var(--primary-border-radius) * 2);
+    border-radius: calc(var(--cell-tile-border-radius) * 2);
     box-shadow: var(--cell-shadow-footer);
     &--disabled {
       opacity: var(--opacity-disabled);

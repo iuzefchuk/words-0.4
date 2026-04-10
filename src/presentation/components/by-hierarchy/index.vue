@@ -20,7 +20,6 @@ onMounted(() => {
 
 <template>
   <div
-    :class="{ index: true, 'index--blurred': showEndscreen }"
     :style="{
       ...(transitionDurationMs && {
         '--transition-duration': `${transitionDurationMs}ms`,
@@ -29,13 +28,15 @@ onMounted(() => {
       '--cell-count-per-axis': mainStore.boardCellsPerAxis,
     }"
   >
-    <Loader :is-active="loaderIsActive" @derendered="mainIsRendered = true" />
-    <Main v-if="mainIsRendered" />
-    <Dialog />
+    <div :class="{ index: true, 'index--blurred': showEndscreen }">
+      <Loader :is-active="loaderIsActive" @derendered="mainIsRendered = true" />
+      <Main v-if="mainIsRendered" />
+      <Dialog />
+    </div>
+    <Transition name="fade" appear>
+      <Endscreen v-if="showEndscreen" />
+    </Transition>
   </div>
-  <Transition name="fade" appear>
-    <Endscreen v-if="showEndscreen" />
-  </Transition>
 </template>
 
 <style lang="scss">
@@ -55,6 +56,7 @@ onMounted(() => {
   transition-property: filter;
   &--blurred {
     filter: blur(0.5rem);
+    opacity: var(--opacity-disabled);
   }
 }
 </style>
