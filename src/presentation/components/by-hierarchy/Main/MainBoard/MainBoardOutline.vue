@@ -3,10 +3,10 @@ import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import MainBoardTooltip from '@/presentation/components/by-hierarchy/Main/MainBoard/MainBoardTooltip.vue';
 import UseOutline from '@/presentation/composables/UseOutline.ts';
-import RackStore from '@/presentation/stores/RackStore.ts';
-const rackStore = RackStore.INSTANCE();
+import InventoryStore from '@/presentation/stores/InventoryStore.ts';
+const inventoryStore = InventoryStore.INSTANCE();
 const outline = new UseOutline();
-const { tiles } = storeToRefs(rackStore);
+const { tiles } = storeToRefs(inventoryStore);
 const outlineGroups = computed(() => outline.createGroups(tiles.value));
 const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axis))';
 </script>

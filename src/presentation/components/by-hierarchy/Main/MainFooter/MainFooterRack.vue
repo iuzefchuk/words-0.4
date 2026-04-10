@@ -3,12 +3,14 @@ import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { GameTile } from '@/application/types/index.ts';
 import AppTile from '@/presentation/components/shared/AppTile/AppTile.vue';
+import UseInventoryEvents from '@/presentation/composables/UseInventoryEvents.ts';
+import InventoryStore from '@/presentation/stores/InventoryStore.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
-import RackStore from '@/presentation/stores/RackStore.ts';
+const inventoryEvents = new UseInventoryEvents();
 const mainStore = MainStore.INSTANCE();
-const rackStore = RackStore.INSTANCE();
+const inventoryStore = InventoryStore.INSTANCE();
 const { allActionsAreDisabled, tilesRemaining } = storeToRefs(mainStore);
-const { tiles } = storeToRefs(rackStore);
+const { tiles } = storeToRefs(inventoryStore);
 const paddedTiles = computed<Array<GameTile | null>>(() => {
   const result: Array<GameTile | null> = [...tiles.value];
   while (result.length < mainStore.tilesPerPlayer) result.push(null);
@@ -22,13 +24,13 @@ const paddedTiles = computed<Array<GameTile | null>>(() => {
       v-for="(tile, idx) in paddedTiles"
       :key="idx"
       :class="{ rack__cell: true, 'rack__cell--disabled': allActionsAreDisabled }"
-      @click.stop="tile !== null && rackStore.handleClickFooterCell(idx)"
+      @click.stop="tile !== null && inventoryEvents.handleClickFooterCell(idx)"
     >
       <AppTile
-        v-if="tile !== null && rackStore.isTileVisible(tile)"
+        v-if="tile !== null && inventoryStore.isTileVisible(tile)"
         :letter="mainStore.getTileLetter(tile)"
-        :is-inverted="rackStore.isTileSelected(tile)"
-        @click.stop="rackStore.handleClickFooterTile(tile)"
+        :is-inverted="inventoryStore.isTileSelected(tile)"
+        @click.stop="inventoryEvents.handleClickFooterTile(tile)"
       />
     </li>
     <Transition name="fade">

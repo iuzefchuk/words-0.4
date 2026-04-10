@@ -2,20 +2,20 @@ import { inject } from 'vue';
 import ProvidesPlugin from '@/presentation/plugins/ProvidesPlugin.ts';
 import SoundPlayer, { Sound } from '@/presentation/services/SoundPlayer.ts';
 import DialogStore from '@/presentation/stores/DialogStore.ts';
+import InventoryStore from '@/presentation/stores/InventoryStore.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
-import RackStore from '@/presentation/stores/RackStore.ts';
 
 export default class UseButtons {
   private get dialogStore() {
     return DialogStore.INSTANCE();
   }
 
-  private get mainStore() {
-    return MainStore.INSTANCE();
+  private get inventoryStore() {
+    return InventoryStore.INSTANCE();
   }
 
-  private get rackStore() {
-    return RackStore.INSTANCE();
+  private get mainStore() {
+    return MainStore.INSTANCE();
   }
 
   private constructor(private readonly resignDelayMs: number) {}
@@ -28,7 +28,7 @@ export default class UseButtons {
 
   handleClear(): void {
     this.mainStore.clearTiles();
-    this.rackStore.initialize();
+    this.inventoryStore.initialize();
     SoundPlayer.play(Sound.SystemClear);
   }
 
@@ -41,7 +41,7 @@ export default class UseButtons {
 
   handlePlay(): void {
     this.mainStore.save();
-    this.rackStore.initialize();
+    this.inventoryStore.initialize();
   }
 
   async handleResign(): Promise<void> {
@@ -51,7 +51,7 @@ export default class UseButtons {
   }
 
   handleShuffle(): void {
-    this.rackStore.shuffle();
+    this.inventoryStore.shuffle();
     SoundPlayer.play(Sound.SystemShuffle);
   }
 

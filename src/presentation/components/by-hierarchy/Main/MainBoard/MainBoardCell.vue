@@ -2,14 +2,16 @@
 import { computed } from 'vue';
 import { GameBonus, GameCell } from '@/application/types/index.ts';
 import GameTile from '@/presentation/components/shared/AppTile/AppTile.vue';
+import UseInventoryEvents from '@/presentation/composables/UseInventoryEvents.ts';
 import { getBonusName } from '@/presentation/mappings.ts';
+import InventoryStore from '@/presentation/stores/InventoryStore.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
-import RackStore from '@/presentation/stores/RackStore.ts';
+const inventoryEvents = new UseInventoryEvents();
 const props = defineProps<{
   cell: GameCell;
 }>();
 const mainStore = MainStore.INSTANCE();
-const rackStore = RackStore.INSTANCE();
+const inventoryStore = InventoryStore.INSTANCE();
 const isCellCenter = computed(() => mainStore.isCellCenter(props.cell));
 const bonus = computed(() => mainStore.getCellBonus(props.cell));
 const bonusName = computed(() => (bonus.value ? getBonusName(bonus.value) : ''));
@@ -24,7 +26,7 @@ const isTileSaturated = computed(() => tile.value != null && mainStore.wasTileUs
       'cell--center': isCellCenter,
       'cell--has-tile': tile,
     }"
-    @click.stop="rackStore.handleClickBoardCell(cell)"
+    @click.stop="inventoryEvents.handleClickBoardCell(cell)"
   >
     <Transition name="fade" appear>
       <svg
@@ -48,10 +50,10 @@ const isTileSaturated = computed(() => tile.value != null && mainStore.wasTileUs
       <GameTile
         v-if="tile"
         :letter="mainStore.getTileLetter(tile)"
-        :is-inverted="rackStore.isTileSelected(tile)"
+        :is-inverted="inventoryStore.isTileSelected(tile)"
         :is-saturated="isTileSaturated"
-        @click.stop="rackStore.handleClickBoardTile(tile)"
-        @dblclick.stop="rackStore.handleDoubleClickBoardTile(tile)"
+        @click.stop="inventoryEvents.handleClickBoardTile(tile)"
+        @dblclick.stop="inventoryEvents.handleDoubleClickBoardTile(tile)"
       />
     </Transition>
   </li>

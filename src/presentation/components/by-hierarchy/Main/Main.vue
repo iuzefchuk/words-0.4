@@ -7,11 +7,11 @@ import MainEndscreen from '@/presentation/components/by-hierarchy/Main/MainEndsc
 import MainFooter from '@/presentation/components/by-hierarchy/Main/MainFooter/MainFooter.vue';
 import MainHeader from '@/presentation/components/by-hierarchy/Main/MainHeader.vue';
 import ProvidesPlugin from '@/presentation/plugins/ProvidesPlugin.ts';
+import InventoryStore from '@/presentation/stores/InventoryStore.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
-import RackStore from '@/presentation/stores/RackStore.ts';
 await MainStore.initiate();
 const { matchIsFinished } = storeToRefs(MainStore.INSTANCE());
-const rackStore = RackStore.INSTANCE();
+const inventoryStore = InventoryStore.INSTANCE();
 const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY);
 </script>
 
@@ -25,7 +25,7 @@ const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY);
       '--cell-count-per-axis': 15,
     }"
     class="main"
-    @click="rackStore.deselectTile()"
+    @click="inventoryStore.deselectTile()"
   >
     <Transition name="fade-down-up" appear>
       <MainHeader />

@@ -2,12 +2,12 @@
 import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
 import UseButtons from '@/presentation/composables/UseButtons.ts';
+import InventoryStore from '@/presentation/stores/InventoryStore.ts';
 import MainStore from '@/presentation/stores/MainStore.ts';
-import RackStore from '@/presentation/stores/RackStore.ts';
 const mainStore = MainStore.INSTANCE();
-const rackStore = RackStore.INSTANCE();
+const inventoryStore = InventoryStore.INSTANCE();
 const buttons = UseButtons.create();
-const { anyTileIsPlaced } = storeToRefs(rackStore);
+const { anyTileIsPlaced } = storeToRefs(inventoryStore);
 const { allActionsAreDisabled } = storeToRefs(mainStore);
 const items = reactive([
   {
