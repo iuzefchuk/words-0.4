@@ -39,11 +39,12 @@ export default class Board {
     return LayoutService.calculateAdjacentCells(cell);
   }
 
-  calculateAnchorCells(historyHasPriorTurns: boolean): ReadonlySet<Cell> {
+  calculateAnchorCells(): ReadonlySet<Cell> {
+    const boardIsEmpty = this.tileByCell.size === 0;
     return new Set(
       Board.CELLS_BY_INDEX.filter((cell: Cell) => {
         const isCenter = LayoutService.isCellCenter(cell);
-        if (!historyHasPriorTurns) return isCenter;
+        if (boardIsEmpty) return isCenter;
         if (this.isCellOccupied(cell)) return false;
         return LayoutService.calculateAdjacentCells(cell).some((adjacentCell: Cell) => this.isCellOccupied(adjacentCell));
       }),

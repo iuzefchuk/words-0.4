@@ -340,10 +340,10 @@ export default class TurnGenerator {
   };
 
   static async *execute(context: GeneratorContext, player: Player, yieldControl: () => Promise<void>): AsyncGenerator<GeneratorResult> {
-    const { board, dictionary, inventory, turns } = context;
+    const { board, dictionary, inventory } = context;
     const playerTileCollection = inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;
-    const anchorCells = board.calculateAnchorCells(turns.historyHasPriorTurns);
+    const anchorCells = board.calculateAnchorCells();
     if (anchorCells.size === 0) return;
     const crossChecker = new CrossCheckService(board, dictionary, inventory);
     for (const cell of anchorCells) {
