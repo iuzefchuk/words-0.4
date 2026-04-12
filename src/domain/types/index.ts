@@ -7,7 +7,8 @@ import { InventoryView, Tile } from '@/domain/models/inventory/types.ts';
 import { MatchResult } from '@/domain/models/match/enums.ts';
 import { MatchView } from '@/domain/models/match/types.ts';
 import { TurnsView, ValidationResult } from '@/domain/models/turns/types.ts';
-import { default as GameTurnGenerator, GeneratorResult } from '@/domain/services/turn-generation/TurnGenerationService.ts';
+import { default as GameTurnGenerator } from '@/domain/services/generation/turn/TurnGenerationService.ts';
+import { GeneratorResult } from '@/domain/services/generation/turn/types.ts';
 
 export {
   BoardType as GameBoardType,

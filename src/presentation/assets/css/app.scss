@@ -92,7 +92,7 @@
   --opacity-disabled: 0.7;
   @include light-scheme;
   @media (prefers-color-scheme: dark) {
-    @include dark-scheme;
+    // @include dark-scheme;
   }
 }
 

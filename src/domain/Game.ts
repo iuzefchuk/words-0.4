@@ -5,8 +5,9 @@ import Inventory from '@/domain/models/inventory/Inventory.ts';
 import Match from '@/domain/models/match/Match.ts';
 import { ValidationStatus } from '@/domain/models/turns/enums.ts';
 import Turns from '@/domain/models/turns/Turns.ts';
-import { GeneratorContext, GeneratorResult } from '@/domain/services/turn-generation/TurnGenerationService.ts';
-import TurnValidationService, { ValidatorContext } from '@/domain/services/turn-validation/TurnValidationService.ts';
+import { GeneratorContext, GeneratorResult } from '@/domain/services/generation/turn/types.ts';
+import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
+import { ValidatorContext } from '@/domain/services/validation/turn/types.ts';
 import {
   GameBoardType,
   GameBoardView,
