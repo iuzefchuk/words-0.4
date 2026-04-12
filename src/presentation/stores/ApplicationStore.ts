@@ -17,12 +17,12 @@ class Actions {
   ) {}
 
   changeBoardType = (boardType: GameBoardType): void => {
-    MainStore.saveSettings({ boardType });
+    ApplicationStore.saveSettings({ boardType });
     return this.state.writeBoard(() => this.commandsService.changeBoardType(boardType));
   };
 
   changeDifficulty = (difficulty: GameDifficulty): void => {
-    MainStore.saveSettings({ difficulty });
+    ApplicationStore.saveSettings({ difficulty });
     return this.state.write(() => this.commandsService.changeDifficulty(difficulty));
   };
 
@@ -188,13 +188,13 @@ class State {
   }
 }
 
-export default class MainStore {
+export default class ApplicationStore {
   private static app: Application;
 
   static readonly INSTANCE = defineStore('main', () => {
-    const store = new MainStore(MainStore.app);
+    const store = new ApplicationStore(ApplicationStore.app);
     return {
-      ...MainStore.app.config,
+      ...ApplicationStore.app.config,
       ...store.getters,
       ...store.actions,
     };
@@ -214,8 +214,8 @@ export default class MainStore {
   }
 
   static async initiate(): Promise<void> {
-    const settings = MainStore.loadSettings();
-    MainStore.app = markRaw(await Application.create(settings));
+    const settings = ApplicationStore.loadSettings();
+    ApplicationStore.app = markRaw(await Application.create(settings));
   }
 
   static saveSettings(data: { boardType?: GameBoardType; difficulty?: GameDifficulty }): void {

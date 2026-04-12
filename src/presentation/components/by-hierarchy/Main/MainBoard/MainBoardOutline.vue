@@ -2,18 +2,18 @@
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import MainBoardTooltip from '@/presentation/components/by-hierarchy/Main/MainBoard/MainBoardTooltip.vue';
-import UseOutline from '@/presentation/composables/UseOutline.ts';
-import InventoryStore from '@/presentation/stores/InventoryStore.ts';
-const inventoryStore = InventoryStore.INSTANCE();
-const outline = new UseOutline();
-const { tiles } = storeToRefs(inventoryStore);
-const outlineGroups = computed(() => outline.createGroups(tiles.value));
-const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axis))';
+import UseTileLocator from '@/presentation/composables/UseTileLocator.ts';
+import FooStore from '@/presentation/stores/FooStore.ts';
+const fooStore = FooStore.INSTANCE();
+const tileLocator = new UseTileLocator();
+const { tiles } = storeToRefs(fooStore);
+const locations = computed(() => tileLocator.getLocationsFor(tiles.value));
+const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axis))'; // TODO move to css variable
 </script>
 
 <template>
   <div
-    v-for="(group, idx) in outlineGroups"
+    v-for="(group, idx) in locations"
     :key="idx"
     class="outline"
     :style="{
@@ -24,7 +24,10 @@ const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axi
     }"
   >
     <Transition name="fade" appear>
-      <MainBoardTooltip v-if="outline.isTooltipRendered(outlineGroups, idx)" :is-flipped="outline.isTooltipFlipped(outlineGroups, idx)" />
+      <MainBoardTooltip
+        v-if="tileLocator.areLocationsForSelectedTiles(locations, idx)"
+        :is-flipped="tileLocator.isLocationOnRightmostColumn(locations, idx)"
+      />
     </Transition>
   </div>
 </template>

@@ -7,23 +7,24 @@ import MainEndscreen from '@/presentation/components/by-hierarchy/Main/MainEndsc
 import MainFooter from '@/presentation/components/by-hierarchy/Main/MainFooter/MainFooter.vue';
 import MainHeader from '@/presentation/components/by-hierarchy/Main/MainHeader.vue';
 import ProvidesPlugin from '@/presentation/plugins/ProvidesPlugin.ts';
-import InventoryStore from '@/presentation/stores/InventoryStore.ts';
-import MainStore from '@/presentation/stores/MainStore.ts';
-await MainStore.initiate();
-const { matchIsFinished } = storeToRefs(MainStore.INSTANCE());
-const inventoryStore = InventoryStore.INSTANCE();
+import ApplicationStore from '@/presentation/stores/ApplicationStore.ts';
+import FooStore from '@/presentation/stores/FooStore.ts';
+await ApplicationStore.initiate();
+const applicationStore = ApplicationStore.INSTANCE();
+const { matchIsFinished } = storeToRefs(applicationStore);
+const fooStore = FooStore.INSTANCE();
 const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY);
 const style = computed(() => ({
   ...(transitionDurationMs && {
     '--transition-duration': `${transitionDurationMs}ms`,
     '--transition-duration-half': `${transitionDurationMs / 2}ms`,
   }),
-    '--cell-count-per-axis': 15, // TODO replace this for boardCellsPerAxis
+  '--cell-count-per-axis': 15, // TODO remove when implementing dynamic board sizes
 }));
 </script>
 
 <template>
-  <main :style="style" :class="{ main: true, 'main--blurred': matchIsFinished }" @click="inventoryStore.deselectTile()">
+  <main :style="style" :class="{ main: true, 'main--blurred': matchIsFinished }" @click="fooStore.deselectTile()">
     <Transition name="fade-down-up" appear>
       <MainHeader />
     </Transition>

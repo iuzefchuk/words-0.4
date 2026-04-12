@@ -2,10 +2,10 @@
 import { computed } from 'vue';
 import { GameBoardType, GameDifficulty } from '@/application/types/index.ts';
 import AppSelect from '@/presentation/components/shared/AppSelect/AppSelect.vue';
-import MainStore from '@/presentation/stores/MainStore.ts';
+import ApplicationStore from '@/presentation/stores/ApplicationStore.ts';
 type OptionValue = GameBoardType | GameDifficulty;
-const mainStore = MainStore.INSTANCE();
-const optionsAreDisabled = computed(() => !mainStore.settingsChangeIsAllowed);
+const applicationStore = ApplicationStore.INSTANCE();
+const optionsAreDisabled = computed(() => !applicationStore.settingsChangeIsAllowed);
 const options = [
   {
     items: [
@@ -13,8 +13,8 @@ const options = [
       { text: window.t('game.bonus_distribution_random'), value: GameBoardType.Random },
     ],
     label: window.t('game.settings_bonuses'),
-    modelValue: () => mainStore.boardType,
-    onChange: (value: OptionValue) => mainStore.changeBoardType(value as GameBoardType),
+    modelValue: () => applicationStore.boardType,
+    onChange: (value: OptionValue) => applicationStore.changeBoardType(value as GameBoardType),
   },
   {
     items: [
@@ -23,18 +23,18 @@ const options = [
       { text: window.t('game.difficulty_high'), value: GameDifficulty.High },
     ],
     label: window.t('game.settings_difficulty'),
-    modelValue: () => mainStore.difficulty,
-    onChange: (value: OptionValue) => mainStore.changeDifficulty(value as GameDifficulty),
+    modelValue: () => applicationStore.difficulty,
+    onChange: (value: OptionValue) => applicationStore.changeDifficulty(value as GameDifficulty),
   },
 ];
 const players = [
   {
     name: window.t('game.player_user'),
-    score: () => mainStore.userScore,
+    score: () => applicationStore.userScore,
   },
   {
     name: window.t('game.player_opponent'),
-    score: () => mainStore.opponentScore,
+    score: () => applicationStore.opponentScore,
   },
 ];
 </script>

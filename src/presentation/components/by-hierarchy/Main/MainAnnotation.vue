@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import UseAnnotation from '@/presentation/composables/UseAnnotation.ts';
-const { messages } = new UseAnnotation();
+import UseNotifications from '@/presentation/composables/UseNotifications.ts';
+const { messages } = new UseNotifications();
 </script>
 
 <template>

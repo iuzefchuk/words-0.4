@@ -1,8 +1,8 @@
 import { computed } from 'vue';
 import { GameEvent, GameEventType, GamePlayer } from '@/application/types/index.ts';
-import MainStore from '@/presentation/stores/MainStore.ts';
+import ApplicationStore from '@/presentation/stores/ApplicationStore.ts';
 
-export default class UseAnnotation {
+export default class UseNotifications {
   private static readonly MAX_DISPLAYED_MESSAGES = 3;
 
   readonly messages = computed(() => {
@@ -13,17 +13,17 @@ export default class UseAnnotation {
   });
 
   private get allDisplayedEvents(): ReadonlyArray<GameEvent> {
-    return this.mainStore.eventsLog.filter(event => this.isEventDisplayed(event));
+    return this.applicationStore.eventsLog.filter(event => this.isEventDisplayed(event));
+  }
+
+  private get applicationStore() {
+    return ApplicationStore.INSTANCE();
   }
 
   private get displayedEvents(): ReadonlyArray<GameEvent> {
     const events = this.allDisplayedEvents;
-    const start = Math.max(0, events.length - UseAnnotation.MAX_DISPLAYED_MESSAGES);
+    const start = Math.max(0, events.length - UseNotifications.MAX_DISPLAYED_MESSAGES);
     return events.slice(start);
-  }
-
-  private get mainStore() {
-    return MainStore.INSTANCE();
   }
 
   private createEventHtml(event: GameEvent): string {
@@ -43,7 +43,7 @@ export default class UseAnnotation {
 
   private createEventKey(index: number): number {
     const total = this.allDisplayedEvents.length;
-    const start = Math.max(0, total - UseAnnotation.MAX_DISPLAYED_MESSAGES);
+    const start = Math.max(0, total - UseNotifications.MAX_DISPLAYED_MESSAGES);
     return start + index;
   }
 

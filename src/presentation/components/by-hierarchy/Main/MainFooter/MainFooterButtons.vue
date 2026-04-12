@@ -1,42 +1,42 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
-import UseActions from '@/presentation/composables/UseActions.ts';
-import InventoryStore from '@/presentation/stores/InventoryStore.ts';
-import MainStore from '@/presentation/stores/MainStore.ts';
-const mainStore = MainStore.INSTANCE();
-const inventoryStore = InventoryStore.INSTANCE();
-const actions = UseActions.create();
-const { anyTileIsPlaced } = storeToRefs(inventoryStore);
-const { allActionsAreDisabled } = storeToRefs(mainStore);
+import UseEventHandlers from '@/presentation/composables/UseEventHandlers.ts';
+import ApplicationStore from '@/presentation/stores/ApplicationStore.ts';
+import FooStore from '@/presentation/stores/FooStore.ts';
+const applicationStore = ApplicationStore.INSTANCE();
+const fooStore = FooStore.INSTANCE();
+const events = UseEventHandlers.create();
+const { anyTileIsPlaced } = storeToRefs(fooStore);
+const { allActionsAreDisabled } = storeToRefs(applicationStore);
 const items = reactive([
   {
-    action: () => actions.handleResign(),
+    action: () => events.handleResign(),
     isDisabled: () => allActionsAreDisabled.value,
     isRendered: () => true,
     name: window.t('game.action_resign'),
   },
   {
-    action: () => actions.handlePass(),
+    action: () => events.handlePass(),
     isDisabled: () => allActionsAreDisabled.value,
     isRendered: () => true,
     name: window.t('game.action_pass'),
   },
   {
-    action: () => actions.handleShuffle(),
+    action: () => events.handleShuffle(),
     isDisabled: () => allActionsAreDisabled.value,
     isRendered: () => !anyTileIsPlaced.value,
     name: window.t('game.action_shuffle'),
   },
   {
-    action: () => actions.handleClear(),
+    action: () => events.handleClear(),
     isDisabled: () => allActionsAreDisabled.value,
     isRendered: () => anyTileIsPlaced.value,
     name: window.t('game.action_clear'),
   },
   {
-    action: () => actions.handlePlay(),
-    isDisabled: () => allActionsAreDisabled.value || !mainStore.currentTurnIsValid,
+    action: () => events.handlePlay(),
+    isDisabled: () => allActionsAreDisabled.value || !applicationStore.currentTurnIsValid,
     isRendered: () => true,
     name: window.t('game.action_play'),
   },

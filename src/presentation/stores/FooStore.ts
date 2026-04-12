@@ -1,18 +1,18 @@
 import { defineStore } from 'pinia';
 import { computed, ref, shallowRef, triggerRef } from 'vue';
 import { GameTile } from '@/application/types/index.ts';
-import MainStore from '@/presentation/stores/MainStore.ts';
+import ApplicationStore from '@/presentation/stores/ApplicationStore.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
-export default class InventoryStore {
+export default class FooStore {
   static readonly INSTANCE = defineStore('inventory', () => {
-    const store = new InventoryStore();
-    const mainStore = MainStore.INSTANCE();
-    store.initialize(mainStore.userTiles);
+    const store = new FooStore();
+    const applicationStore = ApplicationStore.INSTANCE();
+    store.initialize(applicationStore.userTiles);
     return {
       anyTileIsPlaced: computed(() => store.anyTileIsPlaced),
       deselectTile: store.deselectTile.bind(store),
-      initialize: () => store.initialize(mainStore.userTiles),
+      initialize: () => store.initialize(applicationStore.userTiles),
       isTileInRack: store.isTileInRack.bind(store),
       isTileSelected: store.isTileSelected.bind(store),
       isTileVisible: store.isTileVisible.bind(store),
@@ -26,11 +26,11 @@ export default class InventoryStore {
   });
 
   private get anyTileIsPlaced(): boolean {
-    return this.tiles.some(tile => this.mainStore.isTilePlaced(tile));
+    return this.tiles.some(tile => this.applicationStore.isTilePlaced(tile));
   }
 
-  private get mainStore() {
-    return MainStore.INSTANCE();
+  private get applicationStore() {
+    return ApplicationStore.INSTANCE();
   }
 
   private get selectedTile(): GameTile | null {
@@ -38,7 +38,7 @@ export default class InventoryStore {
   }
 
   private get selectedTileIsPlaced(): boolean {
-    return this.selectedTile !== null && this.mainStore.isTilePlaced(this.selectedTile);
+    return this.selectedTile !== null && this.applicationStore.isTilePlaced(this.selectedTile);
   }
 
   private get tiles(): Array<GameTile> {
@@ -73,11 +73,11 @@ export default class InventoryStore {
   }
 
   private isTileSelected(tile: GameTile): boolean {
-    return this.selectedTile !== null && this.mainStore.areTilesSame(this.selectedTile, tile);
+    return this.selectedTile !== null && this.applicationStore.areTilesSame(this.selectedTile, tile);
   }
 
   private isTileVisible(tile: GameTile): boolean {
-    return this.isTileInRack(tile) && !this.mainStore.isTilePlaced(tile);
+    return this.isTileInRack(tile) && !this.applicationStore.isTilePlaced(tile);
   }
 
   private selectTile(tile: GameTile): void {
