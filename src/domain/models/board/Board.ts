@@ -30,6 +30,10 @@ export default class Board {
     private cellByTile: Map<Tile, Cell>,
   ) {}
 
+  static clone(source: Board): Board {
+    return new Board(source.bonusByCell, source.type, new Map(source.tileByCell), new Map(source.cellByTile));
+  }
+
   static create(type: BoardType, randomizer?: () => number): Board {
     const bonusByCell = BonusService.createBonusDistribution(type, randomizer);
     return new Board(bonusByCell, type, new Map(), new Map());
@@ -70,10 +74,6 @@ export default class Board {
 
   calculateAxisCells(coords: AnchorCoordinates): ReadonlyArray<Cell> {
     return LayoutService.calculateAxisCells(coords);
-  }
-
-  clone(): Board {
-    return new Board(this.bonusByCell, this.type, new Map(this.tileByCell), new Map(this.cellByTile));
   }
 
   createPlacement(coords: AnchorCoordinates, tiles: ReadonlyArray<Tile>): Placement {

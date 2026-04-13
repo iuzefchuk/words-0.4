@@ -36,8 +36,6 @@ import { ValidatorContext } from '@/domain/services/validation/turn/types.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 class TaskCommandResolver {
-  private static readonly YIELD_INTERVAL = 100;
-
   private constructor(private readonly stack: Array<Task>) {}
 
   static continueExecute(newTasks: Array<Task>): ContinueTaskCommand {
@@ -57,14 +55,12 @@ class TaskCommandResolver {
     return { type: GenerationCommandType.StopExecute };
   }
 
-  async *execute(dispatcher: (task: Task) => TaskCommand, yieldControl: () => Promise<void>): AsyncGenerator<GeneratorResult> {
-    let taskCount = 0;
+  *execute(dispatcher: (task: Task) => TaskCommand): Generator<GeneratorResult> {
     while (this.stack.length > 0) {
       const task = this.popFromStack();
       const command = dispatcher(task);
       if (command.type === GenerationCommandType.ContinueExecute) this.pushToStack(command.newTasks);
       if (command.type === GenerationCommandType.ReturnResult) yield command.result;
-      if (++taskCount % TaskCommandResolver.YIELD_INTERVAL === 0) await yieldControl();
     }
   }
 
@@ -269,7 +265,7 @@ class TaskDispatcher {
 }
 
 export default class TurnGenerationService {
-  static async *execute(context: GeneratorContext, player: Player, yieldControl: () => Promise<void>): AsyncGenerator<GeneratorResult> {
+  static *execute(context: GeneratorContext, player: Player): Generator<GeneratorResult> {
     const { board, dictionary, inventory } = context;
     const playerTileCollection = inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;
@@ -279,13 +275,13 @@ export default class TurnGenerationService {
     for (const cell of anchorCells) {
       for (const axis of Object.values(Axis)) {
         const coords: AnchorCoordinates = { axis, cell };
-        yield* this.generate({ context, coords, crossChecker, playerTileCollection, yieldControl });
+        yield* this.generate({ context, coords, crossChecker, playerTileCollection });
       }
     }
   }
 
-  private static async *generate(args: GeneratorArguments): AsyncGenerator<GeneratorResult> {
-    const { context, coords, yieldControl } = args;
+  private static *generate(args: GeneratorArguments): Generator<GeneratorResult> {
+    const { context, coords } = args;
     const { dictionary } = context;
     const dispatcher = TaskDispatcher.create(args);
     const firstTask: EvaluateTask = {
@@ -297,6 +293,6 @@ export default class TurnGenerationService {
       type: GenerationTask.EvaluateTraversal,
     };
     const resolver = TaskCommandResolver.create(firstTask);
-    yield* resolver.execute(task => dispatcher.execute(task), yieldControl);
+    yield* resolver.execute(task => dispatcher.execute(task));
   }
 }

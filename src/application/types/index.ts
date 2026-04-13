@@ -1,4 +1,4 @@
-import { CompressionService, SchedulingService } from '@/application/types/ports.ts';
+import { CompressionService, SchedulingService, WorkerService } from '@/application/types/ports.ts';
 import { DictionaryRepository, EventRepository } from '@/application/types/repositories.ts';
 import { GameCell } from '@/domain/types/index.ts';
 import { IdentityService, SeedingService } from '@/domain/types/ports.ts';
@@ -22,6 +22,7 @@ export type {
   GameGeneratorResult,
   GameInventoryView,
   GameMatchView,
+  GameSerializedNode,
   GameSettings,
   GameTile,
   GameTrie,
@@ -36,7 +37,14 @@ export type AppConfig = {
 
 export type AppDependencies = {
   repositories: { dictionary: DictionaryRepository; events: EventRepository };
-  services: { compression: CompressionService; identity: IdentityService; scheduling: SchedulingService; seeding: SeedingService };
+  services: {
+    compression: CompressionService;
+    identity: IdentityService;
+    scheduling: SchedulingService;
+    seeding: SeedingService;
+    worker: WorkerService;
+  };
+  tasks: { dictionary: string; turnGeneration: string };
 };
 
 export type AppTurnResponse = Result<{ words: ReadonlyArray<string> }, string>;

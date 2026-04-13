@@ -9,4 +9,9 @@ export type ReadonlyNode = {
   readonly isFinal: boolean;
 };
 
+export type SerializedNode = {
+  readonly 0: 0 | 1;
+  readonly 1: string;
+} & ReadonlyArray<0 | 1 | SerializedNode | string>;
+
 export type Trie = ReadonlyNode;

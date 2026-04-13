@@ -197,10 +197,10 @@ export default class Game {
   createGeneratorContext(): GeneratorContext {
     if (this.dictionary === undefined) throw new Error('Dictionary has to be defined');
     return {
-      board: this.board.clone(),
+      board: Board.clone(this.board),
       dictionary: this.dictionary,
       inventory: this.inventory,
-      turns: this.turns.clone(),
+      turns: Turns.clone(this.turns),
     };
   }
 

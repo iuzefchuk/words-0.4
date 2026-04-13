@@ -1,6 +1,6 @@
 import { Letter } from '@/domain/enums.ts';
 import TrieService from '@/domain/models/dictionary/services/trie/TrieService.ts';
-import { NextNodeGenerator, Node, ReadonlyNode, Trie } from '@/domain/models/dictionary/types.ts';
+import { NextNodeGenerator, Node, ReadonlyNode, SerializedNode, Trie } from '@/domain/models/dictionary/types.ts';
 
 export default class Dictionary {
   get rootNode(): ReadonlyNode {
@@ -9,17 +9,12 @@ export default class Dictionary {
 
   private constructor(public readonly trie: Trie) {}
 
-  static createFromText(text: ReadonlyArray<string>): Dictionary {
-    const trie = TrieService.createNodeTree(text);
-    return new Dictionary(trie);
-  }
-
   static createFromTrie(trie: Trie): Dictionary {
     return new Dictionary(trie);
   }
 
-  static deserializeNodeTree(array: ReadonlyArray<unknown>): Node {
-    return TrieService.deserializeNodeTree(array);
+  static createNodeTree(array: SerializedNode, yieldControl: () => Promise<void>): Promise<Node> {
+    return TrieService.createNodeTree(array, yieldControl);
   }
 
   containsAllWords(words: ReadonlyArray<string>): boolean {

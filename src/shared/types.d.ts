@@ -1,5 +1,10 @@
 declare const APP_VERSION: string;
 
+declare module '*?worker' {
+  const workerConstructor: new () => Worker;
+  export default workerConstructor;
+}
+
 declare const brandSymbol: unique symbol;
 
 declare const schedulingService: { yield(): Promise<void> };

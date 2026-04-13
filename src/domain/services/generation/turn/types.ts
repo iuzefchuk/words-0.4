@@ -36,7 +36,6 @@ export type GeneratorArguments = {
   coords: AnchorCoordinates;
   crossChecker: CrossCheckService;
   playerTileCollection: TileCollection;
-  yieldControl: () => Promise<void>;
 };
 
 export type GeneratorContext = {

@@ -2,7 +2,7 @@ import { Difficulty, Letter, Player } from '@/domain/enums.ts';
 import { BoardType, Bonus } from '@/domain/models/board/enums.ts';
 import { type BoardView, type Cell } from '@/domain/models/board/types.ts';
 import { default as GameDictionary } from '@/domain/models/dictionary/Dictionary.ts';
-import { type Trie } from '@/domain/models/dictionary/types.ts';
+import { type SerializedNode, type Trie } from '@/domain/models/dictionary/types.ts';
 import { EventType } from '@/domain/models/events/enums.ts';
 import { type Event } from '@/domain/models/events/types.ts';
 import { InventoryView, Tile } from '@/domain/models/inventory/types.ts';
@@ -31,6 +31,7 @@ export type {
   GeneratorResult as GameGeneratorResult,
   InventoryView as GameInventoryView,
   MatchView as GameMatchView,
+  SerializedNode as GameSerializedNode,
   Tile as GameTile,
   Trie as GameTrie,
   TurnsView as GameTurnsView,

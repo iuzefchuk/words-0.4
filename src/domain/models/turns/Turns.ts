@@ -37,6 +37,10 @@ class Turn {
     private validationResult: ValidationResult = { status: ValidationStatus.Unvalidated },
   ) {}
 
+  static clone(source: Turn): Turn {
+    return new Turn(source.id, source.player, [...source.tiles], { ...source.validationResult });
+  }
+
   static create({ identityService, player }: { identityService: IdentityService; player: Player }): Turn {
     const id = identityService.createUniqueId();
     return new Turn(id, player, []);
@@ -45,10 +49,6 @@ class Turn {
   addTile(tile: Tile): void {
     if (this.tiles.includes(tile)) throw new Error(`Tile ${tile} already connected`);
     this.tiles.push(tile);
-  }
-
-  clone(): Turn {
-    return new Turn(this.id, this.player, [...this.tiles], { ...this.validationResult });
   }
 
   removeTile(tile: Tile): void {
@@ -118,19 +118,19 @@ export default class Turns {
     private history: Array<Turn>,
   ) {}
 
+  static clone(source: Turns, identityService?: IdentityService): Turns {
+    return new Turns(
+      identityService ?? source.identityService,
+      source.history.map(turn => Turn.clone(turn)),
+    );
+  }
+
   static create(identityService: IdentityService): Turns {
     return new Turns(identityService, []);
   }
 
   addPlacedTile(tile: Tile): void {
     this.currentTurn.addTile(tile);
-  }
-
-  clone(): Turns {
-    return new Turns(
-      this.identityService,
-      this.history.map(turn => turn.clone()),
-    );
   }
 
   recordValidationResult(result: ValidationResult): void {

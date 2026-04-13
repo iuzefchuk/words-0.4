@@ -1,8 +1,8 @@
-import { GameEvent, GameTrie } from '@/application/types/index.ts';
+import { GameEvent } from '@/application/types/index.ts';
 
 export type DictionaryRepository = {
-  load(): Promise<GameTrie | null>;
-  save(trie: GameTrie): Promise<void>;
+  load(): Promise<null | string>;
+  save(data: string): Promise<void>;
 };
 
 export type EventRepository = {

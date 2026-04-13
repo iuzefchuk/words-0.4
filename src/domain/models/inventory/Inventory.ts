@@ -99,6 +99,19 @@ export default class Inventory {
     private discardPool: TilePool,
   ) {}
 
+  static clone(source: Inventory): Inventory {
+    const extractTiles = (pool: TilePool): Array<Tile> =>
+      'tilesView' in pool ? [...pool.tilesView] : [...(pool as unknown as { tiles: Array<Tile> }).tiles];
+    const drawPool = TilePool.create({ tiles: extractTiles(source.drawPool) });
+    const playerPools = new Map(
+      [...source.playerPools].map(
+        ([player, pool]) => [player, TilePool.create({ capacity: Inventory.PLAYER_POOL_CAPACITY, tiles: extractTiles(pool) })] as const,
+      ),
+    );
+    const discardPool = TilePool.create({ tiles: extractTiles(source.discardPool) });
+    return new Inventory(drawPool, playerPools, discardPool);
+  }
+
   static create(players: ReadonlyArray<Player>, randomizer: () => number): Inventory {
     const tiles = [...Inventory.LETTER_BY_TILE.keys()];
     shuffleWithFisherYates({ array: tiles, randomizer });

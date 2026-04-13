@@ -9,9 +9,8 @@ import {
   GameInventoryView,
   GamePlayer,
   GameTile,
-  GameTurnGenerator,
 } from '@/application/types/index.ts';
-import { SchedulingService } from '@/application/types/ports.ts';
+import { SchedulingService, WorkerService } from '@/application/types/ports.ts';
 import { EventRepository } from '@/application/types/repositories.ts';
 import Game from '@/domain/Game.ts';
 import { TIME } from '@/shared/constants.ts';
@@ -30,6 +29,8 @@ export default class CommandsService {
   constructor(
     private readonly game: Game,
     private readonly schedulingService: SchedulingService,
+    private readonly workerService: WorkerService,
+    private readonly turnGenerationTaskId: string,
     private readonly eventRepository: EventRepository,
   ) {}
 
@@ -117,7 +118,7 @@ export default class CommandsService {
     let bestResult: GameGeneratorResult | null = null;
     let bestScore = -1;
     let attemptsCount = 0;
-    for await (const result of GameTurnGenerator.execute(context, player, () => this.schedulingService.yield())) {
+    for await (const result of this.workerService.stream<GameGeneratorResult>(this.turnGenerationTaskId, { data: context, player })) {
       if (attemptsLimit === 1) {
         bestResult = result;
         break;

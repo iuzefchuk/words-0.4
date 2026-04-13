@@ -1,7 +1,7 @@
 import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
-import { AppConfig, GameDictionary, GameSettings } from '@/application/types/index.ts';
-import { CompressionService, IdentityService, SeedingService } from '@/application/types/ports.ts';
+import { AppConfig, GameDictionary, GameSerializedNode, GameSettings } from '@/application/types/index.ts';
+import { CompressionService, IdentityService, SchedulingService, SeedingService, WorkerService } from '@/application/types/ports.ts';
 import { DictionaryRepository, EventRepository } from '@/application/types/repositories.ts';
 import Game from '@/domain/Game.ts';
 import Infrastructure from '@/infrastructure/index.ts';
@@ -18,6 +18,9 @@ export default class Application {
   private constructor(
     private readonly game: Game,
     private readonly compressor: CompressionService,
+    private readonly schedulingService: SchedulingService,
+    private readonly workerService: WorkerService,
+    private readonly dictionaryTaskId: string,
     private readonly dictionaryRepository: DictionaryRepository,
     readonly commandsService: CommandsService,
     readonly queriesService: QueriesService,
@@ -27,11 +30,20 @@ export default class Application {
   }
 
   static async create(settings: GameSettings): Promise<Application> {
-    const { repositories, services } = await Infrastructure.createAppDependencies();
+    const { repositories, services, tasks } = await Infrastructure.createAppDependencies();
     const game = await this.createGame(services, repositories, settings);
     const queriesService = new QueriesService(game);
-    const commandsService = new CommandsService(game, services.scheduling, repositories.events);
-    return new Application(game, services.compression, repositories.dictionary, commandsService, queriesService);
+    const commandsService = new CommandsService(game, services.scheduling, services.worker, tasks.turnGeneration, repositories.events);
+    return new Application(
+      game,
+      services.compression,
+      services.scheduling,
+      services.worker,
+      tasks.dictionary,
+      repositories.dictionary,
+      commandsService,
+      queriesService,
+    );
   }
 
   private static async createGame(
@@ -46,16 +58,13 @@ export default class Application {
   }
 
   async loadDictionary(): Promise<void> {
-    const cachedTrie = await this.dictionaryRepository.load();
-    let dictionary: GameDictionary;
-    if (cachedTrie) {
-      dictionary = GameDictionary.createFromTrie(cachedTrie);
-    } else {
-      const data = await this.compressor.fetchAndDecompress('/dictionary.gz');
-      const trie = GameDictionary.deserializeNodeTree(JSON.parse(data));
-      dictionary = GameDictionary.createFromTrie(trie);
-      this.dictionaryRepository.save(dictionary.trie);
+    let data = await this.dictionaryRepository.load();
+    if (typeof data !== 'string') {
+      data = await this.compressor.fetchAndDecompress('/dictionary.gz');
+      this.dictionaryRepository.save(data);
     }
-    this.game.setDictionary(dictionary);
+    const array = await this.workerService.execute<GameSerializedNode>(this.dictionaryTaskId, data);
+    const trie = await GameDictionary.createNodeTree(array, () => this.schedulingService.yield());
+    this.game.setDictionary(GameDictionary.createFromTrie(trie));
   }
 }
