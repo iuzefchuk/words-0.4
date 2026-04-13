@@ -82,7 +82,8 @@ const items = reactive([
     width: 100%;
     height: 100%;
     user-select: none;
-    box-shadow: var(--btn-box-shadow);
+    box-shadow: var(--btn-shadow);
+    --shadow-color: var(--btn-shadow-color);
     transition-property: box-shadow;
     transition-duration: var(--transition-duration-half);
     transition-timing-function: var(--transition-timing-function);
@@ -92,16 +93,21 @@ const items = reactive([
     font-weight: var(--btn-font-weight);
     letter-spacing: 0.25px;
     background: var(--btn-bg);
+    text-shadow: var(--text-shadow-2xs);
+    --text-shadow-color: var(--btn-color);
     &:hover:not(:active):not(:disabled) {
       background: var(--btn-bg-hover);
       border-color: var(--btn-border-color-hover);
-      box-shadow: var(--btn-box-shadow-hover);
+      box-shadow: var(--btn-shadow-hover);
+      --shadow-color: var(--btn-shadow-color-hover);
     }
     &:active:not(:disabled) {
       background: var(--btn-bg-active);
       border-color: transparent;
+      box-shadow: none;
     }
     &:disabled {
+      background: transparent;
       border-color: transparent;
       box-shadow: none;
       cursor: not-allowed;

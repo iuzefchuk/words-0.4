@@ -66,6 +66,7 @@ const isTileSaturated = computed(() => tile.value != null && applicationStore.wa
   background: var(--cell-bg);
   user-select: none;
   box-shadow: var(--cell-shadow);
+  --shadow-color: var(--cell-shadow-color);
   cursor: pointer;
   &--center {
     background: var(--cell-bg-center);
@@ -75,7 +76,7 @@ const isTileSaturated = computed(() => tile.value != null && applicationStore.wa
     box-shadow: none;
   }
   &__bonus {
-    font-weight: var(--font-weight-bigger);
+    font-weight: var(--font-weight-big);
     z-index: var(--z-index-level-1);
     $bonuses: 'dw', 'tw', 'dl', 'tl';
     @each $bonus in $bonuses {

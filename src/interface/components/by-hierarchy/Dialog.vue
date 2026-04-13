@@ -54,7 +54,7 @@ watch(html, newValue => {
   z-index: var(--z-index-level-2);
   display: grid;
   place-items: center;
-  opacity: 0.95;
+  opacity: 0.98;
   &__window {
     padding: var(--space-xl) var(--space-2xl);
     border-radius: var(--primary-border-radius);
@@ -96,7 +96,7 @@ watch(html, newValue => {
     font-size: var(--font-size-small);
     font-weight: var(--font-weight);
     &:last-child {
-      color: var(--color-red-500); // TODO to personalized css variable
+      color: var(--color-red-500);
     }
     &:hover {
       background: var(--dialog-btn-bg-hover);
