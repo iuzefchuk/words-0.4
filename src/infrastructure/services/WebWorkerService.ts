@@ -26,6 +26,7 @@ export default class WebWorkerService implements WorkerService {
   async *stream<O>(taskId: string, data: unknown): AsyncGenerator<O> {
     const worker = this.createWorker(taskId);
     const queue: Array<WorkerResponse> = [];
+    let queueReadIndex = 0;
     let resolve: (() => void) | null = null;
     let error: Error | null = null;
     worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
@@ -39,14 +40,18 @@ export default class WebWorkerService implements WorkerService {
     worker.postMessage({ input: data, type: 'stream' } satisfies WorkerRequest);
     try {
       while (true) {
-        while (queue.length === 0) {
+        while (queueReadIndex >= queue.length) {
           if (error) throw error;
           await new Promise<void>(r => {
             resolve = r;
           });
           resolve = null;
         }
-        const msg = queue.shift()!;
+        const msg = queue[queueReadIndex++]!;
+        if (queueReadIndex > 64) {
+          queue.splice(0, queueReadIndex);
+          queueReadIndex = 0;
+        }
         if (msg.type === 'error') throw new Error(msg.error);
         if (msg.type === 'done') return;
         yield msg.value as O;

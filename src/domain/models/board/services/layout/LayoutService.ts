@@ -8,26 +8,39 @@ export default class LayoutService {
 
   static readonly CENTER_CELL = Math.floor(this.TOTAL_CELLS / 2) as Cell;
 
+  private static readonly AXIS_CELLS_CACHE: ReadonlyMap<Axis, ReadonlyArray<ReadonlyArray<Cell>>> = (() => {
+    const cache = new Map<Axis, ReadonlyArray<ReadonlyArray<Cell>>>();
+    for (const axis of Object.values(Axis)) {
+      const lines: Array<ReadonlyArray<Cell>> = [];
+      for (let lineIndex = 0; lineIndex < LayoutService.CELLS_PER_AXIS; lineIndex++) {
+        const cells: Array<Cell> = [];
+        for (let i = 0; i < LayoutService.CELLS_PER_AXIS; i++) {
+          cells.push((axis === Axis.X ? lineIndex * LayoutService.CELLS_PER_AXIS + i : lineIndex + i * LayoutService.CELLS_PER_AXIS) as Cell);
+        }
+        lines.push(cells);
+      }
+      cache.set(axis, lines);
+    }
+    return cache;
+  })();
+
   static calculateAdjacentCells(cell: Cell): ReadonlyArray<Cell> {
     this.validateCellBounds(cell);
-    const STEP_X = this.getAxisStep(Axis.X);
-    const STEP_Y = this.getAxisStep(Axis.Y);
+    const col = cell % this.CELLS_PER_AXIS;
+    const row = Math.floor(cell / this.CELLS_PER_AXIS);
     const result: Array<Cell> = [];
-    if (!this.isCellOnLeftEdge(cell)) result.push((cell - STEP_X) as Cell);
-    if (!this.isCellOnRightEdge(cell)) result.push((cell + STEP_X) as Cell);
-    if (!this.isCellOnTopEdge(cell)) result.push((cell - STEP_Y) as Cell);
-    if (!this.isCellOnBottomEdge(cell)) result.push((cell + STEP_Y) as Cell);
+    if (col > 0) result.push((cell - 1) as Cell);
+    if (col < this.CELLS_PER_AXIS - 1) result.push((cell + 1) as Cell);
+    if (row > 0) result.push((cell - this.CELLS_PER_AXIS) as Cell);
+    if (row < this.CELLS_PER_AXIS - 1) result.push((cell + this.CELLS_PER_AXIS) as Cell);
     return result;
   }
 
   static calculateAxisCells(coords: AnchorCoordinates): ReadonlyArray<Cell> {
     const { axis, cell } = coords;
     this.validateCellBounds(cell);
-    return Array.from(
-      { length: this.CELLS_PER_AXIS },
-      (_, i) =>
-        (axis === Axis.X ? cell - this.getCellPositionInColumn(cell) + i : this.getCellPositionInColumn(cell) + i * this.CELLS_PER_AXIS) as Cell,
-    );
+    const lineIndex = axis === Axis.X ? Math.floor(cell / this.CELLS_PER_AXIS) : cell % this.CELLS_PER_AXIS;
+    return this.AXIS_CELLS_CACHE.get(axis)![lineIndex]!;
   }
 
   static getAxisStep(axis: Axis): number {
@@ -55,31 +68,27 @@ export default class LayoutService {
 
   static isCellOnBottomEdge(cell: Cell): boolean {
     this.validateCellBounds(cell);
-    const position = this.getCellPositionInRow(cell);
-    return this.isCellPositionAtAxisEnd(position);
+    return Math.floor(cell / this.CELLS_PER_AXIS) === this.CELLS_PER_AXIS - 1;
   }
 
   static isCellOnLeftEdge(cell: Cell): boolean {
     this.validateCellBounds(cell);
-    const position = this.getCellPositionInColumn(cell);
-    return this.isCellPositionAtAxisStart(position);
+    return cell % this.CELLS_PER_AXIS === 0;
   }
 
   static isCellOnRightEdge(cell: Cell): boolean {
     this.validateCellBounds(cell);
-    const position = this.getCellPositionInColumn(cell);
-    return this.isCellPositionAtAxisEnd(position);
+    return cell % this.CELLS_PER_AXIS === this.CELLS_PER_AXIS - 1;
   }
 
   static isCellOnTopEdge(cell: Cell): boolean {
     this.validateCellBounds(cell);
-    const position = this.getCellPositionInRow(cell);
-    return this.isCellPositionAtAxisStart(position);
+    return Math.floor(cell / this.CELLS_PER_AXIS) === 0;
   }
 
   static isCellPositionAtAxisEnd(position: number): boolean {
     this.validateCellPositionBounds(position);
-    return position === this.getAxisStep(Axis.Y) - this.getAxisStep(Axis.X);
+    return position === this.CELLS_PER_AXIS - 1;
   }
 
   static isCellPositionAtAxisStart(position: number): boolean {

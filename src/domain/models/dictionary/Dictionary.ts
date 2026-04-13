@@ -1,6 +1,6 @@
 import { Letter } from '@/domain/enums.ts';
 import TrieService from '@/domain/models/dictionary/services/trie/TrieService.ts';
-import { NextNodeGenerator, Node, ReadonlyNode, SerializedNode, Trie } from '@/domain/models/dictionary/types.ts';
+import { Node, ReadonlyNode, ReadonlyNodeChildren, SerializedNode, Trie } from '@/domain/models/dictionary/types.ts';
 
 export default class Dictionary {
   get rootNode(): ReadonlyNode {
@@ -22,17 +22,12 @@ export default class Dictionary {
     return words.every(word => this.containsWord(word));
   }
 
-  createNextNodeGenerator({ startNode }: { startNode: ReadonlyNode }): NextNodeGenerator {
-    function* generator(node: ReadonlyNode): Generator<[Letter, ReadonlyNode]> {
-      for (const [possibleNextLetter, nodeForPossibleNextLetter] of node.children) {
-        yield [possibleNextLetter, nodeForPossibleNextLetter];
-      }
-    }
-    return generator(startNode);
-  }
-
   getNode(word: string, startNode: ReadonlyNode = this.rootNode): null | ReadonlyNode {
     return this.findNodeForWord(word, startNode);
+  }
+
+  getNodeChildren(node: ReadonlyNode): ReadonlyNodeChildren {
+    return node.children;
   }
 
   isNodeFinal(node: ReadonlyNode): boolean {
@@ -48,7 +43,7 @@ export default class Dictionary {
     let currentNode = startNode;
     for (let i = 0; i < word.length; i++) {
       const letter = word[i] as Letter;
-      const nextNode = currentNode.children.get(letter);
+      const nextNode = currentNode.children[letter];
       if (!nextNode) return null;
       currentNode = nextNode;
     }

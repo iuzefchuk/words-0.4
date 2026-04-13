@@ -1,13 +1,13 @@
-import { Letter } from '@/domain/enums.ts';
+export type Node = { children: NodeChildren; isFinal: boolean };
 
-export type NextNodeGenerator = Generator<[Letter, ReadonlyNode]>;
-
-export type Node = { children: Map<Letter, Node>; isFinal: boolean };
+export type NodeChildren = { [key: string]: Node | undefined };
 
 export type ReadonlyNode = {
-  readonly children: ReadonlyMap<Letter, ReadonlyNode>;
+  readonly children: ReadonlyNodeChildren;
   readonly isFinal: boolean;
 };
+
+export type ReadonlyNodeChildren = { readonly [key: string]: ReadonlyNode | undefined };
 
 export type SerializedNode = {
   readonly 0: 0 | 1;

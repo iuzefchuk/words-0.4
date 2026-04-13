@@ -4,7 +4,7 @@ import { Event } from '@/domain/models/events/types.ts';
 
 export default class Events {
   get logView(): ReadonlyArray<Event> {
-    return [...this.log];
+    return this.log;
   }
 
   private constructor(

@@ -3,7 +3,8 @@ import { MatchResult } from '@/domain/models/match/enums.ts';
 
 export default class Match {
   get isFinished(): boolean {
-    return [...this.results.values()].some(result => result !== MatchResult.Undecided);
+    for (const result of this.results.values()) if (result !== MatchResult.Undecided) return true;
+    return false;
   }
 
   get leaderByScore(): null | Player {

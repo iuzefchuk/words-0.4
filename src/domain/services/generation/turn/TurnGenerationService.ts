@@ -1,4 +1,4 @@
-import { Player } from '@/domain/enums.ts';
+import { Letter, Player } from '@/domain/enums.ts';
 import Board from '@/domain/models/board/Board.ts';
 import { Axis } from '@/domain/models/board/enums.ts';
 import { AnchorCoordinates, Link } from '@/domain/models/board/types.ts';
@@ -147,10 +147,12 @@ class TaskDispatcher {
 
   private calculateAndExploreResolution(traversal: Traversal, candidate: Candidate): ContinueTaskCommand | StopTaskCommand {
     const { cell, position } = candidate;
-    const generator = this.dictionary.createNextNodeGenerator({ startNode: traversal.node });
+    const children = this.dictionary.getNodeChildren(traversal.node);
     const anchorLetters = this.crossChecker.execute({ axis: this.computeds.oppositeAxis, cell });
     const newTasks: Array<Task> = [];
-    for (const [possibleNextLetter, nodeWithPossibleNextLetter] of generator) {
+    for (const key in children) {
+      const possibleNextLetter = key as Letter;
+      const nodeWithPossibleNextLetter = children[key]!;
       const letterTiles = this.tiles.get(possibleNextLetter) as Array<Tile>;
       if (!anchorLetters.has(possibleNextLetter)) continue;
       if (!letterTiles) continue;
@@ -218,13 +220,16 @@ class TaskDispatcher {
     const { traversal } = task;
     const placementIsUsable = this.placement.length > 0 && this.dictionary.isNodeFinal(traversal.node);
     if (traversal.direction === GenerationDirection.Right && placementIsUsable) {
-      const placement = [...this.placement];
-      const tiles = placement.map(link => link.tile);
-      for (const tile of tiles) this.context.turns.addPlacedTile(tile);
+      const tiles: Array<Tile> = [];
+      for (const link of this.placement) {
+        tiles.push(link.tile);
+        this.context.turns.addPlacedTile(link.tile);
+      }
       const validationResult = TurnValidationService.execute(this.context as ValidatorContext);
       for (const tile of tiles) this.context.turns.removePlacedTile(tile);
       if (validationResult.status === ValidationStatus.Valid) {
-        return this.emitReturn({ cells: placement.map(link => link.cell), tiles, validationResult });
+        const cells = this.placement.map(link => link.cell);
+        return this.emitReturn({ cells, tiles, validationResult });
       }
     }
     const nextTasks: Array<Task> = [];

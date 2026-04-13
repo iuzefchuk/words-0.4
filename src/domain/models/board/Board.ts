@@ -45,14 +45,18 @@ export default class Board {
 
   calculateAnchorCells(): ReadonlySet<Cell> {
     const boardIsEmpty = this.tileByCell.size === 0;
-    return new Set(
-      Board.CELLS_BY_INDEX.filter((cell: Cell) => {
-        const isCenter = LayoutService.isCellCenter(cell);
-        if (boardIsEmpty) return isCenter;
-        if (this.isCellOccupied(cell)) return false;
-        return LayoutService.calculateAdjacentCells(cell).some((adjacentCell: Cell) => this.isCellOccupied(adjacentCell));
-      }),
-    );
+    const result = new Set<Cell>();
+    for (const cell of Board.CELLS_BY_INDEX) {
+      if (boardIsEmpty) {
+        if (cell === Board.CENTER_CELL) result.add(cell);
+        continue;
+      }
+      if (this.tileByCell.has(cell)) continue;
+      if (LayoutService.calculateAdjacentCells(cell).some(adjacent => this.tileByCell.has(adjacent))) {
+        result.add(cell);
+      }
+    }
+    return result;
   }
 
   calculateAxis(cells: ReadonlyArray<Cell>): Axis {

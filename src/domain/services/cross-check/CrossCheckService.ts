@@ -40,16 +40,17 @@ export default class CrossCheckService {
 
   private computeFor(coords: AnchorCoordinates): ReadonlySet<Letter> {
     const axisCells = this.board.calculateAxisCells(coords);
-    const position = axisCells.indexOf(coords.cell);
-    if (position === -1) throw new Error('Cell not found in axis cells');
+    const position = coords.axis === Axis.X ? this.board.getCellPositionInColumn(coords.cell) : this.board.getCellPositionInRow(coords.cell);
     const prefix = this.collectAdjacentTileLetters(axisCells, position, -1);
     const suffix = this.collectAdjacentTileLetters(axisCells, position, 1);
     if (!prefix && !suffix) return new Set(Object.values(Letter));
     const prefixNode = prefix ? this.dictionary.getNode(prefix) : this.dictionary.rootNode;
     if (!prefixNode) return new Set();
     const anchorLetters = new Set<Letter>();
-    const generator = this.dictionary.createNextNodeGenerator({ startNode: prefixNode });
-    for (const [possibleNextLetter, nodeWithPossibleNextLetter] of generator) {
+    const children = this.dictionary.getNodeChildren(prefixNode);
+    for (const key in children) {
+      const possibleNextLetter = key as Letter;
+      const nodeWithPossibleNextLetter = children[key]!;
       if (!suffix) {
         anchorLetters.add(possibleNextLetter);
         continue;

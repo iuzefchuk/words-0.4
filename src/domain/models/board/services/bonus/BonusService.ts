@@ -23,29 +23,11 @@ export default class BonusService {
 
   private static createRandomDistribution(randomizer?: () => number): BonusDistribution {
     const classicMap = this.createClassicDistribution();
-    const counts = [
-      {
-        bonus: Bonus.DoubleLetter,
-        count: [...classicMap.values()].filter(bonus => bonus === Bonus.DoubleLetter).length,
-      },
-      {
-        bonus: Bonus.TripleLetter,
-        count: [...classicMap.values()].filter(bonus => bonus === Bonus.TripleLetter).length,
-      },
-      {
-        bonus: Bonus.DoubleWord,
-        count: [...classicMap.values()].filter(bonus => bonus === Bonus.DoubleWord).length,
-      },
-      {
-        bonus: Bonus.TripleWord,
-        count: [...classicMap.values()].filter(bonus => bonus === Bonus.TripleWord).length,
-      },
-    ];
+    const countByBonus = new Map<Bonus, number>();
+    for (const bonus of classicMap.values()) countByBonus.set(bonus, (countByBonus.get(bonus) ?? 0) + 1);
+    const counts = Object.values(Bonus).map(bonus => ({ bonus, count: countByBonus.get(bonus) ?? 0 }));
     const availableCells = Board.CELLS_BY_INDEX.filter(cell => cell !== Board.CENTER_CELL);
-    shuffleWithFisherYates({
-      array: availableCells,
-      ...(randomizer && { randomizer }),
-    });
+    shuffleWithFisherYates({ array: availableCells, ...(randomizer && { randomizer }) });
     const result = new Map<Cell, Bonus>();
     let offset = 0;
     for (const { bonus, count } of counts)
