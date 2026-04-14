@@ -111,6 +111,7 @@ const items = reactive([
       border-color: transparent;
       box-shadow: none;
       cursor: not-allowed;
+      text-shadow: none;
     }
   }
 }

@@ -33,7 +33,7 @@ const text = computed(() => getMatchResultText(matchResult.value, userScore.valu
   &__text {
     position: relative;
     user-select: none;
-    font-size: var(--font-size-bigger);
+    font-size: var(--font-size-big);
   }
   &__hint {
     $ms: calc(var(--transition-duration) * 10);

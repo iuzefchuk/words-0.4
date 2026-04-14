@@ -1,7 +1,7 @@
 import { ValidationError, ValidationStatus } from '@/domain/models/turns/enums.ts';
 import { ComputedValue, InvalidResult, ValidationResult, ValidResult } from '@/domain/models/turns/types.ts';
 import ScoringService from '@/domain/services/scoring/ScoringService.ts';
-import CellsValidationService from '@/domain/services/validation/cells/service.ts';
+import CellsValidationService from '@/domain/services/validation/cells/CellsValidationService.ts';
 import PlacementsValidationService from '@/domain/services/validation/placements/PlacementsValidationService.ts';
 import {
   ComputedTilesOutput,

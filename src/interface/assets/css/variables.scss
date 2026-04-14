@@ -15,15 +15,13 @@
   --space-5xl: 2.25rem;
   --space-6xl: 2.5rem;
 
-  --font-size-smaller: 12px;
-  --font-size-small: 14px;
-  --font-size: 16px;
-  --font-size-big: 18px;
-  --font-size-bigger: 20px;
+  --font-size-small: var(--space-m);
+  --font-size: var(--space-l);
+  --font-size-big: var(--space-xl);
 
-  --line-height-small: 1.25rem;
-  --line-height: 1.5rem;
-  --line-height-big: 1.75rem;
+  --line-height-small: var(--space-xl);
+  --line-height: var(--space-2xl);
+  --line-height-big: var(--space-3xl);
 
   --font-weight-smaller: 200;
   --font-weight-small: 300;
@@ -41,11 +39,11 @@
 
   --shadow-2xs: 0 1px color-mix(in oklch, var(--shadow-color) 5%, transparent);
   --shadow-xs: 0 1px 2px 0 color-mix(in oklch, var(--shadow-color) 5%, transparent);
-  --shadow-sm:
+  --shadow-s:
     0 1px 3px 0 color-mix(in oklch, var(--shadow-color) 10%, transparent), 0 1px 2px -1px color-mix(in oklch, var(--shadow-color) 10%, transparent);
-  --shadow-md:
+  --shadow-m:
     0 4px 6px -1px color-mix(in oklch, var(--shadow-color) 10%, transparent), 0 2px 4px -2px color-mix(in oklch, var(--shadow-color) 10%, transparent);
-  --shadow-lg:
+  --shadow-l:
     0 10px 15px -3px color-mix(in oklch, var(--shadow-color) 10%, transparent),
     0 4px 6px -4px color-mix(in oklch, var(--shadow-color) 10%, transparent);
   --shadow-xl:
@@ -56,22 +54,22 @@
 
   --inset-shadow-2xs: inset 0 1px color-mix(in oklch, var(--shadow-color) 5%, transparent);
   --inset-shadow-xs: inset 0 1px 1px color-mix(in oklch, var(--shadow-color) 5%, transparent);
-  --inset-shadow-sm: inset 0 2px 4px color-mix(in oklch, var(--shadow-color) 5%, transparent);
+  --inset-shadow-s: inset 0 2px 4px color-mix(in oklch, var(--shadow-color) 5%, transparent);
   --inset-shadow-none: inset 0 0 #0000;
 
   --text-shadow-color: black;
 
   --text-shadow-2xs: 0px 1px 0px color-mix(in oklch, var(--text-shadow-color) 15%, transparent);
   --text-shadow-xs: 0px 1px 1px color-mix(in oklch, var(--text-shadow-color) 20%, transparent);
-  --text-shadow-sm:
+  --text-shadow-s:
     0px 1px 0px color-mix(in oklch, var(--text-shadow-color) 7.5%, transparent),
     0px 1px 1px color-mix(in oklch, var(--text-shadow-color) 7.5%, transparent),
     0px 2px 2px color-mix(in oklch, var(--text-shadow-color) 7.5%, transparent);
-  --text-shadow-md:
+  --text-shadow-m:
     0px 1px 1px color-mix(in oklch, var(--text-shadow-color) 10%, transparent),
     0px 1px 2px color-mix(in oklch, var(--text-shadow-color) 10%, transparent),
     0px 2px 4px color-mix(in oklch, var(--text-shadow-color) 10%, transparent);
-  --text-shadow-lg:
+  --text-shadow-l:
     0px 1px 2px color-mix(in oklch, var(--text-shadow-color) 10%, transparent),
     0px 3px 2px color-mix(in oklch, var(--text-shadow-color) 10%, transparent),
     0px 4px 8px color-mix(in oklch, var(--text-shadow-color) 10%, transparent);
