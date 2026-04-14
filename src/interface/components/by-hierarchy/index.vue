@@ -27,10 +27,8 @@ const style = computed(() => ({
 <style lang="scss">
 @use '@/interface/assets/css/adjustments.scss';
 @use '@/interface/assets/css/animations.scss';
-@use '@/interface/assets/css/app.scss';
-@use '@/interface/assets/css/boxShadow.scss';
+@use '@/interface/assets/css/general.scss';
 @use '@/interface/assets/css/colors.scss';
-@use '@/interface/assets/css/textShadow.scss';
 @use '@/interface/assets/css/transitions.scss';
 @use '@/interface/assets/css/variables.scss';
 </style>
