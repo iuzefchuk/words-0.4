@@ -22,7 +22,11 @@ export default class IndexedDbService<T> {
     try {
       const db = await this.openDatabase();
       const cache = await this.getCache(db);
-      if (!cache || cache.version !== version) return null;
+      if (!cache) return null;
+      if (cache.version !== version) {
+        await this.deleteCache(db);
+        return null;
+      }
       return cache.data;
     } catch {
       return null;

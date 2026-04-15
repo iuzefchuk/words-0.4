@@ -28,43 +28,38 @@ describe('BonusService', () => {
 
   describe('has same count of each bonus for different distributions', () => {
     const bonusTypes = Object.values(Bonus).map(b => [b] as const);
+    let classicOccurrences: Map<Bonus, number>;
+    let randomOccurrences: Map<Bonus, number>;
+
+    beforeAll(() => {
+      classicOccurrences = countBonusOccurrences(classicDistribution);
+      randomOccurrences = countBonusOccurrences(randomDistribution);
+    });
 
     it.each(bonusTypes)('bonus %s', bonusType => {
-      expect(countBonusOccurrences(classicDistribution).get(bonusType)).toBe(
-        countBonusOccurrences(randomDistribution).get(bonusType),
-      );
+      expect(classicOccurrences.get(bonusType)).toBe(randomOccurrences.get(bonusType));
     });
   });
 
-  it('classic distribution excludes center cell', () => {
-    expect(classicDistribution.has(Board.CENTER_CELL)).toBe(false);
+  const distributions = [
+    ['classic', () => classicDistribution],
+    ['random', () => randomDistribution],
+  ] as const;
+
+  it.each(distributions)('%s distribution excludes center cell', (_, getDist) => {
+    expect(getDist().has(Board.CENTER_CELL)).toBe(false);
   });
 
-  it('random distribution excludes center cell', () => {
-    expect(randomDistribution.has(Board.CENTER_CELL)).toBe(false);
-  });
+  const validCells = new Set(Board.CELLS_BY_INDEX);
+  const validBonusValues = new Set(Object.values(Bonus));
 
-  it('classic distribution contains only valid board cells', () => {
-    const validCells = new Set(Board.CELLS_BY_INDEX);
-    const invalidCells = Array.from(classicDistribution.keys()).filter(cell => !validCells.has(cell));
+  it.each(distributions)('%s distribution contains only valid board cells', (_, getDist) => {
+    const invalidCells = Array.from(getDist().keys()).filter(cell => !validCells.has(cell));
     expect(invalidCells).toEqual([]);
   });
 
-  it('random distribution contains only valid board cells', () => {
-    const validCells = new Set(Board.CELLS_BY_INDEX);
-    const invalidCells = Array.from(randomDistribution.keys()).filter(cell => !validCells.has(cell));
-    expect(invalidCells).toEqual([]);
-  });
-
-  it('classic distribution contains only valid bonus values', () => {
-    const validBonusValues = new Set(Object.values(Bonus));
-    const invalidBonuses = Array.from(classicDistribution.values()).filter(bonus => !validBonusValues.has(bonus));
-    expect(invalidBonuses).toEqual([]);
-  });
-
-  it('random distribution contains only valid bonus values', () => {
-    const validBonusValues = new Set(Object.values(Bonus));
-    const invalidBonuses = Array.from(randomDistribution.values()).filter(bonus => !validBonusValues.has(bonus));
+  it.each(distributions)('%s distribution contains only valid bonus values', (_, getDist) => {
+    const invalidBonuses = Array.from(getDist().values()).filter(bonus => !validBonusValues.has(bonus));
     expect(invalidBonuses).toEqual([]);
   });
 });
