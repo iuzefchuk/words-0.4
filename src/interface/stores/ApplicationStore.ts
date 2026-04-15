@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia';
-import { computed, markRaw, ref } from 'vue';
+import { computed, markRaw, reactive, ref } from 'vue';
 import Application from '@/application/index.ts';
 import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
 import { GameBoardType, GameCell, GameDifficulty, GameSettings, GameTile } from '@/application/types/index.ts';
+import { SchedulingService } from '@/application/types/ports.ts';
 import { DEFAULT_SETTINGS } from '@/interface/constants.ts';
 import { StorageKey } from '@/interface/enums.ts';
 import { getEventSound } from '@/interface/mappings.ts';
@@ -11,8 +12,11 @@ import LocalStorage from '@/interface/services/LocalStorage.ts';
 import SoundPlayer from '@/interface/services/SoundPlayer.ts';
 
 class Actions {
+  private pendingValidationId = 0;
+
   constructor(
     private readonly commandsService: CommandsService,
+    private readonly schedulingService: SchedulingService,
     private readonly state: State,
   ) {}
 
@@ -36,7 +40,8 @@ class Actions {
   };
 
   placeTile = (args: { cell: GameCell; tile: GameTile }): void => {
-    return this.writeBoardAndPlaySound(() => this.commandsService.placeTile(args));
+    this.writeBoardAndPlaySound(() => this.commandsService.placeTile(args));
+    this.scheduleDeferredValidation();
   };
 
   resign = (): void => {
@@ -53,7 +58,8 @@ class Actions {
   };
 
   undoPlaceTile = (tile: GameTile): void => {
-    return this.writeBoardAndPlaySound(() => this.commandsService.undoPlaceTile(tile));
+    this.writeBoardAndPlaySound(() => this.commandsService.undoPlaceTile(tile));
+    this.scheduleDeferredValidation();
   };
 
   private playPendingSounds(): void {
@@ -62,6 +68,14 @@ class Actions {
       if (sound) SoundPlayer.play(sound);
     }
   }
+
+  private scheduleDeferredValidation = (): void => {
+    const id = ++this.pendingValidationId;
+    this.schedulingService.yield().then(() => {
+      if (id !== this.pendingValidationId) return;
+      this.writeBoardAndPlaySound(() => this.commandsService.validateAndSync());
+    });
+  };
 
   private syncAndPlaySound(): void {
     this.state.incrementVersions();
@@ -127,7 +141,7 @@ class Getters {
 
   findCellWithTile = (tile: GameTile) => this.readBoard(() => this.queriesService.findCellWithTile(tile));
 
-  findTileOnCell = (cell: GameCell) => this.readBoard(() => this.queriesService.findTileOnCell(cell));
+  findTileOnCell = (cell: GameCell) => this.state.tileByCellCache.get(cell);
 
   getCellBonus = (cell: GameCell) => this.readBoard(() => this.queriesService.getCellBonus(cell));
 
@@ -153,13 +167,21 @@ class Getters {
 }
 
 class State {
+  readonly tileByCellCache: Map<GameCell, GameTile> = reactive(new Map());
+
   private readonly boardVersion = ref(0);
 
   private readonly stateVersion = ref(0);
 
+  constructor(
+    private readonly findTileOnCell: (cell: GameCell) => GameTile | undefined,
+    private readonly boardCells: ReadonlyArray<GameCell>,
+  ) {}
+
   incrementVersions(): void {
     this.boardVersion.value++;
     this.stateVersion.value++;
+    this.syncTileByCellCache();
   }
 
   read<T>(fn: () => T): T {
@@ -184,7 +206,19 @@ class State {
   writeBoard<T>(fn: () => T): T {
     const result = fn();
     this.boardVersion.value++;
+    this.syncTileByCellCache();
     return result;
+  }
+
+  private syncTileByCellCache(): void {
+    for (const cell of this.boardCells) {
+      const tile = this.findTileOnCell(cell);
+      if (tile !== undefined) {
+        this.tileByCellCache.set(cell, tile);
+      } else {
+        this.tileByCellCache.delete(cell);
+      }
+    }
   }
 }
 
@@ -207,9 +241,9 @@ export default class ApplicationStore {
   private readonly state: State;
 
   private constructor(app: Application) {
-    this.state = new State();
+    this.state = new State(cell => app.queriesService.findTileOnCell(cell), app.config.boardCells);
     this.getters = new Getters(app.queriesService, this.state);
-    this.actions = new Actions(app.commandsService, this.state);
+    this.actions = new Actions(app.commandsService, app.schedulingService, this.state);
     this.state.write(() => app.loadDictionary());
   }
 

@@ -15,7 +15,19 @@ export default defineConfig({
   optimizeDeps: {
     include: ['vue', 'pinia'],
   },
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    {
+      configureServer(server) {
+        server.middlewares.use((_, res, next) => {
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+          next();
+        });
+      },
+      name: 'cross-origin-isolation',
+    },
+  ],
   publicDir: path.resolve(__dirname, 'public'),
   resolve: {
     alias: {

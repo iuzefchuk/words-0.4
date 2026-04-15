@@ -1,17 +1,67 @@
-import SerializationService from '@/application/services/SerializationService.ts';
-import { GamePlayer, GameTurnGenerator } from '@/application/types/index.ts';
-import { WorkerResponseType } from '@/infrastructure/services/WebWorkerService.ts';
+import {
+  GameDictionary,
+  GameGeneratorContextData,
+  GameGeneratorPartition,
+  GamePlayer,
+  GameTurnGenerator,
+} from '@/application/types/index.ts';
+import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
+import { GeneratorResult } from '@/domain/services/generation/turn/types.ts';
+import { WorkerRequestType, WorkerResponseType } from '@/infrastructure/services/WebWorkerService.ts';
 
-const serializationService = new SerializationService();
+type StreamInput = {
+  attemptsLimit: number;
+  buffer: SharedArrayBuffer;
+  partition?: GameGeneratorPartition;
+  player: GamePlayer;
+} & GameGeneratorContextData;
+
+class TurnGenerationHandler {
+  private dictionary: Dictionary | null = null;
+
+  handleMessage(e: MessageEvent<{ input: unknown; type: string }>): void {
+    if (e.data.type === (WorkerRequestType.Init as string)) {
+      this.init(e.data.input as SharedArrayBuffer);
+    } else {
+      this.stream(e.data.input as StreamInput);
+    }
+  }
+
+  private findBestResult(input: StreamInput): GeneratorResult | null {
+    const dictionary = this.dictionary ?? GameDictionary.createFromBuffer(input.buffer);
+    const context = GameTurnGenerator.hydrateContext(input, dictionary);
+    let bestResult: GeneratorResult | null = null;
+    let bestScore = -1;
+    let count = 0;
+    for (const result of GameTurnGenerator.execute(context, input.player, input.partition)) {
+      if (result.validationResult.score > bestScore) {
+        bestResult = result;
+        bestScore = result.validationResult.score;
+      }
+      if (++count >= input.attemptsLimit) break;
+    }
+    return bestResult;
+  }
+
+  private init(buffer: SharedArrayBuffer): void {
+    this.dictionary = GameDictionary.createFromBuffer(buffer);
+    self.postMessage({ type: WorkerResponseType.Ready });
+  }
+
+  private stream(input: StreamInput): void {
+    const bestResult = this.findBestResult(input);
+    if (bestResult) {
+      self.postMessage({ type: WorkerResponseType.Result, value: bestResult });
+    }
+    self.postMessage({ type: WorkerResponseType.Done });
+  }
+}
+
+const handler = new TurnGenerationHandler();
 
 self.onmessage = (e: MessageEvent<{ input: unknown; type: string }>) => {
   try {
-    const { data, player } = e.data.input as { data: unknown; player: GamePlayer };
-    const context = serializationService.hydrate(data);
-    for (const result of GameTurnGenerator.execute(context, player)) {
-      self.postMessage({ type: WorkerResponseType.Result, value: result });
-    }
-    self.postMessage({ type: WorkerResponseType.Done });
+    handler.handleMessage(e);
   } catch (error) {
     self.postMessage({ error: String(error), type: WorkerResponseType.Error });
   }

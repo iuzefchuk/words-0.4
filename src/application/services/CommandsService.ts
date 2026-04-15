@@ -92,8 +92,7 @@ export default class CommandsService {
 
   placeTile({ cell, tile }: { cell: GameCell; tile: GameTile }): void {
     this.game.placeTile({ cell, tile });
-    this.game.validateTurn();
-    this.syncPersistence();
+    this.game.invalidateTurnForCurrentPlayer();
   }
 
   restartGame(): void {
@@ -103,6 +102,10 @@ export default class CommandsService {
 
   undoPlaceTile(tile: GameTile): void {
     this.game.undoPlaceTile({ tile });
+    this.game.invalidateTurnForCurrentPlayer();
+  }
+
+  validateAndSync(): void {
     this.game.validateTurn();
     this.syncPersistence();
   }
@@ -114,23 +117,20 @@ export default class CommandsService {
   private async createOpponentTurn(): Promise<GameEvent> {
     const player = GamePlayer.Opponent;
     const attemptsLimit = this.game.turnGenerationAttempts;
-    const context = this.game.createGeneratorContext();
+    const anchorCount = this.game.anchorCellsCount;
+    const { dictionary, ...data } = this.game.createTurnGenerationContext();
+    const workerInput = { attemptsLimit, buffer: dictionary.buffer, ...data, player };
+    const results =
+      attemptsLimit === Infinity
+        ? this.createWorkerParallelStream(workerInput, anchorCount)
+        : this.workerService.stream<GameGeneratorResult>(this.turnGenerationTaskId, workerInput);
     let bestResult: GameGeneratorResult | null = null;
     let bestScore = -1;
-    let attemptsCount = 0;
-    for await (const result of this.workerService.stream<GameGeneratorResult>(this.turnGenerationTaskId, {
-      data: context,
-      player,
-    })) {
-      if (attemptsLimit === 1) {
-        bestResult = result;
-        break;
-      }
+    for await (const result of results) {
       if (result.validationResult.score > bestScore) {
         bestResult = result;
         bestScore = result.validationResult.score;
       }
-      if (++attemptsCount >= attemptsLimit) break;
     }
     if (bestResult === null) {
       if (this.game.willPassBeResignFor(player)) {
@@ -142,6 +142,23 @@ export default class CommandsService {
     }
     const { score, words } = this.game.applyGeneratedTurn(bestResult);
     return { player: GamePlayer.Opponent, score, type: GameEventType.TurnSaved, words };
+  }
+
+  private createWorkerParallelStream(
+    workerInput: Record<string, unknown>,
+    anchorCount: number,
+  ): AsyncGenerator<GameGeneratorResult> {
+    const workerCount = Math.min(this.workerService.getPoolSize(this.turnGenerationTaskId), anchorCount);
+    if (workerCount <= 1) {
+      return this.workerService.stream<GameGeneratorResult>(this.turnGenerationTaskId, workerInput);
+    }
+    const inputs: Array<unknown> = [];
+    for (let i = 0; i < workerCount; i++) {
+      const offset = Math.round((anchorCount * i) / workerCount);
+      const end = Math.round((anchorCount * (i + 1)) / workerCount);
+      inputs.push({ ...workerInput, partition: { length: end - offset, offset } });
+    }
+    return this.workerService.streamParallel<GameGeneratorResult>(this.turnGenerationTaskId, inputs);
   }
 
   private async ensureMinimumDuration<T>(callback: () => Promise<T> | T): Promise<T> {

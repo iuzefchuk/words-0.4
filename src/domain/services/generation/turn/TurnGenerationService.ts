@@ -6,6 +6,7 @@ import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 import { Tile, TileCollection } from '@/domain/models/inventory/types.ts';
 import { ValidationStatus } from '@/domain/models/turns/enums.ts';
+import Turns from '@/domain/models/turns/Turns.ts';
 import CrossCheckService from '@/domain/services/cross-check/CrossCheckService.ts';
 import { GenerationCommandType, GenerationDirection, GenerationTask } from '@/domain/services/generation/turn/enums.ts';
 import {
@@ -18,6 +19,7 @@ import {
   EvaluateTask,
   GeneratorArguments,
   GeneratorContext,
+  GeneratorPartition,
   GeneratorResult,
   MutableTileCollection,
   Resolution,
@@ -272,19 +274,41 @@ class TaskDispatcher {
 }
 
 export default class TurnGenerationService {
-  static *execute(context: GeneratorContext, player: Player): Generator<GeneratorResult> {
+  static createContext(board: Board, dictionary: Dictionary, inventory: Inventory, turns: Turns): GeneratorContext {
+    return {
+      board: Board.clone(board),
+      dictionary,
+      inventory,
+      turns: Turns.clone(turns),
+    };
+  }
+
+  static *execute(context: GeneratorContext, player: Player, partition?: GeneratorPartition): Generator<GeneratorResult> {
     const { board, dictionary, inventory } = context;
     const playerTileCollection = inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;
     const anchorCells = board.calculateAnchorCells();
     if (anchorCells.size === 0) return;
+    const allAnchors = Array.from(anchorCells);
+    const anchors = partition ? allAnchors.slice(partition.offset, partition.offset + partition.length) : allAnchors;
+    if (anchors.length === 0) return;
     const crossChecker = new CrossCheckService(board, dictionary, inventory);
-    for (const cell of anchorCells) {
+    for (const cell of anchors) {
       for (const axis of Object.values(Axis)) {
         const coords: AnchorCoordinates = { axis, cell };
         yield* this.generate({ context, coords, crossChecker, playerTileCollection });
       }
     }
+  }
+
+  static hydrateContext(data: unknown, dictionary: Dictionary): GeneratorContext {
+    const d = data as { board: Board; inventory: Inventory; turns: Turns };
+    return {
+      board: Board.clone(d.board),
+      dictionary,
+      inventory: Inventory.clone(d.inventory),
+      turns: Turns.clone(d.turns, { createUniqueId: () => '' }),
+    };
   }
 
   private static *generate(args: GeneratorArguments): Generator<GeneratorResult> {

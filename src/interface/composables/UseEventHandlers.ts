@@ -138,7 +138,6 @@ export default class UseEventHandlers {
   }
 
   private async triggerPassDialog() {
-    SoundPlayer.play(Sound.SystemDialog);
     return await this.dialogStore.trigger({
       cancelText: window.t('game.dialog_cancel'),
       confirmText: window.t('game.dialog_confirm'),
@@ -147,7 +146,6 @@ export default class UseEventHandlers {
   }
 
   private async triggerResignDialog() {
-    SoundPlayer.play(Sound.SystemDialog);
     return await this.dialogStore.trigger({
       cancelText: window.t('game.dialog_cancel'),
       confirmText: window.t('game.dialog_confirm'),

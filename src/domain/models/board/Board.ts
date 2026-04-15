@@ -66,7 +66,7 @@ export default class Board {
       if (firstCell === undefined) throw new ReferenceError('First cell must be defined');
       const connectedAdjacents = LayoutService.calculateAdjacentCells(firstCell).filter(cell => this.isCellOccupied(cell));
       const firstConnectedAdjacent = connectedAdjacents[0];
-      normalizedSequence = !firstConnectedAdjacent ? [] : [firstConnectedAdjacent, firstCell];
+      normalizedSequence = firstConnectedAdjacent === undefined ? [] : [firstConnectedAdjacent, firstCell];
     }
     if (normalizedSequence.length === 0) return Board.DEFAULT_AXIS;
     const [firstIndex] = normalizedSequence;

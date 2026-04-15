@@ -3,7 +3,7 @@ import Board from '@/domain/models/board/Board.ts';
 import { Axis } from '@/domain/models/board/enums.ts';
 import { AnchorCoordinates, Cell, Link } from '@/domain/models/board/types.ts';
 import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
-import { ReadonlyNode } from '@/domain/models/dictionary/types.ts';
+import { Node } from '@/domain/models/dictionary/types.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 import { Tile, TileCollection } from '@/domain/models/inventory/types.ts';
 import Turns from '@/domain/models/turns/Turns.ts';
@@ -38,18 +38,13 @@ export type GeneratorArguments = {
   playerTileCollection: TileCollection;
 };
 
-export type GeneratorContext = {
-  board: Board;
-  dictionary: Dictionary;
-  inventory: Inventory;
-  turns: Turns;
-};
+export type GeneratorContext = { dictionary: Dictionary } & GeneratorContextData;
 
-export type GeneratorResult = {
-  cells: ReadonlyArray<Cell>;
-  tiles: ReadonlyArray<Tile>;
-  validationResult: ValidResult;
-};
+export type GeneratorContextData = { readonly board: Board; readonly inventory: Inventory; readonly turns: Turns };
+
+export type GeneratorPartition = { length: number; offset: number };
+
+export type GeneratorResult = { cells: ReadonlyArray<Cell>; tiles: ReadonlyArray<Tile>; validationResult: ValidResult };
 
 export type MutableTileCollection = Map<Letter, Array<Tile>>;
 
@@ -74,6 +69,6 @@ export type Task = ApplyTask | CalculateTask | EvaluateTask | ResolveTask | Reve
 
 export type TaskCommand = ContinueTaskCommand | ReturnTaskCommand | StopTaskCommand;
 
-export type Traversal = { direction: GenerationDirection; node: ReadonlyNode; position: number };
+export type Traversal = { direction: GenerationDirection; node: Node; position: number };
 
 export type ValidateTask = { traversal: Traversal; type: GenerationTask.ValidateTraversal };

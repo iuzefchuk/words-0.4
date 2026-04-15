@@ -1,5 +1,5 @@
-import { CompressionService, SchedulingService, WorkerService } from '@/application/types/ports.ts';
-import { DictionaryRepository, EventRepository } from '@/application/types/repositories.ts';
+import { FileService, SchedulingService, WorkerService } from '@/application/types/ports.ts';
+import { EventRepository } from '@/application/types/repositories.ts';
 import { GameCell } from '@/domain/types/index.ts';
 import { IdentityService, SeedingService } from '@/domain/types/ports.ts';
 
@@ -19,13 +19,14 @@ export type {
   GameBoardView,
   GameCell,
   GameEvent,
+  GameGeneratorContextData,
+  GameGeneratorPartition,
   GameGeneratorResult,
   GameInventoryView,
   GameMatchView,
-  GameSerializedNode,
+  GameNode,
   GameSettings,
   GameTile,
-  GameTrie,
   GameTurnsView,
 } from '@/domain/types/index.ts';
 
@@ -36,15 +37,15 @@ export type AppConfig = {
 };
 
 export type AppDependencies = {
-  repositories: { dictionary: DictionaryRepository; events: EventRepository };
+  repositories: { events: EventRepository };
   services: {
-    compression: CompressionService;
+    file: FileService;
     identity: IdentityService;
     scheduling: SchedulingService;
     seeding: SeedingService;
     worker: WorkerService;
   };
-  tasks: { dictionary: string; turnGeneration: string };
+  tasks: { turnGeneration: string };
 };
 
 export type AppTurnResponse = Result<{ words: ReadonlyArray<string> }, string>;

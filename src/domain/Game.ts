@@ -5,6 +5,7 @@ import Inventory from '@/domain/models/inventory/Inventory.ts';
 import Match from '@/domain/models/match/Match.ts';
 import { ValidationStatus } from '@/domain/models/turns/enums.ts';
 import Turns from '@/domain/models/turns/Turns.ts';
+import TurnGenerationService from '@/domain/services/generation/turn/TurnGenerationService.ts';
 import { GeneratorContext, GeneratorResult } from '@/domain/services/generation/turn/types.ts';
 import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
 import { ValidatorContext } from '@/domain/services/validation/turn/types.ts';
@@ -30,6 +31,10 @@ export default class Game {
     [GameDifficulty.Low]: 1,
     [GameDifficulty.Medium]: 20,
   };
+
+  get anchorCellsCount(): number {
+    return this.board.calculateAnchorCells().size;
+  }
 
   get boardView(): Readonly<GameBoardView> {
     return this.board;
@@ -208,14 +213,9 @@ export default class Game {
     this.applyEvent({ result: { status: ValidationStatus.Unvalidated }, type: GameEventType.TurnValidated });
   }
 
-  createGeneratorContext(): GeneratorContext {
+  createTurnGenerationContext(): GeneratorContext {
     if (this.dictionary === undefined) throw new Error('Dictionary has to be defined');
-    return {
-      board: Board.clone(this.board),
-      dictionary: this.dictionary,
-      inventory: this.inventory,
-      turns: Turns.clone(this.turns),
-    };
+    return TurnGenerationService.createContext(this.board, this.dictionary, this.inventory, this.turns);
   }
 
   drainPendingEvents(): Array<GameEvent> {
@@ -226,6 +226,10 @@ export default class Game {
     this.ensureMutability();
     const { leaderByScore } = this.match;
     this.applyEvent({ type: GameEventType.MatchFinished, winner: leaderByScore });
+  }
+
+  invalidateTurnForCurrentPlayer(): void {
+    this.applyEvent({ result: { status: ValidationStatus.Unvalidated }, type: GameEventType.TurnValidated });
   }
 
   passTurnForCurrentPlayer(): void {

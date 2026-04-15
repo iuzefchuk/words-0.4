@@ -2,7 +2,7 @@ import { Difficulty, Letter, Player } from '@/domain/enums.ts';
 import { BoardType, Bonus } from '@/domain/models/board/enums.ts';
 import { type BoardView, type Cell } from '@/domain/models/board/types.ts';
 import { default as GameDictionary } from '@/domain/models/dictionary/Dictionary.ts';
-import { type SerializedNode, type Trie } from '@/domain/models/dictionary/types.ts';
+import { type Node } from '@/domain/models/dictionary/types.ts';
 import { EventType } from '@/domain/models/events/enums.ts';
 import { type Event } from '@/domain/models/events/types.ts';
 import { InventoryView, Tile } from '@/domain/models/inventory/types.ts';
@@ -10,7 +10,7 @@ import { MatchResult } from '@/domain/models/match/enums.ts';
 import { MatchView } from '@/domain/models/match/types.ts';
 import { TurnsView } from '@/domain/models/turns/types.ts';
 import { default as GameTurnGenerator } from '@/domain/services/generation/turn/TurnGenerationService.ts';
-import { GeneratorResult } from '@/domain/services/generation/turn/types.ts';
+import { GeneratorContextData, GeneratorPartition, GeneratorResult } from '@/domain/services/generation/turn/types.ts';
 
 export {
   BoardType as GameBoardType,
@@ -28,12 +28,13 @@ export type {
   BoardView as GameBoardView,
   Cell as GameCell,
   Event as GameEvent,
+  GeneratorContextData as GameGeneratorContextData,
+  GeneratorPartition as GameGeneratorPartition,
   GeneratorResult as GameGeneratorResult,
   InventoryView as GameInventoryView,
   MatchView as GameMatchView,
-  SerializedNode as GameSerializedNode,
+  Node as GameNode,
   Tile as GameTile,
-  Trie as GameTrie,
   TurnsView as GameTurnsView,
 };
 

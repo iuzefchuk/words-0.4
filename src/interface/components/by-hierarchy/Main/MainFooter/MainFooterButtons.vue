@@ -91,10 +91,8 @@ const items = reactive([
     font-size: var(--btn-font-size);
     color: var(--btn-color);
     font-weight: var(--btn-font-weight);
-    letter-spacing: 0.25px;
+    letter-spacing: 0.5px;
     background: var(--btn-bg);
-    text-shadow: var(--text-shadow-2xs);
-    --text-shadow-color: var(--btn-color);
     &:hover:not(:active):not(:disabled) {
       background: var(--btn-bg-hover);
       border-color: var(--btn-border-color-hover);
