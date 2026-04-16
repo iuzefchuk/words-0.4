@@ -30,7 +30,11 @@ export default class WebWorkerService implements WorkerService {
   }
 
   async init(taskId: string, data: unknown): Promise<void> {
-    const poolSize = Math.min(8, Math.max(1, Math.floor((globalThis.navigator?.hardwareConcurrency ?? 2) / 2)));
+    const deviceMemoryGb = (globalThis.navigator as { deviceMemory?: number })?.deviceMemory;
+    const poolSize = Math.min(
+      8,
+      Math.max(1, deviceMemoryGb ? Math.floor(deviceMemoryGb) : Math.floor((globalThis.navigator?.hardwareConcurrency ?? 2) / 2)),
+    );
     const workers = Array.from({ length: poolSize }, () => this.createWorker(taskId));
     await Promise.all(workers.map(worker => this.initWorker(worker, data)));
     for (const worker of workers) this.returnToPool(taskId, worker);
