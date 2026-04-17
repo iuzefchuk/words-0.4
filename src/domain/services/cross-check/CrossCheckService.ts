@@ -44,7 +44,7 @@ export default class CrossCheckService {
     const suffix = this.collectAdjacentTileLetters(axisCells, position, 1);
     if (!prefix && !suffix) return CrossCheckTable.ALL_LETTERS_MASK;
     const prefixNode = prefix ? this.dictionary.getNode(prefix) : this.dictionary.rootNode;
-    if (!prefixNode) return 0;
+    if (prefixNode === null) return 0;
     let mask = 0;
     this.dictionary.forEachNodeChild(prefixNode, (_letter, nodeWithPossibleNextLetter, letterIndex) => {
       if (!suffix) {
