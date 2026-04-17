@@ -32,6 +32,16 @@ export default class Dictionary {
     });
   }
 
+  forEachNodeChild(node: Node, callback: (letter: Letter, childNode: Node, letterIndex: number) => void): void {
+    const data = this.data;
+    for (let i = 0; i < Dictionary.LETTERS.length; i++) {
+      const childOffset = data[(node as number) + 1 + i]!;
+      if (childOffset !== 0) {
+        callback(Dictionary.LETTERS[i]!, childOffset as Node, i);
+      }
+    }
+  }
+
   getNode(word: string, startNode: Node = this.rootNode): Node | null {
     const data = this.data;
     let current = startNode as number;
@@ -41,16 +51,6 @@ export default class Dictionary {
       current = childOffset;
     }
     return current as Node;
-  }
-
-  forEachNodeChild(node: Node, callback: (letter: Letter, childNode: Node) => void): void {
-    const data = this.data;
-    for (let i = 0; i < Dictionary.LETTERS.length; i++) {
-      const childOffset = data[(node as number) + 1 + i]!;
-      if (childOffset !== 0) {
-        callback(Dictionary.LETTERS[i]!, childOffset as Node);
-      }
-    }
   }
 
   getNodeChildren(node: Node): NodeChildren {

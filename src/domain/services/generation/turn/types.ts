@@ -8,7 +8,7 @@ import Inventory from '@/domain/models/inventory/Inventory.ts';
 import { Tile, TileCollection } from '@/domain/models/inventory/types.ts';
 import Turns from '@/domain/models/turns/Turns.ts';
 import { ValidResult } from '@/domain/models/turns/types.ts';
-import CrossCheckService from '@/domain/services/cross-check/CrossCheckService.ts';
+import CrossCheckTable from '@/domain/services/cross-check/CrossCheckTable.ts';
 import { GenerationCommandType, GenerationDirection, GenerationTask } from '@/domain/services/generation/turn/enums.ts';
 
 export type ApplyTask = {
@@ -34,11 +34,10 @@ export type EvaluateTask = { traversal: Traversal; type: GenerationTask.Evaluate
 export type GeneratorArguments = {
   context: GeneratorContext;
   coords: AnchorCoordinates;
-  crossChecker: CrossCheckService;
   playerTileCollection: TileCollection;
 };
 
-export type GeneratorContext = { dictionary: Dictionary } & GeneratorContextData;
+export type GeneratorContext = { crossCheckTable: CrossCheckTable; dictionary: Dictionary } & GeneratorContextData;
 
 export type GeneratorContextData = { readonly board: Board; readonly inventory: Inventory; readonly turns: Turns };
 

@@ -118,8 +118,14 @@ export default class CommandsService {
     const player = GamePlayer.Opponent;
     const attemptsLimit = this.game.turnGenerationAttempts;
     const anchorCount = this.game.anchorCellsCount;
-    const { dictionary, ...data } = this.game.createTurnGenerationContext();
-    const workerInput = { attemptsLimit, buffer: dictionary.buffer, ...data, player };
+    const { crossCheckTable, dictionary, ...data } = this.game.createTurnGenerationContext();
+    const workerInput = {
+      attemptsLimit,
+      buffer: dictionary.buffer,
+      crossCheckBuffer: crossCheckTable.buffer,
+      ...data,
+      player,
+    };
     const results =
       attemptsLimit === Infinity
         ? this.createWorkerParallelStream(workerInput, anchorCount)

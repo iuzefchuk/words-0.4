@@ -12,6 +12,7 @@ import { WorkerRequestType, WorkerResponseType } from '@/infrastructure/services
 type StreamInput = {
   attemptsLimit: number;
   buffer: SharedArrayBuffer;
+  crossCheckBuffer: SharedArrayBuffer;
   partition?: GameGeneratorPartition;
   player: GamePlayer;
 } & GameGeneratorContextData;
@@ -29,7 +30,7 @@ class TurnGenerationHandler {
 
   private findBestResult(input: StreamInput): GeneratorResult | null {
     const dictionary = this.dictionary ?? GameDictionary.createFromBuffer(input.buffer);
-    const context = GameTurnGenerator.hydrateContext(input, dictionary);
+    const context = GameTurnGenerator.hydrateContext(input, dictionary, input.crossCheckBuffer);
     let bestResult: GeneratorResult | null = null;
     let bestScore = -1;
     let count = 0;

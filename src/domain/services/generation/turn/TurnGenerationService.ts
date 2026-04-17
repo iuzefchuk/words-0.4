@@ -1,4 +1,4 @@
-import { Letter, Player } from '@/domain/enums.ts';
+import { Player } from '@/domain/enums.ts';
 import Board from '@/domain/models/board/Board.ts';
 import { Axis } from '@/domain/models/board/enums.ts';
 import { AnchorCoordinates, Link } from '@/domain/models/board/types.ts';
@@ -8,6 +8,7 @@ import { Tile, TileCollection } from '@/domain/models/inventory/types.ts';
 import { ValidationStatus } from '@/domain/models/turns/enums.ts';
 import Turns from '@/domain/models/turns/Turns.ts';
 import CrossCheckService from '@/domain/services/cross-check/CrossCheckService.ts';
+import CrossCheckTable from '@/domain/services/cross-check/CrossCheckTable.ts';
 import { GenerationCommandType, GenerationDirection, GenerationTask } from '@/domain/services/generation/turn/enums.ts';
 import {
   ApplyTask,
@@ -104,12 +105,11 @@ class TaskDispatcher {
 
   private constructor(
     private readonly context: GeneratorContext,
-    private readonly crossChecker: CrossCheckService,
     private state: DispatcherState,
     public computeds: DispatcherComputeds,
   ) {}
 
-  static create({ context, coords, crossChecker, playerTileCollection }: GeneratorArguments): TaskDispatcher {
+  static create({ context, coords, playerTileCollection }: GeneratorArguments): TaskDispatcher {
     const tiles: MutableTileCollection = new Map();
     for (const [letter, tileIds] of playerTileCollection) tiles.set(letter, [...tileIds]);
     const state: DispatcherState = { placement: [], tiles };
@@ -117,7 +117,7 @@ class TaskDispatcher {
       axisCells: context.board.calculateAxisCells(coords),
       oppositeAxis: context.board.getOppositeAxis(coords.axis),
     };
-    return new TaskDispatcher(context, crossChecker, state, computeds);
+    return new TaskDispatcher(context, state, computeds);
   }
 
   execute(task: Task): TaskCommand {
@@ -149,11 +149,11 @@ class TaskDispatcher {
 
   private calculateAndExploreResolution(traversal: Traversal, candidate: Candidate): ContinueTaskCommand | StopTaskCommand {
     const { cell, position } = candidate;
-    const anchorLetters = this.crossChecker.execute({ axis: this.computeds.oppositeAxis, cell });
+    const anchorMask = this.context.crossCheckTable.getMask(this.computeds.oppositeAxis, cell);
     const newTasks: Array<Task> = [];
-    this.dictionary.forEachNodeChild(traversal.node, (possibleNextLetter, nodeWithPossibleNextLetter) => {
+    this.dictionary.forEachNodeChild(traversal.node, (possibleNextLetter, nodeWithPossibleNextLetter, letterIndex) => {
+      if (((anchorMask >>> letterIndex) & 1) === 0) return;
       const letterTiles = this.tiles.get(possibleNextLetter) as Array<Tile>;
-      if (!anchorLetters.has(possibleNextLetter)) return;
       if (!letterTiles) return;
       const tile = letterTiles.at(-1);
       if (!tile) return;
@@ -272,8 +272,10 @@ class TaskDispatcher {
 
 export default class TurnGenerationService {
   static createContext(board: Board, dictionary: Dictionary, inventory: Inventory, turns: Turns): GeneratorContext {
+    const clonedBoard = Board.clone(board);
     return {
-      board: Board.clone(board),
+      board: clonedBoard,
+      crossCheckTable: CrossCheckService.precompute(clonedBoard, dictionary, inventory),
       dictionary,
       inventory,
       turns: Turns.clone(turns),
@@ -281,7 +283,7 @@ export default class TurnGenerationService {
   }
 
   static *execute(context: GeneratorContext, player: Player, partition?: GeneratorPartition): Generator<GeneratorResult> {
-    const { board, dictionary, inventory } = context;
+    const { board, inventory } = context;
     const playerTileCollection = inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;
     const anchorCells = board.calculateAnchorCells();
@@ -289,19 +291,19 @@ export default class TurnGenerationService {
     const allAnchors = Array.from(anchorCells);
     const anchors = partition ? allAnchors.slice(partition.offset, partition.offset + partition.length) : allAnchors;
     if (anchors.length === 0) return;
-    const crossChecker = new CrossCheckService(board, dictionary, inventory);
     for (const cell of anchors) {
       for (const axis of Object.values(Axis)) {
         const coords: AnchorCoordinates = { axis, cell };
-        yield* this.generate({ context, coords, crossChecker, playerTileCollection });
+        yield* this.generate({ context, coords, playerTileCollection });
       }
     }
   }
 
-  static hydrateContext(data: unknown, dictionary: Dictionary): GeneratorContext {
+  static hydrateContext(data: unknown, dictionary: Dictionary, crossCheckBuffer: SharedArrayBuffer): GeneratorContext {
     const d = data as { board: Board; inventory: Inventory; turns: Turns };
     return {
       board: Board.clone(d.board),
+      crossCheckTable: CrossCheckTable.fromBuffer(crossCheckBuffer),
       dictionary,
       inventory: Inventory.clone(d.inventory),
       turns: Turns.clone(d.turns, { createUniqueId: () => '' }),
