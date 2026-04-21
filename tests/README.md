@@ -1,5 +1,4 @@
-HOW TO UNIT TEST
-================
+# HOW TO UNIT TEST
 
 Two patterns depending on the class under test:
 
@@ -81,7 +80,7 @@ Stateful classes hold state across method calls. The flow above still applies �
 
 ### 1. Identify entities — also include construction
 
-Method arguments are entities as before. **Additionally**, treat the constructor's arguments as a *construction* entity — the inputs that produce an instance. Cover every equivalence class of construction input (valid, invalid, edge-of-range) the same way you cover method arguments.
+Method arguments are entities as before. **Additionally**, treat the constructor's arguments as a _construction_ entity — the inputs that produce an instance. Cover every equivalence class of construction input (valid, invalid, edge-of-range) the same way you cover method arguments.
 
 ### 2. Build (or reuse) fixtures for every meaningful state
 
@@ -122,7 +121,7 @@ type CartCases = {
   readonly buildCart: () => Cart;
   readonly itemCount: number; // expected result of cart.getItemCount() after action
   readonly name: string;
-  readonly total: number;     // expected result of cart.getTotal() after action
+  readonly total: number; // expected result of cart.getTotal() after action
 };
 ```
 
@@ -131,25 +130,22 @@ type CartCases = {
 Call the fixture builder inside `beforeEach` — never share instances across cases:
 
 ```ts
-describe.each(<Filename>Cases.createCartCases())(
-  '$name',
-  ({ action, buildCart, itemCount, total }) => {
-    let cart: Cart;
-    beforeEach(() => {
-      cart = buildCart();
-    });
+describe.each(<Filename>Cases.createCartCases())('$name', ({ action, buildCart, itemCount, total }) => {
+  let cart: Cart;
+  beforeEach(() => {
+    cart = buildCart();
+  });
 
-    test('updates total', () => {
-      action(cart);
-      expect(cart.getTotal()).toBe(total);
-    });
+  test('updates total', () => {
+    action(cart);
+    expect(cart.getTotal()).toBe(total);
+  });
 
-    test('updates item count', () => {
-      action(cart);
-      expect(cart.getItemCount()).toBe(itemCount);
-    });
-  },
-);
+  test('updates item count', () => {
+    action(cart);
+    expect(cart.getItemCount()).toBe(itemCount);
+  });
+});
 ```
 
 Verify state **only** through the class's public query methods — never by inspecting private fields. Reaching into internals couples the test to the implementation and breaks on every refactor. If the class exposes only mutations with no way to read state back, add public queries first — a class with no observable state isn't really testable.
@@ -188,7 +184,7 @@ describe.each(<Filename>Cases.createOrderErrorCases())(
 
 **Guidelines:**
 
-- **Match on the error *class*, not the full message.** Messages rot under refactors; class contracts don't. Use the optional `message` field only for a short, load-bearing substring or regex — never the full text.
+- **Match on the error _class_, not the full message.** Messages rot under refactors; class contracts don't. Use the optional `message` field only for a short, load-bearing substring or regex — never the full text.
 - **For async throws**, assert with `await expect(service.foo(input)).rejects.toThrow(error)`.
 - **The skip-trivial rule still applies.** An unconditional `throw new Error('...')` with no branching isn't worth testing — only throws guarded by a real condition (input validation, invariant check) deserve coverage.
 
