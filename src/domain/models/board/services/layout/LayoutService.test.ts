@@ -1,96 +1,118 @@
-import Board from '@/domain/models/board/Board.ts';
 import { Axis } from '@/domain/models/board/enums.ts';
 import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
-import { Cell } from '@/domain/models/board/types.ts';
+import { AnchorCoordinates, Cell } from '@/domain/models/board/types.ts';
 
-const cellsPerAxis = Board.CELLS_PER_AXIS;
-// 2D grid used as an alternative to flat-index arithmetic for deriving expected values
-const grid = Array.from({ length: cellsPerAxis }, (_, row) =>
-  Array.from({ length: cellsPerAxis }, (_, col) => (row * cellsPerAxis + col) as Cell),
-);
-const cells = Board.CELLS_BY_INDEX.map(cell => [cell] as const);
-const positions = Array.from({ length: cellsPerAxis }, (_, i) => [i] as const);
-const findCellPosition = (cell: Cell): [number, number] => [Math.floor(cell / cellsPerAxis), cell % cellsPerAxis];
+type CellCases = {
+  readonly adjacentCells: ReadonlyArray<Cell>;
+  readonly cell: Cell;
+  readonly column: number;
+  readonly isBottomEdge: boolean;
+  readonly isLeftEdge: boolean;
+  readonly isRightEdge: boolean;
+  readonly isTopEdge: boolean;
+  readonly row: number;
+};
 
-describe('LayoutService', () => {
-  it.each(cells)('calculates adjacent cells correctly for cell %i', cell => {
-    const directionOffsets: ReadonlyArray<readonly [number, number]> = [
+type CoordsCases = {
+  readonly axisCells: ReadonlyArray<Cell>;
+  readonly coords: AnchorCoordinates;
+};
+
+class CasesFactory {
+  static createCellCases(): ReadonlyArray<CellCases> {
+    const grid = this.buildAltGrid();
+    return grid.flatMap((rowCells, row) =>
+      rowCells.map((cell, column) => ({
+        adjacentCells: this.computeAltAdjacentCells(grid, row, column),
+        cell,
+        column,
+        isBottomEdge: row === grid.length - 1,
+        isLeftEdge: column === 0,
+        isRightEdge: column === rowCells.length - 1,
+        isTopEdge: row === 0,
+        row,
+      })),
+    );
+  }
+
+  static createCoordsCases(): ReadonlyArray<CoordsCases> {
+    const grid = this.buildAltGrid();
+    return grid.flatMap(rowCells =>
+      rowCells.flatMap((cell, column) => [
+        { axisCells: rowCells, coords: { axis: Axis.X, cell } },
+        { axisCells: grid.map(gridRow => gridRow[column]!), coords: { axis: Axis.Y, cell } },
+      ]),
+    );
+  }
+
+  private static buildAltGrid(): ReadonlyArray<ReadonlyArray<Cell>> {
+    return Array.from({ length: LayoutService.CELLS_PER_AXIS ** 2 }, (_, index) => index as Cell).reduce<Array<Array<Cell>>>(
+      (rowsSoFar, cell) => {
+        const lastRow = rowsSoFar[rowsSoFar.length - 1];
+        if (lastRow !== undefined && lastRow.length < LayoutService.CELLS_PER_AXIS) lastRow.push(cell);
+        else rowsSoFar.push([cell]);
+        return rowsSoFar;
+      },
+      [],
+    );
+  }
+
+  private static computeAltAdjacentCells(
+    grid: ReadonlyArray<ReadonlyArray<Cell>>,
+    row: number,
+    column: number,
+  ): ReadonlyArray<Cell> {
+    return [
       [0, -1],
       [0, 1],
       [-1, 0],
       [1, 0],
-    ];
-    const [row, col] = findCellPosition(cell);
-    const adjacentCoords = directionOffsets.map(([rowDelta, colDelta]) => [row + rowDelta, col + colDelta] as const);
-    const inBoundsCoords = adjacentCoords.filter(
-      ([neighborRow, neighborCol]) =>
-        neighborRow >= 0 && neighborRow < cellsPerAxis && neighborCol >= 0 && neighborCol < cellsPerAxis,
-    );
-    const expectedAdjacentCells = inBoundsCoords.map(([neighborRow, neighborCol]) => grid[neighborRow]![neighborCol]!);
-    expect(LayoutService.calculateAdjacentCells(cell)).toEqual(expectedAdjacentCells);
-  });
+    ]
+      .map(([rowOffset, columnOffset]) => grid[row + rowOffset!]?.[column + columnOffset!])
+      .filter((neighbor): neighbor is Cell => neighbor !== undefined);
+  }
+}
 
-  it.each(cells)('calculates axis cells correctly for cell %i', cell => {
-    const [row, col] = findCellPosition(cell);
-    const expectedRowCells = grid[row]!;
-    expect(LayoutService.calculateAxisCells({ axis: Axis.X, cell })).toEqual(expectedRowCells);
-    const expectedColumnCells = grid.map(gridRow => gridRow[col]!);
-    expect(LayoutService.calculateAxisCells({ axis: Axis.Y, cell })).toEqual(expectedColumnCells);
-  });
+describe('LayoutService', () => {
+  describe.each(CasesFactory.createCellCases())(
+    'for cell $cell',
+    ({ adjacentCells, cell, column, isBottomEdge, isLeftEdge, isRightEdge, isTopEdge, row }) => {
+      test('calculates adjacent cells', () => {
+        expect(LayoutService.getAdjacentCells(cell)).toEqual(adjacentCells);
+      });
 
-  it.each(cells)('calculates row position correctly for cell %i', cell => {
-    const [expectedRow] = findCellPosition(cell);
-    expect(LayoutService.getCellPositionInRow(cell)).toBe(expectedRow);
-  });
+      test('calculates column position', () => {
+        expect(LayoutService.getCellPositionInColumn(cell)).toBe(column);
+      });
 
-  it.each(cells)('calculates column position correctly for cell %i', cell => {
-    const [, expectedCol] = findCellPosition(cell);
-    expect(LayoutService.getCellPositionInColumn(cell)).toBe(expectedCol);
-  });
+      test('calculates is on bottom edge', () => {
+        expect(LayoutService.isCellOnBottomEdge(cell)).toBe(isBottomEdge);
+      });
 
-  it.each(positions)('calculates axis start correctly for position %i', position => {
-    const [firstPosition] = grid.keys();
-    expect(LayoutService.isCellPositionAtAxisStart(position)).toBe(position === firstPosition);
-  });
+      test('calculates is on left edge', () => {
+        expect(LayoutService.isCellOnLeftEdge(cell)).toBe(isLeftEdge);
+      });
 
-  it.each(positions)('calculates axis end correctly for position %i', position => {
-    const lastPosition = Array.from(grid.keys()).at(-1)!;
-    expect(LayoutService.isCellPositionAtAxisEnd(position)).toBe(position === lastPosition);
-  });
+      test('calculates is on right edge', () => {
+        expect(LayoutService.isCellOnRightEdge(cell)).toBe(isRightEdge);
+      });
 
-  it.each(cells)('calculates bottom edge correctly for cell %i', cell => {
-    const bottomRowCells = new Set(grid.at(-1)!);
-    expect(LayoutService.isCellOnBottomEdge(cell)).toBe(bottomRowCells.has(cell));
-  });
+      test('calculates is on top edge', () => {
+        expect(LayoutService.isCellOnTopEdge(cell)).toBe(isTopEdge);
+      });
 
-  it.each(cells)('calculates left edge correctly for cell %i', cell => {
-    const leftColumnCells = new Set(grid.map(gridRow => gridRow.at(0)!));
-    expect(LayoutService.isCellOnLeftEdge(cell)).toBe(leftColumnCells.has(cell));
-  });
+      test('calculates row position', () => {
+        expect(LayoutService.getCellPositionInRow(cell)).toBe(row);
+      });
+    },
+  );
 
-  it.each(cells)('calculates right edge correctly for cell %i', cell => {
-    const rightColumnCells = new Set(grid.map(gridRow => gridRow.at(-1)!));
-    expect(LayoutService.isCellOnRightEdge(cell)).toBe(rightColumnCells.has(cell));
-  });
-
-  it.each(cells)('calculates top edge correctly for cell %i', cell => {
-    const topRowCells = new Set(grid.at(0)!);
-    expect(LayoutService.isCellOnTopEdge(cell)).toBe(topRowCells.has(cell));
-  });
-
-  it.each([[-1], [Board.TOTAL_CELLS]])('throws on out-of-bounds cell %i', invalidCell => {
-    expect(() => LayoutService.calculateAdjacentCells(invalidCell as Cell)).toThrow(RangeError);
-    expect(() => LayoutService.calculateAxisCells({ axis: Axis.X, cell: invalidCell as Cell })).toThrow(RangeError);
-    expect(() => LayoutService.getCellPositionInRow(invalidCell as Cell)).toThrow(RangeError);
-    expect(() => LayoutService.getCellPositionInColumn(invalidCell as Cell)).toThrow(RangeError);
-    expect(() => LayoutService.isCellOnBottomEdge(invalidCell as Cell)).toThrow(RangeError);
-    expect(() => LayoutService.isCellOnLeftEdge(invalidCell as Cell)).toThrow(RangeError);
-    expect(() => LayoutService.isCellOnRightEdge(invalidCell as Cell)).toThrow(RangeError);
-    expect(() => LayoutService.isCellOnTopEdge(invalidCell as Cell)).toThrow(RangeError);
-  });
-
-  it.each([[-1], [cellsPerAxis]])('throws on out-of-bounds position %i', invalidPosition => {
-    expect(() => LayoutService.isCellPositionAtAxisStart(invalidPosition)).toThrow(RangeError);
-    expect(() => LayoutService.isCellPositionAtAxisEnd(invalidPosition)).toThrow(RangeError);
-  });
+  describe.each(CasesFactory.createCoordsCases())(
+    'for coords (axis $coords.axis, cell $coords.cell)',
+    ({ axisCells, coords }) => {
+      test('calculates axis cells', () => {
+        expect(LayoutService.getAxisCells(coords)).toEqual(axisCells);
+      });
+    },
+  );
 });

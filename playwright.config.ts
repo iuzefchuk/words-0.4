@@ -1,6 +1,8 @@
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@playwright/test';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const URL = `http://localhost:${process.env.VITE_PORT ?? 5173}`;
 
 export default defineConfig({

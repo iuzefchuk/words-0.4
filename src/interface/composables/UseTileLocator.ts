@@ -63,7 +63,7 @@ export default class UseTileLocator {
       if (row > maxRow) maxRow = row;
       if (col < minCol) minCol = col;
       if (col > maxCol) maxCol = col;
-      for (const adjacent of this.applicationStore.calculateAdjacentCells(cell)) {
+      for (const adjacent of this.applicationStore.getAdjacentCells(cell)) {
         if (!cells.has(adjacent) || visited.has(adjacent)) continue;
         visited.add(adjacent);
         stack.push(adjacent);

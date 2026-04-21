@@ -114,7 +114,7 @@ class TaskDispatcher {
     for (const [letter, tileIds] of playerTileCollection) tiles.set(letter, [...tileIds]);
     const state: DispatcherState = { placement: [], tiles };
     const computeds: DispatcherComputeds = {
-      axisCells: context.board.calculateAxisCells(coords),
+      axisCells: context.board.getAxisCells(coords),
       oppositeAxis: context.board.getOppositeAxis(coords.axis),
     };
     return new TaskDispatcher(context, crossChecker, state, computeds);

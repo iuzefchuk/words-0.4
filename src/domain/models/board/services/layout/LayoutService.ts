@@ -4,9 +4,13 @@ import { AnchorCoordinates, Cell } from '@/domain/models/board/types.ts';
 export default class LayoutService {
   static readonly CELLS_PER_AXIS = 15;
 
-  static readonly TOTAL_CELLS = this.CELLS_PER_AXIS ** 2;
+  static readonly CELLS_PER_LAYOUT = this.CELLS_PER_AXIS ** 2;
 
-  static readonly CENTER_CELL = Math.floor(this.TOTAL_CELLS / 2) as Cell;
+  static readonly CELLS_BY_INDEX: ReadonlyArray<Cell> = Array.from({ length: this.CELLS_PER_LAYOUT }, (_, i) => i as Cell);
+
+  static readonly CENTER_CELL = Math.floor(this.CELLS_PER_LAYOUT / 2) as Cell;
+
+  static readonly DEFAULT_AXIS = Axis.X;
 
   private static readonly AXIS_X_STEP = 1;
 
@@ -18,7 +22,7 @@ export default class LayoutService {
 
   private static readonly ADJACENT_CELLS: ReadonlyMap<Cell, ReadonlyArray<Cell>> = (() => {
     const cache = new Map<Cell, ReadonlyArray<Cell>>();
-    for (let cell = 0; cell < this.TOTAL_CELLS; cell++) {
+    for (let cell = 0; cell < this.CELLS_PER_LAYOUT; cell++) {
       const col = this.getCellPositionInColumn(cell as Cell);
       const row = this.getCellPositionInRow(cell as Cell);
       const adjacents: Array<Cell> = [];
@@ -47,29 +51,25 @@ export default class LayoutService {
     return cache;
   })();
 
-  static calculateAdjacentCells(cell: Cell): ReadonlyArray<Cell> {
-    this.validateCellBounds(cell);
-    const cells = this.ADJACENT_CELLS.get(cell);
-    if (cells === undefined) throw new ReferenceError('Cells have to be defined');
-    return cells;
+  static getAdjacentCells(cell: Cell): ReadonlyArray<Cell> {
+    const adjacentCells = this.ADJACENT_CELLS.get(cell);
+    if (adjacentCells === undefined) throw new ReferenceError('Adjacent cells have to be defined');
+    return adjacentCells;
   }
 
-  static calculateAxisCells(coords: AnchorCoordinates): ReadonlyArray<Cell> {
+  static getAxisCells(coords: AnchorCoordinates): ReadonlyArray<Cell> {
     const { axis, cell } = coords;
-    this.validateCellBounds(cell);
     const cellPosition = axis === Axis.X ? this.getCellPositionInRow(cell) : this.getCellPositionInColumn(cell);
-    const cells = this.AXIS_CELLS.get(axis);
-    if (cells === undefined) throw new ReferenceError('Cells have to be defined');
-    return cells[cellPosition]!;
+    const axisCells = this.AXIS_CELLS.get(axis);
+    if (axisCells === undefined) throw new ReferenceError('Axis cells have to be defined');
+    return axisCells[cellPosition]!;
   }
 
   static getCellPositionInColumn(cell: Cell): number {
-    this.validateCellBounds(cell);
     return cell % this.AXIS_Y_STEP;
   }
 
   static getCellPositionInRow(cell: Cell): number {
-    this.validateCellBounds(cell);
     return Math.floor(cell / this.AXIS_Y_STEP);
   }
 
@@ -78,45 +78,30 @@ export default class LayoutService {
   }
 
   static isCellCenter(cell: Cell): boolean {
-    this.validateCellBounds(cell);
     return cell === this.CENTER_CELL;
   }
 
   static isCellOnBottomEdge(cell: Cell): boolean {
-    this.validateCellBounds(cell);
     return this.isCellPositionAtAxisEnd(this.getCellPositionInRow(cell));
   }
 
   static isCellOnLeftEdge(cell: Cell): boolean {
-    this.validateCellBounds(cell);
     return this.isCellPositionAtAxisStart(this.getCellPositionInColumn(cell));
   }
 
   static isCellOnRightEdge(cell: Cell): boolean {
-    this.validateCellBounds(cell);
     return this.isCellPositionAtAxisEnd(this.getCellPositionInColumn(cell));
   }
 
   static isCellOnTopEdge(cell: Cell): boolean {
-    this.validateCellBounds(cell);
     return this.isCellPositionAtAxisStart(this.getCellPositionInRow(cell));
   }
 
   static isCellPositionAtAxisEnd(position: number): boolean {
-    this.validateCellPositionBounds(position);
     return position === this.LAST_CELL_POSITION;
   }
 
   static isCellPositionAtAxisStart(position: number): boolean {
-    this.validateCellPositionBounds(position);
     return position === this.FIRST_CELL_POSITION;
-  }
-
-  private static validateCellBounds(cell: Cell): void {
-    if (cell < 0 || cell >= this.TOTAL_CELLS) throw new RangeError('Cell out of bounds');
-  }
-
-  private static validateCellPositionBounds(position: number): void {
-    if (position < this.FIRST_CELL_POSITION || position > this.LAST_CELL_POSITION) throw new RangeError('Position out of bounds');
   }
 }

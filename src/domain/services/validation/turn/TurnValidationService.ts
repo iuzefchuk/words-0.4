@@ -83,7 +83,7 @@ export default class TurnValidationService {
       turns.historyHasPriorTurns,
       tiles => board.resolvePlacement(tiles),
       cell => board.isCellCenter(cell),
-      cell => board.calculateAdjacentCells(cell),
+      cell => board.getAdjacentCells(cell),
       cell => board.isCellOccupied(cell),
     );
     if (this.isError(result)) return Pipeline.fail(result);

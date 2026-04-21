@@ -1,10 +1,10 @@
-import Board from '@/domain/models/board/Board.ts';
 import { BoardType, Bonus } from '@/domain/models/board/enums.ts';
+import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
 import { BonusDistribution, Cell } from '@/domain/models/board/types.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 export default class BonusService {
-  static createBonusDistribution(type: BoardType, randomizer?: () => number): BonusDistribution {
+  static createDistribution(type: BoardType, randomizer?: () => number): BonusDistribution {
     return type === BoardType.Classic ? this.createClassicDistribution() : this.createRandomDistribution(randomizer);
   }
 
@@ -26,7 +26,7 @@ export default class BonusService {
     const countByBonus = new Map<Bonus, number>();
     for (const bonus of classicMap.values()) countByBonus.set(bonus, (countByBonus.get(bonus) ?? 0) + 1);
     const counts = Object.values(Bonus).map(bonus => ({ bonus, count: countByBonus.get(bonus) ?? 0 }));
-    const availableCells = Board.CELLS_BY_INDEX.filter(cell => cell !== Board.CENTER_CELL);
+    const availableCells = LayoutService.CELLS_BY_INDEX.filter(cell => cell !== LayoutService.CENTER_CELL);
     shuffleWithFisherYates({ array: availableCells, ...(randomizer && { randomizer }) });
     const result = new Map<Cell, Bonus>();
     let offset = 0;

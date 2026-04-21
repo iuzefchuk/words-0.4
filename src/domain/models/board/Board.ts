@@ -5,22 +5,12 @@ import { AnchorCoordinates, BonusDistribution, Cell, Link, Placement } from '@/d
 import { Tile } from '@/domain/models/inventory/types.ts';
 
 export default class Board {
-  static readonly CELLS_PER_AXIS = 15;
-
-  static readonly TOTAL_CELLS = Board.CELLS_PER_AXIS ** 2;
-
-  static readonly CELLS_BY_INDEX: ReadonlyArray<Cell> = Array.from({ length: Board.TOTAL_CELLS }, (_, i) => i as Cell);
-
-  static readonly CENTER_CELL = Math.floor(Board.TOTAL_CELLS / 2) as Cell;
-
-  private static readonly DEFAULT_AXIS = Axis.X;
-
   get cells(): ReadonlyArray<Cell> {
-    return Board.CELLS_BY_INDEX;
+    return LayoutService.CELLS_BY_INDEX;
   }
 
   get cellsPerAxis(): number {
-    return Board.CELLS_PER_AXIS;
+    return LayoutService.CELLS_PER_AXIS;
   }
 
   private constructor(
@@ -35,19 +25,15 @@ export default class Board {
   }
 
   static create(type: BoardType, randomizer?: () => number): Board {
-    const bonusByCell = BonusService.createBonusDistribution(type, randomizer);
+    const bonusByCell = BonusService.createDistribution(type, randomizer);
     return new Board(bonusByCell, type, new Map(), new Map());
   }
 
-  calculateAdjacentCells(cell: Cell): ReadonlyArray<Cell> {
-    return LayoutService.calculateAdjacentCells(cell);
-  }
-
   calculateAnchorCells(): ReadonlySet<Cell> {
-    if (this.tileByCell.size === 0) return new Set([Board.CENTER_CELL]);
+    if (this.tileByCell.size === 0) return new Set([LayoutService.CENTER_CELL]);
     const result = new Set<Cell>();
     for (const cell of this.tileByCell.keys()) {
-      for (const adjacent of LayoutService.calculateAdjacentCells(cell)) {
+      for (const adjacent of LayoutService.getAdjacentCells(cell)) {
         if (!this.tileByCell.has(adjacent)) result.add(adjacent);
       }
     }
@@ -59,11 +45,11 @@ export default class Board {
     if (cells.length === 1) {
       const [firstCell] = cells;
       if (firstCell === undefined) throw new ReferenceError('First cell must be defined');
-      const connectedAdjacents = LayoutService.calculateAdjacentCells(firstCell).filter(cell => this.isCellOccupied(cell));
+      const connectedAdjacents = LayoutService.getAdjacentCells(firstCell).filter(cell => this.isCellOccupied(cell));
       const firstConnectedAdjacent = connectedAdjacents[0];
       normalizedSequence = firstConnectedAdjacent === undefined ? [] : [firstConnectedAdjacent, firstCell];
     }
-    if (normalizedSequence.length === 0) return Board.DEFAULT_AXIS;
+    if (normalizedSequence.length === 0) return LayoutService.DEFAULT_AXIS;
     const [firstIndex] = normalizedSequence;
     if (firstIndex === undefined) throw new ReferenceError('First index must be defined');
     const firstColumn = LayoutService.getCellPositionInColumn(firstIndex);
@@ -71,13 +57,9 @@ export default class Board {
     return isVertical ? Axis.Y : Axis.X;
   }
 
-  calculateAxisCells(coords: AnchorCoordinates): ReadonlyArray<Cell> {
-    return LayoutService.calculateAxisCells(coords);
-  }
-
   createPlacement(coords: AnchorCoordinates, tiles: ReadonlyArray<Tile>): Placement {
     if (tiles.length === 0) throw new Error('Tiles must not be empty');
-    const axisCells = LayoutService.calculateAxisCells(coords);
+    const axisCells = LayoutService.getAxisCells(coords);
     const tilesToPlace = new Set(tiles);
     let links: Array<Link> = [];
     let segmentContainsTile = false;
@@ -108,6 +90,14 @@ export default class Board {
 
   findTileByCell(cell: Cell): Tile | undefined {
     return this.tileByCell.get(cell);
+  }
+
+  getAdjacentCells(cell: Cell): ReadonlyArray<Cell> {
+    return LayoutService.getAdjacentCells(cell);
+  }
+
+  getAxisCells(coords: AnchorCoordinates): ReadonlyArray<Cell> {
+    return LayoutService.getAxisCells(coords);
   }
 
   getBonus(cell: Cell): Bonus | null {

@@ -6,6 +6,7 @@ dist-ssr
 .coverage
 .results
 .unlighthouse
+.stryker-report
 visual.spec.ts-snapshots
 *.local
 *.lock
