@@ -15,18 +15,17 @@ export default class Board {
 
   private constructor(
     private readonly bonusByCell: BonusDistribution,
-    public readonly type: BoardType,
     private tileByCell: Map<Cell, Tile>,
     private cellByTile: Map<Tile, Cell>,
   ) {}
 
   static clone(source: Board): Board {
-    return new Board(source.bonusByCell, source.type, new Map(source.tileByCell), new Map(source.cellByTile));
+    return new Board(source.bonusByCell, new Map(source.tileByCell), new Map(source.cellByTile));
   }
 
   static create(type: BoardType, randomizer?: () => number): Board {
     const bonusByCell = BonusService.createDistribution(type, randomizer);
-    return new Board(bonusByCell, type, new Map(), new Map());
+    return new Board(bonusByCell, new Map(), new Map());
   }
 
   calculateAnchorCells(): ReadonlySet<Cell> {

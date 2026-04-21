@@ -1,4 +1,4 @@
-import { Axis, BoardType, Bonus } from '@/domain/models/board/enums.ts';
+import { Axis, Bonus } from '@/domain/models/board/enums.ts';
 import { Tile } from '@/domain/models/inventory/types.ts';
 
 export type AnchorCoordinates = { readonly axis: Axis; readonly cell: Cell };
@@ -14,7 +14,6 @@ export type BoardView = {
   getCellPositionInRow(cell: Cell): number;
   isCellCenter(cell: Cell): boolean;
   isTilePlaced(tile: Tile): boolean;
-  readonly type: BoardType;
 };
 
 export type BonusDistribution = ReadonlyMap<Cell, Bonus>;

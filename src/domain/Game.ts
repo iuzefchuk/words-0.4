@@ -1,10 +1,14 @@
 import Board from '@/domain/models/board/Board.ts';
 import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Events from '@/domain/models/events/Events.ts';
+import PassIsResignSpec from '@/domain/models/events/specifications/PassIsResignSpec.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 import Match from '@/domain/models/match/Match.ts';
+import WinnerDerivationPolicy from '@/domain/models/match/policies/WinnerDerivationPolicy.ts';
 import { ValidationStatus } from '@/domain/models/turns/enums.ts';
+import SettingsMutationSpec from '@/domain/models/turns/specifications/SettingsMutationSpec.ts';
 import Turns from '@/domain/models/turns/Turns.ts';
+import MatchTerminationPolicy from '@/domain/policies/MatchTerminationPolicy.ts';
 import TurnGenerationService from '@/domain/services/generation/turn/TurnGenerationService.ts';
 import { GeneratorContext, GeneratorResult } from '@/domain/services/generation/turn/types.ts';
 import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
@@ -57,11 +61,11 @@ export default class Game {
   }
 
   get settingsChangeIsAllowed(): boolean {
-    return !this.turns.historyHasPriorTurns;
+    return SettingsMutationSpec.isSatisfiedBy(this.turns);
   }
 
   get turnGenerationAttempts(): number {
-    return Game.TURN_GENERATION_ATTEMPTS[this.difficulty];
+    return Game.TURN_GENERATION_ATTEMPTS[this.match.difficulty];
   }
 
   get turnsView(): Readonly<GameTurnsView> {
@@ -82,14 +86,13 @@ export default class Game {
     private readonly events: Events,
     private readonly identityService: IdentityService,
     private readonly seedingService: SeedingService,
-    public difficulty: GameDifficulty,
   ) {}
 
   static create(identityService: IdentityService, seedingService: SeedingService, settings: GameSettings): Game {
     const seed = seedingService.createSeed();
     const event: GameEvent = { seed, settings, type: GameEventType.MatchStarted };
     const events = Events.create([event]);
-    const game = new Game(events, identityService, seedingService, settings.difficulty);
+    const game = new Game(events, identityService, seedingService);
     game.initialize(Game.createInitParams(seed, settings, seedingService, identityService));
     return game;
   }
@@ -103,7 +106,7 @@ export default class Game {
     const first = initialEvents[0];
     if (first.type !== GameEventType.MatchStarted) throw new Error('First event must be MatchStarted');
     const events = Events.create([...initialEvents]);
-    const game = new Game(events, identityService, seedingService, first.settings.difficulty);
+    const game = new Game(events, identityService, seedingService);
     game.initialize(Game.createInitParams(first.seed, first.settings, seedingService, identityService));
     for (let i = 1; i < initialEvents.length; i++) game.applyToState(initialEvents[i]!);
     return game;
@@ -120,7 +123,7 @@ export default class Game {
     return {
       board: Board.create(settings.boardType, randomizer),
       inventory: Inventory.create(players, randomizer),
-      match: Match.create(players),
+      match: Match.create(players, settings),
       turns: Turns.create(identityService),
     };
   }
@@ -145,20 +148,20 @@ export default class Game {
         this.initialize(
           Game.createInitParams(
             event.seed,
-            { boardType: event.boardType, difficulty: this.difficulty },
+            { boardType: event.boardType, difficulty: this.match.difficulty },
             this.seedingService,
             this.identityService,
           ),
         );
         break;
       case GameEventType.DifficultyChanged:
-        this.difficulty = event.difficulty;
+        this.match.setDifficulty(event.difficulty);
         break;
       case GameEventType.MatchFinished:
         if (event.winner === null) {
           this.match.recordTie(this.turnsView.currentPlayer, this.turnsView.nextPlayer);
         } else {
-          const loser = event.winner === GamePlayer.User ? GamePlayer.Opponent : GamePlayer.User;
+          const loser = WinnerDerivationPolicy.onResignation(event.winner);
           this.match.recordCompletion(event.winner, loser);
         }
         break;
@@ -220,8 +223,8 @@ export default class Game {
 
   finishMatchByScore(): void {
     this.ensureMutability();
-    const { leaderByScore } = this.match;
-    this.applyEvent({ type: GameEventType.MatchFinished, winner: leaderByScore });
+    const winner = WinnerDerivationPolicy.byScore(this.match);
+    this.applyEvent({ type: GameEventType.MatchFinished, winner });
   }
 
   invalidateTurnForCurrentPlayer(): void {
@@ -231,8 +234,8 @@ export default class Game {
   passTurnForCurrentPlayer(): void {
     this.ensureMutability();
     const player = this.turnsView.currentPlayer;
-    if (this.events.wasLastTurnEventPassFor(player)) {
-      const winner = player === GamePlayer.User ? GamePlayer.Opponent : GamePlayer.User;
+    if (PassIsResignSpec.isSatisfiedBy(this.events, player)) {
+      const winner = WinnerDerivationPolicy.onResignation(player);
       this.applyEvent({ type: GameEventType.MatchFinished, winner });
       return;
     }
@@ -246,13 +249,13 @@ export default class Game {
 
   resignMatchForCurrentPlayer(): void {
     this.ensureMutability();
-    const winner = this.turnsView.currentPlayer === GamePlayer.User ? GamePlayer.Opponent : GamePlayer.User;
+    const winner = WinnerDerivationPolicy.onResignation(this.turnsView.currentPlayer);
     this.applyEvent({ type: GameEventType.MatchFinished, winner });
   }
 
   restart(): void {
     const seed = this.seedingService.createSeed();
-    const settings: GameSettings = { boardType: this.board.type, difficulty: this.difficulty };
+    const settings: GameSettings = { boardType: this.match.boardType, difficulty: this.match.difficulty };
     const event: GameEvent = { seed, settings, type: GameEventType.MatchStarted };
     this.events.reset(event);
     this.initialize(Game.createInitParams(seed, settings, this.seedingService, this.identityService));
@@ -265,7 +268,12 @@ export default class Game {
     if (words === undefined) throw new ReferenceError('Current turn words do not exist');
     if (score === undefined) throw new ReferenceError('Current turn score does not exist');
     this.applyEvent({ player, score, type: GameEventType.TurnSaved, words });
-    if (!this.inventory.hasTilesFor(player)) this.finishMatchByScore();
+    const decision = MatchTerminationPolicy.afterTurnSaved({
+      currentPlayer: player,
+      inventory: this.inventory,
+      match: this.match,
+    });
+    if (decision.terminate) this.applyEvent({ type: GameEventType.MatchFinished, winner: decision.winner });
     return { words };
   }
 
@@ -297,7 +305,7 @@ export default class Game {
   }
 
   willPassBeResignFor(player: GamePlayer): boolean {
-    return this.events.wasLastTurnEventPassFor(player);
+    return PassIsResignSpec.isSatisfiedBy(this.events, player);
   }
 
   private applyEvent(event: GameEvent): void {

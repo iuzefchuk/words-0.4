@@ -1,20 +1,12 @@
-import { Player } from '@/domain/enums.ts';
+import { Difficulty, Player } from '@/domain/enums.ts';
+import { BoardType } from '@/domain/models/board/enums.ts';
 import { MatchResult } from '@/domain/models/match/enums.ts';
+import { GameSettings } from '@/domain/types/index.ts';
 
 export default class Match {
   get isFinished(): boolean {
     for (const result of this.results.values()) if (result !== MatchResult.Undecided) return true;
     return false;
-  }
-
-  get leaderByScore(): null | Player {
-    if (this.scoresAreTied) return null;
-    return this.userScore > this.opponentScore ? Player.User : Player.Opponent;
-  }
-
-  get loserByScore(): null | Player {
-    if (this.scoresAreTied) return null;
-    return this.leaderByScore === Player.User ? Player.Opponent : Player.User;
   }
 
   get opponentScore(): number {
@@ -25,19 +17,17 @@ export default class Match {
     return this.getScoreFor(Player.User);
   }
 
-  private get scoresAreTied(): boolean {
-    return this.userScore === this.opponentScore;
-  }
-
   private constructor(
     private results: Map<Player, MatchResult>,
     private scores: Map<Player, number>,
+    public boardType: BoardType,
+    public difficulty: Difficulty,
   ) {}
 
-  static create(players: ReadonlyArray<Player>): Match {
+  static create(players: ReadonlyArray<Player>, settings: GameSettings): Match {
     const results = new Map(players.map(player => [player, MatchResult.Undecided]));
     const scores = new Map(players.map(player => [player, 0]));
-    return new Match(results, scores);
+    return new Match(results, scores, settings.boardType, settings.difficulty);
   }
 
   getResultFor(player: Player): MatchResult {
@@ -69,6 +59,14 @@ export default class Match {
     this.ensureMutability();
     this.recordResult(firstPlayer, MatchResult.Tie);
     this.recordResult(secondPlayer, MatchResult.Tie);
+  }
+
+  setBoardType(boardType: BoardType): void {
+    this.boardType = boardType;
+  }
+
+  setDifficulty(difficulty: Difficulty): void {
+    this.difficulty = difficulty;
   }
 
   private ensureMutability(): void {

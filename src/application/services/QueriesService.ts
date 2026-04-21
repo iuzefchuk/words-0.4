@@ -46,7 +46,7 @@ export default class QueriesService {
   }
 
   getBoardType(): GameBoardType {
-    return this.boardView.type;
+    return this.game.matchView.boardType;
   }
 
   getCellBonus(cell: GameCell): GameBonus | null {
@@ -66,7 +66,7 @@ export default class QueriesService {
   }
 
   getDifficulty(): GameDifficulty {
-    return this.game.difficulty;
+    return this.game.matchView.difficulty;
   }
 
   getEventsLog(): ReadonlyArray<GameEvent> {
