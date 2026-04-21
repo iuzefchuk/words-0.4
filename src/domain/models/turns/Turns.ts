@@ -47,13 +47,13 @@ class Turn {
   }
 
   addTile(tile: Tile): void {
-    if (this.tiles.includes(tile)) throw new Error(`Tile ${tile} already connected`);
+    if (this.tiles.includes(tile)) throw new Error(`tile ${tile} is already in current turn`);
     this.tiles.push(tile);
   }
 
   removeTile(tile: Tile): void {
     const index = this.tiles.indexOf(tile);
-    if (index === -1) throw new ReferenceError(`Tile ${tile} not found`);
+    if (index === -1) throw new ReferenceError(`tile ${tile} is not in current turn`);
     this.tiles.splice(index, 1);
   }
 
@@ -109,7 +109,7 @@ export default class Turns {
 
   private get currentTurn(): Turn {
     const last = this.history.at(-1);
-    if (last === undefined) throw new ReferenceError('Current turn does not exist');
+    if (last === undefined) throw new ReferenceError('expected current turn, got undefined');
     return last;
   }
 
@@ -146,7 +146,7 @@ export default class Turns {
   }
 
   startTurnFor(player: Player): void {
-    if (player !== this.nextPlayer) throw new Error(`Expected next player to be ${this.nextPlayer}, but got ${player}`);
+    if (player !== this.nextPlayer) throw new Error(`expected next player to be ${this.nextPlayer}, got ${player}`);
     const newTurn = Turn.create({ identityService: this.identityService, player });
     this.history.push(newTurn);
   }

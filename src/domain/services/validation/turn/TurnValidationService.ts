@@ -44,7 +44,7 @@ class Pipeline<State extends PipelineInput> {
   end(): PipelineOutput {
     if (this.throughput.status === ValidationStatus.Invalid) return this.throughput;
     const { cells, placements, score, words } = this.throughput.state as unknown as PipelineState<ScoreOutput>;
-    if (score === undefined) throw new Error('Can`t end pipeline until it`s completed');
+    if (score === undefined) throw new Error('cannot end pipeline: score is undefined');
     return { cells, placements, score, status: ValidationStatus.Valid, words } as ValidResult;
   }
 }

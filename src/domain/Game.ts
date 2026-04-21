@@ -99,15 +99,15 @@ export default class Game {
     identityService: IdentityService,
     seedingService: SeedingService,
   ): Game {
-    if (initialEvents[0] === undefined) throw new Error('Events have to exist');
+    if (initialEvents[0] === undefined) throw new Error('cannot create game from empty events');
     const first = initialEvents[0];
-    if (first.type !== GameEventType.MatchStarted) throw new Error('First event must be MatchStarted');
+    if (first.type !== GameEventType.MatchStarted) throw new Error(`expected first event to be MatchStarted, got ${first.type}`);
     const events = Events.create([...initialEvents]);
     const game = new Game(events, identityService, seedingService, first.settings.difficulty);
     game.initialize(Game.createInitParams(first.seed, first.settings, seedingService, identityService));
     for (let i = 1; i < initialEvents.length; i++) {
       const event = initialEvents[i];
-      if (event === undefined) throw new ReferenceError('Event must be defined');
+      if (event === undefined) throw new ReferenceError(`expected event at index ${i}, got undefined`);
       game.applyToState(event);
     }
     return game;
@@ -133,9 +133,9 @@ export default class Game {
     this.ensureMutability();
     for (let i = 0; i < result.tiles.length; i++) {
       const cell = result.cells[i];
-      if (cell === undefined) throw new ReferenceError('Cell must be defined');
+      if (cell === undefined) throw new ReferenceError(`expected cell at index ${i}, got undefined`);
       const tile = result.tiles[i];
-      if (tile === undefined) throw new ReferenceError('Tile must be defined');
+      if (tile === undefined) throw new ReferenceError(`expected tile at index ${i}, got undefined`);
       this.applyEvent({ cell, tile, type: GameEventType.TilePlaced });
     }
     this.applyEvent({ result: result.validationResult, type: GameEventType.TurnValidated });
@@ -168,7 +168,7 @@ export default class Game {
         }
         break;
       case GameEventType.MatchStarted:
-        throw new Error('MatchStarted can only be applied during game creation');
+        throw new Error('cannot apply MatchStarted after game creation');
       case GameEventType.TilePlaced:
         this.board.placeTile(event.cell, event.tile);
         this.turns.addPlacedTile(event.tile);
@@ -212,14 +212,14 @@ export default class Game {
     const tiles = [...this.turns.currentTurnTiles];
     for (const tile of tiles) {
       const cell = this.board.findCellByTile(tile);
-      if (cell === undefined) throw new Error(`Tile ${tile} is not on the board`);
+      if (cell === undefined) throw new Error(`tile ${tile} is not on the board`);
       this.applyEvent({ cell, tile, type: GameEventType.TileUndoPlaced });
     }
     this.applyEvent({ result: { status: ValidationStatus.Unvalidated }, type: GameEventType.TurnValidated });
   }
 
   createTurnGenerationContext(): GeneratorContext {
-    if (this.dictionary === undefined) throw new Error('Dictionary has to be defined');
+    if (this.dictionary === undefined) throw new Error('cannot create turn generation context: dictionary is undefined');
     return TurnGenerationService.createContext(this.board, this.dictionary, this.inventory, this.turns);
   }
 
@@ -263,10 +263,10 @@ export default class Game {
 
   saveTurnForCurrentPlayer(): { words: ReadonlyArray<string> } {
     this.ensureMutability();
-    if (!this.turnsView.currentTurnIsValid) throw new Error('Turn is not valid');
+    if (!this.turnsView.currentTurnIsValid) throw new Error('cannot save invalid turn');
     const { currentPlayer: player, currentTurnScore: score, currentTurnWords: words } = this.turnsView;
-    if (words === undefined) throw new ReferenceError('Current turn words do not exist');
-    if (score === undefined) throw new ReferenceError('Current turn score does not exist');
+    if (words === undefined) throw new ReferenceError('expected current turn words, got undefined');
+    if (score === undefined) throw new ReferenceError('expected current turn score, got undefined');
     this.applyEvent({ player, score, type: GameEventType.TurnSaved, words });
     return { words };
   }
@@ -278,13 +278,13 @@ export default class Game {
   undoPlaceTile(input: { tile: GameTile }): void {
     this.ensureMutability();
     const cell = this.board.findCellByTile(input.tile);
-    if (cell === undefined) throw new Error(`Tile ${input.tile} is not on the board`);
+    if (cell === undefined) throw new Error(`tile ${input.tile} is not on the board`);
     this.applyEvent({ cell, tile: input.tile, type: GameEventType.TileUndoPlaced });
   }
 
   validateTurn(): void {
     this.ensureMutability();
-    if (this.dictionary === undefined) throw new Error('Dictionary has to be defined');
+    if (this.dictionary === undefined) throw new Error('cannot validate turn: dictionary is undefined');
     const result = TurnValidationService.execute({
       board: this.board,
       dictionary: this.dictionary,
@@ -308,11 +308,11 @@ export default class Game {
   }
 
   private ensureMutability(): void {
-    if (this.match.isFinished) throw new Error('Match is finished');
+    if (this.match.isFinished) throw new Error('cannot mutate finished match');
   }
 
   private ensureSettingsMutability(): void {
-    if (!this.settingsChangeIsAllowed) throw new Error('Settings change is not allowed');
+    if (!this.settingsChangeIsAllowed) throw new Error('cannot change settings after first turn');
   }
 
   private initialize(params: { board: Board; inventory: Inventory; match: Match; turns: Turns }): void {

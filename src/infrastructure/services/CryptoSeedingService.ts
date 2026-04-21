@@ -13,7 +13,7 @@ export default class CryptoSeedingService implements SeedingService {
 
   createSeed(): number {
     const value = crypto.getRandomValues(new Uint32Array(1))[0];
-    if (value === undefined) throw new ReferenceError('Random value must be defined');
+    if (value === undefined) throw new ReferenceError('expected random value, got undefined');
     return value;
   }
 }

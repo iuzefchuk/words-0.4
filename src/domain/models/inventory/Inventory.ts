@@ -21,26 +21,28 @@ class TilePool {
   }
 
   addTile(tile: Tile): void {
-    if (this.tiles.includes(tile)) throw new Error(`Tile ${tile} is already present`);
+    if (this.tiles.includes(tile)) throw new Error(`tile ${tile} is already in pool`);
     this.validateCapacity(this.tiles.length + 1);
     this.tiles.push(tile);
   }
 
   popTile(): Tile {
     const tile = this.tiles.pop();
-    if (tile === undefined) throw new Error('No tiles left');
+    if (tile === undefined) throw new Error('cannot pop tile: pool is empty');
     return tile;
   }
 
   removeTile(tile: Tile): Tile {
     const index = this.tiles.indexOf(tile);
     const [removedTile] = this.tiles.splice(index, 1);
-    if (removedTile === undefined) throw new ReferenceError(`Tile ${tile} absent`);
+    if (removedTile === undefined) throw new ReferenceError(`tile ${tile} is not in pool`);
     return removedTile;
   }
 
   private validateCapacity(newTileCount: number): void {
-    if (this.capacity !== undefined && newTileCount > this.capacity) throw new Error('Tiles limit exceeded');
+    if (this.capacity !== undefined && newTileCount > this.capacity) {
+      throw new Error(`cannot add tile: pool capacity ${this.capacity} exceeded`);
+    }
   }
 }
 
@@ -147,7 +149,7 @@ export default class Inventory {
 
   getTileLetter(tile: Tile): Letter {
     const letter = Inventory.LETTER_BY_TILE.get(tile);
-    if (letter === undefined) throw new ReferenceError('Letter must be defined');
+    if (letter === undefined) throw new ReferenceError(`expected letter for tile ${tile}, got undefined`);
     return letter;
   }
 
@@ -171,7 +173,7 @@ export default class Inventory {
 
   private getTilePoolFor(player: Player): TilePool {
     const pool = this.playerPools.get(player);
-    if (pool === undefined) throw new ReferenceError('Tile pool must be defined');
+    if (pool === undefined) throw new ReferenceError(`expected tile pool for player ${player}, got undefined`);
     return pool;
   }
 

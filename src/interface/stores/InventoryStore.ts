@@ -93,10 +93,12 @@ export default class InventoryStore {
   private switchTiles(firstTile: GameTile, secondTile: GameTile): void {
     const firstIdx = this.getTileIdx(firstTile);
     const secondIdx = this.getTileIdx(secondTile);
-    if (firstIdx < 0 || secondIdx < 0) throw new Error('Can`t find tile indexes');
+    if (firstIdx < 0 || secondIdx < 0) throw new Error(`cannot switch tiles: ${firstTile} or ${secondTile} is not in rack`);
     const first = this.tiles[firstIdx];
     const second = this.tiles[secondIdx];
-    if (first === undefined || second === undefined) throw new Error('Invalid tile index');
+    if (first === undefined || second === undefined) {
+      throw new Error(`expected tiles at rack indices ${firstIdx} and ${secondIdx}, got undefined`);
+    }
     this.tiles[firstIdx] = second;
     this.tiles[secondIdx] = first;
     triggerRef(this.tilesRef);

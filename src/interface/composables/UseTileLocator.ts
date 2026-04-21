@@ -15,7 +15,7 @@ export default class UseTileLocator {
     let rightmostEdge = -Infinity;
     for (let i = 0; i < locations.length; i++) {
       const group = locations[i];
-      if (group === undefined) throw new ReferenceError('Group must be defined');
+      if (group === undefined) throw new ReferenceError(`expected location group at index ${i}, got undefined`);
       if (group.row < minRow) {
         minRow = group.row;
         rightmostIdx = i;
@@ -58,7 +58,7 @@ export default class UseTileLocator {
     let maxCol = -Infinity;
     while (stack.length > 0) {
       const cell = stack.pop();
-      if (cell === undefined) throw new ReferenceError('Cell must be defined');
+      if (cell === undefined) throw new ReferenceError('expected cell from traversal stack, got undefined');
       const row = this.applicationStore.getCellRowIndex(cell);
       const col = this.applicationStore.getCellColumnIndex(cell);
       if (row < minRow) minRow = row;

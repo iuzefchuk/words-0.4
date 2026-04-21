@@ -35,7 +35,7 @@ export default class Events {
   wasLastTurnEventPassFor(player: Player): boolean {
     for (let i = this.log.length - 1; i >= 0; i--) {
       const e = this.log[i];
-      if (e === undefined) throw new ReferenceError('Event must be defined');
+      if (e === undefined) throw new ReferenceError(`expected event at index ${i}, got undefined`);
       if (e.type === EventType.TurnPassed && e.player === player) return true;
       if (e.type === EventType.TurnSaved && e.player === player) return false;
     }

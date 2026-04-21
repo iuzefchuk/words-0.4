@@ -17,7 +17,7 @@ export default class CrossCheckService {
   execute(coords: AnchorCoordinates): ReadonlySet<Letter> {
     const { axis, cell } = coords;
     const axisCache = this.cache.get(axis);
-    if (axisCache === undefined) throw new ReferenceError('Axis cache has to exist');
+    if (axisCache === undefined) throw new ReferenceError(`expected axis cache for axis ${axis}, got undefined`);
     const cachedResult = axisCache.get(cell);
     if (cachedResult !== undefined) return cachedResult;
     const newResult = this.computeFor(coords);
@@ -29,7 +29,7 @@ export default class CrossCheckService {
     let result = '';
     for (let i = startPosition + direction; i >= 0 && i < axisCells.length; i += direction) {
       const cell = axisCells[i];
-      if (cell === undefined) throw new ReferenceError('Cell must be defined');
+      if (cell === undefined) throw new ReferenceError(`expected cell at index ${i}, got undefined`);
       const tile = this.board.findTileByCell(cell);
       if (tile === undefined) break;
       const letter = this.inventory.getTileLetter(tile);

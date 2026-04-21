@@ -26,12 +26,12 @@ export default class Dictionary {
 
   private static computeFirstLetterCode(): number {
     const first = Object.values(Letter)[0];
-    if (first === undefined) throw new ReferenceError('First letter must be defined');
+    if (first === undefined) throw new ReferenceError('expected first letter, got undefined');
     return first.charCodeAt(0);
   }
 
   containsAllWords(words: ReadonlyArray<string>): boolean {
-    if (words.length === 0) throw new Error('Words array is empty');
+    if (words.length === 0) throw new Error('cannot check membership of empty word list');
     return words.every(word => {
       const node = this.getNode(word);
       return node !== null && this.isNodeFinal(node);
@@ -42,9 +42,9 @@ export default class Dictionary {
     const data = this.data;
     for (let i = 0; i < Dictionary.LETTERS.length; i++) {
       const childOffset = data[(node as number) + 1 + i];
-      if (childOffset === undefined) throw new ReferenceError('Child offset must be defined');
+      if (childOffset === undefined) throw new ReferenceError(`expected child offset at index ${i}, got undefined`);
       const letter = Dictionary.LETTERS[i];
-      if (letter === undefined) throw new ReferenceError('Letter must be defined');
+      if (letter === undefined) throw new ReferenceError(`expected letter at index ${i}, got undefined`);
       if (childOffset !== 0) callback(letter, childOffset as Node);
     }
   }
@@ -54,7 +54,7 @@ export default class Dictionary {
     let current = startNode as number;
     for (let i = 0; i < word.length; i++) {
       const childOffset = data[current + 1 + word.charCodeAt(i) - Dictionary.FIRST_LETTER_CODE];
-      if (childOffset === undefined) throw new ReferenceError('Child offset must be defined');
+      if (childOffset === undefined) throw new ReferenceError(`expected child offset for letter "${word[i]}", got undefined`);
       if (childOffset === 0) return null;
       current = childOffset;
     }

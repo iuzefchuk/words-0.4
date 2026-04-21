@@ -70,7 +70,7 @@ export default class WebWorkerService implements WorkerService {
           resolve = null;
         }
         const msg = queue[queueReadIndex++];
-        if (msg === undefined) throw new ReferenceError('Message must be defined');
+        if (msg === undefined) throw new ReferenceError('expected worker message, got undefined');
         if (queueReadIndex > 64) {
           queue.splice(0, queueReadIndex);
           queueReadIndex = 0;
@@ -94,7 +94,7 @@ export default class WebWorkerService implements WorkerService {
     const totalWorkers = workers.length;
     for (let i = 0; i < workers.length; i++) {
       const worker = workers[i];
-      if (worker === undefined) throw new ReferenceError('Worker must be defined');
+      if (worker === undefined) throw new ReferenceError(`expected worker at index ${i}, got undefined`);
       worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
         if (e.data.type === WorkerResponseType.Done) doneCount++;
         else queue.push(e.data);
@@ -117,7 +117,7 @@ export default class WebWorkerService implements WorkerService {
           resolve = null;
         }
         const msg = queue[queueReadIndex++];
-        if (msg === undefined) throw new ReferenceError('Message must be defined');
+        if (msg === undefined) throw new ReferenceError('expected worker message, got undefined');
         if (queueReadIndex > 64) {
           queue.splice(0, queueReadIndex);
           queueReadIndex = 0;
@@ -137,7 +137,7 @@ export default class WebWorkerService implements WorkerService {
   private createWorker(taskId: string): Worker {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const WorkerConstructor = this.workers[taskId];
-    if (WorkerConstructor === undefined) throw new Error(`No worker registered for task: ${taskId}`);
+    if (WorkerConstructor === undefined) throw new Error(`no worker registered for task ${taskId}`);
     return new WorkerConstructor();
   }
 
@@ -145,7 +145,7 @@ export default class WebWorkerService implements WorkerService {
     return new Promise<void>((resolve, reject) => {
       worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
         if (e.data.type === WorkerResponseType.Ready) resolve();
-        else reject(new Error('Unexpected response during init'));
+        else reject(new Error(`expected worker Ready response, got ${e.data.type}`));
       };
       worker.onerror = e => reject(e instanceof Error ? e : new Error(String(e)));
       worker.postMessage({ input: data, type: WorkerRequestType.Init } satisfies WorkerRequest);

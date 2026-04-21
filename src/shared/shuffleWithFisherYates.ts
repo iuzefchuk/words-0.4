@@ -15,7 +15,9 @@ export default function shuffleWithFisherYates<T>({
       const b = j + k;
       const itemA = array[a];
       const itemB = array[b];
-      if (itemA === undefined || itemB === undefined) throw new ReferenceError('Array item must be defined');
+      if (itemA === undefined || itemB === undefined) {
+        throw new ReferenceError(`expected array items at indices ${a} and ${b}, got undefined`);
+      }
       array[a] = itemB;
       array[b] = itemA;
     }

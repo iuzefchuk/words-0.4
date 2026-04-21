@@ -30,7 +30,7 @@ export default class BonusService {
     return new Map(
       Array.from(this.CLASSIC_DISTRIBUTION.values(), (bonus, i) => {
         const cell = availableCells[i];
-        if (cell === undefined) throw new ReferenceError('Cell must be defined');
+        if (cell === undefined) throw new ReferenceError(`expected cell at index ${i}, got undefined`);
         return [cell, bonus];
       }),
     );

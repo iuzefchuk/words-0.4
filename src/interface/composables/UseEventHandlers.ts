@@ -75,7 +75,7 @@ export default class UseEventHandlers {
 
   handleClickRackCell(idx: number): void {
     const tile = this.inventoryStore.tiles[idx];
-    if (tile === undefined) throw new ReferenceError('Tile must be defined');
+    if (tile === undefined) throw new ReferenceError(`expected tile at rack index ${idx}, got undefined`);
     const selected = this.selectedTile;
     if (selected === null) {
       if (this.applicationStore.isTilePlaced(tile)) this.applicationStore.undoPlaceTile(tile);

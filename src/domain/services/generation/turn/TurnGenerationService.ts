@@ -68,14 +68,14 @@ class TaskCommandResolver {
 
   private popFromStack(): Task {
     const lastTask = this.stack.pop();
-    if (lastTask === undefined) throw new ReferenceError('Task has to exist');
+    if (lastTask === undefined) throw new ReferenceError('cannot pop task: stack is empty');
     return lastTask;
   }
 
   private pushToStack(tasks: Array<Task>): void {
     for (let i = tasks.length - 1; i >= 0; i--) {
       const task = tasks[i];
-      if (task === undefined) throw new ReferenceError('Task must be defined');
+      if (task === undefined) throw new ReferenceError(`expected task at index ${i}, got undefined`);
       this.stack.push(task);
     }
   }
@@ -187,7 +187,7 @@ class TaskDispatcher {
     const { traversal } = task;
     const position = traversal.position + traversal.direction;
     const cell = this.computeds.axisCells[position];
-    if (cell === undefined) throw new ReferenceError('Cell must be defined');
+    if (cell === undefined) throw new ReferenceError(`expected cell at position ${position}, got undefined`);
     const tile = this.board.findTileByCell(cell);
     const resolution: Resolution | undefined = tile !== undefined ? { tile } : undefined;
     const candidate: Candidate = { cell, position, resolution };
@@ -196,7 +196,7 @@ class TaskDispatcher {
 
   private createTraversalFromCandidate(traversal: Traversal, candidate: Candidate): ContinueTaskCommand | StopTaskCommand {
     const { position, resolution } = candidate;
-    if (resolution === undefined) throw new ReferenceError('Resolution must be defined');
+    if (resolution === undefined) throw new ReferenceError('expected candidate resolution, got undefined');
     const nextNode = this.dictionary.getNode(this.inventory.getTileLetter(resolution.tile), traversal.node);
     if (nextNode === null) return this.emitStop();
     const traversalFromCandidate: Traversal = { ...traversal, node: nextNode, position };

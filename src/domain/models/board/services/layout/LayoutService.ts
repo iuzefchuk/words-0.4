@@ -53,7 +53,7 @@ export default class LayoutService {
 
   static getAdjacentCells(cell: Cell): ReadonlyArray<Cell> {
     const adjacentCells = this.ADJACENT_CELLS.get(cell);
-    if (adjacentCells === undefined) throw new ReferenceError('Adjacent cells have to be defined');
+    if (adjacentCells === undefined) throw new ReferenceError(`expected adjacent cells for cell ${cell}, got undefined`);
     return adjacentCells;
   }
 
@@ -61,9 +61,9 @@ export default class LayoutService {
     const { axis, cell } = coords;
     const cellPosition = axis === Axis.X ? this.getCellPositionInRow(cell) : this.getCellPositionInColumn(cell);
     const axisCells = this.AXIS_CELLS.get(axis);
-    if (axisCells === undefined) throw new ReferenceError('Axis cells have to be defined');
+    if (axisCells === undefined) throw new ReferenceError(`expected axis cells for axis ${axis}, got undefined`);
     const line = axisCells[cellPosition];
-    if (line === undefined) throw new ReferenceError('Axis line must be defined');
+    if (line === undefined) throw new ReferenceError(`expected axis line at position ${cellPosition}, got undefined`);
     return line;
   }
 

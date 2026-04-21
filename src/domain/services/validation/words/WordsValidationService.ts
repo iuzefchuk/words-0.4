@@ -11,7 +11,7 @@ export default class WordsValidationService {
     const words: Array<string> = [];
     for (let i = 0; i < placements.length; i++) {
       const placement = placements[i];
-      if (placement === undefined) throw new ReferenceError('Placement must be defined');
+      if (placement === undefined) throw new ReferenceError(`expected placement at index ${i}, got undefined`);
       let word = '';
       for (const { tile } of placement) word += getTileLetter(tile);
       words[i] = word;
