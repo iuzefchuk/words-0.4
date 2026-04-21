@@ -5,10 +5,9 @@ import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
 import { GameBoardType, GameCell, GameDifficulty, GameSettings, GameTile } from '@/application/types/index.ts';
 import { SchedulingService } from '@/application/types/ports.ts';
+import Infrastructure from '@/infrastructure/index.ts';
 import { DEFAULT_SETTINGS } from '@/interface/constants.ts';
-import { StorageKey } from '@/interface/enums.ts';
 import { getEventSound } from '@/interface/mappings.ts';
-import LocalStorage from '@/interface/services/LocalStorage.ts';
 import SoundPlayer from '@/interface/services/SoundPlayer.ts';
 
 class Actions {
@@ -22,12 +21,10 @@ class Actions {
   ) {}
 
   changeBoardType = (boardType: GameBoardType): void => {
-    ApplicationStore.saveSettings({ boardType });
     return this.state.writeBoard(() => this.commandsService.changeBoardType(boardType));
   };
 
   changeDifficulty = (difficulty: GameDifficulty): void => {
-    ApplicationStore.saveSettings({ difficulty });
     return this.state.write(() => this.commandsService.changeDifficulty(difficulty));
   };
 
@@ -255,24 +252,12 @@ export default class ApplicationStore {
   }
 
   static async initiate(): Promise<void> {
-    const settings = ApplicationStore.loadSettings();
-    ApplicationStore.app = markRaw(await Application.create(settings));
-  }
-
-  static saveSettings(data: { boardType?: GameBoardType; difficulty?: GameDifficulty }): void {
-    const existingCache = this.loadSettings();
-    const newCache = {
-      boardType: data?.boardType ?? existingCache?.boardType,
-      difficulty: data?.difficulty ?? existingCache?.difficulty,
+    const dependencies = await Infrastructure.createAppDependencies();
+    const persisted = dependencies.repositories.settings.load();
+    const settings: GameSettings = {
+      boardType: persisted?.boardType ?? DEFAULT_SETTINGS.boardType,
+      difficulty: persisted?.difficulty ?? DEFAULT_SETTINGS.difficulty,
     };
-    LocalStorage.save(StorageKey.Settings, newCache);
-  }
-
-  private static loadSettings(): GameSettings {
-    const cache = LocalStorage.load(StorageKey.Settings) as null | Partial<GameSettings>;
-    return {
-      boardType: cache?.boardType ?? DEFAULT_SETTINGS.boardType,
-      difficulty: cache?.difficulty ?? DEFAULT_SETTINGS.difficulty,
-    };
+    ApplicationStore.app = markRaw(await Application.create(dependencies, settings));
   }
 }

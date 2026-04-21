@@ -5,13 +5,14 @@ import {
   GamePlayer,
   GameTurnGenerator,
 } from '@/application/types/index.ts';
+import { WorkerRequestType, WorkerResponseType } from '@/application/types/ports.ts';
 import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
+import { DictionaryBuffer } from '@/domain/models/dictionary/types.ts';
 import { GeneratorResult } from '@/domain/services/generation/turn/types.ts';
-import { WorkerRequestType, WorkerResponseType } from '@/infrastructure/services/WebWorkerService.ts';
 
 type StreamInput = {
   attemptsLimit: number;
-  buffer: SharedArrayBuffer;
+  buffer: DictionaryBuffer;
   partition?: GameGeneratorPartition;
   player: GamePlayer;
 } & GameGeneratorContextData;
@@ -21,7 +22,7 @@ class TurnGenerationHandler {
 
   handleMessage(e: MessageEvent<{ input: unknown; type: string }>): void {
     if (e.data.type === (WorkerRequestType.Init as string)) {
-      this.init(e.data.input as SharedArrayBuffer);
+      this.init(e.data.input as DictionaryBuffer);
     } else {
       this.stream(e.data.input as StreamInput);
     }
@@ -43,7 +44,7 @@ class TurnGenerationHandler {
     return bestResult;
   }
 
-  private init(buffer: SharedArrayBuffer): void {
+  private init(buffer: DictionaryBuffer): void {
     this.dictionary = GameDictionary.createFromBuffer(buffer);
     self.postMessage({ type: WorkerResponseType.Ready });
   }

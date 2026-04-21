@@ -1,4 +1,4 @@
-export { IdentityService, SeedingService } from '@/domain/types/ports.ts';
+export type { IdentityService, SeedingService } from '@/domain/types/ports.ts';
 
 export type FileService = {
   loadSharedArrayBuffer(url: string): Promise<SharedArrayBuffer>;
@@ -9,6 +9,26 @@ export type SchedulingService = {
   wait(ms: number): Promise<void>;
   yield(): Promise<void>;
 };
+
+export const enum WorkerRequestType {
+  Init = 'Init',
+  Stream = 'Stream',
+}
+
+export const enum WorkerResponseType {
+  Done = 'Done',
+  Error = 'Error',
+  Ready = 'Ready',
+  Result = 'Result',
+}
+
+export type WorkerRequest = { input: unknown; type: WorkerRequestType };
+
+export type WorkerResponse =
+  | { error: string; type: WorkerResponseType.Error }
+  | { type: WorkerResponseType.Done }
+  | { type: WorkerResponseType.Ready }
+  | { type: WorkerResponseType.Result; value: unknown };
 
 export type WorkerService = {
   getPoolSize(taskId: string): number;

@@ -6,12 +6,11 @@ import {
   GameEvent,
   GameEventType,
   GameGeneratorResult,
-  GameInventoryView,
   GamePlayer,
   GameTile,
 } from '@/application/types/index.ts';
 import { SchedulingService, WorkerService } from '@/application/types/ports.ts';
-import { EventRepository } from '@/application/types/repositories.ts';
+import { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
 import Game from '@/domain/Game.ts';
 import { TIME } from '@/shared/constants.ts';
 
@@ -22,9 +21,7 @@ export default class CommandsService {
     return this.game.turnsView.currentPlayer;
   }
 
-  private get inventoryView(): Readonly<GameInventoryView> {
-    return this.game.inventoryView;
-  }
+  private lastDrainedEventCount = 0;
 
   constructor(
     private readonly game: Game,
@@ -32,14 +29,17 @@ export default class CommandsService {
     private readonly workerService: WorkerService,
     private readonly turnGenerationTaskId: string,
     private readonly eventRepository: EventRepository,
+    private readonly settingsRepository: SettingsRepository,
   ) {}
 
   changeBoardType(boardType: GameBoardType): void {
     this.game.changeBoardType(boardType);
+    this.settingsRepository.save({ boardType });
   }
 
   changeDifficulty(difficulty: GameDifficulty): void {
     this.game.changeDifficulty(difficulty);
+    this.settingsRepository.save({ difficulty });
   }
 
   clearTiles(): void {
@@ -48,17 +48,20 @@ export default class CommandsService {
   }
 
   drainNewEvents(): Array<GameEvent> {
-    return this.game.drainPendingEvents();
+    const log = this.game.eventsLogView;
+    if (this.lastDrainedEventCount > log.length) this.lastDrainedEventCount = 0;
+    const drained = log.slice(this.lastDrainedEventCount);
+    this.lastDrainedEventCount = log.length;
+    return [...drained];
   }
 
   handlePassTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined } {
     this.clearTiles();
-    if (this.game.willPassBeResignFor(GamePlayer.User)) {
-      this.game.resignMatchForCurrentPlayer();
+    this.game.passTurnForCurrentPlayer();
+    if (this.game.matchView.isFinished) {
       this.clearPersistence();
       return { opponentTurn: undefined };
     }
-    this.game.passTurnForCurrentPlayer();
     this.syncPersistence();
     const opponentTurn = this.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
     return { opponentTurn };
@@ -71,14 +74,8 @@ export default class CommandsService {
   }
 
   handleSaveTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined; userResponse: AppTurnResponse } {
-    const player = this.currentPlayer;
     const userResponse = this.saveTurnForCurrentPlayer();
     if (!userResponse.ok) {
-      return { opponentTurn: undefined, userResponse };
-    }
-    if (!this.inventoryView.hasTilesFor(player)) {
-      this.game.finishMatchByScore();
-      this.clearPersistence();
       return { opponentTurn: undefined, userResponse };
     }
     if (this.game.matchView.isFinished) {
@@ -133,11 +130,10 @@ export default class CommandsService {
       }
     }
     if (bestResult === null) {
-      if (this.game.willPassBeResignFor(player)) {
-        this.game.resignMatchForCurrentPlayer();
+      this.game.passTurnForCurrentPlayer();
+      if (this.game.matchView.isFinished) {
         return { type: GameEventType.MatchFinished, winner: GamePlayer.User };
       }
-      this.game.passTurnForCurrentPlayer();
       return { player: GamePlayer.Opponent, type: GameEventType.TurnPassed };
     }
     const { score, words } = this.game.applyGeneratedTurn(bestResult);
@@ -181,7 +177,6 @@ export default class CommandsService {
         response = { ok: true, value: { words: [] } };
         break;
       case GameEventType.TurnSaved:
-        if (!this.inventoryView.hasTilesFor(GamePlayer.Opponent)) this.game.finishMatchByScore();
         response = { ok: true, value: { words: event.words } };
         break;
       default:

@@ -1,5 +1,5 @@
 import { FileService, SchedulingService, WorkerService } from '@/application/types/ports.ts';
-import { EventRepository } from '@/application/types/repositories.ts';
+import { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
 import { GameCell } from '@/domain/types/index.ts';
 import { IdentityService, SeedingService } from '@/domain/types/ports.ts';
 
@@ -36,8 +36,13 @@ export type AppConfig = {
   tilesPerPlayer: number;
 };
 
+export type AppConfigValues = {
+  dictionaryUrl: string;
+};
+
 export type AppDependencies = {
-  repositories: { events: EventRepository };
+  config: AppConfigValues;
+  repositories: { events: EventRepository; settings: SettingsRepository };
   services: {
     file: FileService;
     identity: IdentityService;

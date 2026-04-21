@@ -7,24 +7,14 @@ export default class Events {
     return this.log;
   }
 
-  private constructor(
-    private readonly log: Array<Event>,
-    private readonly pending: Array<Event>,
-  ) {}
+  private constructor(private readonly log: Array<Event>) {}
 
   static create(initialEvents: Array<Event> = []): Events {
-    return new Events([...initialEvents], []);
-  }
-
-  drainPending(): Array<Event> {
-    const drained = [...this.pending];
-    this.pending.length = 0;
-    return drained;
+    return new Events([...initialEvents]);
   }
 
   record(event: Event): void {
     this.log.push(event);
-    this.pending.push(event);
   }
 
   reset(initialEvent: Event): void {

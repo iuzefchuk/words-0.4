@@ -1,5 +1,5 @@
 import { inject } from 'vue';
-import { GameCell, GameTile } from '@/domain/types/index.ts';
+import { GameCell, GameTile } from '@/application/types/index.ts';
 import ProvidesPlugin from '@/interface/plugins/ProvidesPlugin.ts';
 import SoundPlayer, { Sound } from '@/interface/services/SoundPlayer.ts';
 import ApplicationStore from '@/interface/stores/ApplicationStore.ts';

@@ -218,10 +218,6 @@ export default class Game {
     return TurnGenerationService.createContext(this.board, this.dictionary, this.inventory, this.turns);
   }
 
-  drainPendingEvents(): Array<GameEvent> {
-    return this.events.drainPending();
-  }
-
   finishMatchByScore(): void {
     this.ensureMutability();
     const { leaderByScore } = this.match;
@@ -234,7 +230,13 @@ export default class Game {
 
   passTurnForCurrentPlayer(): void {
     this.ensureMutability();
-    this.applyEvent({ player: this.turnsView.currentPlayer, type: GameEventType.TurnPassed });
+    const player = this.turnsView.currentPlayer;
+    if (this.events.wasLastTurnEventPassFor(player)) {
+      const winner = player === GamePlayer.User ? GamePlayer.Opponent : GamePlayer.User;
+      this.applyEvent({ type: GameEventType.MatchFinished, winner });
+      return;
+    }
+    this.applyEvent({ player, type: GameEventType.TurnPassed });
   }
 
   placeTile(input: { cell: GameCell; tile: GameTile }): void {
@@ -263,6 +265,7 @@ export default class Game {
     if (words === undefined) throw new ReferenceError('Current turn words do not exist');
     if (score === undefined) throw new ReferenceError('Current turn score does not exist');
     this.applyEvent({ player, score, type: GameEventType.TurnSaved, words });
+    if (!this.inventory.hasTilesFor(player)) this.finishMatchByScore();
     return { words };
   }
 

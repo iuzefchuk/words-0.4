@@ -1,12 +1,12 @@
 import { Letter } from '@/domain/enums.ts';
-import { Node } from '@/domain/models/dictionary/types.ts';
+import { DictionaryBuffer, Node } from '@/domain/models/dictionary/types.ts';
 
 export default class Dictionary {
   private static readonly LETTERS: ReadonlyArray<Letter> = Object.values(Letter);
 
   private static readonly FIRST_LETTER_CODE = Dictionary.LETTERS[0]!.charCodeAt(0);
 
-  get buffer(): ArrayBuffer | SharedArrayBuffer {
+  get buffer(): DictionaryBuffer {
     return this.data.buffer;
   }
 
@@ -16,11 +16,11 @@ export default class Dictionary {
 
   private readonly data: Int32Array;
 
-  private constructor(buffer: ArrayBuffer | SharedArrayBuffer) {
+  private constructor(buffer: DictionaryBuffer) {
     this.data = new Int32Array(buffer);
   }
 
-  static createFromBuffer(buffer: ArrayBuffer | SharedArrayBuffer): Dictionary {
+  static createFromBuffer(buffer: DictionaryBuffer): Dictionary {
     return new Dictionary(buffer);
   }
 
