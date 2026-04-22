@@ -15,6 +15,12 @@ export default defineConfigWithVueTs([
   vueTsConfigs.stylisticTypeChecked,
   perfectionist.configs['recommended-alphabetical'],
   {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: path.dirname(fileURLToPath(import.meta.url)),
+      },
+    },
     rules: {
       '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'as' }],
