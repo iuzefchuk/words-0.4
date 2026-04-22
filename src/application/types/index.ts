@@ -1,19 +1,19 @@
 import { FileService, SchedulingService, WorkerService } from '@/application/types/ports.ts';
-import { EventRepository } from '@/application/types/repositories.ts';
+import { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
 import { GameCell } from '@/domain/types/index.ts';
 import { IdentityService, SeedingService } from '@/domain/types/ports.ts';
 
 export {
-  GameBoardType,
   GameBonus,
-  GameDictionary,
-  GameDifficulty,
   GameEventType,
   GameLetter,
+  GameMatchDifficulty,
   GameMatchResult,
+  GameMatchType,
   GamePlayer,
-  GameTurnGenerator,
-} from '@/domain/types/index.ts';
+} from '@/domain/enums.ts';
+
+export { GameDictionary, GameTurnGenerator } from '@/domain/types/index.ts';
 
 export type {
   GameBoardView,
@@ -23,9 +23,9 @@ export type {
   GameGeneratorPartition,
   GameGeneratorResult,
   GameInventoryView,
+  GameMatchSettings,
   GameMatchView,
   GameNode,
-  GameSettings,
   GameTile,
   GameTurnsView,
 } from '@/domain/types/index.ts';
@@ -37,15 +37,22 @@ export type AppConfig = {
 };
 
 export type AppDependencies = {
-  repositories: { events: EventRepository };
-  services: {
-    file: FileService;
-    identity: IdentityService;
-    scheduling: SchedulingService;
-    seeding: SeedingService;
-    worker: WorkerService;
-  };
+  config: DependenciesConfig;
+  repositories: { events: EventRepository; settings: SettingsRepository };
+  services: AppServices;
   tasks: { turnGeneration: string };
 };
 
+export type AppServices = {
+  file: FileService;
+  identity: IdentityService;
+  scheduling: SchedulingService;
+  seeding: SeedingService;
+  worker: WorkerService;
+};
+
 export type AppTurnResponse = Result<{ words: ReadonlyArray<string> }, string>;
+
+export type DependenciesConfig = {
+  dictionaryUrl: string;
+};

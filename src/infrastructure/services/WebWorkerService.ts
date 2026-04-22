@@ -1,16 +1,10 @@
-import { WorkerService } from '@/application/types/ports.ts';
-
-export const enum WorkerRequestType {
-  Init = 'Init',
-  Stream = 'Stream',
-}
-
-export const enum WorkerResponseType {
-  Done = 'Done',
-  Error = 'Error',
-  Ready = 'Ready',
-  Result = 'Result',
-}
+import {
+  WorkerRequest,
+  WorkerRequestType,
+  WorkerResponse,
+  WorkerResponseType,
+  WorkerService,
+} from '@/application/types/ports.ts';
 
 type StreamState = {
   doneCount: number;
@@ -19,14 +13,6 @@ type StreamState = {
   queueReadIndex: number;
   resolve: (() => void) | null;
 };
-
-type WorkerRequest = { input: unknown; type: WorkerRequestType };
-
-type WorkerResponse =
-  | { error: string; type: WorkerResponseType.Error }
-  | { type: WorkerResponseType.Done }
-  | { type: WorkerResponseType.Ready }
-  | { type: WorkerResponseType.Result; value: unknown };
 
 export default class WebWorkerService implements WorkerService {
   private readonly pool = new Map<string, Array<Worker>>();

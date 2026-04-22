@@ -1,6 +1,6 @@
 import { computed } from 'vue';
 import { GameEvent, GameEventType, GamePlayer } from '@/application/types/index.ts';
-import ApplicationStore from '@/interface/stores/ApplicationStore.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
 
 export default class UseNotifications {
   private static readonly MAX_DISPLAYED_MESSAGES = 3;
@@ -13,17 +13,17 @@ export default class UseNotifications {
   });
 
   private get allDisplayedEvents(): ReadonlyArray<GameEvent> {
-    return this.applicationStore.eventsLog.filter(event => this.isEventDisplayed(event));
-  }
-
-  private get applicationStore(): ReturnType<typeof ApplicationStore.INSTANCE> {
-    return ApplicationStore.INSTANCE();
+    return this.mainStore.eventsLog.filter(event => this.isEventDisplayed(event));
   }
 
   private get displayedEvents(): ReadonlyArray<GameEvent> {
     const events = this.allDisplayedEvents;
     const start = Math.max(0, events.length - UseNotifications.MAX_DISPLAYED_MESSAGES);
     return events.slice(start);
+  }
+
+  private get mainStore(): ReturnType<typeof MainStore.INSTANCE> {
+    return MainStore.INSTANCE();
   }
 
   private static createPassMessage(player: GamePlayer): string {
@@ -39,10 +39,10 @@ export default class UseNotifications {
 
   private createEventHtml(event: GameEvent): string {
     switch (event.type) {
-      case GameEventType.BoardTypeChanged:
-      case GameEventType.DifficultyChanged:
+      case GameEventType.MatchDifficultyChanged:
       case GameEventType.MatchFinished:
       case GameEventType.MatchStarted:
+      case GameEventType.MatchTypeChanged:
       case GameEventType.TilePlaced:
       case GameEventType.TileUndoPlaced:
       case GameEventType.TurnValidated:

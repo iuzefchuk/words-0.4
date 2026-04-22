@@ -1,6 +1,6 @@
-import { GameBoardType, GameDifficulty, GameSettings } from '@/application/types/index.ts';
+import { GameMatchDifficulty, GameMatchSettings, GameMatchType } from '@/application/types/index.ts';
 
-export const DEFAULT_SETTINGS: GameSettings = {
-  boardType: GameBoardType.Classic,
-  difficulty: GameDifficulty.Low,
+export const DEFAULT_SETTINGS: GameMatchSettings = {
+  difficulty: GameMatchDifficulty.Low,
+  type: GameMatchType.Classic,
 };

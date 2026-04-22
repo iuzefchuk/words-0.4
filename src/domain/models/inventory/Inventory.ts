@@ -1,4 +1,4 @@
-import { Letter, Player } from '@/domain/enums.ts';
+import { GameLetter, GamePlayer } from '@/domain/enums.ts';
 import { Tile, TileCollection } from '@/domain/models/inventory/types.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
@@ -34,6 +34,7 @@ class TilePool {
 
   removeTile(tile: Tile): Tile {
     const index = this.tiles.indexOf(tile);
+    if (index === -1) throw new ReferenceError(`tile ${tile} is not in pool`);
     const [removedTile] = this.tiles.splice(index, 1);
     if (removedTile === undefined) throw new ReferenceError(`tile ${tile} is not in pool`);
     return removedTile;
@@ -49,37 +50,37 @@ class TilePool {
 export default class Inventory {
   static readonly PLAYER_POOL_CAPACITY = 7;
 
-  private static readonly LETTER_CONFIG: Record<Letter, { count: number; points: number }> = {
-    [Letter.A]: { count: 9, points: 1 },
-    [Letter.B]: { count: 2, points: 4 },
-    [Letter.C]: { count: 2, points: 4 },
-    [Letter.D]: { count: 4, points: 2 },
-    [Letter.E]: { count: 12, points: 1 },
-    [Letter.F]: { count: 2, points: 4 },
-    [Letter.G]: { count: 3, points: 3 },
-    [Letter.H]: { count: 2, points: 4 },
-    [Letter.I]: { count: 9, points: 1 },
-    [Letter.J]: { count: 1, points: 10 },
-    [Letter.K]: { count: 1, points: 5 },
-    [Letter.L]: { count: 4, points: 1 },
-    [Letter.M]: { count: 2, points: 3 },
-    [Letter.N]: { count: 6, points: 1 },
-    [Letter.O]: { count: 8, points: 1 },
-    [Letter.P]: { count: 2, points: 4 },
-    [Letter.Q]: { count: 1, points: 10 },
-    [Letter.R]: { count: 6, points: 1 },
-    [Letter.S]: { count: 4, points: 1 },
-    [Letter.T]: { count: 6, points: 1 },
-    [Letter.U]: { count: 4, points: 2 },
-    [Letter.V]: { count: 2, points: 4 },
-    [Letter.W]: { count: 2, points: 4 },
-    [Letter.X]: { count: 1, points: 8 },
-    [Letter.Y]: { count: 2, points: 4 },
-    [Letter.Z]: { count: 1, points: 10 },
+  private static readonly LETTER_CONFIG: Record<GameLetter, { count: number; points: number }> = {
+    [GameLetter.A]: { count: 9, points: 1 },
+    [GameLetter.B]: { count: 2, points: 4 },
+    [GameLetter.C]: { count: 2, points: 4 },
+    [GameLetter.D]: { count: 4, points: 2 },
+    [GameLetter.E]: { count: 12, points: 1 },
+    [GameLetter.F]: { count: 2, points: 4 },
+    [GameLetter.G]: { count: 3, points: 3 },
+    [GameLetter.H]: { count: 2, points: 4 },
+    [GameLetter.I]: { count: 9, points: 1 },
+    [GameLetter.J]: { count: 1, points: 10 },
+    [GameLetter.K]: { count: 1, points: 5 },
+    [GameLetter.L]: { count: 4, points: 1 },
+    [GameLetter.M]: { count: 2, points: 3 },
+    [GameLetter.N]: { count: 6, points: 1 },
+    [GameLetter.O]: { count: 8, points: 1 },
+    [GameLetter.P]: { count: 2, points: 4 },
+    [GameLetter.Q]: { count: 1, points: 10 },
+    [GameLetter.R]: { count: 6, points: 1 },
+    [GameLetter.S]: { count: 4, points: 1 },
+    [GameLetter.T]: { count: 6, points: 1 },
+    [GameLetter.U]: { count: 4, points: 2 },
+    [GameLetter.V]: { count: 2, points: 4 },
+    [GameLetter.W]: { count: 2, points: 4 },
+    [GameLetter.X]: { count: 1, points: 8 },
+    [GameLetter.Y]: { count: 2, points: 4 },
+    [GameLetter.Z]: { count: 1, points: 10 },
   };
 
-  private static readonly LETTER_BY_TILE: ReadonlyMap<Tile, Letter> = new Map(
-    Object.values(Letter).flatMap(letter =>
+  private static readonly LETTER_BY_TILE: ReadonlyMap<Tile, GameLetter> = new Map(
+    Object.values(GameLetter).flatMap(letter =>
       Array.from({ length: Inventory.LETTER_CONFIG[letter].count }, (_, idx) => {
         const tile = `${letter}-${String(idx)}` as Tile;
         return [tile, letter] as const;
@@ -97,7 +98,7 @@ export default class Inventory {
 
   private constructor(
     private readonly drawPool: TilePool,
-    private readonly playerPools: ReadonlyMap<Player, TilePool>,
+    private readonly playerPools: ReadonlyMap<GamePlayer, TilePool>,
     private readonly discardPool: TilePool,
   ) {}
 
@@ -115,7 +116,7 @@ export default class Inventory {
     return new Inventory(drawPool, playerPools, discardPool);
   }
 
-  static create(players: ReadonlyArray<Player>, randomizer: () => number): Inventory {
+  static create(players: ReadonlyArray<GamePlayer>, randomizer: () => number): Inventory {
     const tiles = [...Inventory.LETTER_BY_TILE.keys()];
     shuffleWithFisherYates({ array: tiles, randomizer });
     const drawPool = TilePool.create({ tiles });
@@ -130,14 +131,14 @@ export default class Inventory {
     return firstTile === secondTile;
   }
 
-  discardTile({ player, tile }: { player: Player; tile: Tile }): void {
+  discardTile({ player, tile }: { player: GamePlayer; tile: Tile }): void {
     const removedTile = this.getTilePoolFor(player).removeTile(tile);
     this.discardPool.addTile(removedTile);
   }
 
-  getTileCollectionFor(player: Player): TileCollection {
+  getTileCollectionFor(player: GamePlayer): TileCollection {
     const tiles = this.getTilesFor(player);
-    const collection = new Map<Letter, Array<Tile>>();
+    const collection = new Map<GameLetter, Array<Tile>>();
     for (const tile of tiles) {
       const letter = this.getTileLetter(tile);
       let letterArray = collection.get(letter);
@@ -147,7 +148,7 @@ export default class Inventory {
     return collection;
   }
 
-  getTileLetter(tile: Tile): Letter {
+  getTileLetter(tile: Tile): GameLetter {
     const letter = Inventory.LETTER_BY_TILE.get(tile);
     if (letter === undefined) throw new ReferenceError(`expected letter for tile ${tile}, got undefined`);
     return letter;
@@ -158,20 +159,20 @@ export default class Inventory {
     return Inventory.LETTER_CONFIG[letter].points;
   }
 
-  getTilesFor(player: Player): ReadonlyArray<Tile> {
+  getTilesFor(player: GamePlayer): ReadonlyArray<Tile> {
     return this.getTilePoolFor(player).tilesView;
   }
 
-  hasTilesFor(player: Player): boolean {
+  hasTilesFor(player: GamePlayer): boolean {
     return this.getTilePoolFor(player).tileCount > 0;
   }
 
-  replenishTilesFor(player: Player): void {
+  replenishTilesFor(player: GamePlayer): void {
     const pool = this.getTilePoolFor(player);
     this.replenishPlayerPool(pool);
   }
 
-  private getTilePoolFor(player: Player): TilePool {
+  private getTilePoolFor(player: GamePlayer): TilePool {
     const pool = this.playerPools.get(player);
     if (pool === undefined) throw new ReferenceError(`expected tile pool for player ${player}, got undefined`);
     return pool;

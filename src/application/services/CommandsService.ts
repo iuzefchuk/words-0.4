@@ -1,29 +1,26 @@
 import {
   AppTurnResponse,
-  GameBoardType,
   GameCell,
-  GameDifficulty,
   GameEvent,
   GameEventType,
   GameGeneratorResult,
-  GameInventoryView,
+  GameMatchDifficulty,
+  GameMatchType,
   GamePlayer,
   GameTile,
 } from '@/application/types/index.ts';
 import { SchedulingService, WorkerService } from '@/application/types/ports.ts';
-import { EventRepository } from '@/application/types/repositories.ts';
+import { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
 import Game from '@/domain/Game.ts';
 import { TIME } from '@/shared/constants.ts';
 
 export default class CommandsService {
   private static readonly OPPONENT_RESPONSE_MIN_TIME = TIME.ms_in_second * 2;
 
+  private lastDrainedEventCount = 0;
+
   private get currentPlayer(): GamePlayer {
     return this.game.turnsView.currentPlayer;
-  }
-
-  private get inventoryView(): Readonly<GameInventoryView> {
-    return this.game.inventoryView;
   }
 
   constructor(
@@ -32,14 +29,17 @@ export default class CommandsService {
     private readonly workerService: WorkerService,
     private readonly turnGenerationTaskId: string,
     private readonly eventRepository: EventRepository,
+    private readonly settingsRepository: SettingsRepository,
   ) {}
 
-  changeBoardType(boardType: GameBoardType): void {
-    this.game.changeBoardType(boardType);
+  changeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
+    this.game.changeMatchDifficulty(matchDifficulty);
+    this.settingsRepository.save({ difficulty: matchDifficulty });
   }
 
-  changeDifficulty(difficulty: GameDifficulty): void {
-    this.game.changeDifficulty(difficulty);
+  changeMatchType(matchType: GameMatchType): void {
+    this.game.changeMatchType(matchType);
+    this.settingsRepository.save({ type: matchType });
   }
 
   clearTiles(): void {
@@ -48,17 +48,20 @@ export default class CommandsService {
   }
 
   drainNewEvents(): Array<GameEvent> {
-    return this.game.drainPendingEvents();
+    const log = this.game.eventsLogView;
+    if (this.lastDrainedEventCount > log.length) this.lastDrainedEventCount = 0;
+    const drained = log.slice(this.lastDrainedEventCount);
+    this.lastDrainedEventCount = log.length;
+    return [...drained];
   }
 
   handlePassTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined } {
     this.clearTiles();
-    if (this.game.willPassBeResignFor(GamePlayer.User)) {
-      this.game.resignMatchForCurrentPlayer();
+    this.game.passTurnForCurrentPlayer();
+    if (this.game.matchView.isFinished) {
       this.clearPersistence();
       return { opponentTurn: undefined };
     }
-    this.game.passTurnForCurrentPlayer();
     this.syncPersistence();
     const opponentTurn = this.currentPlayer === GamePlayer.Opponent ? this.executeOpponentTurn() : undefined;
     return { opponentTurn };
@@ -71,14 +74,8 @@ export default class CommandsService {
   }
 
   handleSaveTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined; userResponse: AppTurnResponse } {
-    const player = this.currentPlayer;
     const userResponse = this.saveTurnForCurrentPlayer();
     if (!userResponse.ok) {
-      return { opponentTurn: undefined, userResponse };
-    }
-    if (!this.inventoryView.hasTilesFor(player)) {
-      this.game.finishMatchByScore();
-      this.clearPersistence();
       return { opponentTurn: undefined, userResponse };
     }
     if (this.game.matchView.isFinished) {
@@ -139,11 +136,10 @@ export default class CommandsService {
       }
     }
     if (bestResult === null) {
-      if (this.game.willPassBeResignFor(player)) {
-        this.game.resignMatchForCurrentPlayer();
+      this.game.passTurnForCurrentPlayer();
+      if (this.game.matchView.isFinished) {
         return { type: GameEventType.MatchFinished, winner: GamePlayer.User };
       }
-      this.game.passTurnForCurrentPlayer();
       return { player: GamePlayer.Opponent, type: GameEventType.TurnPassed };
     }
     const { score, words } = this.game.applyGeneratedTurn(bestResult);
@@ -193,11 +189,10 @@ export default class CommandsService {
       case GameEventType.TurnPassed:
         return { ok: true, value: { words: [] } };
       case GameEventType.TurnSaved:
-        if (!this.inventoryView.hasTilesFor(GamePlayer.Opponent)) this.game.finishMatchByScore();
         return { ok: true, value: { words: event.words } };
-      case GameEventType.BoardTypeChanged:
-      case GameEventType.DifficultyChanged:
+      case GameEventType.MatchDifficultyChanged:
       case GameEventType.MatchStarted:
+      case GameEventType.MatchTypeChanged:
       case GameEventType.TilePlaced:
       case GameEventType.TileUndoPlaced:
       case GameEventType.TurnValidated:

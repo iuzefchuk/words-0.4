@@ -1,8 +1,8 @@
-import { Axis, BoardType, Bonus } from '@/domain/models/board/enums.ts';
+import { Axis, Bonus, Type } from '@/domain/models/board/enums.ts';
 import BonusService from '@/domain/models/board/services/bonus/BonusService.ts';
 import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
 import { AnchorCoordinates, BonusDistribution, Cell, Link, Placement } from '@/domain/models/board/types.ts';
-import { Tile } from '@/domain/models/inventory/types.ts';
+import { GameTile } from '@/domain/types/index.ts';
 
 export default class Board {
   get cells(): ReadonlyArray<Cell> {
@@ -15,18 +15,17 @@ export default class Board {
 
   private constructor(
     private readonly bonusByCell: BonusDistribution,
-    public readonly type: BoardType,
-    private readonly tileByCell: Map<Cell, Tile>,
-    private readonly cellByTile: Map<Tile, Cell>,
+    private readonly tileByCell: Map<Cell, GameTile>,
+    private readonly cellByTile: Map<GameTile, Cell>,
   ) {}
 
   static clone(source: Board): Board {
-    return new Board(source.bonusByCell, source.type, new Map(source.tileByCell), new Map(source.cellByTile));
+    return new Board(source.bonusByCell, new Map(source.tileByCell), new Map(source.cellByTile));
   }
 
-  static create(type: BoardType, randomizer?: () => number): Board {
+  static create(type: Type, randomizer?: () => number): Board {
     const bonusByCell = BonusService.createDistribution(type, randomizer);
-    return new Board(bonusByCell, type, new Map(), new Map());
+    return new Board(bonusByCell, new Map(), new Map());
   }
 
   calculateAnchorCells(): ReadonlySet<Cell> {
@@ -57,7 +56,7 @@ export default class Board {
     return isVertical ? Axis.Y : Axis.X;
   }
 
-  createPlacement(coords: AnchorCoordinates, tiles: ReadonlyArray<Tile>): Placement {
+  createPlacement(coords: AnchorCoordinates, tiles: ReadonlyArray<GameTile>): Placement {
     if (tiles.length === 0) throw new Error('cannot create placement from empty tiles');
     const axisCells = LayoutService.getAxisCells(coords);
     const tilesToPlace = new Set(tiles);
@@ -84,11 +83,11 @@ export default class Board {
     return isValid ? links : [];
   }
 
-  findCellByTile(tile: Tile): Cell | undefined {
+  findCellByTile(tile: GameTile): Cell | undefined {
     return this.cellByTile.get(tile);
   }
 
-  findTileByCell(cell: Cell): Tile | undefined {
+  findTileByCell(cell: Cell): GameTile | undefined {
     return this.tileByCell.get(cell);
   }
 
@@ -146,18 +145,18 @@ export default class Board {
     return LayoutService.isCellPositionAtAxisStart(position);
   }
 
-  isTilePlaced(tile: Tile): boolean {
+  isTilePlaced(tile: GameTile): boolean {
     return this.cellByTile.has(tile);
   }
 
-  placeTile(cell: Cell, tile: Tile): void {
+  placeTile(cell: Cell, tile: GameTile): void {
     if (this.tileByCell.has(cell)) throw new Error(`cell ${String(cell)} is already occupied`);
     if (this.cellByTile.has(tile)) throw new Error(`tile ${tile} is already placed on the board`);
     this.tileByCell.set(cell, tile);
     this.cellByTile.set(tile, cell);
   }
 
-  resolvePlacement(tiles: ReadonlyArray<Tile>): Placement {
+  resolvePlacement(tiles: ReadonlyArray<GameTile>): Placement {
     return tiles
       .map(tile => {
         const cell = this.cellByTile.get(tile);
@@ -167,7 +166,7 @@ export default class Board {
       .sort((first, second) => first.cell - second.cell);
   }
 
-  undoPlaceTile(tile: Tile): void {
+  undoPlaceTile(tile: GameTile): void {
     const cell = this.cellByTile.get(tile);
     if (cell === undefined) throw new Error(`tile ${tile} is not on the board`);
     this.tileByCell.delete(cell);

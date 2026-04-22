@@ -1,11 +1,7 @@
-import { Player } from '@/domain/enums.ts';
+import { GameAxis, GamePlayer, GameValidationStatus } from '@/domain/enums.ts';
 import Board from '@/domain/models/board/Board.ts';
-import { Axis } from '@/domain/models/board/enums.ts';
-import { AnchorCoordinates, Link } from '@/domain/models/board/types.ts';
 import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
-import { Tile } from '@/domain/models/inventory/types.ts';
-import { ValidationStatus } from '@/domain/models/turns/enums.ts';
 import Turns from '@/domain/models/turns/Turns.ts';
 import CrossCheckService from '@/domain/services/cross-check/CrossCheckService.ts';
 import CrossCheckTable from '@/domain/services/cross-check/CrossCheckTable.ts';
@@ -35,6 +31,7 @@ import {
   ValidateTask,
 } from '@/domain/services/generation/turn/types.ts';
 import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
+import { GameAnchorCoordinates, GameLink, GameTile } from '@/domain/types/index.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 class TaskCommandResolver {
@@ -94,7 +91,7 @@ class TaskDispatcher {
     return this.context.inventory;
   }
 
-  private get placement(): Array<Link> {
+  private get placement(): Array<GameLink> {
     return this.state.placement;
   }
 
@@ -218,14 +215,14 @@ class TaskDispatcher {
     const { traversal } = task;
     const placementIsUsable = this.placement.length > 0 && this.dictionary.isNodeFinal(traversal.node);
     if (traversal.direction === GenerationDirection.Right && placementIsUsable) {
-      const tiles: Array<Tile> = [];
+      const tiles: Array<GameTile> = [];
       for (const link of this.placement) {
         tiles.push(link.tile);
         this.context.turns.addPlacedTile(link.tile);
       }
       const validationResult = TurnValidationService.execute(this.context);
       for (const tile of tiles) this.context.turns.removePlacedTile(tile);
-      if (validationResult.status === ValidationStatus.Valid) {
+      if (validationResult.status === GameValidationStatus.Valid) {
         const cells = this.placement.map(link => link.cell);
         return this.emitReturn({ cells, tiles, validationResult });
       }
@@ -281,7 +278,7 @@ export default class TurnGenerationService {
     };
   }
 
-  static *execute(context: GeneratorContext, player: Player, partition?: GeneratorPartition): Generator<GeneratorResult> {
+  static *execute(context: GeneratorContext, player: GamePlayer, partition?: GeneratorPartition): Generator<GeneratorResult> {
     const { board, inventory } = context;
     const playerTileCollection = inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;
@@ -292,8 +289,8 @@ export default class TurnGenerationService {
       partition !== undefined ? allAnchors.slice(partition.offset, partition.offset + partition.length) : allAnchors;
     if (anchors.length === 0) return;
     for (const cell of anchors) {
-      for (const axis of Object.values(Axis)) {
-        const coords: AnchorCoordinates = { axis, cell };
+      for (const axis of Object.values(GameAxis)) {
+        const coords: GameAnchorCoordinates = { axis, cell };
         yield* this.generate({ context, coords, playerTileCollection });
       }
     }

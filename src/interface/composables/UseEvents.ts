@@ -1,18 +1,14 @@
 import { inject } from 'vue';
-import { GameCell, GameTile } from '@/domain/types/index.ts';
+import { GameCell, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
 import ProvidesPlugin from '@/interface/plugins/ProvidesPlugin.ts';
 import SoundPlayer, { Sound } from '@/interface/services/SoundPlayer.ts';
-import ApplicationStore from '@/interface/stores/ApplicationStore.ts';
 import DialogStore from '@/interface/stores/DialogStore.ts';
 import InventoryStore from '@/interface/stores/InventoryStore.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
 
-export default class UseEventHandlers {
+export default class UseUserEvents {
   get selectedTile(): GameTile | null {
     return this.inventoryStore.selectedTile;
-  }
-
-  private get applicationStore(): ReturnType<typeof ApplicationStore.INSTANCE> {
-    return ApplicationStore.INSTANCE();
   }
 
   private get dialogStore(): ReturnType<typeof DialogStore.INSTANCE> {
@@ -23,16 +19,29 @@ export default class UseEventHandlers {
     return InventoryStore.INSTANCE();
   }
 
-  private constructor(private readonly resignDelayMs: number) {}
-
-  static create(): UseEventHandlers {
-    const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY, 0);
-    const resignDelayMs = transitionDurationMs * 2;
-    return new UseEventHandlers(resignDelayMs);
+  private get mainStore(): ReturnType<typeof MainStore.INSTANCE> {
+    return MainStore.INSTANCE();
   }
 
-  handleClear(): void {
-    this.applicationStore.clearTiles();
+  private constructor(private readonly resignDelayMs: number) {}
+
+  static create(): UseUserEvents {
+    const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY, 0);
+    const resignDelayMs = transitionDurationMs * 2;
+    return new UseUserEvents(resignDelayMs);
+  }
+
+  handleChangeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
+    this.mainStore.changeMatchDifficulty(matchDifficulty);
+  }
+
+  handleChangeMatchType(matchType: GameMatchType): void {
+    this.mainStore.changeMatchType(matchType);
+    this.inventoryStore.initialize();
+  }
+
+  handleClearTiles(): void {
+    this.mainStore.clearTiles();
     this.inventoryStore.initialize();
     SoundPlayer.play(Sound.SystemClear);
   }
@@ -40,9 +49,9 @@ export default class UseEventHandlers {
   handleClickBoardCell(cell: GameCell): void {
     const selected = this.selectedTile;
     if (selected === null) return;
-    if (this.applicationStore.findTileOnCell(cell) !== undefined) return;
-    if (this.inventoryStore.selectedTileIsPlaced) this.applicationStore.undoPlaceTile(selected);
-    this.applicationStore.placeTile({ cell, tile: selected });
+    if (this.mainStore.findTileOnCell(cell) !== undefined) return;
+    if (this.inventoryStore.selectedTileIsPlaced) this.mainStore.undoPlaceTile(selected);
+    this.mainStore.placeTile({ cell, tile: selected });
     this.inventoryStore.deselectTile();
   }
 
@@ -57,17 +66,17 @@ export default class UseEventHandlers {
       this.inventoryStore.selectTile(tile);
       return;
     }
-    const targetCell = this.applicationStore.findCellWithTile(tile);
+    const targetCell = this.mainStore.findCellWithTile(tile);
     if (targetCell === undefined) return;
-    const selectedCell = this.applicationStore.findCellWithTile(selected);
+    const selectedCell = this.mainStore.findCellWithTile(selected);
     if (selectedCell !== undefined) {
-      this.applicationStore.undoPlaceTile(selected);
-      this.applicationStore.undoPlaceTile(tile);
-      this.applicationStore.placeTile({ cell: selectedCell, tile });
-      this.applicationStore.placeTile({ cell: targetCell, tile: selected });
+      this.mainStore.undoPlaceTile(selected);
+      this.mainStore.undoPlaceTile(tile);
+      this.mainStore.placeTile({ cell: selectedCell, tile });
+      this.mainStore.placeTile({ cell: targetCell, tile: selected });
     } else {
-      this.applicationStore.undoPlaceTile(tile);
-      this.applicationStore.placeTile({ cell: targetCell, tile: selected });
+      this.mainStore.undoPlaceTile(tile);
+      this.mainStore.placeTile({ cell: targetCell, tile: selected });
       this.inventoryStore.switchTiles(selected, tile);
     }
     this.inventoryStore.deselectTile();
@@ -78,10 +87,10 @@ export default class UseEventHandlers {
     if (tile === undefined) throw new ReferenceError(`expected tile at rack index ${String(idx)}, got undefined`);
     const selected = this.selectedTile;
     if (selected === null) {
-      if (this.applicationStore.isTilePlaced(tile)) this.applicationStore.undoPlaceTile(tile);
+      if (this.mainStore.isTilePlaced(tile)) this.mainStore.undoPlaceTile(tile);
       return;
     }
-    if (this.inventoryStore.selectedTileIsPlaced) this.applicationStore.undoPlaceTile(selected);
+    if (this.inventoryStore.selectedTileIsPlaced) this.mainStore.undoPlaceTile(selected);
     this.inventoryStore.switchTiles(selected, tile);
     this.inventoryStore.deselectTile();
   }
@@ -93,10 +102,10 @@ export default class UseEventHandlers {
       return;
     }
     if (!this.inventoryStore.isTileSelected(tile)) {
-      const selectedCell = this.applicationStore.findCellWithTile(selected);
+      const selectedCell = this.mainStore.findCellWithTile(selected);
       if (selectedCell !== undefined) {
-        this.applicationStore.undoPlaceTile(selected);
-        this.applicationStore.placeTile({ cell: selectedCell, tile });
+        this.mainStore.undoPlaceTile(selected);
+        this.mainStore.placeTile({ cell: selectedCell, tile });
       }
       this.inventoryStore.switchTiles(selected, tile);
     }
@@ -106,32 +115,32 @@ export default class UseEventHandlers {
   handleDoubleClickBoardTile(tile: GameTile): void {
     if (!this.inventoryStore.isTileInRack(tile)) return;
     this.inventoryStore.deselectTile();
-    this.applicationStore.undoPlaceTile(tile);
-  }
-
-  handleGameRestart(): void {
-    this.applicationStore.restartGame();
-    this.inventoryStore.initialize();
+    this.mainStore.undoPlaceTile(tile);
   }
 
   async handlePass(): Promise<void> {
-    if (this.applicationStore.userPassWillBeResign) return this.handleResign();
+    if (this.mainStore.userPassWillBeResign) return this.handleResign();
     const { isConfirmed } = await this.triggerPassDialog();
     if (!isConfirmed) return;
-    this.applicationStore.pass();
-  }
-
-  handlePlay(): void {
-    this.applicationStore.save();
-    this.inventoryStore.initialize();
+    this.mainStore.pass();
   }
 
   async handleResign(): Promise<void> {
     const { isConfirmed } = await this.triggerResignDialog();
     if (!isConfirmed) return;
     setTimeout(() => {
-      this.applicationStore.resign();
+      this.mainStore.resign();
     }, this.resignDelayMs);
+  }
+
+  handleRestartGame(): void {
+    this.mainStore.restartGame();
+    this.inventoryStore.initialize();
+  }
+
+  handleSave(): void {
+    this.mainStore.save();
+    this.inventoryStore.initialize();
   }
 
   handleShuffle(): void {

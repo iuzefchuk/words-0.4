@@ -15,6 +15,14 @@ export default defineConfigWithVueTs([
   vueTsConfigs.stylisticTypeChecked,
   perfectionist.configs['recommended-alphabetical'],
   {
+    languageOptions: {
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ['scripts/*.js', '*.mjs'],
+        },
+        tsconfigRootDir: path.dirname(fileURLToPath(import.meta.url)),
+      },
+    },
     rules: {
       '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'as' }],
@@ -96,6 +104,86 @@ export default defineConfigWithVueTs([
       'vue/multi-word-component-names': 'off',
       'vue/no-unused-refs': 'error',
       'vue/no-v-html': 'off',
+    },
+  },
+  {
+    files: ['src/domain/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/application/**', '@/infrastructure/**', '@/interface/**'],
+              message: 'domain must not import from application, infrastructure, or interface',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/application/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/infrastructure/**', '@/interface/**'],
+              message: 'application must not import from infrastructure or interface',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/infrastructure/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/interface/**'],
+              message: 'infrastructure must not import from interface',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/interface/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/domain/**', '@/infrastructure/**'],
+              message: 'interface must not import from domain or infrastructure; depend on application ports instead',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/shared/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/domain/**', '@/application/**', '@/infrastructure/**', '@/interface/**'],
+              message: 'shared must not import from any feature layer',
+            },
+          ],
+        },
+      ],
     },
   },
   {

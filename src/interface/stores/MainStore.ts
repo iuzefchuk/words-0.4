@@ -3,13 +3,11 @@ import { computed, markRaw, reactive, ref } from 'vue';
 import Application from '@/application/index.ts';
 import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
-import { GameBoardType, GameCell, GameDifficulty, GameSettings, GameTile } from '@/application/types/index.ts';
+import { GameCell, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
 import { SchedulingService } from '@/application/types/ports.ts';
-import { DEFAULT_SETTINGS } from '@/interface/constants.ts';
-import { StorageKey } from '@/interface/enums.ts';
 import { getEventSound } from '@/interface/mappings.ts';
-import LocalStorage from '@/interface/services/LocalStorage.ts';
 import SoundPlayer from '@/interface/services/SoundPlayer.ts';
+import bootstrapApplication from '@/main.ts';
 
 class Actions {
   private pendingValidationId = 0;
@@ -21,17 +19,15 @@ class Actions {
     private readonly state: State,
   ) {}
 
-  changeBoardType = (boardType: GameBoardType): void => {
-    ApplicationStore.saveSettings({ boardType });
-    this.state.writeBoard(() => {
-      this.commandsService.changeBoardType(boardType);
+  changeMatchDifficulty = (matchDifficulty: GameMatchDifficulty): void => {
+    this.state.write(() => {
+      this.commandsService.changeMatchDifficulty(matchDifficulty);
     });
   };
 
-  changeDifficulty = (difficulty: GameDifficulty): void => {
-    ApplicationStore.saveSettings({ difficulty });
-    this.state.write(() => {
-      this.commandsService.changeDifficulty(difficulty);
+  changeMatchType = (matchType: GameMatchType): void => {
+    this.state.writeBoard(() => {
+      this.commandsService.changeMatchType(matchType);
     });
   };
 
@@ -128,21 +124,21 @@ class Getters {
 
   readonly allActionsAreDisabled = computed(() => !this.currentPlayerIsUser.value || !this.dictionaryIsReady.value);
 
-  readonly boardType = computed(() => this.readBoard(() => this.queriesService.getBoardType()));
-
   readonly currentTurnIsValid = computed(() => this.readBoard(() => this.queriesService.isCurrentTurnValid()));
 
   readonly currentTurnScore = computed(() => this.readBoard(() => this.queriesService.getCurrentTurnScore()));
-
-  readonly difficulty = computed(() => this.readState(() => this.queriesService.getDifficulty()));
 
   readonly eventsLog = computed(() => this.readState(() => [...this.queriesService.getEventsLog()]));
 
   readonly hasPriorTurns = computed(() => this.readState(() => this.queriesService.hasPriorTurns()));
 
+  readonly matchDifficulty = computed(() => this.readState(() => this.queriesService.getMatchDifficulty()));
+
   readonly matchIsFinished = computed(() => this.readState(() => this.queriesService.isMatchFinished()));
 
   readonly matchResult = computed(() => this.readState(() => this.queriesService.getMatchResult()));
+
+  readonly matchType = computed(() => this.readBoard(() => this.queriesService.getMatchType()));
 
   readonly opponentScore = computed(() => this.readState(() => this.queriesService.getOpponentScore()));
 
@@ -253,13 +249,13 @@ class State {
   }
 }
 
-export default class ApplicationStore {
+export default class MainStore {
   private static app: Application;
 
   static readonly INSTANCE = defineStore('main', () => {
-    const store = new ApplicationStore(ApplicationStore.app);
+    const store = new MainStore(MainStore.app);
     return {
-      ...ApplicationStore.app.config,
+      ...MainStore.app.config,
       ...(store.getters as { [K in keyof Getters]: Getters[K] }),
       ...(store.actions as { [K in keyof Actions]: Actions[K] }),
     };
@@ -279,24 +275,6 @@ export default class ApplicationStore {
   }
 
   static async initiate(): Promise<void> {
-    const settings = ApplicationStore.loadSettings();
-    ApplicationStore.app = markRaw(await Application.create(settings));
-  }
-
-  static saveSettings(data: { boardType?: GameBoardType; difficulty?: GameDifficulty }): void {
-    const existingCache = this.loadSettings();
-    const newCache = {
-      boardType: data.boardType ?? existingCache.boardType,
-      difficulty: data.difficulty ?? existingCache.difficulty,
-    };
-    LocalStorage.save(StorageKey.Settings, newCache);
-  }
-
-  private static loadSettings(): GameSettings {
-    const cache = LocalStorage.load(StorageKey.Settings) as null | Partial<GameSettings>;
-    return {
-      boardType: cache?.boardType ?? DEFAULT_SETTINGS.boardType,
-      difficulty: cache?.difficulty ?? DEFAULT_SETTINGS.difficulty,
-    };
+    MainStore.app = markRaw(await bootstrapApplication());
   }
 }

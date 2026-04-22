@@ -2,21 +2,21 @@
 import { computed } from 'vue';
 import { GameBonus, GameCell } from '@/application/types/index.ts';
 import GameTile from '@/interface/components/shared/AppTile/AppTile.vue';
-import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
+import UseEvents from '@/interface/composables/UseEvents';
 import { getBonusName } from '@/interface/mappings.ts';
-import ApplicationStore from '@/interface/stores/ApplicationStore.ts';
 import InventoryStore from '@/interface/stores/InventoryStore.ts';
-const events = UseEventHandlers.create();
+import MainStore from '@/interface/stores/MainStore.ts';
+const events = UseEvents.create();
 const props = defineProps<{
   cell: GameCell;
 }>();
-const applicationStore = ApplicationStore.INSTANCE();
+const mainStore = MainStore.INSTANCE();
 const inventoryStore = InventoryStore.INSTANCE();
-const isCellCenter = computed(() => applicationStore.isCellCenter(props.cell));
-const bonus = computed(() => applicationStore.getCellBonus(props.cell));
+const isCellCenter = computed(() => mainStore.isCellCenter(props.cell));
+const bonus = computed(() => mainStore.getCellBonus(props.cell));
 const bonusName = computed(() => (bonus.value !== null ? getBonusName(bonus.value) : ''));
-const tile = computed(() => applicationStore.findTileOnCell(props.cell));
-const isTileSaturated = computed(() => tile.value !== undefined && applicationStore.wasTileUsedInPreviousTurn(tile.value));
+const tile = computed(() => mainStore.findTileOnCell(props.cell));
+const isTileSaturated = computed(() => tile.value !== undefined && mainStore.wasTileUsedInPreviousTurn(tile.value));
 </script>
 
 <template>
@@ -50,7 +50,7 @@ const isTileSaturated = computed(() => tile.value !== undefined && applicationSt
     <Transition name="fade" appear>
       <GameTile
         v-if="tile"
-        :letter="applicationStore.getTileLetter(tile)"
+        :letter="mainStore.getTileLetter(tile)"
         :is-inverted="inventoryStore.isTileSelected(tile)"
         :is-saturated="isTileSaturated"
         @click.stop="events.handleClickBoardTile(tile)"

@@ -1,6 +1,6 @@
-import { Axis } from '@/domain/models/board/enums.ts';
+import { GameAxis } from '@/domain/enums.ts';
 import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
-import { Cell } from '@/domain/models/board/types.ts';
+import { GameCell } from '@/domain/types/index.ts';
 
 export default class CrossCheckTable {
   static readonly ALL_LETTERS_MASK = (1 << 26) - 1;
@@ -27,13 +27,13 @@ export default class CrossCheckTable {
     return new CrossCheckTable(buffer);
   }
 
-  getMask(axis: Axis, cell: Cell): number {
-    const mask = this.data[(axis === Axis.X ? 0 : CrossCheckTable.Y_OFFSET) + cell];
+  getMask(axis: GameAxis, cell: GameCell): number {
+    const mask = this.data[(axis === GameAxis.X ? 0 : CrossCheckTable.Y_OFFSET) + cell];
     if (mask === undefined) throw new ReferenceError(`expected mask for axis ${axis} cell ${String(cell)}, got undefined`);
     return mask;
   }
 
-  setMask(axis: Axis, cell: Cell, mask: number): void {
-    this.data[(axis === Axis.X ? 0 : CrossCheckTable.Y_OFFSET) + cell] = mask;
+  setMask(axis: GameAxis, cell: GameCell, mask: number): void {
+    this.data[(axis === GameAxis.X ? 0 : CrossCheckTable.Y_OFFSET) + cell] = mask;
   }
 }

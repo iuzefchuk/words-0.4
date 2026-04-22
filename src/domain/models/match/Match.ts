@@ -1,81 +1,77 @@
-import { Player } from '@/domain/enums.ts';
-import { MatchResult } from '@/domain/models/match/enums.ts';
+import { GamePlayer } from '@/domain/enums.ts';
+import { Difficulty, Result, Type } from '@/domain/models/match/enums.ts';
+import { MatchSettings } from '@/domain/models/match/types.ts';
 
 export default class Match {
   get isFinished(): boolean {
-    for (const result of this.results.values()) if (result !== MatchResult.Undecided) return true;
+    for (const result of this.results.values()) if (result !== Result.Undecided) return true;
     return false;
   }
 
-  get leaderByScore(): null | Player {
-    if (this.scoresAreTied) return null;
-    return this.userScore > this.opponentScore ? Player.User : Player.Opponent;
-  }
-
-  get loserByScore(): null | Player {
-    if (this.scoresAreTied) return null;
-    return this.leaderByScore === Player.User ? Player.Opponent : Player.User;
-  }
-
   get opponentScore(): number {
-    return this.getScoreFor(Player.Opponent);
+    return this.getScoreFor(GamePlayer.Opponent);
   }
 
   get userScore(): number {
-    return this.getScoreFor(Player.User);
-  }
-
-  private get scoresAreTied(): boolean {
-    return this.userScore === this.opponentScore;
+    return this.getScoreFor(GamePlayer.User);
   }
 
   private constructor(
-    private readonly results: Map<Player, MatchResult>,
-    private readonly scores: Map<Player, number>,
+    private readonly results: Map<GamePlayer, Result>,
+    private readonly scores: Map<GamePlayer, number>,
+    public settings: MatchSettings,
   ) {}
 
-  static create(players: ReadonlyArray<Player>): Match {
-    const results = new Map(players.map(player => [player, MatchResult.Undecided]));
+  static create(players: ReadonlyArray<GamePlayer>, settings: MatchSettings): Match {
+    const results = new Map(players.map(player => [player, Result.Undecided]));
     const scores = new Map(players.map(player => [player, 0]));
-    return new Match(results, scores);
+    return new Match(results, scores, settings);
   }
 
-  getResultFor(player: Player): MatchResult {
+  getResultFor(player: GamePlayer): Result {
     const result = this.results.get(player);
     if (result === undefined) throw new ReferenceError(`expected result for player ${player}, got undefined`);
     return result;
   }
 
-  getScoreFor(player: Player): number {
+  getScoreFor(player: GamePlayer): number {
     const score = this.scores.get(player);
     if (score === undefined) throw new ReferenceError(`expected score for player ${player}, got undefined`);
     return score;
   }
 
-  incrementScore(player: Player, incrementation: number): void {
+  incrementScore(player: GamePlayer, incrementation: number): void {
     if (incrementation < 0) throw new Error(`expected non-negative increment, got ${String(incrementation)}`);
     const currentScore = this.getScoreFor(player);
     const newScore = currentScore + incrementation;
     this.scores.set(player, newScore);
   }
 
-  recordCompletion(winner: Player, loser: Player): void {
+  recordCompletion(winner: GamePlayer, loser: GamePlayer): void {
     this.ensureMutability();
-    this.recordResult(winner, MatchResult.Win);
-    this.recordResult(loser, MatchResult.Lose);
+    this.recordResult(winner, Result.Win);
+    this.recordResult(loser, Result.Lose);
   }
 
-  recordTie(firstPlayer: Player, secondPlayer: Player): void {
+  recordTie(firstPlayer: GamePlayer, secondPlayer: GamePlayer): void {
     this.ensureMutability();
-    this.recordResult(firstPlayer, MatchResult.Tie);
-    this.recordResult(secondPlayer, MatchResult.Tie);
+    this.recordResult(firstPlayer, Result.Tie);
+    this.recordResult(secondPlayer, Result.Tie);
+  }
+
+  setDifficulty(difficulty: Difficulty): void {
+    this.settings.difficulty = difficulty;
+  }
+
+  setType(type: Type): void {
+    this.settings.type = type;
   }
 
   private ensureMutability(): void {
     if (this.isFinished) throw new Error('cannot mutate finished match');
   }
 
-  private recordResult(player: Player, result: MatchResult): void {
+  private recordResult(player: GamePlayer, result: Result): void {
     this.results.set(player, result);
   }
 }

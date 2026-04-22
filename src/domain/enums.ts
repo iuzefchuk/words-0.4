@@ -1,10 +1,16 @@
-export enum Difficulty {
-  High = 'High',
-  Low = 'Low',
-  Medium = 'Medium',
-}
+export { EventType as GameEventType } from '@/domain/events/enums.ts';
 
-export enum Letter {
+export { Axis as GameAxis, Type as GameBoardType, Bonus as GameBonus } from '@/domain/models/board/enums.ts';
+
+export {
+  Difficulty as GameMatchDifficulty,
+  Result as GameMatchResult,
+  Type as GameMatchType,
+} from '@/domain/models/match/enums.ts';
+
+export { ValidationError as GameValidationError, ValidationStatus as GameValidationStatus } from '@/domain/models/turns/enums.ts';
+
+export enum GameLetter {
   A = 'A',
   B = 'B',
   C = 'C',
@@ -33,7 +39,7 @@ export enum Letter {
   Z = 'Z',
 }
 
-export enum Player {
+export enum GamePlayer {
   Opponent = 'Opponent',
   User = 'User',
 }

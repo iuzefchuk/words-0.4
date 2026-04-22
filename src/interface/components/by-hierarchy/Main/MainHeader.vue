@@ -1,44 +1,46 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { GameBoardType, GameDifficulty } from '@/application/types/index.ts';
+import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
 import AppSelect from '@/interface/components/shared/AppSelect/AppSelect.vue';
-import ApplicationStore from '@/interface/stores/ApplicationStore.ts';
-type OptionValue = GameBoardType | GameDifficulty;
-const applicationStore = ApplicationStore.INSTANCE();
-const optionsAreDisabled = computed(() => !applicationStore.settingsChangeIsAllowed);
+import UseEvents from '@/interface/composables/UseEvents';
+import MainStore from '@/interface/stores/MainStore.ts';
+type OptionValue = GameMatchDifficulty | GameMatchType;
+const mainStore = MainStore.INSTANCE();
+const events = UseEvents.create();
+const optionsAreDisabled = computed(() => !mainStore.settingsChangeIsAllowed);
 const options = [
   {
     items: [
-      { text: window.text('game.bonus_distribution_classic'), value: GameBoardType.Classic },
-      { text: window.text('game.bonus_distribution_random'), value: GameBoardType.Random },
+      { text: window.text('game.bonus_distribution_classic'), value: GameMatchType.Classic },
+      { text: window.text('game.bonus_distribution_random'), value: GameMatchType.Random },
     ],
     label: window.text('game.settings_bonuses'),
-    modelValue: () => applicationStore.boardType,
+    modelValue: () => mainStore.matchType,
     onChange: (value: OptionValue) => {
-      applicationStore.changeBoardType(value as GameBoardType);
+      events.handleChangeMatchType(value as GameMatchType);
     },
   },
   {
     items: [
-      { text: window.text('game.difficulty_low'), value: GameDifficulty.Low },
-      { text: window.text('game.difficulty_medium'), value: GameDifficulty.Medium },
-      { text: window.text('game.difficulty_high'), value: GameDifficulty.High },
+      { text: window.text('game.difficulty_low'), value: GameMatchDifficulty.Low },
+      { text: window.text('game.difficulty_medium'), value: GameMatchDifficulty.Medium },
+      { text: window.text('game.difficulty_high'), value: GameMatchDifficulty.High },
     ],
     label: window.text('game.settings_difficulty'),
-    modelValue: () => applicationStore.difficulty,
+    modelValue: () => mainStore.matchDifficulty,
     onChange: (value: OptionValue) => {
-      applicationStore.changeDifficulty(value as GameDifficulty);
+      events.handleChangeMatchDifficulty(value as GameMatchDifficulty);
     },
   },
 ];
 const players = [
   {
     name: window.text('game.player_user'),
-    score: () => applicationStore.userScore,
+    score: () => mainStore.userScore,
   },
   {
     name: window.text('game.player_opponent'),
-    score: () => applicationStore.opponentScore,
+    score: () => mainStore.opponentScore,
   },
 ];
 </script>

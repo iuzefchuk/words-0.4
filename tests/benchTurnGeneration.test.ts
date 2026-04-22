@@ -1,15 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { performance } from 'node:perf_hooks';
 import { describe, it } from 'vitest';
-import { Player } from '@/domain/enums.ts';
+import { GameBoardType, GamePlayer } from '@/domain/enums.ts';
 import Board from '@/domain/models/board/Board.ts';
-import { BoardType } from '@/domain/models/board/enums.ts';
-import { Cell } from '@/domain/models/board/types.ts';
 import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
-import { Tile } from '@/domain/models/inventory/types.ts';
 import Turns from '@/domain/models/turns/Turns.ts';
 import TurnGenerationService from '@/domain/services/generation/turn/TurnGenerationService.ts';
+import { GameCell, GameTile } from '@/domain/types/index.ts';
 
 const LETTER_COUNTS: Record<string, number> = {
   A: 9,
@@ -54,8 +52,8 @@ const WORDS: Array<{ cell: number; letters: string; vertical?: boolean }> = [
 ];
 
 function buildBoard(inventory: Inventory): Board {
-  const board = Board.create(BoardType.Classic);
-  const rackTiles = new Set<string>([...inventory.getTilesFor(Player.User), ...inventory.getTilesFor(Player.Opponent)]);
+  const board = Board.create(GameBoardType.Preset);
+  const rackTiles = new Set<string>([...inventory.getTilesFor(GamePlayer.User), ...inventory.getTilesFor(GamePlayer.Opponent)]);
   const placed = new Set<string>();
   const pick = (letter: string): string => {
     const max = LETTER_COUNTS[letter] ?? 0;
@@ -72,8 +70,8 @@ function buildBoard(inventory: Inventory): Board {
     const step = vertical ? 15 : 1;
     for (let i = 0; i < letters.length; i++) {
       const pos = cell + i * step;
-      if (!board.isCellOccupied(pos as Cell)) {
-        board.placeTile(pos as Cell, pick(letters[i]!) as Tile);
+      if (!board.isCellOccupied(pos as GameCell)) {
+        board.placeTile(pos as GameCell, pick(letters[i]!) as GameTile);
       }
     }
   }
@@ -105,7 +103,7 @@ describe.skipIf(!process.env.BENCH)('TurnGeneration bench', () => {
         return (state >>> 0) / 4294967296;
       };
       try {
-        const inv = Inventory.create([Player.User, Player.Opponent], rand);
+        const inv = Inventory.create([GamePlayer.User, GamePlayer.Opponent], rand);
         board = buildBoard(inv);
         inventory = inv;
       } catch {
@@ -113,10 +111,10 @@ describe.skipIf(!process.env.BENCH)('TurnGeneration bench', () => {
       }
     }
     // eslint-disable-next-line no-console
-    console.log(`[bench] seed=${seed - 1} opp rack=`, inventory!.getTilesFor(Player.Opponent));
+    console.log(`[bench] seed=${seed - 1} opp rack=`, inventory!.getTilesFor(GamePlayer.Opponent));
     const turns = Turns.create({ createUniqueId: () => 'id' });
-    turns.startTurnFor(Player.User);
-    turns.startTurnFor(Player.Opponent);
+    turns.startTurnFor(GamePlayer.User);
+    turns.startTurnFor(GamePlayer.Opponent);
 
     const WARMUP = 1;
     const REPS = 5;
@@ -125,7 +123,7 @@ describe.skipIf(!process.env.BENCH)('TurnGeneration bench', () => {
       let count = 0;
       let best = -1;
       const t0 = performance.now();
-      for (const r of TurnGenerationService.execute(ctx, Player.Opponent)) {
+      for (const r of TurnGenerationService.execute(ctx, GamePlayer.Opponent)) {
         count++;
         if (r.validationResult.score > best) best = r.validationResult.score;
       }

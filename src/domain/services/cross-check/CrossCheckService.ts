@@ -1,9 +1,9 @@
+import { GameAxis } from '@/domain/enums.ts';
 import Board from '@/domain/models/board/Board.ts';
-import { Axis } from '@/domain/models/board/enums.ts';
-import { AnchorCoordinates, Cell } from '@/domain/models/board/types.ts';
 import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 import CrossCheckTable from '@/domain/services/cross-check/CrossCheckTable.ts';
+import { GameAnchorCoordinates, GameCell } from '@/domain/types/index.ts';
 
 export default class CrossCheckService {
   private constructor(
@@ -15,7 +15,7 @@ export default class CrossCheckService {
   static precompute(board: Board, dictionary: Dictionary, inventory: Inventory): CrossCheckTable {
     const service = new CrossCheckService(board, dictionary, inventory);
     const table = CrossCheckTable.create();
-    for (const axis of Object.values(Axis)) {
+    for (const axis of Object.values(GameAxis)) {
       for (const cell of board.cells) {
         table.setMask(axis, cell, service.computeFor({ axis, cell }));
       }
@@ -23,7 +23,7 @@ export default class CrossCheckService {
     return table;
   }
 
-  private collectAdjacentTileLetters(axisCells: ReadonlyArray<Cell>, startPosition: number, direction: -1 | 1): string {
+  private collectAdjacentTileLetters(axisCells: ReadonlyArray<GameCell>, startPosition: number, direction: -1 | 1): string {
     let result = '';
     for (let idx = startPosition + direction; idx >= 0 && idx < axisCells.length; idx += direction) {
       const cell = axisCells[idx];
@@ -36,10 +36,10 @@ export default class CrossCheckService {
     return result;
   }
 
-  private computeFor(coords: AnchorCoordinates): number {
+  private computeFor(coords: GameAnchorCoordinates): number {
     const axisCells = this.board.getAxisCells(coords);
     const position =
-      coords.axis === Axis.X ? this.board.getCellPositionInColumn(coords.cell) : this.board.getCellPositionInRow(coords.cell);
+      coords.axis === GameAxis.X ? this.board.getCellPositionInColumn(coords.cell) : this.board.getCellPositionInRow(coords.cell);
     const prefix = this.collectAdjacentTileLetters(axisCells, position, -1);
     const suffix = this.collectAdjacentTileLetters(axisCells, position, 1);
     if (prefix === '' && suffix === '') return CrossCheckTable.ALL_LETTERS_MASK;
