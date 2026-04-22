@@ -1,6 +1,6 @@
 import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
-import { AppConfig, AppDependencies, AppServices, GameDictionary, GameSettings } from '@/application/types/index.ts';
+import { AppConfig, AppDependencies, AppServices, GameDictionary, GameMatchSettings } from '@/application/types/index.ts';
 import { SchedulingService } from '@/application/types/ports.ts';
 import { EventRepository } from '@/application/types/repositories.ts';
 import Game from '@/domain/Game.ts';
@@ -28,7 +28,7 @@ export default class Application {
     this.queriesService = queriesService;
   }
 
-  static async create(dependencies: AppDependencies, settings: GameSettings): Promise<Application> {
+  static async create(dependencies: AppDependencies, settings: GameMatchSettings): Promise<Application> {
     const { repositories, services, tasks } = dependencies;
     const game = await this.createGame(services, repositories.events, settings);
     const queriesService = new QueriesService(game);
@@ -46,7 +46,7 @@ export default class Application {
   private static async createGame(
     services: AppServices,
     eventRepository: EventRepository,
-    settings: GameSettings,
+    settings: GameMatchSettings,
   ): Promise<Game> {
     const events = await eventRepository.load();
     return events !== null && events.length > 0

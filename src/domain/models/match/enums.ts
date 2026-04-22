@@ -4,14 +4,14 @@ export enum Difficulty {
   Medium = 'Medium',
 }
 
-export enum MatchResult {
+export enum Result {
   Lose = 'Lose',
   Tie = 'Tie',
   Undecided = 'Undecided',
   Win = 'Win',
 }
 
-export enum MatchType {
+export enum Type {
   Classic = 'Classic',
   Random = 'Random',
 }

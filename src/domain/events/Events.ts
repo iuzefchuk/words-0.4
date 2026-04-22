@@ -1,6 +1,6 @@
-import { Player } from '@/domain/enums.ts';
-import { EventType } from '@/domain/models/events/enums.ts';
-import { Event } from '@/domain/models/events/types.ts';
+import { GamePlayer } from '@/domain/enums.ts';
+import { EventType } from '@/domain/events/enums.ts';
+import { Event } from '@/domain/events/types.ts';
 
 export default class Events {
   get logView(): ReadonlyArray<Event> {
@@ -22,7 +22,7 @@ export default class Events {
     this.log.push(initialEvent);
   }
 
-  wasLastTurnEventPassFor(player: Player): boolean {
+  wasLastTurnEventPassFor(player: GamePlayer): boolean {
     for (let idx = this.log.length - 1; idx >= 0; idx--) {
       const event = this.log[idx];
       if (event === undefined) throw new ReferenceError(`expected event at index ${String(idx)}, got undefined`);

@@ -1,12 +1,11 @@
-import { Player } from '@/domain/enums.ts';
-import { Cell } from '@/domain/models/board/types.ts';
-import { Tile } from '@/domain/models/inventory/types.ts';
+import { GamePlayer } from '@/domain/enums.ts';
 import { ValidationError, ValidationStatus } from '@/domain/models/turns/enums.ts';
 import { ValidationResult } from '@/domain/models/turns/types.ts';
+import { GameCell, GameTile } from '@/domain/types/index.ts';
 import { IdentityService } from '@/domain/types/ports.ts';
 
 class Turn {
-  get cells(): ReadonlyArray<Cell> | undefined {
+  get cells(): ReadonlyArray<GameCell> | undefined {
     return this.validationResult.status === ValidationStatus.Valid ? this.validationResult.cells : undefined;
   }
 
@@ -22,7 +21,7 @@ class Turn {
     return this.validationResult.status === ValidationStatus.Valid ? this.validationResult.score : undefined;
   }
 
-  get tilesView(): ReadonlyArray<Tile> {
+  get tilesView(): ReadonlyArray<GameTile> {
     return this.tiles;
   }
 
@@ -32,8 +31,8 @@ class Turn {
 
   private constructor(
     readonly id: string,
-    readonly player: Player,
-    private readonly tiles: Array<Tile>,
+    readonly player: GamePlayer,
+    private readonly tiles: Array<GameTile>,
     private validationResult: ValidationResult = { status: ValidationStatus.Unvalidated },
   ) {}
 
@@ -41,17 +40,17 @@ class Turn {
     return new Turn(source.id, source.player, [...source.tiles], { ...source.validationResult });
   }
 
-  static create({ identityService, player }: { identityService: IdentityService; player: Player }): Turn {
+  static create({ identityService, player }: { identityService: IdentityService; player: GamePlayer }): Turn {
     const id = identityService.createUniqueId();
     return new Turn(id, player, []);
   }
 
-  addTile(tile: Tile): void {
+  addTile(tile: GameTile): void {
     if (this.tiles.includes(tile)) throw new Error(`tile ${tile} is already in current turn`);
     this.tiles.push(tile);
   }
 
-  removeTile(tile: Tile): void {
+  removeTile(tile: GameTile): void {
     const index = this.tiles.indexOf(tile);
     if (index === -1) throw new ReferenceError(`tile ${tile} is not in current turn`);
     this.tiles.splice(index, 1);
@@ -68,13 +67,13 @@ class Turn {
 }
 
 export default class Turns {
-  private static readonly FIRST_PLAYER: Player = Player.User;
+  private static readonly FIRST_PLAYER: GamePlayer = GamePlayer.User;
 
-  get currentPlayer(): Player {
+  get currentPlayer(): GamePlayer {
     return this.currentTurn.player;
   }
 
-  get currentTurnCells(): ReadonlyArray<Cell> | undefined {
+  get currentTurnCells(): ReadonlyArray<GameCell> | undefined {
     return this.currentTurn.cells;
   }
 
@@ -86,7 +85,7 @@ export default class Turns {
     return this.currentTurn.score;
   }
 
-  get currentTurnTiles(): ReadonlyArray<Tile> {
+  get currentTurnTiles(): ReadonlyArray<GameTile> {
     return this.currentTurn.tilesView;
   }
 
@@ -98,12 +97,12 @@ export default class Turns {
     return this.history.length > 1;
   }
 
-  get nextPlayer(): Player {
+  get nextPlayer(): GamePlayer {
     if (this.history.length === 0) return Turns.FIRST_PLAYER;
-    return this.currentPlayer === Player.User ? Player.Opponent : Player.User;
+    return this.currentPlayer === GamePlayer.User ? GamePlayer.Opponent : GamePlayer.User;
   }
 
-  get previousTurnTiles(): ReadonlyArray<Tile> | undefined {
+  get previousTurnTiles(): ReadonlyArray<GameTile> | undefined {
     return this.history.at(-2)?.tilesView;
   }
 
@@ -129,7 +128,7 @@ export default class Turns {
     return new Turns(identityService, []);
   }
 
-  addPlacedTile(tile: Tile): void {
+  addPlacedTile(tile: GameTile): void {
     this.currentTurn.addTile(tile);
   }
 
@@ -137,7 +136,7 @@ export default class Turns {
     this.currentTurn.setValidationResult(result);
   }
 
-  removePlacedTile(tile: Tile): void {
+  removePlacedTile(tile: GameTile): void {
     this.currentTurn.removeTile(tile);
   }
 
@@ -145,7 +144,7 @@ export default class Turns {
     this.currentTurn.reset();
   }
 
-  startTurnFor(player: Player): void {
+  startTurnFor(player: GamePlayer): void {
     if (player !== this.nextPlayer) throw new Error(`expected next player to be ${this.nextPlayer}, got ${player}`);
     const newTurn = Turn.create({ identityService: this.identityService, player });
     this.history.push(newTurn);

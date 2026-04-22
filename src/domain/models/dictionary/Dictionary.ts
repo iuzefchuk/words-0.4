@@ -1,10 +1,10 @@
-import { Letter } from '@/domain/enums.ts';
+import { GameLetter } from '@/domain/enums.ts';
 import { DictionaryBuffer, Node } from '@/domain/models/dictionary/types.ts';
 
 export default class Dictionary {
   private static readonly FIRST_LETTER_CODE = Dictionary.computeFirstLetterCode();
 
-  private static readonly LETTERS: ReadonlyArray<Letter> = Object.values(Letter);
+  private static readonly LETTERS: ReadonlyArray<GameLetter> = Object.values(GameLetter);
 
   get buffer(): DictionaryBuffer {
     return this.data.buffer;
@@ -25,7 +25,7 @@ export default class Dictionary {
   }
 
   private static computeFirstLetterCode(): number {
-    const first = Object.values(Letter)[0];
+    const first = Object.values(GameLetter)[0];
     if (first === undefined) throw new ReferenceError('expected first letter, got undefined');
     return first.charCodeAt(0);
   }
@@ -38,7 +38,7 @@ export default class Dictionary {
     });
   }
 
-  forEachNodeChild(node: Node, callback: (letter: Letter, childNode: Node) => void): void {
+  forEachNodeChild(node: Node, callback: (letter: GameLetter, childNode: Node) => void): void {
     const data = this.data;
     for (let idx = 0; idx < Dictionary.LETTERS.length; idx++) {
       const childOffset = data[(node as number) + 1 + idx];

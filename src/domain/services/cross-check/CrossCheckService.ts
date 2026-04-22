@@ -1,12 +1,14 @@
-import { Letter } from '@/domain/enums.ts';
+import { GameLetter } from '@/domain/enums.ts';
 import Board from '@/domain/models/board/Board.ts';
 import { Axis } from '@/domain/models/board/enums.ts';
 import { AnchorCoordinates, Cell } from '@/domain/models/board/types.ts';
 import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 
+// TODo fix imports in all services
+
 export default class CrossCheckService {
-  private readonly cache = new Map<Axis, Map<Cell, ReadonlySet<Letter>>>(Object.values(Axis).map(axis => [axis, new Map()]));
+  private readonly cache = new Map<Axis, Map<Cell, ReadonlySet<GameLetter>>>(Object.values(Axis).map(axis => [axis, new Map()]));
 
   constructor(
     private readonly board: Board,
@@ -14,7 +16,7 @@ export default class CrossCheckService {
     private readonly inventory: Inventory,
   ) {}
 
-  execute(coords: AnchorCoordinates): ReadonlySet<Letter> {
+  execute(coords: AnchorCoordinates): ReadonlySet<GameLetter> {
     const { axis, cell } = coords;
     const axisCache = this.cache.get(axis);
     if (axisCache === undefined) throw new ReferenceError(`expected axis cache for axis ${axis}, got undefined`);
@@ -38,16 +40,16 @@ export default class CrossCheckService {
     return result;
   }
 
-  private computeFor(coords: AnchorCoordinates): ReadonlySet<Letter> {
+  private computeFor(coords: AnchorCoordinates): ReadonlySet<GameLetter> {
     const axisCells = this.board.getAxisCells(coords);
     const position =
       coords.axis === Axis.X ? this.board.getCellPositionInColumn(coords.cell) : this.board.getCellPositionInRow(coords.cell);
     const prefix = this.collectAdjacentTileLetters(axisCells, position, -1);
     const suffix = this.collectAdjacentTileLetters(axisCells, position, 1);
-    if (prefix === '' && suffix === '') return new Set(Object.values(Letter));
+    if (prefix === '' && suffix === '') return new Set(Object.values(GameLetter));
     const prefixNode = prefix !== '' ? this.dictionary.getNode(prefix) : this.dictionary.rootNode;
     if (prefixNode === null) return new Set();
-    const anchorLetters = new Set<Letter>();
+    const anchorLetters = new Set<GameLetter>();
     this.dictionary.forEachNodeChild(prefixNode, (possibleNextLetter, nodeWithPossibleNextLetter) => {
       if (suffix === '') {
         anchorLetters.add(possibleNextLetter);

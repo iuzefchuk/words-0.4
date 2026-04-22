@@ -9,3 +9,8 @@ export enum Bonus {
   TripleLetter = 'TripleLetter',
   TripleWord = 'TripleWord',
 }
+
+export enum Type {
+  Preset = 'Preset',
+  Random = 'Random',
+}

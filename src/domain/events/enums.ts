@@ -1,5 +1,5 @@
 export enum EventType {
-  DifficultyChanged = 'DifficultyChanged',
+  MatchDifficultyChanged = 'MatchDifficultyChanged',
   MatchFinished = 'MatchFinished',
   MatchStarted = 'MatchStarted',
   MatchTypeChanged = 'MatchTypeChanged',

@@ -6,9 +6,9 @@ import { IdentityService, SeedingService } from '@/domain/types/ports.ts';
 export {
   GameBonus,
   GameDictionary,
-  GameDifficulty,
   GameEventType,
   GameLetter,
+  GameMatchDifficulty,
   GameMatchResult,
   GameMatchType,
   GamePlayer,
@@ -23,9 +23,9 @@ export type {
   GameGeneratorPartition,
   GameGeneratorResult,
   GameInventoryView,
+  GameMatchSettings,
   GameMatchView,
   GameNode,
-  GameSettings,
   GameTile,
   GameTurnsView,
 } from '@/domain/types/index.ts';

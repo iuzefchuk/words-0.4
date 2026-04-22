@@ -1,4 +1,4 @@
-import { Player } from '@/domain/enums.ts';
+import { GamePlayer } from '@/domain/enums.ts';
 import Board from '@/domain/models/board/Board.ts';
 import { Axis } from '@/domain/models/board/enums.ts';
 import { AnchorCoordinates, Link } from '@/domain/models/board/types.ts';
@@ -279,7 +279,7 @@ export default class TurnGenerationService {
     };
   }
 
-  static *execute(context: GeneratorContext, player: Player, partition?: GeneratorPartition): Generator<GeneratorResult> {
+  static *execute(context: GeneratorContext, player: GamePlayer, partition?: GeneratorPartition): Generator<GeneratorResult> {
     const { board, dictionary, inventory } = context;
     const playerTileCollection = inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;

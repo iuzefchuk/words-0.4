@@ -1,13 +1,12 @@
-import { Player } from '@/domain/enums.ts';
-import { Cell, Placement } from '@/domain/models/board/types.ts';
-import { Tile } from '@/domain/models/inventory/types.ts';
+import { GamePlayer } from '@/domain/enums.ts';
 import { ValidationError, ValidationStatus } from '@/domain/models/turns/enums.ts';
+import { GameCell, GamePlacement, GameTile } from '@/domain/types/index.ts';
 
 export type AllComputeds = ComputedCells & ComputedPlacements & ComputedScore & ComputedWords;
 
-export type ComputedCells = { cells: ReadonlyArray<Cell> };
+export type ComputedCells = { cells: ReadonlyArray<GameCell> };
 
-export type ComputedPlacements = { placements: ReadonlyArray<Placement> };
+export type ComputedPlacements = { placements: ReadonlyArray<GamePlacement> };
 
 export type ComputedScore = { score: number };
 
@@ -18,15 +17,15 @@ export type ComputedWords = { words: ReadonlyArray<string> };
 export type InvalidResult = { error: ValidationError; status: ValidationStatus.Invalid };
 
 export type TurnsView = {
-  readonly currentPlayer: Player;
-  readonly currentTurnCells: ReadonlyArray<Cell> | undefined;
+  readonly currentPlayer: GamePlayer;
+  readonly currentTurnCells: ReadonlyArray<GameCell> | undefined;
   readonly currentTurnIsValid: boolean;
   readonly currentTurnScore: number | undefined;
-  readonly currentTurnTiles: ReadonlyArray<Tile>;
+  readonly currentTurnTiles: ReadonlyArray<GameTile>;
   readonly currentTurnWords: ReadonlyArray<string> | undefined;
   readonly historyHasPriorTurns: boolean;
-  readonly nextPlayer: Player;
-  readonly previousTurnTiles: ReadonlyArray<Tile> | undefined;
+  readonly nextPlayer: GamePlayer;
+  readonly previousTurnTiles: ReadonlyArray<GameTile> | undefined;
 };
 
 export type UnvalidatedResult = { status: ValidationStatus.Unvalidated };

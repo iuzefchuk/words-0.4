@@ -1,7 +1,6 @@
-import { Bonus } from '@/domain/models/board/enums.ts';
+import { Bonus, Type } from '@/domain/models/board/enums.ts';
 import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
 import { BonusDistribution, Cell } from '@/domain/models/board/types.ts';
-import { MatchType } from '@/domain/models/match/enums.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 export default class BonusService {
@@ -15,21 +14,21 @@ export default class BonusService {
     [Bonus.TripleWord, [4, 10, 60, 74, 150, 164, 214, 220]],
   ]);
 
-  private static readonly CLASSIC_DISTRIBUTION: BonusDistribution = (() => {
+  private static readonly PRESET_DISTRIBUTION: BonusDistribution = (() => {
     const result = new Map<Cell, Bonus>();
     for (const [bonus, cells] of this.INDEXES_BY_BONUS) for (const cell of cells) result.set(cell as Cell, bonus);
     return result;
   })();
 
-  static createDistribution(type: MatchType, randomizer?: () => number): BonusDistribution {
-    return type === MatchType.Classic ? this.CLASSIC_DISTRIBUTION : this.createRandomDistribution(randomizer);
+  static createDistribution(type: Type, randomizer?: () => number): BonusDistribution {
+    return type === Type.Preset ? this.PRESET_DISTRIBUTION : this.createRandomDistribution(randomizer);
   }
 
   private static createRandomDistribution(randomizer?: () => number): BonusDistribution {
     const availableCells = LayoutService.CELLS_BY_INDEX.filter(cell => cell !== LayoutService.CENTER_CELL);
     shuffleWithFisherYates({ array: availableCells, ...(randomizer !== undefined && { randomizer }) });
     return new Map(
-      Array.from(this.CLASSIC_DISTRIBUTION.values(), (bonus, idx) => {
+      Array.from(this.PRESET_DISTRIBUTION.values(), (bonus, idx) => {
         const cell = availableCells[idx];
         if (cell === undefined) throw new ReferenceError(`expected cell at index ${String(idx)}, got undefined`);
         return [cell, bonus];

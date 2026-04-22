@@ -1,10 +1,10 @@
 import {
   AppTurnResponse,
   GameCell,
-  GameDifficulty,
   GameEvent,
   GameEventType,
   GameGeneratorResult,
+  GameMatchDifficulty,
   GameMatchType,
   GamePlayer,
   GameTile,
@@ -32,14 +32,14 @@ export default class CommandsService {
     private readonly settingsRepository: SettingsRepository,
   ) {}
 
-  changeDifficulty(difficulty: GameDifficulty): void {
-    this.game.changeDifficulty(difficulty);
-    this.settingsRepository.save({ difficulty });
+  changeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
+    this.game.changeMatchDifficulty(matchDifficulty);
+    this.settingsRepository.save({ difficulty: matchDifficulty });
   }
 
   changeMatchType(matchType: GameMatchType): void {
     this.game.changeMatchType(matchType);
-    this.settingsRepository.save({ matchType });
+    this.settingsRepository.save({ type: matchType });
   }
 
   clearTiles(): void {
@@ -184,7 +184,7 @@ export default class CommandsService {
         return { ok: true, value: { words: [] } };
       case GameEventType.TurnSaved:
         return { ok: true, value: { words: event.words } };
-      case GameEventType.DifficultyChanged:
+      case GameEventType.MatchDifficultyChanged:
       case GameEventType.MatchStarted:
       case GameEventType.MatchTypeChanged:
       case GameEventType.TilePlaced:

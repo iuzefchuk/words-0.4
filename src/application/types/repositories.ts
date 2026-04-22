@@ -1,4 +1,4 @@
-import { GameEvent, GameSettings } from '@/application/types/index.ts';
+import { GameEvent, GameMatchSettings } from '@/application/types/index.ts';
 
 export type EventRepository = {
   delete(): Promise<void>;
@@ -7,6 +7,6 @@ export type EventRepository = {
 };
 
 export type SettingsRepository = {
-  load(): null | Partial<GameSettings>;
-  save(settings: Partial<GameSettings>): void;
+  load(): null | Partial<GameMatchSettings>;
+  save(settings: Partial<GameMatchSettings>): void;
 };

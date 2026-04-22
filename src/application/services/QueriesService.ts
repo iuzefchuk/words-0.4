@@ -2,10 +2,10 @@ import {
   GameBoardView,
   GameBonus,
   GameCell,
-  GameDifficulty,
   GameEvent,
   GameInventoryView,
   GameLetter,
+  GameMatchDifficulty,
   GameMatchResult,
   GameMatchType,
   GamePlayer,
@@ -61,12 +61,12 @@ export default class QueriesService {
     return this.turnsView.currentTurnScore;
   }
 
-  getDifficulty(): GameDifficulty {
-    return this.game.matchView.difficulty;
-  }
-
   getEventsLog(): ReadonlyArray<GameEvent> {
     return this.game.eventsLogView;
+  }
+
+  getMatchDifficulty(): GameMatchDifficulty {
+    return this.game.matchView.difficulty;
   }
 
   getMatchResult(): GameMatchResult {
@@ -74,7 +74,7 @@ export default class QueriesService {
   }
 
   getMatchType(): GameMatchType {
-    return this.game.matchView.matchType;
+    return this.game.matchView.type;
   }
 
   getOpponentScore(): number {

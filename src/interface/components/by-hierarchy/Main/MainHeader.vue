@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { GameDifficulty, GameMatchType } from '@/application/types/index.ts';
+import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
 import AppSelect from '@/interface/components/shared/AppSelect/AppSelect.vue';
 import ApplicationStore from '@/interface/stores/ApplicationStore.ts';
-type OptionValue = GameDifficulty | GameMatchType;
+type OptionValue = GameMatchDifficulty | GameMatchType;
 const applicationStore = ApplicationStore.INSTANCE();
 const optionsAreDisabled = computed(() => !applicationStore.settingsChangeIsAllowed);
 const options = [
@@ -20,14 +20,14 @@ const options = [
   },
   {
     items: [
-      { text: window.text('game.difficulty_low'), value: GameDifficulty.Low },
-      { text: window.text('game.difficulty_medium'), value: GameDifficulty.Medium },
-      { text: window.text('game.difficulty_high'), value: GameDifficulty.High },
+      { text: window.text('game.difficulty_low'), value: GameMatchDifficulty.Low },
+      { text: window.text('game.difficulty_medium'), value: GameMatchDifficulty.Medium },
+      { text: window.text('game.difficulty_high'), value: GameMatchDifficulty.High },
     ],
     label: window.text('game.settings_difficulty'),
-    modelValue: () => applicationStore.difficulty,
+    modelValue: () => applicationStore.matchDifficulty,
     onChange: (value: OptionValue) => {
-      applicationStore.changeDifficulty(value as GameDifficulty);
+      applicationStore.changeMatchDifficulty(value as GameMatchDifficulty);
     },
   },
 ];

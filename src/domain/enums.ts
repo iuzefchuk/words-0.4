@@ -1,4 +1,4 @@
-export enum Letter {
+export enum GameLetter {
   A = 'A',
   B = 'B',
   C = 'C',
@@ -27,7 +27,7 @@ export enum Letter {
   Z = 'Z',
 }
 
-export enum Player {
+export enum GamePlayer {
   Opponent = 'Opponent',
   User = 'User',
 }

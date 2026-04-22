@@ -1,7 +1,7 @@
+import Events from '@/domain/events/Events.ts';
+import PassIsResignSpec from '@/domain/events/specifications/PassIsResignSpec.ts';
 import Board from '@/domain/models/board/Board.ts';
 import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
-import Events from '@/domain/models/events/Events.ts';
-import PassIsResignSpec from '@/domain/models/events/specifications/PassIsResignSpec.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 import Match from '@/domain/models/match/Match.ts';
 import WinnerDerivationPolicy from '@/domain/models/match/policies/WinnerDerivationPolicy.ts';
@@ -13,26 +13,27 @@ import TurnGenerationService from '@/domain/services/generation/turn/TurnGenerat
 import { GeneratorContext, GeneratorResult } from '@/domain/services/generation/turn/types.ts';
 import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
 import {
+  GameBoardType,
   GameBoardView,
   GameCell,
-  GameDifficulty,
   GameEvent,
   GameEventType,
   GameInventoryView,
+  GameMatchDifficulty,
+  GameMatchSettings,
   GameMatchType,
   GameMatchView,
   GamePlayer,
-  GameSettings,
   GameTile,
   GameTurnsView,
 } from '@/domain/types/index.ts';
 import { IdentityService, SeedingService } from '@/domain/types/ports.ts';
 
 export default class Game {
-  private static readonly TURN_GENERATION_ATTEMPTS: Record<GameDifficulty, number> = {
-    [GameDifficulty.High]: Infinity,
-    [GameDifficulty.Low]: 1,
-    [GameDifficulty.Medium]: 20,
+  private static readonly TURN_GENERATION_ATTEMPTS: Record<GameMatchDifficulty, number> = {
+    [GameMatchDifficulty.High]: Infinity,
+    [GameMatchDifficulty.Low]: 1,
+    [GameMatchDifficulty.Medium]: 20,
   };
 
   get anchorCellsCount(): number {
@@ -87,7 +88,7 @@ export default class Game {
     private readonly seedingService: SeedingService,
   ) {}
 
-  static create(identityService: IdentityService, seedingService: SeedingService, settings: GameSettings): Game {
+  static create(identityService: IdentityService, seedingService: SeedingService, settings: GameMatchSettings): Game {
     const seed = seedingService.createSeed();
     const event: GameEvent = { seed, settings, type: GameEventType.MatchStarted };
     const events = Events.create([event]);
@@ -117,18 +118,25 @@ export default class Game {
 
   private static createInitParams(
     seed: number,
-    settings: GameSettings,
+    settings: GameMatchSettings,
     seedingService: SeedingService,
     identityService: IdentityService,
   ): { board: Board; inventory: Inventory; match: Match; turns: Turns } {
     const players = Object.values(GamePlayer);
     const randomizer = seedingService.createRandomizer(seed);
     return {
-      board: Board.create(settings.matchType, randomizer),
+      board: Board.create(this.mapTypeFromSettingsToBoard(settings.type), randomizer),
       inventory: Inventory.create(players, randomizer),
       match: Match.create(players, settings),
       turns: Turns.create(identityService),
     };
+  }
+
+  private static mapTypeFromSettingsToBoard(matchType: GameMatchType): GameBoardType {
+    return {
+      [GameMatchType.Classic]: GameBoardType.Preset,
+      [GameMatchType.Random]: GameBoardType.Random,
+    }[matchType];
   }
 
   applyGeneratedTurn(result: GeneratorResult): { score: number; words: ReadonlyArray<string> } {
@@ -148,7 +156,7 @@ export default class Game {
 
   applyToState(event: GameEvent): void {
     switch (event.type) {
-      case GameEventType.DifficultyChanged:
+      case GameEventType.MatchDifficultyChanged:
         this.match.setDifficulty(event.difficulty);
         break;
       case GameEventType.MatchFinished:
@@ -164,7 +172,7 @@ export default class Game {
         this.initialize(
           Game.createInitParams(
             event.seed,
-            { difficulty: this.match.difficulty, matchType: event.matchType },
+            { difficulty: this.match.difficulty, type: event.matchType },
             this.seedingService,
             this.identityService,
           ),
@@ -186,10 +194,10 @@ export default class Game {
     }
   }
 
-  changeDifficulty(difficulty: GameDifficulty): void {
+  changeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
     this.ensureMutability();
     this.ensureSettingsMutability();
-    this.applyEvent({ difficulty, type: GameEventType.DifficultyChanged });
+    this.applyEvent({ difficulty: matchDifficulty, type: GameEventType.MatchDifficultyChanged });
   }
 
   changeMatchType(matchType: GameMatchType): void {
@@ -249,7 +257,7 @@ export default class Game {
 
   restart(): void {
     const seed = this.seedingService.createSeed();
-    const settings: GameSettings = { difficulty: this.match.difficulty, matchType: this.match.matchType };
+    const settings: GameMatchSettings = { difficulty: this.match.difficulty, type: this.match.type };
     const event: GameEvent = { seed, settings, type: GameEventType.MatchStarted };
     this.events.reset(event);
     this.initialize(Game.createInitParams(seed, settings, this.seedingService, this.identityService));
