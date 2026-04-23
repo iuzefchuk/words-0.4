@@ -21,15 +21,15 @@ type CoordsCases = {
 
 class LayoutServiceCases {
   static forCell(): ReadonlyArray<CellCases> {
-    const altGrid = this.buildAltGrid();
-    return altGrid.flatMap((altRowCells, row) =>
-      altRowCells.map((cell, column) => ({
-        adjacentCells: this.computeAltAdjacentCells(altGrid, row, column),
+    const matrix = this.buildIndexMatrix();
+    return matrix.flatMap((matrixRow, row) =>
+      matrixRow.map((cell, column) => ({
+        adjacentCells: this.getOrthogonalNeighbors(matrix, row, column),
         cell,
         column,
-        isBottomEdge: row === altGrid.length - 1,
+        isBottomEdge: row === matrix.length - 1,
         isLeftEdge: column === 0,
-        isRightEdge: column === altRowCells.length - 1,
+        isRightEdge: column === matrixRow.length - 1,
         isTopEdge: row === 0,
         row,
       })),
@@ -37,13 +37,13 @@ class LayoutServiceCases {
   }
 
   static forCoords(): ReadonlyArray<CoordsCases> {
-    const altGrid = this.buildAltGrid();
-    return altGrid.flatMap(altRowCells =>
-      altRowCells.flatMap((cell, column) => [
-        { axisCells: altRowCells, coords: { axis: Axis.X, cell } },
+    const matrix = this.buildIndexMatrix();
+    return matrix.flatMap(matrixRow =>
+      matrixRow.flatMap((cell, column) => [
+        { axisCells: matrixRow, coords: { axis: Axis.X, cell } },
         {
-          axisCells: altGrid.map(altGridRow => {
-            const columnCell = altGridRow[column];
+          axisCells: matrix.map(otherRow => {
+            const columnCell = otherRow[column];
             if (columnCell === undefined) throw new ReferenceError('Cell must be defined');
             return columnCell;
           }),
@@ -53,7 +53,7 @@ class LayoutServiceCases {
     );
   }
 
-  private static buildAltGrid(): ReadonlyArray<ReadonlyArray<Cell>> {
+  private static buildIndexMatrix(): ReadonlyArray<ReadonlyArray<Cell>> {
     return Array.from({ length: LayoutService.CELLS_PER_AXIS ** 2 }, (_, index) => index as Cell).reduce<Array<Array<Cell>>>(
       (rowsSoFar, cell) => {
         const lastRow = rowsSoFar[rowsSoFar.length - 1];
@@ -65,8 +65,8 @@ class LayoutServiceCases {
     );
   }
 
-  private static computeAltAdjacentCells(
-    altGrid: ReadonlyArray<ReadonlyArray<Cell>>,
+  private static getOrthogonalNeighbors(
+    matrix: ReadonlyArray<ReadonlyArray<Cell>>,
     row: number,
     column: number,
   ): ReadonlyArray<Cell> {
@@ -80,7 +80,7 @@ class LayoutServiceCases {
         if (rowOffset === undefined || columnOffset === undefined) {
           throw new ReferenceError('Offsets must be defined');
         }
-        return altGrid[row + rowOffset]?.[column + columnOffset];
+        return matrix[row + rowOffset]?.[column + columnOffset];
       })
       .filter((neighbor): neighbor is Cell => neighbor !== undefined);
   }

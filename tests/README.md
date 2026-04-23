@@ -81,7 +81,7 @@ Same entity (`Type`), four distinct scopes, four case records — each narrow to
 
 ### 3. Build the `<Filename>Cases`
 
-Create a `<Filename>Cases` class with one public factory per cases type: `for<Entity><Scope>()`, returning `ReadonlyArray<<Entity><Scope>Cases>`. Prefix private helpers with `build` (e.g. `buildSymmetryPairs`, `buildAltGrid`):
+Create a `<Filename>Cases` class with one public factory per cases type: `for<Entity><Scope>()`, returning `ReadonlyArray<<Entity><Scope>Cases>`. Prefix private helpers with `build` and name them in technical/data-structure vocabulary — never the tested code's domain terms (e.g. `buildIndexMatrix` not `buildGrid`, `getOrthogonalNeighbors` not `getAdjacentCells`):
 
 ```ts
 class BonusServiceCases {
@@ -90,7 +90,7 @@ class BonusServiceCases {
   static forTypePreset(): ReadonlyArray<TypePresetCases> { ... }
   static forTypeRandom(): ReadonlyArray<TypeRandomCases> { ... }
 
-  private static buildSymmetryPairs(): ReadonlyArray<readonly [Cell, Cell, Cell, Cell]> { ... }
+  private static buildSymmetryQuadruples(): ReadonlyArray<readonly [Cell, Cell, Cell, Cell]> { ... }
 }
 ```
 
@@ -110,17 +110,17 @@ Name each field after the noun the method returns, not after the method itself �
 
 ```ts
 type TypePresetCases = {
-  readonly symmetryPairs: ReadonlyArray<readonly [Cell, Cell, Cell, Cell]>;
+  readonly symmetryQuadruples: ReadonlyArray<readonly [Cell, Cell, Cell, Cell]>;
   readonly type: Type;
 };
 
 // factory helper — one quadruple (origin, hMirror, vMirror, dMirror) per cell
-private static buildSymmetryPairs(): ReadonlyArray<readonly [Cell, Cell, Cell, Cell]> { ... }
+private static buildSymmetryQuadruples(): ReadonlyArray<readonly [Cell, Cell, Cell, Cell]> { ... }
 
 // test — iterate the field, assert each step
 test('distribution is D4-symmetric', () => {
   const distribution = BonusService.createDistribution(type);
-  for (const [origin, horizontal, vertical, diagonal] of symmetryPairs) {
+  for (const [origin, horizontal, vertical, diagonal] of symmetryQuadruples) {
     const originBonus = distribution.get(origin);
     expect(distribution.get(horizontal)).toBe(originBonus);
     expect(distribution.get(vertical)).toBe(originBonus);
@@ -191,9 +191,9 @@ If this leaves an entity with no methods left to test, drop that entity's Cases 
 
 The factory must not reimplement the formula it is testing, or the test becomes tautological.
 
-For example, if a method computes `Math.floor(itemIndex / PAGE_SIZE)` to return a page number, do not recompute the same formula in the factory — derive expected values from an alternate representation (e.g. a pre-built list of pages where the page number is the array index). Prefix helpers and locals that build the alternate representation with `Alt` (e.g. `buildAltGrid`, `altPages`) so the alternate model is visually distinct from the tested code's vocabulary.
+For example, if a method computes `Math.floor(itemIndex / PAGE_SIZE)` to return a page number, do not recompute the same formula in the factory — derive expected values from an alternate representation (e.g. a pre-built list of pages where the page number is the array index).
 
-**Exception — invariant tests.** When the test verifies a property (symmetry, ordering, closure) rather than a specific scalar return, encoding that property in the factory is fine: the property IS the specification, not a reimplementation of the method's formula. `buildSymmetryPairs` encodes D4 reflection math because D4 symmetry is exactly what the test is ABOUT.
+**Exception — invariant tests.** When the test verifies a property (symmetry, ordering, closure) rather than a specific scalar return, encoding that property in the factory is fine: the property IS the specification, not a reimplementation of the method's formula. `buildSymmetryQuadruples` encodes D4 reflection math because D4 symmetry is exactly what the test is ABOUT.
 
 #### Vitest features
 

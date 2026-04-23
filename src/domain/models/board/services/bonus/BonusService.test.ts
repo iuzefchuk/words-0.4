@@ -15,7 +15,7 @@ type TypePairCases = {
 
 type TypePresetCases = {
   readonly anotherInvocation: BonusDistribution;
-  readonly symmetryPairs: ReadonlyArray<readonly [Cell, Cell, Cell, Cell]>;
+  readonly symmetryQuadruples: ReadonlyArray<readonly [Cell, Cell, Cell, Cell]>;
   readonly type: Type;
 };
 
@@ -48,7 +48,7 @@ class BonusServiceCases {
     return [
       {
         anotherInvocation: BonusService.createDistribution(Type.Preset),
-        symmetryPairs: this.buildSymmetryPairs(),
+        symmetryQuadruples: this.buildSymmetryQuadruples(),
         type: Type.Preset,
       },
     ];
@@ -75,13 +75,13 @@ class BonusServiceCases {
     ];
   }
 
-  private static buildSymmetryPairs(): ReadonlyArray<readonly [Cell, Cell, Cell, Cell]> {
+  private static buildSymmetryQuadruples(): ReadonlyArray<readonly [Cell, Cell, Cell, Cell]> {
     const size = LayoutService.CELLS_PER_AXIS;
     const last = size - 1;
-    const pairs: Array<readonly [Cell, Cell, Cell, Cell]> = [];
+    const quadruples: Array<readonly [Cell, Cell, Cell, Cell]> = [];
     for (let row = 0; row < size; row++) {
       for (let col = 0; col < size; col++) {
-        pairs.push([
+        quadruples.push([
           (row * size + col) as Cell,
           (row * size + (last - col)) as Cell,
           ((last - row) * size + col) as Cell,
@@ -89,7 +89,7 @@ class BonusServiceCases {
         ]);
       }
     }
-    return pairs;
+    return quadruples;
   }
 }
 
@@ -100,7 +100,7 @@ describe('BonusService', () => {
     });
   });
 
-  describe.each(BonusServiceCases.forTypePreset())('for $type', ({ anotherInvocation, symmetryPairs, type }) => {
+  describe.each(BonusServiceCases.forTypePreset())('for $type', ({ anotherInvocation, symmetryQuadruples, type }) => {
     test('always returns same distribution', () => {
       expect(BonusService.createDistribution(type)).toEqual(anotherInvocation);
     });
@@ -111,7 +111,7 @@ describe('BonusService', () => {
 
     test('distribution is D4-symmetric', () => {
       const distribution = BonusService.createDistribution(type);
-      for (const [origin, horizontal, vertical, diagonal] of symmetryPairs) {
+      for (const [origin, horizontal, vertical, diagonal] of symmetryQuadruples) {
         const originBonus = distribution.get(origin);
         expect(distribution.get(horizontal)).toBe(originBonus);
         expect(distribution.get(vertical)).toBe(originBonus);

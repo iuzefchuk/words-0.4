@@ -6,9 +6,10 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [vue()],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+    alias: [
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      { find: '$', replacement: path.resolve(__dirname, './tests') },
+    ],
   },
   test: {
     clearMocks: true,
