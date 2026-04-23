@@ -20,7 +20,7 @@ type CoordsCases = {
 };
 
 class LayoutServiceCases {
-  static forCells(): ReadonlyArray<CellCases> {
+  static forCell(): ReadonlyArray<CellCases> {
     const altGrid = this.buildAltGrid();
     return altGrid.flatMap((altRowCells, row) =>
       altRowCells.map((cell, column) => ({
@@ -87,7 +87,7 @@ class LayoutServiceCases {
 }
 
 describe('LayoutService', () => {
-  describe.each(LayoutServiceCases.forCells())(
+  describe.each(LayoutServiceCases.forCell())(
     'for cell $cell',
     ({ adjacentCells, cell, column, isBottomEdge, isLeftEdge, isRightEdge, isTopEdge, row }) => {
       test('calculates adjacent cells', () => {

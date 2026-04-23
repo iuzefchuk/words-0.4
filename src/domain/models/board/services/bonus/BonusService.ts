@@ -3,25 +3,76 @@ import LayoutService from '@/domain/models/board/services/layout/LayoutService.t
 import { BonusDistribution, Cell } from '@/domain/models/board/types.ts';
 import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
+type OctantLocation = readonly [row: number, col: number];
+
+// Octant is an upper-left slice of the board depicted on illustration below. The 8 D4 symmetries (4 rotations + 4 reflections) expand it to the full layout:
+
+// [0,0] .     .     .     .     .     .     .     .     .     .     .     .     .     .
+// [1,0] [1,1] .     .     .     .     .     .     .     .     .     .     .     .     .
+// [2,0] [2,1] [2,2] .     .     .     .     .     .     .     .     .     .     .     .
+// [3,0] [3,1] [3,2] [3,3] .     .     .     .     .     .     .     .     .     .     .
+// [4,0] [4,1] [4,2] [4,3] [4,4] .     .     .     .     .     .     .     .     .     .
+// [5,0] [5,1] [5,2] [5,3] [5,4] [5,5] .     .     .     .     .     .     .     .     .
+// [6,0] [6,1] [6,2] [6,3] [6,4] [6,5] [6,6] .     .     .     .     .     .     .     .
+// [7,0] [7,1] [7,2] [7,3] [7,4] [7,5] [7,6] *     .     .     .     .     .     .     .   (* = center)
+// .     .     .     .     .     .     .     .     .     .     .     .     .     .     .
+// .     .     .     .     .     .     .     .     .     .     .     .     .     .     .
+// .     .     .     .     .     .     .     .     .     .     .     .     .     .     .
+// .     .     .     .     .     .     .     .     .     .     .     .     .     .     .
+// .     .     .     .     .     .     .     .     .     .     .     .     .     .     .
+// .     .     .     .     .     .     .     .     .     .     .     .     .     .     .
+// .     .     .     .     .     .     .     .     .     .     .     .     .     .     .
+
 export default class BonusService {
-  private static readonly INDEXES_BY_BONUS: ReadonlyMap<Bonus, Array<number>> = new Map([
+  private static readonly PRESET_OCTANT_LOCATIONS_BY_BONUS: ReadonlyMap<Bonus, ReadonlyArray<OctantLocation>> = new Map([
     [
       Bonus.DoubleLetter,
-      [7, 16, 28, 36, 38, 66, 68, 92, 94, 100, 102, 105, 119, 122, 124, 130, 132, 156, 158, 186, 188, 196, 208, 217],
+      [
+        [1, 1],
+        [6, 2],
+        [6, 4],
+        [7, 0],
+      ],
     ],
-    [Bonus.DoubleWord, [32, 42, 52, 64, 70, 108, 116, 154, 160, 172, 182, 192]],
-    [Bonus.TripleLetter, [0, 14, 20, 24, 48, 56, 76, 80, 84, 88, 136, 140, 144, 148, 168, 176, 200, 204, 210, 224]],
-    [Bonus.TripleWord, [4, 10, 60, 74, 150, 164, 214, 220]],
+    [
+      Bonus.DoubleWord,
+      [
+        [2, 2],
+        [4, 4],
+        [7, 3],
+      ],
+    ],
+    [
+      Bonus.TripleLetter,
+      [
+        [0, 0],
+        [3, 3],
+        [5, 1],
+        [5, 5],
+      ],
+    ],
+    [Bonus.TripleWord, [[4, 0]]],
   ]);
 
   private static readonly PRESET_DISTRIBUTION: BonusDistribution = (() => {
     const result = new Map<Cell, Bonus>();
-    for (const [bonus, cells] of this.INDEXES_BY_BONUS) for (const cell of cells) result.set(cell as Cell, bonus);
+    for (const [bonus, locations] of this.PRESET_OCTANT_LOCATIONS_BY_BONUS) {
+      for (const location of locations) {
+        for (const cell of this.getSymmetricCells(location)) result.set(cell, bonus);
+      }
+    }
     return result;
   })();
 
   static createDistribution(type: Type, randomizer?: () => number): BonusDistribution {
-    return type === Type.Preset ? this.PRESET_DISTRIBUTION : this.createRandomDistribution(randomizer);
+    switch (type) {
+      case Type.Preset:
+        return this.PRESET_DISTRIBUTION;
+      case Type.Random:
+        return this.createRandomDistribution(randomizer);
+      default:
+        throw new ReferenceError(`unexpected board type: ${String(type)}`);
+    }
   }
 
   private static createRandomDistribution(randomizer?: () => number): BonusDistribution {
@@ -34,5 +85,23 @@ export default class BonusService {
         return [cell, bonus];
       }),
     );
+  }
+
+  private static getSymmetricCells([row, col]: OctantLocation): ReadonlySet<Cell> {
+    const size = LayoutService.CELLS_PER_AXIS;
+    const last = size - 1;
+    const reflections: ReadonlyArray<OctantLocation> = [
+      [row, col],
+      [row, last - col],
+      [last - row, col],
+      [last - row, last - col],
+      [col, row],
+      [col, last - row],
+      [last - col, row],
+      [last - col, last - row],
+    ];
+    const cells = new Set<Cell>();
+    for (const [rowIdx, colIdx] of reflections) cells.add((rowIdx * size + colIdx) as Cell);
+    return cells;
   }
 }
