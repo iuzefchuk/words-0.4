@@ -9,6 +9,8 @@ import launchWords from '@/index.ts';
 import { getEventSound } from '@/interface/mappings.ts';
 import SoundPlayer, { Sound } from '@/interface/services/SoundPlayer.ts';
 
+export const launchError = ref<null | string>(null);
+
 class Actions {
   private lastDrainedEventCount = 0;
 
@@ -135,8 +137,6 @@ class Getters {
 
   readonly currentTurnScore = computed(() => this.readBoard(() => this.queriesService.getCurrentTurnScore()));
 
-  readonly dictionaryLoadError = computed(() => this.state.dictionaryLoadError.value);
-
   readonly eventsLog = computed(() => this.readState(() => [...this.queriesService.getEventsLog()]));
 
   readonly hasPriorTurns = computed(() => this.readState(() => this.queriesService.hasPriorTurns()));
@@ -200,8 +200,6 @@ class Getters {
 }
 
 class State {
-  readonly dictionaryLoadError = ref<null | string>(null);
-
   readonly tileByCellCache: Map<GameCell, GameTile> = reactive(new Map());
 
   private readonly boardVersion = ref(0);
@@ -289,7 +287,7 @@ export default class MainStore {
     this.actions = new Actions(app.commandsService, app.queriesService, app.schedulingService, this.state);
     const dictionaryLoad = this.state.write(() => app.loadDictionary());
     dictionaryLoad.catch((error: unknown) => {
-      this.state.dictionaryLoadError.value = error instanceof Error ? error.message : String(error);
+      launchError.value = error instanceof Error ? error.message : String(error);
     });
   }
 

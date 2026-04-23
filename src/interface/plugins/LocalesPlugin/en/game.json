@@ -32,5 +32,5 @@
   "end_lose": "You lost 🦨",
   "end_lose_by": "You lost by {points} pts 🦨",
   "end_tie": "It's a tie 👔",
-  "error_dictionary_load": "Dictionary failed to load: <em>{error}</em>. Try reloading the page or using different browser."
+  "error_launch": "Something went wrong: <em>{error}</em>. Try reloading the page or using different browser."
 }
