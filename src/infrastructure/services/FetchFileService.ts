@@ -8,14 +8,12 @@ export default class FetchFileService implements FileService {
     return new Response(stream).arrayBuffer();
   }
 
-  async loadSharedArrayBuffer(url: string): Promise<SharedArrayBuffer> {
-    if (typeof SharedArrayBuffer === 'undefined') {
-      throw new Error('SharedArrayBuffer is unavailable; set COOP/COEP headers to enable it');
-    }
+  async loadBuffer(url: string): Promise<ArrayBufferLike> {
     const gzUrl = `${url}.gz`;
     const response = await fetch(gzUrl);
     if (!response.ok) throw new Error(`failed to fetch ${gzUrl}: ${String(response.status)} ${response.statusText}`);
     const buffer = await FetchFileService.decompressIfGzipped(await response.arrayBuffer());
+    if (typeof SharedArrayBuffer === 'undefined') return buffer;
     const shared = new SharedArrayBuffer(buffer.byteLength);
     new Uint8Array(shared).set(new Uint8Array(buffer));
     return shared;

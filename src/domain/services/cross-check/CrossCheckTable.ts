@@ -19,7 +19,8 @@ export default class CrossCheckTable {
 
   static create(cellCount: number): CrossCheckTable {
     const byteLength = cellCount * 2 * Uint32Array.BYTES_PER_ELEMENT;
-    return new CrossCheckTable(new SharedArrayBuffer(byteLength), cellCount);
+    const buffer = typeof SharedArrayBuffer === 'undefined' ? new ArrayBuffer(byteLength) : new SharedArrayBuffer(byteLength);
+    return new CrossCheckTable(buffer, cellCount);
   }
 
   static createFromBuffer(buffer: ArrayBuffer | SharedArrayBuffer, cellCount: number): CrossCheckTable {

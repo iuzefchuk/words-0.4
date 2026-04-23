@@ -296,7 +296,11 @@ export default class TurnGenerationService {
     }
   }
 
-  static hydrateContext(data: unknown, dictionary: Dictionary, crossCheckBuffer: SharedArrayBuffer): GeneratorContext {
+  static hydrateContext(
+    data: unknown,
+    dictionary: Dictionary,
+    crossCheckBuffer: ArrayBuffer | SharedArrayBuffer,
+  ): GeneratorContext {
     const source = data as { board: Board; inventory: Inventory; turns: Turns };
     const board = Board.clone(source.board);
     return {

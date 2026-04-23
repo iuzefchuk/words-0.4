@@ -1,12 +1,12 @@
-import { inject } from 'vue';
 import { GameCell, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
-import ProvidesPlugin from '@/interface/plugins/ProvidesPlugin.ts';
 import SoundPlayer, { Sound } from '@/interface/services/SoundPlayer.ts';
 import DialogStore from '@/interface/stores/DialogStore.ts';
-import UserStore from '@/interface/stores/UserStore.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+import UserStore from '@/interface/stores/UserStore.ts';
 
 export default class UseEventHandlers {
+  private static readonly RESIGN_DELAY_MS = 500;
+
   get selectedTile(): GameTile | null {
     return this.userStore.selectedTile;
   }
@@ -15,20 +15,16 @@ export default class UseEventHandlers {
     return DialogStore.INSTANCE();
   }
 
-  private get userStore(): ReturnType<typeof UserStore.INSTANCE> {
-    return UserStore.INSTANCE();
-  }
-
   private get mainStore(): ReturnType<typeof MainStore.INSTANCE> {
     return MainStore.INSTANCE();
   }
 
-  private constructor(private readonly resignDelayMs: number) {}
+  private get userStore(): ReturnType<typeof UserStore.INSTANCE> {
+    return UserStore.INSTANCE();
+  }
 
   static create(): UseEventHandlers {
-    const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY, 0);
-    const resignDelayMs = transitionDurationMs * 2;
-    return new UseEventHandlers(resignDelayMs);
+    return new UseEventHandlers();
   }
 
   handleChangeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
@@ -130,7 +126,7 @@ export default class UseEventHandlers {
     if (!isConfirmed) return;
     setTimeout(() => {
       this.mainStore.resign();
-    }, this.resignDelayMs);
+    }, UseEventHandlers.RESIGN_DELAY_MS);
   }
 
   handleRestartGame(): void {

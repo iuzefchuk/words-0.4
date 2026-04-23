@@ -13,7 +13,7 @@ import { GeneratorResult } from '@/domain/services/generation/turn/types.ts';
 type StreamInput = {
   attemptsLimit: number;
   buffer: DictionaryBuffer;
-  crossCheckBuffer: SharedArrayBuffer;
+  crossCheckBuffer: ArrayBuffer | SharedArrayBuffer;
   partition?: GameGeneratorPartition;
   player: GamePlayer;
 } & GameGeneratorContextData;

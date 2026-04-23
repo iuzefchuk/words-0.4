@@ -13,7 +13,7 @@ export const enum WorkerResponseType {
 }
 
 export type FileService = {
-  loadSharedArrayBuffer(url: string): Promise<SharedArrayBuffer>;
+  loadBuffer(url: string): Promise<ArrayBufferLike>;
 };
 
 export type SchedulingService = {

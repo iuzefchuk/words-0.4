@@ -4,8 +4,8 @@ import { GameBonus, GameCell } from '@/application/types/index.ts';
 import GameTile from '@/interface/components/shared/AppTile/AppTile.vue';
 import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { getBonusName } from '@/interface/mappings.ts';
-import UserStore from '@/interface/stores/UserStore.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+import UserStore from '@/interface/stores/UserStore.ts';
 const eventHandlers = UseEventHandlers.create();
 const props = defineProps<{
   cell: GameCell;

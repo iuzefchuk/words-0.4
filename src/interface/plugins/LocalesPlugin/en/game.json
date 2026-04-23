@@ -31,5 +31,6 @@
   "end_win_by": "You won by {points} pts 🏆",
   "end_lose": "You lost 🦨",
   "end_lose_by": "You lost by {points} pts 🦨",
-  "end_tie": "It's a tie 👔"
+  "end_tie": "It's a tie 👔",
+  "error_dictionary_load": "Dictionary failed to load: <em>{error}</em>. Try reloading the page or using different browser."
 }

@@ -8,7 +8,7 @@ const userStore = UserStore.INSTANCE();
 const tileLocator = new UseTileLocator();
 const { tiles } = storeToRefs(userStore);
 const locations = computed(() => tileLocator.getLocationsFor(tiles.value));
-const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axis))'; // TODO move to css variable
+const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axis))';
 </script>
 
 <template>

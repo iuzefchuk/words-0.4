@@ -56,7 +56,7 @@ export default class Application {
 
   async loadDictionary(): Promise<void> {
     const { config, services, tasks } = this.dependencies;
-    const buffer = await services.file.loadSharedArrayBuffer(config.dictionaryUrl);
+    const buffer = await services.file.loadBuffer(config.dictionaryUrl);
     this.game.setDictionary(GameDictionary.createFromBuffer(buffer));
     await services.worker.init(tasks.turnGeneration, buffer);
   }

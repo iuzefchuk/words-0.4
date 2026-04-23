@@ -9,7 +9,7 @@
   --cell-color-tl: var(--color-blue-400);
   --cell-color-dw: var(--color-amber-400);
   --cell-color-tw: var(--color-red-400);
-  --cell-opacity-bonus: 0.85;
+  --cell-opacity-bonus: 0.7;
   --cell-bg: var(--color-white);
   --cell-bg-center: var(--color-gray-200);
   --cell-bg-footer: var(--color-gray-200);
@@ -25,6 +25,8 @@
   --tile-outline-color: var(--color-violet-600);
   --tooltip-bg: var(--color-rose-500);
   --tooltip-color: var(--color-white);
+  --banner-bg: var(--color-red-400);
+  --banner-color: var(--color-white);
   --btn-bg: var(--color-white);
   --btn-bg-hover: var(--color-white);
   --btn-bg-active: var(--color-gray-300);
@@ -71,6 +73,8 @@
   --tile-outline-color: var(--color-purple-500);
   --tooltip-bg: var(--color-rose-500);
   --tooltip-color: var(--color-white);
+  --banner-bg: var(--color-pink-700);
+  --banner-color: var(--color-gray-50);
   --btn-bg: var(--color-gray-600);
   --btn-bg-hover: var(--color-gray-500);
   --btn-bg-active: var(--color-gray-900);
@@ -98,6 +102,8 @@
   --cell-tile-gap: var(--space-2xs);
   --cell-tile-border-radius: var(--space-xs);
   --opacity-disabled: 0.9;
+  --transition-duration: 250ms;
+  --transition-duration-half: 125ms;
   @include light-scheme;
   @media (prefers-color-scheme: dark) {
     @include dark-scheme;

@@ -3,7 +3,6 @@ import { createApp } from 'vue';
 import Index from '@/interface/components/by-hierarchy/index.vue';
 import DirectivesPlugin from '@/interface/plugins/DirectivesPlugin/DirectivesPlugin.ts';
 import LocalesPlugin from '@/interface/plugins/LocalesPlugin/LocalesPlugin.ts';
-import ProvidesPlugin from '@/interface/plugins/ProvidesPlugin.ts';
 
 class Presentation {
   private readonly app = createApp(Index);
@@ -21,7 +20,6 @@ class Presentation {
   private installPlugins(): void {
     this.app.use(createPinia());
     this.app.use(new DirectivesPlugin());
-    this.app.use(new ProvidesPlugin());
   }
 
   private mount(): void {

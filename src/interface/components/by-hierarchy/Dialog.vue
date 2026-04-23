@@ -1,9 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { inject, ref, watch } from 'vue';
-import ProvidesPlugin from '@/interface/plugins/ProvidesPlugin.ts';
+import { ref, watch } from 'vue';
 import DialogStore, { DialogStatus } from '@/interface/stores/DialogStore.ts';
-const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY);
 const dialogStore = DialogStore.INSTANCE();
 const { cancelIsHidden, cancelText, confirmIsHidden, confirmText, html, title } = storeToRefs(dialogStore);
 const exitAnimation = ref(false);
@@ -16,7 +14,7 @@ function toggleExitAnimation(): void {
   exitAnimation.value = true;
   setTimeout(() => {
     exitAnimation.value = false;
-  }, transitionDurationMs);
+  }, 250);
 }
 watch(html, newValue => {
   if (newValue !== '') isRendered.value = true;

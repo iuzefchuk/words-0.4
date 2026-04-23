@@ -1,32 +1,29 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { computed, inject, nextTick, onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 import MainAnnotation from '@/interface/components/by-hierarchy/Main/MainAnnotation.vue';
+import MainBanner from '@/interface/components/by-hierarchy/Main/MainBanner.vue';
 import MainBoard from '@/interface/components/by-hierarchy/Main/MainBoard/MainBoard.vue';
 import MainEndscreen from '@/interface/components/by-hierarchy/Main/MainEndscreen.vue';
 import MainFooter from '@/interface/components/by-hierarchy/Main/MainFooter/MainFooter.vue';
 import MainHeader from '@/interface/components/by-hierarchy/Main/MainHeader.vue';
-import ProvidesPlugin from '@/interface/plugins/ProvidesPlugin.ts';
-import UserStore from '@/interface/stores/UserStore.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+import UserStore from '@/interface/stores/UserStore.ts';
 await MainStore.initiate();
 const mainStore = MainStore.INSTANCE();
 const { matchIsFinished } = storeToRefs(mainStore);
 const userStore = UserStore.INSTANCE();
-const transitionDurationMs = inject(ProvidesPlugin.TRANSITION_DURATION_MS_KEY);
 const isMounted = ref(false);
 onMounted(() => nextTick(() => (isMounted.value = true)));
-const style = computed(() => ({
-  ...(transitionDurationMs !== undefined && {
-    '--transition-duration': `${String(transitionDurationMs)}ms`,
-    '--transition-duration-half': `${String(transitionDurationMs / 2)}ms`,
-  }),
-  '--cell-count-per-axis': 15, // TODO remove when implementing dynamic board sizes
-}));
 </script>
 
 <template>
-  <main :style="style" :class="{ main: true, 'main--blurred': matchIsFinished }" @click="userStore.deselectTile()">
+  <MainBanner />
+  <main
+    :style="{ '--cell-count-per-axis': mainStore.boardCellsPerAxis }"
+    :class="{ main: true, 'main--blurred': matchIsFinished }"
+    @click="userStore.deselectTile()"
+  >
     <Transition name="fade-down-up">
       <MainHeader v-if="isMounted" />
     </Transition>
@@ -39,7 +36,7 @@ const style = computed(() => ({
     </Transition>
   </main>
   <Transition name="fade">
-    <MainEndscreen v-if="matchIsFinished" :style="style" />
+    <MainEndscreen v-if="matchIsFinished" />
   </Transition>
 </template>
 

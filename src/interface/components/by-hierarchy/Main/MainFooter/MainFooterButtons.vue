@@ -2,8 +2,8 @@
 import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
 import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
-import UserStore from '@/interface/stores/UserStore.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+import UserStore from '@/interface/stores/UserStore.ts';
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
 const eventHandlers = UseEventHandlers.create();
