@@ -135,7 +135,7 @@ class Getters {
 
   readonly currentTurnScore = computed(() => this.readBoard(() => this.queriesService.getCurrentTurnScore()));
 
-  readonly dictionaryLoadError = computed(() => 'this.state.dictionaryLoadError.value');
+  readonly dictionaryLoadError = computed(() => this.state.dictionaryLoadError.value);
 
   readonly eventsLog = computed(() => this.readState(() => [...this.queriesService.getEventsLog()]));
 
