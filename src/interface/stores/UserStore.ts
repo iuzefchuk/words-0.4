@@ -10,7 +10,6 @@ export default class UserStore {
     const mainStore = MainStore.INSTANCE();
     store.initialize(mainStore.userTiles);
     return {
-      anyTileIsPlaced: computed(() => store.anyTileIsPlaced),
       deselectTile: store.deselectTile.bind(store),
       initialize: () => {
         store.initialize(mainStore.userTiles);
@@ -29,11 +28,7 @@ export default class UserStore {
       tiles: store.tilesRef,
     };
   });
-
-  private get anyTileIsPlaced(): boolean {
-    return this.tiles.some(tile => this.mainStore.isTilePlaced(tile));
-  }
-
+  
   private get mainStore(): ReturnType<typeof MainStore.INSTANCE> {
     return MainStore.INSTANCE();
   }

@@ -2,15 +2,14 @@
 import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
 import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
+import { Accent } from '@/interface/enums.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-import UserStore from '@/interface/stores/UserStore.ts';
 const mainStore = MainStore.INSTANCE();
-const userStore = UserStore.INSTANCE();
 const eventHandlers = UseEventHandlers.create();
-const { anyTileIsPlaced } = storeToRefs(userStore);
 const { allActionsAreDisabled } = storeToRefs(mainStore);
 const items = reactive([
   {
+    accent: Accent.Tertiary,
     action: () => {
       void eventHandlers.handleResign();
     },
@@ -19,6 +18,7 @@ const items = reactive([
     name: window.text('game.action_resign'),
   },
   {
+    accent: Accent.Secondary,
     action: () => {
       void eventHandlers.handlePass();
     },
@@ -27,50 +27,55 @@ const items = reactive([
     name: window.text('game.action_pass'),
   },
   {
+    accent: Accent.Secondary,
     action: () => {
       eventHandlers.handleShuffle();
     },
     isDisabled: () => allActionsAreDisabled.value,
-    isRendered: () => !anyTileIsPlaced.value,
     name: window.text('game.action_shuffle'),
   },
   {
-    action: () => {
-      eventHandlers.handleClearTiles();
-    },
-    isDisabled: () => allActionsAreDisabled.value,
-    isRendered: () => anyTileIsPlaced.value,
-    name: window.text('game.action_clear'),
-  },
-  {
+    accent: Accent.Primary,
     action: () => {
       eventHandlers.handleSave();
     },
     isDisabled: () => allActionsAreDisabled.value || !mainStore.currentTurnIsValid,
-    isRendered: () => true,
     name: window.text('game.action_play'),
   },
+  // {
+  //   accent: Accent.Secondary,
+  //   action: () => {
+  //     eventHandlers.handleClearTiles();
+  //   },
+  //   isDisabled: () => allActionsAreDisabled.value,
+  //   name: window.text('game.action_clear'),
+  // },
 ]);
 </script>
 
 <template>
   <div class="buttons">
     <ul class="buttons__list app__limit-max-width app__btn">
-      <template v-for="{ name, action, isRendered, isDisabled } in items" :key="name">
-        <li v-if="isRendered()" class="buttons__list-item">
-          <button class="buttons__btn" :disabled="isDisabled()" @click="action()">
-            {{ name }}
-          </button>
-        </li>
-      </template>
+      <li v-for="{ name, action, accent, isDisabled } in items" :key="name">
+        <button
+          :class="{
+            buttons__btn: true,
+            'buttons__btn--primary': accent === Accent.Primary,
+            'buttons__btn--secondary': accent === Accent.Secondary,
+            'buttons__btn--tertiary': accent === Accent.Tertiary,
+          }"
+          :disabled="isDisabled()"
+          @click="action()"
+        >
+          {{ name }}
+        </button>
+      </li>
     </ul>
   </div>
 </template>
 
 <style lang="scss" scoped>
 .buttons {
-  $gap: var(--space-m);
-  height: calc(var(--cell-tile-width) * 1.6);
   width: 100%;
   display: grid;
   place-items: center;
@@ -78,48 +83,51 @@ const items = reactive([
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    gap: $gap;
-    height: 100%;
-  }
-  &__list-item {
-    width: calc((100% - $gap * 3) / 4);
+    gap: var(--space-m);
   }
   &__btn {
     cursor: pointer;
-    text-transform: uppercase;
     text-align: center;
-    border-radius: var(--primary-border-radius);
-    width: 100%;
-    height: 100%;
+    border-radius: var(--btn-radius);
     user-select: none;
-    box-shadow: var(--btn-shadow);
-    --shadow-color: var(--btn-shadow-color);
     transition-property: box-shadow;
-    transition-duration: var(--transition-duration-half);
+    transition-duration: var(--transition-duration);
     transition-timing-function: var(--transition-timing-function);
-    border: var(--primary-border);
+    border: 1px solid transparent;
     font-size: var(--btn-font-size);
-    color: var(--btn-color);
     font-weight: var(--btn-font-weight);
-    letter-spacing: 0.5px;
-    background: var(--btn-bg);
-    &:hover:not(:active):not(:disabled) {
-      background: var(--btn-bg-hover);
-      border-color: var(--btn-border-color-hover);
-      box-shadow: var(--btn-shadow-hover);
-      --shadow-color: var(--btn-shadow-color-hover);
-    }
-    &:active:not(:disabled) {
-      background: var(--btn-bg-active);
-      border-color: transparent;
-      box-shadow: none;
-    }
-    &:disabled {
-      background: transparent;
-      border-color: transparent;
-      box-shadow: none;
-      cursor: not-allowed;
-      text-shadow: none;
+    display: grid;
+    place-items: center;
+    width: 6rem;
+    height: 2.75rem;
+    text-transform: uppercase;
+    $accents: 'primary', 'secondary', 'tertiary', 'quaternary';
+    @each $accent in $accents {
+      &--#{$accent} {
+        background: var(--btn-bg-#{$accent});
+        color: var(--btn-color-#{$accent});
+        border-color: var(--btn-border-color-#{$accent});
+        box-shadow: var(--shadow-s);
+        &:hover:not(:active):not(:disabled) {
+          background: var(--btn-bg-#{$accent}-hover);
+          color: var(--btn-color-#{$accent}-hover);
+          border-color: var(--btn-border-color-#{$accent}-hover);
+          box-shadow: var(--shadow-m);
+        }
+        &:active:not(:disabled) {
+          background: var(--btn-bg-#{$accent}-active);
+          color: var(--btn-color-#{$accent}-active);
+          border-color: var(--btn-border-color-#{$accent}-active);
+          box-shadow: var(--shadow-xs);
+        }
+        &:disabled {
+          cursor: not-allowed;
+          background: var(--btn-bg-#{$accent}-disabled);
+          color: var(--btn-color-#{$accent}-disabled);
+          border-color: var(--btn-border-color-#{$accent}-disabled);
+          box-shadow: none;
+        }
+      }
     }
   }
 }

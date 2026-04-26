@@ -8,7 +8,7 @@ const userStore = UserStore.INSTANCE();
 const tileLocator = new UseTileLocator();
 const { tiles } = storeToRefs(userStore);
 const locations = computed(() => tileLocator.getLocationsFor(tiles.value));
-const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axis))';
+const CELL_STEP = 'calc((100% + var(--grid-gap)) / var(--grid-items-per-axis))';
 </script>
 
 <template>
@@ -19,8 +19,8 @@ const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axi
     :style="{
       top: `calc(${CELL_STEP} * ${group.row})`,
       left: `calc(${CELL_STEP} * ${group.col})`,
-      width: `calc(${CELL_STEP} * ${group.colSpan} - var(--cell-tile-gap) - 1px)`,
-      height: `calc(${CELL_STEP} * ${group.rowSpan} - var(--cell-tile-gap) - 1px)`,
+      width: `calc(${CELL_STEP} * ${group.colSpan} - var(--grid-gap) - 1px)`,
+      height: `calc(${CELL_STEP} * ${group.rowSpan} - var(--grid-gap) - 1px)`,
     }"
   >
     <Transition name="fade" appear>
@@ -36,8 +36,8 @@ const CELL_STEP = 'calc((100% + var(--cell-tile-gap)) / var(--cell-count-per-axi
 .outline {
   position: absolute;
   z-index: var(--z-index-level-1);
-  outline: 2px solid var(--tile-outline-color);
-  border-radius: var(--cell-tile-border-radius);
+  outline: var(--tile-outline);
+  border-radius: var(--grid-item-radius);
   transition-property: top, left, width, height, outline;
   transition-duration: var(--transition-duration-half);
   transition-timing-function: var(--transition-timing-function);

@@ -3,7 +3,7 @@ import { computed, markRaw, reactive, ref } from 'vue';
 import Application from '@/application/index.ts';
 import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
-import { GameCell, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
+import { GameCell, GameLetter, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
 import { SchedulingService } from '@/application/types/ports.ts';
 import launchWords from '@/index.ts';
 import { getEventSound } from '@/interface/mappings.ts';
@@ -180,6 +180,8 @@ class Getters {
   getCellColumnIndex = (cell: GameCell): number => this.queriesService.getCellColumnIndex(cell);
 
   getCellRowIndex = (cell: GameCell): number => this.queriesService.getCellRowIndex(cell);
+
+  getLetterPoints = (letter: GameLetter): number => this.queriesService.getLetterPoints(letter);
 
   getTileLetter = (tile: GameTile): ReturnType<QueriesService['getTileLetter']> => this.queriesService.getTileLetter(tile);
 

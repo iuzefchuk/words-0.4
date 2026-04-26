@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { GameBonus, GameCell } from '@/application/types/index.ts';
-import GameTile from '@/interface/components/shared/AppTile/AppTile.vue';
+import AppTile from '@/interface/components/shared/AppTile/AppTile.vue';
 import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
+import { Accent } from '@/interface/enums.ts';
 import { getBonusName } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
@@ -12,20 +13,25 @@ const props = defineProps<{
 }>();
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
-const isCellCenter = computed(() => mainStore.isCellCenter(props.cell));
+const isCenter = computed(() => mainStore.isCellCenter(props.cell));
 const bonus = computed(() => mainStore.getCellBonus(props.cell));
 const bonusName = computed(() => (bonus.value !== null ? getBonusName(bonus.value) : ''));
 const tile = computed(() => mainStore.findTileOnCell(props.cell));
-const isTileSaturated = computed(() => tile.value !== undefined && mainStore.wasTileUsedInPreviousTurn(tile.value));
+const tileAccent = computed(() => {
+  if (tile.value === undefined) return null;
+  if (userStore.isTileSelected(tile.value)) return Accent.Primary;
+  else if (mainStore.wasTileUsedInPreviousTurn(tile.value)) return Accent.Secondary;
+  return Accent.Tertiary;
+});
 </script>
 
 <template>
   <li
-    v-memo="[tile, bonus, isTileSaturated, tile ? userStore.isTileSelected(tile) : false]"
+    v-memo="[tile, bonus, tileAccent, tile ? userStore.isTileSelected(tile) : false]"
     :class="{
       cell: true,
-      'cell--center': isCellCenter,
-      'cell--has-tile': tile,
+      'cell--highlighted': isCenter,
+      'cell--occupied': tile !== undefined,
     }"
     @click.stop="eventHandlers.handleClickBoardCell(cell)"
   >
@@ -34,25 +40,24 @@ const isTileSaturated = computed(() => tile.value !== undefined && mainStore.was
         v-if="bonus"
         :class="{
           cell__bonus: true,
-          'cell__bonus--dw': bonus === GameBonus.DoubleWord,
-          'cell__bonus--tw': bonus === GameBonus.TripleWord,
-          'cell__bonus--dl': bonus === GameBonus.DoubleLetter,
-          'cell__bonus--tl': bonus === GameBonus.TripleLetter,
+          'cell__bonus--quaternary': bonus === GameBonus.DoubleLetter,
+          'cell__bonus--tertiary': bonus === GameBonus.TripleLetter,
+          'cell__bonus--secondary': bonus === GameBonus.DoubleWord,
+          'cell__bonus--primary': bonus === GameBonus.TripleWord,
         }"
         class="cell__bonus"
         viewBox="0 0 40 40"
       >
-        <text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle">
+        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central">
           {{ bonusName }}
         </text>
       </svg>
     </Transition>
     <Transition name="fade" appear>
-      <GameTile
-        v-if="tile"
+      <AppTile
+        v-if="tile && tileAccent"
         :letter="mainStore.getTileLetter(tile)"
-        :is-inverted="userStore.isTileSelected(tile)"
-        :is-saturated="isTileSaturated"
+        :accent="tileAccent"
         @click.stop="eventHandlers.handleClickBoardTile(tile)"
         @dblclick.stop="eventHandlers.handleDoubleClickBoardTile(tile)"
       />
@@ -62,34 +67,33 @@ const isTileSaturated = computed(() => tile.value !== undefined && mainStore.was
 
 <style lang="scss" scoped>
 .cell {
-  max-width: var(--cell-tile-width);
-  border-radius: var(--cell-tile-border-radius);
+  max-width: var(--grid-item-size);
+  border-radius: var(--grid-item-radius);
   background: var(--cell-bg);
   user-select: none;
   box-shadow: var(--cell-shadow);
-  --shadow-color: var(--cell-shadow-color);
   cursor: pointer;
-  &--center {
-    background: var(--cell-bg-center);
+  &--highlighted {
+    background: var(--cell-bg-highlighted);
   }
-  &--center,
-  &--has-tile {
+  &--highlighted,
+  &--occupied {
     box-shadow: none;
   }
   &__bonus {
     font-weight: var(--font-weight-big);
     z-index: var(--z-index-level-1);
     opacity: var(--cell-opacity-bonus);
-    $bonuses: 'dw', 'tw', 'dl', 'tl';
-    @each $bonus in $bonuses {
-      &--#{$bonus} text {
-        fill: var(--cell-color-#{$bonus});
+    $accents: 'primary', 'secondary', 'tertiary', 'quaternary';
+    @each $accent in $accents {
+      &--#{$accent} text {
+        fill: var(--cell-color-#{$accent});
       }
     }
   }
   &__tile {
     width: 100%;
-    max-width: var(--cell-tile-width);
+    max-width: var(--grid-item-size);
   }
 }
 </style>

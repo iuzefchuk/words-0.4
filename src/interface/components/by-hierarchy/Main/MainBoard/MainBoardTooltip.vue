@@ -32,12 +32,12 @@ const SHIMMER_THRESHOLD_SCORE = 29;
   &__score {
     width: max-content;
     height: max-content;
-    padding: var(--space-3xs) var(--space-2xs);
+    padding: var(--space-xs);
     font-weight: var(--font-weight);
     background: var(--tooltip-bg);
     color: var(--tooltip-color);
     font-size: var(--font-size-small);
-    border-radius: var(--primary-border-radius);
+    border-radius: var(--tooltip-radius);
     line-height: var(--font-size-small);
     &--shimmer {
       background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet, red);

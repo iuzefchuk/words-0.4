@@ -56,12 +56,11 @@ watch(html, newValue => {
   z-index: var(--z-index-level-2);
   display: grid;
   place-items: center;
-  opacity: 0.98;
   &__window {
     padding: var(--space-xl) var(--space-2xl);
-    border-radius: var(--primary-border-radius);
-    color: var(--dialog-color);
+    border-radius: var(--dialog-radius);
     background: var(--dialog-bg);
+    color: var(--dialog-color);
     width: max-content;
     border: none;
     &--shaking {
@@ -89,22 +88,26 @@ watch(html, newValue => {
   &__button {
     cursor: pointer;
     padding: var(--space-s) var(--space-6xl);
-    border: var(--dialog-btn-border);
-    border-radius: var(--primary-border-radius);
+    border: 1px solid transparent;
+    border-color: var(--dialog-btn-border-color);
+    border-radius: var(--dialog-btn-radius);
     transition-property: box-shadow;
     transition-duration: var(--transition-duration-half);
     transition-timing-function: var(--transition-timing-function);
     text-transform: uppercase;
     font-size: var(--font-size-small);
     font-weight: var(--font-weight);
+    background: var(--dialog-btn-bg);
     &:last-child {
       color: var(--color-red-500);
     }
     &:hover {
       background: var(--dialog-btn-bg-hover);
+      border-color: var(--dialog-btn-border-color-hover);
     }
     &:active {
       background: var(--dialog-btn-bg-active);
+      border-color: var(--dialog-btn-border-color-active);
     }
   }
 }

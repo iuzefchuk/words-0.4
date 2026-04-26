@@ -13,6 +13,7 @@ import {
   GameTurnsView,
 } from '@/application/types/index.ts';
 import Game from '@/domain/Game.ts';
+import Inventory from '@/domain/models/inventory/Inventory.ts';
 
 export default class QueriesService {
   private get boardView(): Readonly<GameBoardView> {
@@ -79,6 +80,10 @@ export default class QueriesService {
 
   getOpponentScore(): number {
     return this.game.matchView.getScoreFor(GamePlayer.Opponent);
+  }
+
+  getLetterPoints(letter: GameLetter): number {
+    return Inventory.getLetterPoints(letter);
   }
 
   getTileLetter(tile: GameTile): GameLetter {

@@ -20,7 +20,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
 <template>
   <MainBanner />
   <main
-    :style="{ '--cell-count-per-axis': mainStore.boardCellsPerAxis }"
+    :style="{ '--grid-items-per-axis': mainStore.boardCellsPerAxis }"
     :class="{ main: true, 'main--blurred': matchIsFinished }"
     @click="userStore.deselectTile()"
   >

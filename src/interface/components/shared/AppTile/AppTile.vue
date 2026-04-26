@@ -1,26 +1,29 @@
 <script lang="ts" setup>
+import { computed } from 'vue';
 import { GameLetter } from '@/application/types/index.ts';
-import { getLetterSvgHtml } from '@/interface/mappings.ts';
-withDefaults(
-  defineProps<{
-    isInverted?: boolean;
-    isSaturated?: boolean;
-    letter: GameLetter;
-  }>(),
-  { isInverted: false, isSaturated: false },
-);
+import { Accent } from '@/interface/enums.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
+const props = defineProps<{
+  accent: Accent;
+  letter: GameLetter;
+}>();
+const mainStore = MainStore.INSTANCE();
+const points = computed(() => mainStore.getLetterPoints(props.letter));
 </script>
 
 <template>
   <svg
     :class="{
       tile: true,
-      'tile--inverted': isInverted,
-      'tile--saturated': isSaturated,
+      'tile--primary': props.accent === Accent.Primary,
+      'tile--secondary': props.accent === Accent.Secondary,
+      'tile--tertiary': props.accent === Accent.Tertiary,
     }"
-    viewBox="0 0 21 21"
-    v-html="getLetterSvgHtml(letter)"
-  ></svg>
+    viewBox="0 0 40 40"
+  >
+    <text class="tile__letter" x="45%" y="45%" font-size="22" text-anchor="middle" dominant-baseline="central">{{ letter }}</text>
+    <text class="tile__points" x="78%" y="78%" font-size="13" text-anchor="middle" dominant-baseline="central">{{ points }}</text>
+  </svg>
 </template>
 
 <style lang="scss" scoped>
@@ -28,9 +31,8 @@ withDefaults(
   cursor: pointer;
   fill: currentColor;
   aspect-ratio: 1 / 1;
-  color: var(--tile-color);
-  background: var(--tile-bg);
   border-radius: inherit;
+  box-shadow: var(--shadow);
   transition-property: background, color, outline;
   transition-duration: var(--transition-duration-half);
   transition-timing-function: var(--transition-timing-function);
@@ -39,12 +41,15 @@ withDefaults(
   left: 0;
   z-index: var(--z-index-level-1);
   min-height: 100%;
-  &--inverted:not(&--saturated) {
-    background: var(--tile-bg-inverted);
-    color: var(--tile-color-inverted);
+  $accents: 'primary', 'secondary', 'tertiary';
+  @each $accent in $accents {
+    &--#{$accent} {
+      background: var(--tile-bg-#{$accent});
+      color: var(--tile-color-#{$accent});
+    }
   }
-  &--saturated {
-    background: var(--tile-bg-saturated);
+  &__letter {
+    font-weight: var(--font-weight-big);
   }
 }
 </style>

@@ -11,7 +11,7 @@ const { history } = new UseEventsHistory();
 
 <style lang="scss" scoped>
 .annotation {
-  $padding-right: calc(var(--cell-tile-width) / 4);
+  $padding-right: calc(var(--grid-item-size) / 4);
   height: 6rem;
   border-right: 1px solid currentColor;
   padding-right: $padding-right;
