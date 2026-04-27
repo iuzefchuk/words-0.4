@@ -3,7 +3,16 @@ import { Axis } from '@/domain/models/board/enums.ts';
 import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
 import { AnchorCoordinates, Cell } from '@/domain/models/board/types.ts';
 
-type CellCases = {
+// test skips isCellCenter, getOppositeAxis, isCellPositionAtAxisStart, isCellPositionAtAxisEnd —
+// all are single-constant comparisons or 2-element enum mappings per the skip-trivial rule.
+
+type CellNegativeCases = {
+  readonly cell: Cell;
+  readonly error: new (...args: Array<unknown>) => Error;
+  readonly message?: RegExp | string;
+};
+
+type CellPositiveCases = {
   readonly adjacentCells: ReadonlyArray<Cell>;
   readonly cell: Cell;
   readonly column: number;
@@ -14,14 +23,30 @@ type CellCases = {
   readonly row: number;
 };
 
-type CoordsCases = {
+type CoordsNegativeCases = {
+  readonly coords: AnchorCoordinates;
+  readonly error: new (...args: Array<unknown>) => Error;
+  readonly message?: RegExp | string;
+};
+
+type CoordsPositiveCases = {
   readonly axisCells: ReadonlyArray<Cell>;
   readonly coords: AnchorCoordinates;
 };
 
 class LayoutServiceCases {
-  static forCell(): ReadonlyArray<CellCases> {
-    const matrix = this.buildIndexMatrix();
+  static forCellNegative(): ReadonlyArray<CellNegativeCases> {
+    return [
+      {
+        cell: LayoutService.CELLS_PER_LAYOUT as Cell,
+        error: ReferenceError,
+        message: /expected adjacent cells/,
+      },
+    ];
+  }
+
+  static forCellPositive(): ReadonlyArray<CellPositiveCases> {
+    const matrix = this.buildIndexMatrix() as ReadonlyArray<ReadonlyArray<Cell>>;
     return matrix.flatMap((matrixRow, row) =>
       matrixRow.map((cell, column) => ({
         adjacentCells: this.getOrthogonalNeighbors(matrix, row, column),
@@ -36,8 +61,23 @@ class LayoutServiceCases {
     );
   }
 
-  static forCoords(): ReadonlyArray<CoordsCases> {
-    const matrix = this.buildIndexMatrix();
+  static forCoordsNegative(): ReadonlyArray<CoordsNegativeCases> {
+    return [
+      {
+        coords: { axis: 'Z' as Axis, cell: 0 as Cell },
+        error: ReferenceError,
+        message: /expected axis cells/,
+      },
+      {
+        coords: { axis: Axis.X, cell: LayoutService.CELLS_PER_LAYOUT as Cell },
+        error: ReferenceError,
+        message: /expected axis line/,
+      },
+    ];
+  }
+
+  static forCoordsPositive(): ReadonlyArray<CoordsPositiveCases> {
+    const matrix = this.buildIndexMatrix() as ReadonlyArray<ReadonlyArray<Cell>>;
     return matrix.flatMap(matrixRow =>
       matrixRow.flatMap((cell, column) => [
         { axisCells: matrixRow, coords: { axis: Axis.X, cell } },
@@ -53,23 +93,23 @@ class LayoutServiceCases {
     );
   }
 
-  private static buildIndexMatrix(): ReadonlyArray<ReadonlyArray<Cell>> {
-    return Array.from({ length: LayoutService.CELLS_PER_AXIS ** 2 }, (_, index) => index as Cell).reduce<Array<Array<Cell>>>(
-      (rowsSoFar, cell) => {
+  private static buildIndexMatrix(): ReadonlyArray<ReadonlyArray<number>> {
+    return Array.from({ length: LayoutService.CELLS_PER_AXIS ** 2 }, (_, index) => index).reduce<Array<Array<number>>>(
+      (rowsSoFar, index) => {
         const lastRow = rowsSoFar[rowsSoFar.length - 1];
-        if (lastRow !== undefined && lastRow.length < LayoutService.CELLS_PER_AXIS) lastRow.push(cell);
-        else rowsSoFar.push([cell]);
+        if (lastRow !== undefined && lastRow.length < LayoutService.CELLS_PER_AXIS) lastRow.push(index);
+        else rowsSoFar.push([index]);
         return rowsSoFar;
       },
       [],
     );
   }
 
-  private static getOrthogonalNeighbors(
-    matrix: ReadonlyArray<ReadonlyArray<Cell>>,
+  private static getOrthogonalNeighbors<T>(
+    matrix: ReadonlyArray<ReadonlyArray<T>>,
     row: number,
     column: number,
-  ): ReadonlyArray<Cell> {
+  ): ReadonlyArray<T> {
     return [
       [0, -1],
       [0, 1],
@@ -82,12 +122,20 @@ class LayoutServiceCases {
         }
         return matrix[row + rowOffset]?.[column + columnOffset];
       })
-      .filter((neighbor): neighbor is Cell => neighbor !== undefined);
+      .filter((neighbor): neighbor is T => neighbor !== undefined);
   }
 }
 
 describe('LayoutService', () => {
-  describe.each(LayoutServiceCases.forCell())(
+  describe.each(LayoutServiceCases.forCellNegative())('for invalid cell $cell', ({ cell, error, message }) => {
+    test('getAdjacentCells throws', () => {
+      const act = (): unknown => LayoutService.getAdjacentCells(cell);
+      expect(act).toThrow(error);
+      if (message !== undefined) expect(act).toThrow(message);
+    });
+  });
+
+  describe.each(LayoutServiceCases.forCellPositive())(
     'for cell $cell',
     ({ adjacentCells, cell, column, isBottomEdge, isLeftEdge, isRightEdge, isTopEdge, row }) => {
       test('calculates adjacent cells', () => {
@@ -120,9 +168,23 @@ describe('LayoutService', () => {
     },
   );
 
-  describe.each(LayoutServiceCases.forCoords())('for coords (axis $coords.axis, cell $coords.cell)', ({ axisCells, coords }) => {
-    test('calculates axis cells', () => {
-      expect(LayoutService.getAxisCells(coords)).toEqual(axisCells);
-    });
-  });
+  describe.each(LayoutServiceCases.forCoordsPositive())(
+    'for coords (axis $coords.axis, cell $coords.cell)',
+    ({ axisCells, coords }) => {
+      test('calculates axis cells', () => {
+        expect(LayoutService.getAxisCells(coords)).toEqual(axisCells);
+      });
+    },
+  );
+
+  describe.each(LayoutServiceCases.forCoordsNegative())(
+    'for invalid coords (axis $coords.axis, cell $coords.cell)',
+    ({ coords, error, message }) => {
+      test('getAxisCells throws', () => {
+        const act = (): unknown => LayoutService.getAxisCells(coords);
+        expect(act).toThrow(error);
+        if (message !== undefined) expect(act).toThrow(message);
+      });
+    },
+  );
 });
