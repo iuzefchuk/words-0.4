@@ -4,13 +4,13 @@ const { history } = new UseEventsHistory();
 </script>
 
 <template>
-  <TransitionGroup v-if="history.length > 0" name="fade-from-right" tag="ul" class="annotation app__make-secondary" appear>
+  <TransitionGroup v-if="history.length > 0" name="fade-from-right" tag="ul" class="feed app__make-secondary" appear>
     <li v-for="{ key, html } in history" :key="key" v-html="html" />
   </TransitionGroup>
 </template>
 
 <style lang="scss" scoped>
-.annotation {
+.feed {
   $padding-right: calc(var(--grid-item-size) / 4);
   height: 6rem;
   border-right: 1px solid currentColor;

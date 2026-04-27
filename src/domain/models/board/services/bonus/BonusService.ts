@@ -28,30 +28,35 @@ export default class BonusService {
     [
       Bonus.DoubleLetter,
       [
-        [1, 1],
+        [3, 0],
         [6, 2],
-        [6, 4],
-        [7, 0],
+        [6, 6],
+        [7, 3],
       ],
     ],
     [
       Bonus.DoubleWord,
       [
+        [1, 1],
         [2, 2],
+        [3, 3],
         [4, 4],
-        [7, 3],
       ],
     ],
     [
       Bonus.TripleLetter,
       [
-        [0, 0],
-        [3, 3],
         [5, 1],
         [5, 5],
       ],
     ],
-    [Bonus.TripleWord, [[4, 0]]],
+    [
+      Bonus.TripleWord,
+      [
+        [0, 0],
+        [7, 0],
+      ],
+    ],
   ]);
 
   private static readonly PRESET_DISTRIBUTION: BonusDistribution = (() => {
@@ -75,16 +80,17 @@ export default class BonusService {
     }
   }
 
-  private static createRandomDistribution(randomizer?: () => number): BonusDistribution {
+  private static createRandomDistribution(randomizer: () => number = Math.random): BonusDistribution {
     const availableCells = LayoutService.CELLS_BY_INDEX.filter(cell => cell !== LayoutService.CENTER_CELL);
-    shuffleWithFisherYates({ array: availableCells, ...(randomizer !== undefined && { randomizer }) });
-    return new Map(
-      Array.from(this.PRESET_DISTRIBUTION.values(), (bonus, idx) => {
-        const cell = availableCells[idx];
-        if (cell === undefined) throw new ReferenceError(`expected cell at index ${String(idx)}, got undefined`);
-        return [cell, bonus];
-      }),
-    );
+    shuffleWithFisherYates({ array: availableCells, randomizer });
+    const result = new Map<Cell, Bonus>();
+    const bonuses = this.PRESET_DISTRIBUTION.values();
+    for (const cell of availableCells) {
+      const { done, value: bonus } = bonuses.next();
+      if (done === true) break;
+      result.set(cell, bonus);
+    }
+    return result;
   }
 
   private static getSymmetricCells([row, col]: OctantLocation): ReadonlySet<Cell> {

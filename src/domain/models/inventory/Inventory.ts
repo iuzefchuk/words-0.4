@@ -127,6 +127,10 @@ export default class Inventory {
     return inventory;
   }
 
+  static getLetterPoints(letter: GameLetter): number {
+    return Inventory.LETTER_CONFIG[letter].points;
+  }
+
   areTilesEqual(firstTile: Tile, secondTile: Tile): boolean {
     return firstTile === secondTile;
   }
@@ -155,8 +159,7 @@ export default class Inventory {
   }
 
   getTilePoints(tile: Tile): number {
-    const letter = this.getTileLetter(tile);
-    return Inventory.LETTER_CONFIG[letter].points;
+    return Inventory.getLetterPoints(this.getTileLetter(tile));
   }
 
   getTilesFor(player: GamePlayer): ReadonlyArray<Tile> {

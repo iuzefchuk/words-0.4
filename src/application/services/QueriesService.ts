@@ -66,6 +66,10 @@ export default class QueriesService {
     return this.game.eventsLogView;
   }
 
+  getLetterPoints(letter: GameLetter): number {
+    return Inventory.getLetterPoints(letter);
+  }
+
   getMatchDifficulty(): GameMatchDifficulty {
     return this.game.matchView.settings.difficulty;
   }
@@ -80,10 +84,6 @@ export default class QueriesService {
 
   getOpponentScore(): number {
     return this.game.matchView.getScoreFor(GamePlayer.Opponent);
-  }
-
-  getLetterPoints(letter: GameLetter): number {
-    return Inventory.getLetterPoints(letter);
   }
 
   getTileLetter(tile: GameTile): GameLetter {

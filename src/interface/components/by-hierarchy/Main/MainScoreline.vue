@@ -46,14 +46,14 @@ const players = [
 </script>
 
 <template>
-  <section class="statistics">
+  <section class="scoreline">
     <Transition name="fade" mode="out-in">
-      <div v-if="optionsAreDisabled" class="statistics__group">
+      <div v-if="optionsAreDisabled" class="scoreline__group">
         <p v-for="player in players" :key="player.name">
           {{ player.name }}: <span v-animate-number="{ number: player.score() }" />
         </p>
       </div>
-      <div v-else class="statistics__group">
+      <div v-else class="scoreline__group">
         <p v-for="{ items, label, modelValue, onChange } in options" :key="label">
           {{ label }}:
           <AppSelect :model-value="modelValue()" :options="items" :is-disabled="false" @change="onChange" />
@@ -64,7 +64,7 @@ const players = [
 </template>
 
 <style lang="scss" scoped>
-.statistics {
+.scoreline {
   z-index: var(--z-index-level-2);
   padding: var(--primary-padding) 0;
   &__group {

@@ -56,6 +56,17 @@
   }
 }
 
+.fade-from-left {
+  &-enter-active {
+    @include transition();
+    transition-property: opacity, transform;
+  }
+  &-enter-from {
+    opacity: 0;
+    transform: translateX(1rem);
+  }
+}
+
 .fade-from-right {
   &-enter-active {
     @include transition();

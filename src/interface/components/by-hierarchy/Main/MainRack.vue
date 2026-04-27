@@ -20,40 +20,40 @@ const paddedTiles = computed<Array<GameTile | null>>(() => {
 </script>
 
 <template>
-  <section class="inventory">
+  <section class="rack">
     <ul
       :class="{
-        inventory__grid: true,
+        rack__grid: true,
         'app__limit-max-width': true,
-        'app__create-grid--for-inventory': true,
+        'app__create-grid--for-rack': true,
       }"
     >
       <li
         v-for="(tile, idx) in paddedTiles"
         :key="idx"
         :class="{
-          inventory__cell: true,
-          'inventory__cell--disabled': allActionsAreDisabled,
+          rack__cell: true,
+          'rack__cell--disabled': allActionsAreDisabled,
         }"
-        @click.stop="tile !== null && eventHandlers.handleClickInventoryCell(idx)"
+        @click.stop="tile !== null && eventHandlers.handleClickRackCell(idx)"
       >
         <AppTile
-          v-if="tile !== null && userStore.isTileInInventory(tile) && !mainStore.isTilePlaced(tile)"
+          v-if="tile !== null && userStore.isTileInRack(tile) && !mainStore.isTilePlaced(tile)"
           :letter="mainStore.getTileLetter(tile)"
           :accent="userStore.isTileSelected(tile) ? Accent.Primary : Accent.Tertiary"
-          @click.stop="eventHandlers.handleClickInventoryTile(tile)"
+          @click.stop="eventHandlers.handleClickRackTile(tile)"
         />
       </li>
       <Transition name="fade">
         <li
           v-if="tilesRemaining > 0"
           :class="{
-            inventory__count: true,
+            rack__count: true,
             'app__make-secondary': true,
           }"
         >
           <p>
-            <span v-animate-number="{ number: tilesRemaining }" class="inventory__count-item" />
+            <span v-animate-number="{ number: tilesRemaining }" class="rack__count-item" />
             {{ text('game.unassigned_count') }}
           </p>
         </li>
@@ -63,16 +63,16 @@ const paddedTiles = computed<Array<GameTile | null>>(() => {
 </template>
 
 <style lang="scss" scoped>
-.inventory {
+.rack {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-l);
   &__cell {
     cursor: pointer;
-    background: var(--inventory-bg);
+    background: var(--rack-cell-bg);
     border-radius: calc(var(--grid-item-radius) * 2);
-    box-shadow: var(--inventory-shadow);
+    box-shadow: var(--rack-cell-shadow);
     &--disabled {
       opacity: var(--opacity-disabled);
       cursor: not-allowed;

@@ -14,7 +14,7 @@ export default class UserStore {
       initialize: () => {
         store.initialize(mainStore.userTiles);
       },
-      isTileInInventory: store.isTileInInventory.bind(store),
+      isTileInRack: store.isTileInRack.bind(store),
       isTileSelected: store.isTileSelected.bind(store),
       selectedTile: computed(() => store.selectedTile),
       selectedTileIsPlaced: computed(() => store.selectedTileIsPlaced),
@@ -28,7 +28,7 @@ export default class UserStore {
       tiles: store.tilesRef,
     };
   });
-  
+
   private get mainStore(): ReturnType<typeof MainStore.INSTANCE> {
     return MainStore.INSTANCE();
   }
@@ -68,7 +68,7 @@ export default class UserStore {
     this.selectedTileRef.value = null;
   }
 
-  private isTileInInventory(tile: GameTile): boolean {
+  private isTileInRack(tile: GameTile): boolean {
     return this.getTileIdx(tile) !== -1;
   }
 
@@ -77,7 +77,7 @@ export default class UserStore {
   }
 
   private selectTile(tile: GameTile): void {
-    if (!this.isTileInInventory(tile)) return;
+    if (!this.isTileInRack(tile)) return;
     this.selectedTileRef.value = tile;
   }
 
@@ -89,11 +89,11 @@ export default class UserStore {
   private switchTiles(firstTile: GameTile, secondTile: GameTile): void {
     const firstIdx = this.getTileIdx(firstTile);
     const secondIdx = this.getTileIdx(secondTile);
-    if (firstIdx < 0 || secondIdx < 0) throw new Error(`cannot switch tiles: ${firstTile} or ${secondTile} is not in rack`);
+    if (firstIdx < 0 || secondIdx < 0) throw new Error(`cannot switch tiles: ${firstTile} or ${secondTile} is not in inventory`);
     const first = this.tiles[firstIdx];
     const second = this.tiles[secondIdx];
     if (first === undefined || second === undefined) {
-      throw new Error(`expected tiles at rack indices ${String(firstIdx)} and ${String(secondIdx)}, got undefined`);
+      throw new Error(`expected tiles at indices ${String(firstIdx)} and ${String(secondIdx)}, got undefined`);
     }
     this.tiles[firstIdx] = second;
     this.tiles[secondIdx] = first;

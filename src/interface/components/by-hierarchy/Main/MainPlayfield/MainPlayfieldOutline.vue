@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import MainBoardTooltip from '@/interface/components/by-hierarchy/Main/MainBoard/MainBoardTooltip.vue';
+import MainPlayfieldTooltip from '@/interface/components/by-hierarchy/Main/MainPlayfield/MainPlayfieldTooltip.vue';
 import UseTileLocator from '@/interface/composables/UseTileLocator.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 const userStore = UserStore.INSTANCE();
@@ -24,7 +24,7 @@ const CELL_STEP = 'calc((100% + var(--grid-gap)) / var(--grid-items-per-axis))';
     }"
   >
     <Transition name="fade" appear>
-      <MainBoardTooltip
+      <MainPlayfieldTooltip
         v-if="tileLocator.areLocationsForSelectedTiles(locations, idx)"
         :is-flipped="tileLocator.isLocationOnRightmostColumn(locations, idx)"
       />

@@ -1,4 +1,4 @@
-// TODO auto sync changes with /public/words.svg
+// TODO sync changes with /public/words.svg
 
 @mixin light-scheme() {
   --primary-font-weight: var(--font-weight-small);
@@ -21,73 +21,60 @@
 
   --tile-bg-primary: var(--color-gray-800);
   --tile-color-primary: var(--color-gray-100);
-  --tile-pts-color-primary: var(--tile-pts-color-tertiary);
+  --tile-pts-color-primary: var(--color-gray-200);
 
   --tile-bg-secondary: var(--color-gray-600);
   --tile-color-secondary: var(--color-gray-100);
-  --tile-pts-color-secondary: var(--tile-pts-color-tertiary);
+  --tile-pts-color-secondary: var(--color-gray-200);
 
   --tile-bg-tertiary: var(--color-gray-500);
   --tile-color-tertiary: var(--color-gray-50);
-  --tile-pts-color-tertiary:  var(--tile-color-tertiary);
+  --tile-pts-color-tertiary: var(--color-gray-100);
 
   --tile-outline: 2px solid var(--color-gray-900);
 
   --tooltip-bg: var(--color-gray-900);
   --tooltip-color: var(--color-gray-50);
 
-  --notification-bg: var(--color-gray-400);
-  --notification-color: var(--color-gray-50);
+  --error-bg: var(--color-gray-400);
+  --error-color: var(--color-gray-50);
 
-  --inventory-bg: var(--color-gray-300);
-  --inventory-shadow: var(--inset-shadow-s);
+  --rack-cell-bg: var(--color-gray-300);
+  --rack-cell-shadow: var(--inset-shadow-s);
 
-  --btn-font-weight: var(--font-weight);
-  --btn-font-size: var(--font-size-small);
+  --action-font-weight: var(--font-weight);
+  --action-font-size: var(--font-size-small);
 
   // PRIMARY
-  --btn-bg-primary: var(--color-gray-900);
-  --btn-color-primary: var(--color-gray-50);
-  --btn-border-color-primary: transparent;
+  --action-bg-primary: var(--color-gray-900);
+  --action-color-primary: var(--color-gray-50);
+  --action-border-color-primary: transparent;
   // primary - hover
-  --btn-bg-primary-hover: var(--color-gray-800);
-  --btn-color-primary-hover: var(--color-white);
-  --btn-border-color-primary-hover: var(--btn-border-color-primary);
+  --action-bg-primary-hover: var(--color-gray-800);
+  --action-color-primary-hover: var(--color-white);
+  --action-border-color-primary-hover: var(--action-border-color-primary);
   // primary - active
-  --btn-bg-primary-active: var(--color-gray-950);
-  --btn-color-primary-active: var(--color-gray-200);
-  --btn-border-color-primary-active: var(--btn-border-color-primary);
+  --action-bg-primary-active: var(--color-gray-950);
+  --action-color-primary-active: var(--color-gray-200);
+  --action-border-color-primary-active: var(--action-border-color-primary);
 
   // SECONDARY
-  --btn-bg-secondary: var(--color-gray-50);
-  --btn-color-secondary: var(--color-gray-800);
-  --btn-border-color-secondary: var(--color-gray-400);
+  --action-bg-secondary: var(--color-gray-50);
+  --action-color-secondary: var(--color-gray-800);
+  --action-border-color-secondary: var(--color-gray-400);
   // secondary - hover
-  --btn-bg-secondary-hover: var(--color-white);
-  --btn-color-secondary-hover: var(--color-gray-900);
-  --btn-border-color-secondary-hover: var(--btn-color-secondary-hover);
+  --action-bg-secondary-hover: var(--color-white);
+  --action-color-secondary-hover: var(--color-gray-900);
+  --action-border-color-secondary-hover: var(--action-color-secondary-hover);
   // secondary - active
-  --btn-bg-secondary-active: var(--color-gray-100);
-  --btn-color-secondary-active: var(--color-gray-700);
-  --btn-border-color-secondary-active: var(--color-gray-500);
+  --action-bg-secondary-active: var(--color-gray-100);
+  --action-color-secondary-active: var(--color-gray-700);
+  --action-border-color-secondary-active: var(--color-gray-500);
 
   // disabled
-  --btn-bg-disabled: transparent;
-  --btn-color-disabled: var(--color-gray-500);
-  --btn-border-color-disabled: var(--color-gray-400);
-
-  // // TERTIARY
-  // --btn-bg-tertiary: var(--color-gray-50);
-  // --btn-color-tertiary: var(--color-gray-800);
-  // --btn-border-color-tertiary: var(--color-gray-400);
-  // // tertiary - hover
-  // --btn-bg-tertiary-hover: var(--btn-bg-tertiary);
-  // --btn-color-tertiary-hover: var(--btn-color-tertiary);
-  // --btn-border-color-tertiary-hover: var(--btn-border-color-tertiary);
-  // // tertiary - active
-  // --btn-bg-tertiary-active: var(--btn-bg-tertiary);
-  // --btn-color-tertiary-active: var(--btn-color-tertiary);
-  // --btn-border-color-tertiary-active: var(--btn-border-color-tertiary);
+  --action-bg-disabled: var(--primary-bg);
+  --action-color-disabled: var(--color-gray-500);
+  --action-border-color-disabled: var(--color-gray-400);
 
   --dialog-bg: var(--color-gray-800);
   --dialog-color: var(--color-gray-100);
@@ -102,7 +89,7 @@
   --grid-item-size: var(--space-4xl);
   --grid-item-radius: var(--space-xs);
   --tooltip-radius: var(--space-3xs);
-  --btn-radius: var(--space-xs);
+  --action-radius: var(--space-xs);
   --dialog-radius: var(--space-s);
   --dialog-btn-radius: var(--space-xs);
   --opacity-disabled: 0.9;
@@ -149,7 +136,7 @@
     &--for-board {
       @include grid(var(--grid-items-per-axis), var(--grid-items-per-axis));
     }
-    &--for-inventory {
+    &--for-rack {
       @include grid(8, 1, calc(var(--grid-gap) * 2));
     }
   }

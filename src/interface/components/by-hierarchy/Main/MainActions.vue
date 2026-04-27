@@ -55,14 +55,14 @@ const items = reactive([
 
 <template>
   <section>
-    <ul class="menu">
+    <ul class="actions">
       <li v-for="{ name, action, accent, isDisabled } in items" :key="name">
         <button
           :class="{
-            menu__btn: true,
-            'menu__btn--primary': accent === Accent.Primary,
-            'menu__btn--secondary': accent === Accent.Secondary,
-            'menu__btn--tertiary': accent === Accent.Tertiary,
+            actions__btn: true,
+            'actions__btn--primary': accent === Accent.Primary,
+            'actions__btn--secondary': accent === Accent.Secondary,
+            'actions__btn--tertiary': accent === Accent.Tertiary,
           }"
           :disabled="isDisabled()"
           @click="action()"
@@ -75,7 +75,7 @@ const items = reactive([
 </template>
 
 <style lang="scss" scoped>
-.menu {
+.actions {
   display: flex;
   flex-direction: column;
   gap: var(--space-s);
@@ -83,14 +83,14 @@ const items = reactive([
   &__btn {
     cursor: pointer;
     text-align: center;
-    border-radius: var(--btn-radius);
+    border-radius: var(--action-radius);
     user-select: none;
     transition-property: box-shadow;
     transition-duration: var(--transition-duration);
     transition-timing-function: var(--transition-timing-function);
     border: 1px solid transparent;
-    font-size: var(--btn-font-size);
-    font-weight: var(--btn-font-weight);
+    font-size: var(--action-font-size);
+    font-weight: var(--action-font-weight);
     display: grid;
     place-items: center;
     width: 5rem;
@@ -98,28 +98,28 @@ const items = reactive([
     $accents: 'primary', 'secondary', 'tertiary', 'quaternary';
     @each $accent in $accents {
       &--#{$accent} {
-        background: var(--btn-bg-#{$accent});
-        color: var(--btn-color-#{$accent});
-        border-color: var(--btn-border-color-#{$accent});
+        background: var(--action-bg-#{$accent});
+        color: var(--action-color-#{$accent});
+        border-color: var(--action-border-color-#{$accent});
         box-shadow: var(--shadow-xs);
         &:hover:not(:active):not(:disabled) {
-          background: var(--btn-bg-#{$accent}-hover);
-          color: var(--btn-color-#{$accent}-hover);
-          border-color: var(--btn-border-color-#{$accent}-hover);
+          background: var(--action-bg-#{$accent}-hover);
+          color: var(--action-color-#{$accent}-hover);
+          border-color: var(--action-border-color-#{$accent}-hover);
           box-shadow: var(--shadow-s);
         }
         &:active:not(:disabled) {
-          background: var(--btn-bg-#{$accent}-active);
-          color: var(--btn-color-#{$accent}-active);
-          border-color: var(--btn-border-color-#{$accent}-active);
+          background: var(--action-bg-#{$accent}-active);
+          color: var(--action-color-#{$accent}-active);
+          border-color: var(--action-border-color-#{$accent}-active);
         }
       }
     }
     &:disabled {
       cursor: not-allowed;
-      background: var(--btn-bg-disabled);
-      color: var(--btn-color-disabled);
-      border-color: var(--btn-border-color-disabled);
+      background: var(--action-bg-disabled);
+      color: var(--action-color-disabled);
+      border-color: var(--action-border-color-disabled);
       box-shadow: none;
     }
   }
