@@ -27,14 +27,8 @@ const resultText = computed(() => getMatchResultText(matchResult.value, userScor
   z-index: var(--z-index-level-3);
   display: grid;
   place-items: center;
-  gap: var(--space-m);
   align-content: center;
-  font-size: var(--font-size-big);
-  &__text {
-    position: relative;
-    user-select: none;
-    font-size: var(--font-size-big);
-  }
+  user-select: none;
   &__hint {
     $ms: calc(var(--transition-duration) * 10);
     animation: double-tap $ms var(--transition-timing-function) infinite;
@@ -43,33 +37,6 @@ const resultText = computed(() => getMatchResultText(matchResult.value, userScor
     position: absolute;
     bottom: 45%;
     width: max-content;
-    user-select: none;
-  }
-}
-@keyframes double-tap {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  5% {
-    transform: scale(0.9);
-    opacity: 0.5;
-  }
-  10% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  15% {
-    transform: scale(0.9);
-    opacity: 0.5;
-  }
-  20% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
   }
 }
 </style>

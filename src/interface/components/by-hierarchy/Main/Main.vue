@@ -101,7 +101,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
     justify-self: end;
   }
   &--blurred {
-    filter: blur(0.5rem);
+    filter: blur(0.75rem);
     opacity: var(--opacity-disabled);
   }
 }
