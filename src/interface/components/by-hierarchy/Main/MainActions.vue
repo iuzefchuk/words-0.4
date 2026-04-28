@@ -56,7 +56,7 @@ onUnmounted(() => {
   <section class="actions">
     <ul class="actions__list">
       <li v-for="{ name, action, accent, isDisabled } in items" :key="name">
-        <AppButton :accent="accent" :is-disabled="isDisabled()" @click="action()">
+        <AppButton class="actions__btn" :accent="accent" :is-disabled="isDisabled()" @click="action()">
           {{ name }}
         </AppButton>
       </li>
@@ -66,12 +66,15 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .actions {
-  z-index: var(--z-index-level-1);
   &__list {
+    z-index: var(--z-index-level-1);
     display: flex;
     flex-direction: column;
     gap: var(--space-s);
-    padding: var(--space-m);
+    @media screen and (max-width: 750px) {
+      flex-direction: row-reverse;
+      padding-top: calc(var(--rack-height) + var(--primary-space));
+    }
   }
 }
 </style>

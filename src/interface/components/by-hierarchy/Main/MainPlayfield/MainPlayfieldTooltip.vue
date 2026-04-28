@@ -32,7 +32,7 @@ const SHIMMER_THRESHOLD_SCORE = 29;
   &__score {
     width: max-content;
     height: max-content;
-    padding: var(--space-xs);
+    padding: var(--space-4xs) var(--space-2xs);
     font-weight: var(--font-weight);
     background: var(--tooltip-bg);
     color: var(--tooltip-color);

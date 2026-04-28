@@ -26,6 +26,7 @@ function handleKeydown(event: KeyboardEvent): void {
   if (!isRendered.value) return;
   const button = buttons.find(button => button.keys.includes(event.key));
   if (button === undefined) return;
+  event.preventDefault();
   event.stopImmediatePropagation();
   respond(button.status);
 }
@@ -105,7 +106,7 @@ onUnmounted(() => {
       animation: horizontal-shake var(--transition-duration) linear forwards;
     }
     & > * {
-      max-width: 15rem;
+      max-width: 14rem;
       width: 100%;
     }
   }

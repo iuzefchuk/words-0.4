@@ -45,18 +45,16 @@ const paddedTiles = computed<Array<GameTile | null>>(() => {
         />
       </li>
       <Transition name="fade">
-        <li
+        <p
           v-if="tilesRemaining > 0"
           :class="{
             rack__count: true,
             'app__make-secondary': true,
           }"
         >
-          <p>
-            <span v-animate-number="{ number: tilesRemaining }" class="rack__count-item" />
-            {{ text('game.unassigned_count') }}
-          </p>
-        </li>
+          <span v-animate-number="{ number: tilesRemaining }" class="rack__count-item" />
+          {{ text('game.unassigned_count') }}
+        </p>
       </Transition>
     </ul>
   </section>
@@ -67,6 +65,7 @@ const paddedTiles = computed<Array<GameTile | null>>(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-l);
   &__cell {
     cursor: pointer;
@@ -83,11 +82,8 @@ const paddedTiles = computed<Array<GameTile | null>>(() => {
   }
   &__count {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
+    gap: var(--space-2xs);
     user-select: none;
-    padding: 0 var(--space-3xs);
   }
 }
 </style>

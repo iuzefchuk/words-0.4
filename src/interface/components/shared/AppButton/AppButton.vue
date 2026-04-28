@@ -39,8 +39,8 @@ defineEmits<{
   font-weight: var(--btn-font-weight);
   display: grid;
   place-items: center;
-  width: 5rem;
-  height: 2.25rem;
+  width: var(--btn-width);
+  height: var(--btn-height);
   $accents: 'primary', 'secondary', 'tertiary', 'quaternary';
   @each $accent in $accents {
     &--#{$accent} {

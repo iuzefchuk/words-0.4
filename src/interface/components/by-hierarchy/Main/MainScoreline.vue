@@ -66,7 +66,7 @@ const players = [
 <style lang="scss" scoped>
 .scoreline {
   z-index: var(--z-index-level-2);
-  padding: var(--primary-padding) 0;
+  padding: var(--primary-space) 0;
   &__group {
     display: flex;
     flex-direction: column;

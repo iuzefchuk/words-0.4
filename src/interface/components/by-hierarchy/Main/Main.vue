@@ -34,7 +34,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
       </Transition>
     </header>
     <div class="main__mid app__limit-max-width">
-      <MainFeed class="main__mid-history" />
+      <MainFeed class="main__mid-feed" />
       <MainPlayfield />
     </div>
     <footer class="main__bottom">
@@ -64,8 +64,8 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   display: grid;
   grid-template-rows: 1fr auto 1fr;
   align-items: center;
-  padding-left: var(--primary-padding);
-  padding-right: var(--primary-padding);
+  padding-left: var(--primary-space);
+  padding-right: var(--primary-space);
   justify-items: center;
   &__top {
     align-self: flex-start;
@@ -74,15 +74,15 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   &__mid {
     position: relative;
   }
-  &__mid-history {
+  &__mid-feed {
     position: absolute;
-    top: -7rem;
+    top: calc(var(--feed-height) * -1 - var(--primary-space));
     right: 0rem;
   }
   &__bottom {
     justify-self: center;
     align-self: end;
-    padding: var(--primary-padding) 0;
+    padding: var(--primary-space) 0;
     width: 100%;
     display: grid;
     grid-template-columns: 1px 2fr 1px;
@@ -94,15 +94,16 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
     grid-column: 2;
     align-self: flex-start;
     justify-self: center;
-    margin-top: var(--space-m);
+    height: var(--rack-height);
   }
   &__bottom-actions {
     grid-column: 3;
     justify-self: end;
+    align-self: end;
   }
   &--blurred {
-    filter: blur(0.75rem);
-    opacity: var(--opacity-disabled);
+    filter: blur(1rem);
+    opacity: 0.5;
   }
 }
 </style>

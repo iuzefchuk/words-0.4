@@ -37,7 +37,7 @@ const points = computed(() => mainStore.getLetterPoints(props.letter));
   fill: currentColor;
   aspect-ratio: 1 / 1;
   border-radius: inherit;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-xs);
   transition-property: background, color, outline;
   transition-duration: var(--transition-duration-half);
   transition-timing-function: var(--transition-timing-function);
