@@ -1,15 +1,11 @@
 import { defineStore } from 'pinia';
-import { computed, markRaw, reactive, ref } from 'vue';
+import { computed, ComputedRef, markRaw, reactive, ref, shallowRef, ShallowRef, watch } from 'vue';
 import Application from '@/application/index.ts';
-import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
 import { GameCell, GameLetter, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
-import { SchedulingService } from '@/application/types/ports.ts';
 import launchWords from '@/index.ts';
 import { getEventSound } from '@/interface/mappings.ts';
 import SoundPlayer, { Sound } from '@/interface/services/SoundPlayer.ts';
-
-export const launchError = ref<null | string>(null);
 
 class Actions {
   private lastDrainedEventCount = 0;
@@ -17,32 +13,30 @@ class Actions {
   private pendingValidationId = 0;
 
   constructor(
-    private readonly commandsService: CommandsService,
-    private readonly queriesService: QueriesService,
-    private readonly schedulingService: SchedulingService,
     private readonly state: State,
+    private readonly requireApp: () => Application,
   ) {}
 
   changeMatchDifficulty = (matchDifficulty: GameMatchDifficulty): void => {
     this.state.write(() => {
-      this.commandsService.changeMatchDifficulty(matchDifficulty);
+      this.requireApp().commandsService.changeMatchDifficulty(matchDifficulty);
     });
   };
 
   changeMatchType = (matchType: GameMatchType): void => {
     this.state.writeBoard(() => {
-      this.commandsService.changeMatchType(matchType);
+      this.requireApp().commandsService.changeMatchType(matchType);
     });
   };
 
   clearTiles = (): void => {
     this.state.writeBoard(() => {
-      this.commandsService.clearTiles();
+      this.requireApp().commandsService.clearTiles();
     });
   };
 
   pass = (): void => {
-    const { opponentTurn } = this.writeAndPlaySound(() => this.commandsService.handlePassTurn());
+    const { opponentTurn } = this.writeAndPlaySound(() => this.requireApp().commandsService.handlePassTurn());
     void opponentTurn?.then(() => {
       this.syncAndPlaySound();
     });
@@ -50,41 +44,41 @@ class Actions {
 
   placeTile = (args: { cell: GameCell; tile: GameTile }): void => {
     this.writeBoardAndPlaySound(() => {
-      this.commandsService.placeTile(args);
+      this.requireApp().commandsService.placeTile(args);
     }, [args.cell]);
     this.scheduleDeferredValidation();
   };
 
   resign = (): void => {
     this.writeAndPlaySound(() => {
-      this.commandsService.handleResignMatch();
+      this.requireApp().commandsService.handleResignMatch();
     });
   };
 
   restartGame = (): void => {
     this.state.write(() => {
-      this.commandsService.restartGame();
+      this.requireApp().commandsService.restartGame();
     });
   };
 
   save = (): void => {
-    const { opponentTurn } = this.writeAndPlaySound(() => this.commandsService.handleSaveTurn());
+    const { opponentTurn } = this.writeAndPlaySound(() => this.requireApp().commandsService.handleSaveTurn());
     void opponentTurn?.then(() => {
       this.syncAndPlaySound();
     });
   };
 
   undoPlaceTile = (tile: GameTile): void => {
-    const previousCell = this.queriesService.findCellWithTile(tile);
+    const previousCell = this.requireApp().queriesService.findCellWithTile(tile);
     const affectedCells = previousCell === undefined ? undefined : [previousCell];
     this.writeBoardAndPlaySound(() => {
-      this.commandsService.undoPlaceTile(tile);
+      this.requireApp().commandsService.undoPlaceTile(tile);
     }, affectedCells);
     this.scheduleDeferredValidation();
   };
 
   private playPendingSounds(): void {
-    const log = this.queriesService.getEventsLog();
+    const log = this.requireApp().queriesService.getEventsLog();
     if (this.lastDrainedEventCount > log.length) this.lastDrainedEventCount = 0;
     let lastSound: null | Sound = null;
     for (const event of log.slice(this.lastDrainedEventCount)) {
@@ -97,12 +91,14 @@ class Actions {
 
   private readonly scheduleDeferredValidation = (): void => {
     const validationId = ++this.pendingValidationId;
-    void this.schedulingService.yield().then(() => {
-      if (validationId !== this.pendingValidationId) return;
-      this.writeBoardAndPlaySound(() => {
-        this.commandsService.validateAndSync();
-      }, []);
-    });
+    void this.requireApp()
+      .schedulingService.yield()
+      .then(() => {
+        if (validationId !== this.pendingValidationId) return;
+        this.writeBoardAndPlaySound(() => {
+          this.requireApp().commandsService.validateAndSync();
+        }, []);
+      });
   };
 
   private syncAndPlaySound(): void {
@@ -110,16 +106,13 @@ class Actions {
     this.playPendingSounds();
   }
 
-  private writeAndPlaySound<CallbackResponse>(callback: () => CallbackResponse): CallbackResponse {
+  private writeAndPlaySound<R>(callback: () => R): R {
     const response = this.state.write(callback);
     this.playPendingSounds();
     return response;
   }
 
-  private writeBoardAndPlaySound<CallbackResponse>(
-    callback: () => CallbackResponse,
-    affectedCells?: ReadonlyArray<GameCell>,
-  ): CallbackResponse {
+  private writeBoardAndPlaySound<R>(callback: () => R, affectedCells?: ReadonlyArray<GameCell>): R {
     const response = this.state.writeBoard(callback, affectedCells);
     this.playPendingSounds();
     return response;
@@ -127,77 +120,80 @@ class Actions {
 }
 
 class Getters {
-  readonly currentPlayerIsUser = computed(() => this.readState(() => this.queriesService.isCurrentPlayerUser()));
+  readonly currentPlayerIsUser = this.read(queries => queries.isCurrentPlayerUser());
 
-  readonly dictionaryIsReady = computed(() => this.readState(() => this.queriesService.isDictionaryReady()));
+  readonly dictionaryIsReady = this.read(queries => queries.isDictionaryReady());
 
   readonly allActionsAreDisabled = computed(() => !this.currentPlayerIsUser.value || !this.dictionaryIsReady.value);
 
-  readonly currentTurnIsValid = computed(() => this.readBoard(() => this.queriesService.isCurrentTurnValid()));
+  readonly currentTurnIsValid = this.readBoard(queries => queries.isCurrentTurnValid());
 
-  readonly currentTurnScore = computed(() => this.readBoard(() => this.queriesService.getCurrentTurnScore()));
+  readonly currentTurnScore = this.readBoard(queries => queries.getCurrentTurnScore());
 
-  readonly eventsLog = computed(() => this.readState(() => [...this.queriesService.getEventsLog()]));
+  readonly eventsLog = this.read(queries => [...queries.getEventsLog()]);
 
-  readonly hasPriorTurns = computed(() => this.readState(() => this.queriesService.hasPriorTurns()));
+  readonly hasPriorTurns = this.read(queries => queries.hasPriorTurns());
 
-  readonly matchDifficulty = computed(() => this.readState(() => this.queriesService.getMatchDifficulty()));
+  readonly matchDifficulty = this.read(queries => queries.getMatchDifficulty());
 
-  readonly matchIsFinished = computed(() => this.readState(() => this.queriesService.isMatchFinished()));
+  readonly matchIsFinished = this.read(queries => queries.isMatchFinished());
 
-  readonly matchResult = computed(() => this.readState(() => this.queriesService.getMatchResult()));
+  readonly matchResult = this.read(queries => queries.getMatchResult());
 
-  readonly matchType = computed(() => this.readBoard(() => this.queriesService.getMatchType()));
+  readonly matchType = this.readBoard(queries => queries.getMatchType());
 
-  readonly opponentScore = computed(() => this.readState(() => this.queriesService.getOpponentScore()));
+  readonly opponentScore = this.read(queries => queries.getOpponentScore());
 
-  readonly settingsChangeIsAllowed = computed(() => this.readState(() => this.queriesService.settingsChangeIsAllowed()));
+  readonly settingsChangeIsAllowed = this.read(queries => queries.settingsChangeIsAllowed());
 
-  readonly tilesRemaining = computed(() => this.readState(() => this.queriesService.getTilesRemaining()));
+  readonly tilesRemaining = this.read(queries => queries.getTilesRemaining());
 
-  readonly userPassWillBeResign = computed(() => this.readState(() => this.queriesService.willUserPassBeResign()));
+  readonly userPassWillBeResign = this.read(queries => queries.willUserPassBeResign());
 
-  readonly userScore = computed(() => this.readState(() => this.queriesService.getUserScore()));
+  readonly userScore = this.read(queries => queries.getUserScore());
 
-  readonly userTiles = computed(() => this.readState(() => this.queriesService.getUserTiles()));
+  readonly userTiles = this.read(queries => queries.getUserTiles());
 
   constructor(
-    private readonly queriesService: QueriesService,
     private readonly state: State,
+    private readonly requireApp: () => Application,
   ) {}
 
-  areTilesSame = (firstTile: GameTile, secondTile: GameTile): boolean => this.queriesService.areTilesSame(firstTile, secondTile);
+  areTilesSame = (firstTile: GameTile, secondTile: GameTile): boolean =>
+    this.requireApp().queriesService.areTilesSame(firstTile, secondTile);
 
-  findCellWithTile = (tile: GameTile): GameCell | undefined => this.readBoard(() => this.queriesService.findCellWithTile(tile));
+  findCellWithTile = (tile: GameTile): GameCell | undefined =>
+    this.state.readBoard(() => this.requireApp().queriesService.findCellWithTile(tile));
 
   findTileOnCell = (cell: GameCell): GameTile | undefined => this.state.tileByCellCache.get(cell);
 
-  getAdjacentCells = (cell: GameCell): ReadonlyArray<GameCell> => this.queriesService.getAdjacentCells(cell);
+  getAdjacentCells = (cell: GameCell): ReadonlyArray<GameCell> => this.requireApp().queriesService.getAdjacentCells(cell);
 
   getCellBonus = (cell: GameCell): ReturnType<QueriesService['getCellBonus']> =>
-    this.readBoard(() => this.queriesService.getCellBonus(cell));
+    this.state.readBoard(() => this.requireApp().queriesService.getCellBonus(cell));
 
-  getCellColumnIndex = (cell: GameCell): number => this.queriesService.getCellColumnIndex(cell);
+  getCellColumnIndex = (cell: GameCell): number => this.requireApp().queriesService.getCellColumnIndex(cell);
 
-  getCellRowIndex = (cell: GameCell): number => this.queriesService.getCellRowIndex(cell);
+  getCellRowIndex = (cell: GameCell): number => this.requireApp().queriesService.getCellRowIndex(cell);
 
-  getLetterPoints = (letter: GameLetter): number => this.queriesService.getLetterPoints(letter);
+  getLetterPoints = (letter: GameLetter): number => this.requireApp().queriesService.getLetterPoints(letter);
 
-  getTileLetter = (tile: GameTile): ReturnType<QueriesService['getTileLetter']> => this.queriesService.getTileLetter(tile);
+  getTileLetter = (tile: GameTile): ReturnType<QueriesService['getTileLetter']> =>
+    this.requireApp().queriesService.getTileLetter(tile);
 
-  isCellCenter = (cell: GameCell): boolean => this.queriesService.isCellCenter(cell);
+  isCellCenter = (cell: GameCell): boolean => this.requireApp().queriesService.isCellCenter(cell);
 
-  isTilePlaced = (tile: GameTile): boolean => this.readBoard(() => this.queriesService.isTilePlaced(tile));
+  isTilePlaced = (tile: GameTile): boolean => this.state.readBoard(() => this.requireApp().queriesService.isTilePlaced(tile));
 
   wasTileUsedInPreviousTurn = (tile: GameTile): boolean =>
-    this.readBoard(() => this.queriesService.wasTileUsedInPreviousTurn(tile));
+    this.state.readBoard(() => this.requireApp().queriesService.wasTileUsedInPreviousTurn(tile));
 
-  private readBoard<T>(fn: () => T): T {
-    return this.state.readBoard(fn);
+  private read<T>(fn: (queries: QueriesService) => T): ComputedRef<T> {
+    return computed(() => this.state.read(() => fn(this.requireApp().queriesService)));
   }
 
-  private readState<T>(fn: () => T): T {
-    return this.state.read(fn);
+  private readBoard<T>(fn: (queries: QueriesService) => T): ComputedRef<T> {
+    return computed(() => this.state.readBoard(() => fn(this.requireApp().queriesService)));
   }
 }
 
@@ -208,10 +204,15 @@ class State {
 
   private readonly stateVersion = ref(0);
 
-  constructor(
-    private readonly findTileOnCell: (cell: GameCell) => GameTile | undefined,
-    private readonly boardCells: ReadonlyArray<GameCell>,
-  ) {}
+  constructor(private readonly appRef: ShallowRef<Application | null>) {
+    watch(
+      this.appRef,
+      () => {
+        this.syncTileByCellCache();
+      },
+      { flush: 'sync', immediate: true },
+    );
+  }
 
   incrementVersions(): void {
     this.boardVersion.value++;
@@ -253,9 +254,11 @@ class State {
   }
 
   private syncTileByCellCache(affectedCells?: ReadonlyArray<GameCell>): void {
-    const cells = affectedCells ?? this.boardCells;
+    const app = this.appRef.value;
+    if (app === null) return;
+    const cells = affectedCells ?? app.config.boardCells;
     for (const cell of cells) {
-      const tile = this.findTileOnCell(cell);
+      const tile = app.queriesService.findTileOnCell(cell);
       if (tile !== undefined) {
         if (this.tileByCellCache.get(cell) !== tile) this.tileByCellCache.set(cell, tile);
       } else if (this.tileByCellCache.has(cell)) {
@@ -266,34 +269,46 @@ class State {
 }
 
 export default class MainStore {
-  private static app: Application;
+  private static readonly SINGLETON = new MainStore();
 
   static readonly INSTANCE = defineStore('main', () => {
-    const store = new MainStore(MainStore.app);
+    const { appRef, bootProgress, launchError } = MainStore.SINGLETON;
+    const requireApp = (): Application => {
+      if (appRef.value === null) throw new Error('MainStore: app is not ready');
+      return appRef.value;
+    };
+    const state = new State(appRef);
+    const getters = new Getters(state, requireApp);
+    const actions = new Actions(state, requireApp);
     return {
-      ...MainStore.app.config,
-      ...(store.getters as { [K in keyof Getters]: Getters[K] }),
-      ...(store.actions as { [K in keyof Actions]: Actions[K] }),
+      boardCells: computed(() => appRef.value?.config.boardCells ?? []),
+      boardCellsPerAxis: computed(() => appRef.value?.config.boardCellsPerAxis ?? 0),
+      bootProgress,
+      launchError,
+      tilesPerPlayer: computed(() => appRef.value?.config.tilesPerPlayer ?? 0),
+      ...(getters as { [K in keyof Getters]: Getters[K] }),
+      ...(actions as { [K in keyof Actions]: Actions[K] }),
     };
   });
 
-  private readonly actions: Actions;
+  private readonly appRef = shallowRef<Application | null>(null);
 
-  private readonly getters: Getters;
+  private readonly bootProgress = ref(0);
 
-  private readonly state: State;
-
-  private constructor(app: Application) {
-    this.state = new State(cell => app.queriesService.findTileOnCell(cell), app.config.boardCells);
-    this.getters = new Getters(app.queriesService, this.state);
-    this.actions = new Actions(app.commandsService, app.queriesService, app.schedulingService, this.state);
-    const dictionaryLoad = this.state.write(() => app.loadDictionary());
-    dictionaryLoad.catch((error: unknown) => {
-      launchError.value = error instanceof Error ? error.message : String(error);
-    });
-  }
+  private readonly launchError = ref<null | string>(null);
 
   static async initiate(): Promise<void> {
-    MainStore.app = markRaw(await launchWords());
+    const singleton = MainStore.SINGLETON;
+    const { app: appPromise, bootObserver } = launchWords();
+    bootObserver.subscribe(value => {
+      singleton.bootProgress.value = value;
+    });
+    const app = await appPromise;
+    singleton.appRef.value = markRaw(app);
+    try {
+      await app.bootDictionary();
+    } catch (error: unknown) {
+      singleton.launchError.value = error instanceof Error ? error.message : String(error);
+    }
   }
 }

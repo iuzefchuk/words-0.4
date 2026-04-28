@@ -1,3 +1,4 @@
+import { BootProgress } from '@/application/enums.ts';
 import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
 import { AppConfig, AppDependencies, AppServices, GameDictionary, GameMatchSettings } from '@/application/types/index.ts';
@@ -54,10 +55,14 @@ export default class Application {
       : Game.create(services.identity, services.seeding, settings);
   }
 
-  async loadDictionary(): Promise<void> {
+  async bootDictionary(): Promise<void> {
     const { config, services, tasks } = this.dependencies;
+    services.bootObserver.publish(BootProgress.Initialized);
     const buffer = await services.file.loadBuffer(config.dictionaryUrl);
+    services.bootObserver.publish(BootProgress.DictionaryFetched);
     this.game.setDictionary(GameDictionary.createFromBuffer(buffer));
+    services.bootObserver.publish(BootProgress.DictionaryParsed);
     await services.worker.init(tasks.turnGeneration, buffer);
+    services.bootObserver.publish(BootProgress.Done);
   }
 }

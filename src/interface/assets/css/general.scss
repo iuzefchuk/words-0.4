@@ -21,7 +21,7 @@
 
   --tile-bg-primary: var(--color-gray-800);
   --tile-color-primary: var(--color-gray-100);
-  --tile-pts-color-primary: var(--color-gray-200);
+  --tile-pts-color-primary: var(--tile-color-primary);
 
   --tile-bg-secondary: var(--color-gray-600);
   --tile-color-secondary: var(--color-gray-100);
@@ -29,7 +29,7 @@
 
   --tile-bg-tertiary: var(--color-gray-500);
   --tile-color-tertiary: var(--color-gray-50);
-  --tile-pts-color-tertiary: var(--color-gray-100);
+  --tile-pts-color-tertiary: var(--color-gray-200);
 
   --tile-outline: 2px solid var(--color-gray-900);
 

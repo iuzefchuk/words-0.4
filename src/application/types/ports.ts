@@ -16,6 +16,11 @@ export type FileService = {
   loadBuffer(url: string): Promise<ArrayBufferLike>;
 };
 
+export type ObserverService = {
+  publish(value: number): void;
+  subscribe(callback: (value: number) => void): void;
+};
+
 export type SchedulingService = {
   getCurrentTime(): number;
   wait(ms: number): Promise<void>;

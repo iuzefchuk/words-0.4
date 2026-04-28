@@ -35,24 +35,22 @@ const tileAccent = computed(() => {
     }"
     @click.stop="eventHandlers.handleClickBoardCell(cell)"
   >
-    <Transition name="fade" appear>
-      <svg
-        v-if="bonus"
-        :class="{
-          cell__bonus: true,
-          'cell__bonus--quaternary': bonus === GameBonus.DoubleLetter,
-          'cell__bonus--tertiary': bonus === GameBonus.TripleLetter,
-          'cell__bonus--secondary': bonus === GameBonus.DoubleWord,
-          'cell__bonus--primary': bonus === GameBonus.TripleWord,
-        }"
-        class="cell__bonus"
-        viewBox="0 0 40 40"
-      >
-        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central">
-          {{ bonusName }}
-        </text>
-      </svg>
-    </Transition>
+    <svg
+      v-if="bonus"
+      :class="{
+        cell__bonus: true,
+        'cell__bonus--quaternary': bonus === GameBonus.DoubleLetter,
+        'cell__bonus--tertiary': bonus === GameBonus.TripleLetter,
+        'cell__bonus--secondary': bonus === GameBonus.DoubleWord,
+        'cell__bonus--primary': bonus === GameBonus.TripleWord,
+      }"
+      class="cell__bonus"
+      viewBox="0 0 40 40"
+    >
+      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central">
+        {{ bonusName }}
+      </text>
+    </svg>
     <Transition name="fade" appear>
       <AppTile
         v-if="tile && tileAccent"

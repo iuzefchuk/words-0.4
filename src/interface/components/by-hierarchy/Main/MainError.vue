@@ -1,6 +1,8 @@
 <script lang="ts" setup>
+import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import { launchError } from '@/interface/stores/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
+const { launchError } = storeToRefs(MainStore.INSTANCE());
 const message = computed(() =>
   launchError.value === null ? '' : window.text('game.error_launch', { error: launchError.value }),
 );

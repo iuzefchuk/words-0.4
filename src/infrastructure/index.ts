@@ -3,6 +3,7 @@ import TurnGenerationWorker from '@/application/workers/turnGeneration.worker.ts
 import IndexedDbEventRepository from '@/infrastructure/repositories/IndexedDbEventRepository.ts';
 import LocalStorageSettingsRepository from '@/infrastructure/repositories/LocalStorageSettingsRepository.ts';
 import AsyncSchedulingService from '@/infrastructure/services/AsyncSchedulingService.ts';
+import CallbackObserverService from '@/infrastructure/services/CallbackObserverService.ts';
 import CryptoIdentityService from '@/infrastructure/services/CryptoIdentityService.ts';
 import CryptoSeedingService from '@/infrastructure/services/CryptoSeedingService.ts';
 import FetchFileService from '@/infrastructure/services/FetchFileService.ts';
@@ -23,6 +24,7 @@ export default class Infrastructure {
         settings: new LocalStorageSettingsRepository(),
       },
       services: {
+        bootObserver: new CallbackObserverService(),
         file: new FetchFileService(),
         identity,
         scheduling: new AsyncSchedulingService(),
