@@ -24,7 +24,7 @@ class Actions {
   };
 
   changeMatchType = (matchType: GameMatchType): void => {
-    this.state.writeBoard(() => {
+    this.state.write(() => {
       this.requireApp().commandsService.changeMatchType(matchType);
     });
   };
