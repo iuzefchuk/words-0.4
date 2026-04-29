@@ -1,82 +1,102 @@
 import { describe, expect, test } from 'vitest';
 import { Axis } from '@/domain/models/board/enums.ts';
 import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
-import { AnchorCoordinates, Cell } from '@/domain/models/board/types.ts';
+import { Cell } from '@/domain/models/board/types.ts';
 
-describe('LayoutService', () => {
-  let matrix = [] as ReadonlyArray<ReadonlyArray<number>>;
+class IndexMatrix {
+  get entries(): ReadonlyArray<{ cell: number; column: number; row: number }> {
+    return this.grid.flatMap((rowCells, row) => rowCells.map((cell, column) => ({ cell, column, row })));
+  }
 
-  beforeEach(() => {
-    matrix = buildIndexMatrix();
-  });
+  private get grid(): ReadonlyArray<ReadonlyArray<number>> {
+    return Array.from({ length: this.size }, (_, row) =>
+      Array.from({ length: this.size }, (_, column) => row * this.size + column),
+    );
+  }
 
-  afterEach(() => {
-    matrix = [];
-  });
+  constructor(public readonly size: number) {}
 
-  describe('CELLS_PER_AXIS value', () => {
+  getAxisCells(axis: Axis, row: number, column: number): ReadonlyArray<number> {
+    switch (axis) {
+      case Axis.X: {
+        const rowCells = this.grid[row];
+        if (rowCells === undefined) throw new ReferenceError(`expected row at index ${String(row)}, got undefined`);
+        return rowCells;
+      }
+      case Axis.Y: {
+        return this.grid.map(otherRow => {
+          const columnCell = otherRow[column];
+          if (columnCell === undefined) throw new ReferenceError(`expected cell at column ${String(column)}, got undefined`);
+          return columnCell;
+        });
+      }
+      default:
+        throw new ReferenceError(`expected axis to be one of ${Object.values(Axis).join(', ')}, got ${String(axis)}`);
+    }
+  }
+
+  getOrthogonalNeighbors(row: number, column: number): ReadonlyArray<number> {
+    const offsets: ReadonlyArray<readonly [number, number]> = [
+      [0, -1],
+      [0, 1],
+      [-1, 0],
+      [1, 0],
+    ];
+    return offsets
+      .map(([rowOffset, columnOffset]) => this.grid[row + rowOffset]?.[column + columnOffset])
+      .filter((value): value is number => value !== undefined);
+  }
+}
+
+describe('Layout service', () => {
+  const matrix = new IndexMatrix(LayoutService.CELLS_PER_AXIS);
+
+  describe('CELLS_PER_AXIS', () => {
     test('is greater than 0', () => {
       expect(LayoutService.CELLS_PER_AXIS).toBeGreaterThan(0);
     });
   });
-  describe('DEFAULT_AXIS value', () => {
-    test('to be an axis', () => {
+
+  describe('DEFAULT_AXIS', () => {
+    test('is an axis', () => {
       expect(LayoutService.DEFAULT_AXIS).toBeOneOf(Object.values(Axis));
     });
   });
-  describe('getAdjacentCells method', () => {
-    matrix.forEach((matrixRow, row) => {
-      describe.each(matrixRow)('for $cell', (cell, column) => {
-        test('returns geometrically expected values', () => {
-          const actual = LayoutService.getAdjacentCells(cell as Cell);
-          const expected = getOrthogonalNeighbors(matrix, row, column);
-          expect(actual).toEqual(expected);
-        });
+
+  describe.each(matrix.entries)('for $cell', ({ cell, column, row }) => {
+    test('getAdjacentCellseturns returns geometrically expected value', () => {
+      const actual = LayoutService.getAdjacentCells(cell as Cell);
+      const expected = matrix.getOrthogonalNeighbors(row, column);
+      expect(actual).toEqual(expected);
+    });
+    test('getCellPositionInColumn returns geometrically expected value', () => {
+      expect(LayoutService.getCellPositionInColumn(cell as Cell)).toEqual(column);
+    });
+    test('getCellPositionInRow returns geometrically expected value', () => {
+      expect(LayoutService.getCellPositionInRow(cell as Cell)).toEqual(row);
+    });
+    test('isCellOnBottomEdge returns geometrically expected value', () => {
+      expect(LayoutService.isCellOnBottomEdge(cell as Cell)).toEqual(row === matrix.size - 1);
+    });
+    test('isCellOnLeftEdge returns geometrically expected value', () => {
+      expect(LayoutService.isCellOnLeftEdge(cell as Cell)).toEqual(column === 0);
+    });
+    test('isCellOnRightEdge returns geometrically expected value', () => {
+      expect(LayoutService.isCellOnRightEdge(cell as Cell)).toEqual(column === matrix.size - 1);
+    });
+    test('isCellOnTopEdge returns geometrically expected value', () => {
+      expect(LayoutService.isCellOnTopEdge(cell as Cell)).toEqual(row === 0);
+    });
+    describe.each(Object.values(Axis))('for $axis', axis => {
+      test('getAxisCells returns geometrically expected value', () => {
+        const actual = LayoutService.getAxisCells({ axis, cell });
+        const expected = matrix.getAxisCells(axis, row, column);
+        expect(actual).toEqual(expected);
       });
     });
   });
-  describe('getAxisCells method', () => {
-    matrix.forEach(matrixRow => {
-      describe.each(matrixRow)('for $cell', (cell, column) => {
-        describe.each(Object.values(Axis))('for $axis', axis => {
-          const actual = LayoutService.getAxisCells({ axis, cell } as AnchorCoordinates);
-          // TODO move this expected logic into IndexMatrix class when it's created
-          let expected: ReadonlyArray<Cell>;
-          if (axis === Axis.X) {
-            expected = matrixRow as ReadonlyArray<Cell>;
-          } else {
-            expected = matrix.map(otherRow => {
-              const columnCell = otherRow[column];
-              if (columnCell === undefined) throw new ReferenceError('Cell must be defined');
-              return columnCell as Cell;
-            });
-          }
-          test('returns geometrically expected values', () => {
-            expect(actual).toEqual(expected);
-          });
-        });
-      });
-    });
-  });
-  describe('getCellPositionInColumn method', () => {
-    matrix.forEach(matrixRow => {
-      describe.each(matrixRow)('for $cell', (cell, column) => {
-        test('returns geometrically expected value', () => {
-          expect(LayoutService.getCellPositionInColumn(cell as Cell)).toEqual(column);
-        });
-      });
-    });
-  });
-  describe('getCellPositionInRow method', () => {
-    matrix.forEach((matrixRow, row) => {
-      describe.each(matrixRow)('for $cell', cell => {
-        test('returns geometrically expected value', () => {
-          expect(LayoutService.getCellPositionInRow(cell as Cell)).toEqual(row);
-        });
-      });
-    });
-  });
-  describe('getOppositeAxis method', () => {
+
+  describe('getOppositeAxis', () => {
     describe.each(Object.values(Axis))('for $axis', axis => {
       test('returns axis', () => {
         expect(LayoutService.getOppositeAxis(axis)).toBeOneOf(Object.values(Axis));
@@ -86,78 +106,4 @@ describe('LayoutService', () => {
       });
     });
   });
-  describe('isCellOnBottomEdge method', () => {
-    matrix.forEach((matrixRow, row) => {
-      describe.each(matrixRow)('for $cell', (cell, column) => {
-        test('returns geometrically expected value', () => {
-          const actual = LayoutService.isCellOnBottomEdge(cell as Cell);
-          const expected = row === matrix.length - 1;
-          expect(actual).toEqual(expected);
-        });
-      });
-    });
-  });
-  describe('isCellOnLeftEdge method', () => {
-    matrix.forEach((matrixRow, row) => {
-      describe.each(matrixRow)('for $cell', (cell, column) => {
-        test('returns geometrically expected value', () => {
-          const actual = LayoutService.isCellOnLeftEdge(cell as Cell);
-          const expected = column === 0;
-          expect(actual).toEqual(expected);
-        });
-      });
-    });
-  });
-  describe('isCellOnRightEdge method', () => {
-    matrix.forEach((matrixRow, row) => {
-      describe.each(matrixRow)('for $cell', (cell, column) => {
-        test('returns geometrically expected value', () => {
-          const actual = LayoutService.isCellOnRightEdge(cell as Cell);
-          const expected = column === matrixRow.length - 1;
-          expect(actual).toEqual(expected);
-        });
-      });
-    });
-  });
-  describe('isCellOnTopEdge method', () => {
-    matrix.forEach((matrixRow, row) => {
-      describe.each(matrixRow)('for $cell', (cell, column) => {
-        test('returns geometrically expected value', () => {
-          const actual = LayoutService.isCellOnTopEdge(cell as Cell);
-          const expected = row === 0;
-          expect(actual).toEqual(expected);
-        });
-      });
-    });
-  });
 });
-
-// TODO create class IndexMatrix and encapsulate buildIndexMatrix & getOrthogonalNeighbors in there
-
-function buildIndexMatrix(): ReadonlyArray<ReadonlyArray<number>> {
-  return Array.from({ length: LayoutService.CELLS_PER_AXIS ** 2 }, (_, index) => index).reduce<Array<Array<number>>>(
-    (rowsSoFar, index) => {
-      const lastRow = rowsSoFar[rowsSoFar.length - 1];
-      if (lastRow !== undefined && lastRow.length < LayoutService.CELLS_PER_AXIS) lastRow.push(index);
-      else rowsSoFar.push([index]);
-      return rowsSoFar;
-    },
-    [],
-  );
-}
-
-function getOrthogonalNeighbors<T>(matrix: ReadonlyArray<ReadonlyArray<T>>, row: number, column: number): ReadonlyArray<T> {
-  return [
-    [0, -1],
-    [0, 1],
-    [-1, 0],
-    [1, 0],
-  ]
-    .map(([rowOffset, columnOffset]) => {
-      if (rowOffset === undefined || columnOffset === undefined) {
-        throw new ReferenceError('Offsets must be defined');
-      }
-      return matrix[row + rowOffset]?.[column + columnOffset];
-    })
-    .filter((neighbor): neighbor is T => neighbor !== undefined);
-}
