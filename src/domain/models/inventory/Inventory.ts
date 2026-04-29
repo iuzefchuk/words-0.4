@@ -12,11 +12,11 @@ class TilePool {
   }
 
   private constructor(
-    private readonly capacity: number | undefined,
+    private readonly capacity: number,
     private readonly tiles: Array<Tile>,
   ) {}
 
-  static create({ capacity, tiles }: { capacity?: number; tiles?: Array<Tile> } = {}): TilePool {
+  static create({ capacity = Infinity, tiles }: { capacity?: number; tiles?: Array<Tile> } = {}): TilePool {
     return new TilePool(capacity, tiles ?? []);
   }
 
@@ -41,7 +41,7 @@ class TilePool {
   }
 
   private validateCapacity(newTileCount: number): void {
-    if (this.capacity !== undefined && newTileCount > this.capacity) {
+    if (newTileCount > this.capacity) {
       throw new Error(`cannot add tile: pool capacity ${String(this.capacity)} exceeded`);
     }
   }

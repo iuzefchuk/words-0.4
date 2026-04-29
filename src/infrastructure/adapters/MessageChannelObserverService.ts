@@ -1,5 +1,6 @@
 import { ObserverService } from '@/application/types/ports.ts';
 
+// TODO check if this implementation is necessary
 export default class MessageChannelObserverService implements ObserverService {
   private readonly channel = new MessageChannel();
 

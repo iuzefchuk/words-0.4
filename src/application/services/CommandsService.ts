@@ -154,6 +154,7 @@ export default class CommandsService {
   }
 
   private async ensureMinimumDuration<T>(callback: () => Promise<T> | T): Promise<T> {
+    // TODO move this method to schedulingService
     const startTime = this.schedulingService.getCurrentTime();
     const result = await callback();
     const elapsed = this.schedulingService.getCurrentTime() - startTime;

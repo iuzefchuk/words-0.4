@@ -1,14 +1,14 @@
 import { AppDependencies } from '@/application/types/index.ts';
 import TurnGenerationWorker from '@/application/workers/turnGeneration.worker.ts?worker';
+import AsyncSchedulingService from '@/infrastructure/adapters/AsyncSchedulingService.ts';
+import CryptoIdentityService from '@/infrastructure/adapters/CryptoIdentityService.ts';
+import CryptoSeedingService from '@/infrastructure/adapters/CryptoSeedingService.ts';
+import FetchFileService from '@/infrastructure/adapters/FetchFileService.ts';
+import MessageChannelObserverService from '@/infrastructure/adapters/MessageChannelObserverService.ts';
+import WebWorkerService from '@/infrastructure/adapters/WebWorkerService.ts';
 import IndexedDbEventRepository from '@/infrastructure/repositories/IndexedDbEventRepository.ts';
 import LocalStorageSettingsRepository from '@/infrastructure/repositories/LocalStorageSettingsRepository.ts';
-import AsyncSchedulingService from '@/infrastructure/services/AsyncSchedulingService.ts';
-import CryptoIdentityService from '@/infrastructure/services/CryptoIdentityService.ts';
-import CryptoSeedingService from '@/infrastructure/services/CryptoSeedingService.ts';
-import FetchFileService from '@/infrastructure/services/FetchFileService.ts';
-import MessageChannelObserverService from '@/infrastructure/services/MessageChannelObserverService.ts';
 import VersioningService from '@/infrastructure/services/VersioningService.ts';
-import WebWorkerService from '@/infrastructure/services/WebWorkerService.ts';
 
 export default class Infrastructure {
   private static readonly DICTIONARY_URL = '/dictionary.bin';

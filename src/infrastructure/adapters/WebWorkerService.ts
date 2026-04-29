@@ -14,6 +14,7 @@ type StreamState = {
   resolve: (() => void) | null;
 };
 
+// TODO separate service and adapter
 export default class WebWorkerService implements WorkerService {
   private readonly pool = new Map<string, Array<Worker>>();
 
