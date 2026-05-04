@@ -9,6 +9,6 @@ export type Event =
   | { matchType: GameMatchType; seed: number; type: EventType.MatchTypeChanged }
   | { player: GamePlayer; score: number; type: EventType.TurnSaved; words: ReadonlyArray<string> }
   | { player: GamePlayer; type: EventType.TurnPassed }
-  | { result: GameValidationResult; type: EventType.TurnValidated }
+  | { result: GameValidationResult; type: EventType.TurnValidationSet }
   | { seed: number; settings: GameMatchSettings; type: EventType.MatchStarted }
   | { type: EventType.MatchFinished; winner: GamePlayer | null };

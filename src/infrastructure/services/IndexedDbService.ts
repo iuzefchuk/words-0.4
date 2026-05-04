@@ -1,9 +1,7 @@
-type Meta = { appVersion: string };
-
 export default class IndexedDbService<T> {
-  private static readonly SCHEMA_VERSION = 3;
+  private static readonly APP_VERSION_KEY = 'appVersion';
 
-  private static readonly SINGLETON_KEY = 1;
+  private static readonly SCHEMA_VERSION = 3;
 
   private dbPromise: null | Promise<IDBDatabase> = null;
 
@@ -35,9 +33,9 @@ export default class IndexedDbService<T> {
   async load(appVersion: string): Promise<null | ReadonlyArray<T>> {
     try {
       const db = await this.openDatabase();
-      const meta = await this.getMeta(db);
-      if (meta === undefined) return null;
-      if (meta.appVersion !== appVersion) {
+      const storedAppVersion = await this.getStoredAppVersion(db);
+      if (storedAppVersion === undefined) return null;
+      if (storedAppVersion !== appVersion) {
         await this.clearAll(db);
         return null;
       }
@@ -61,7 +59,7 @@ export default class IndexedDbService<T> {
       };
       const eventsStore = transaction.objectStore(this.eventsStore);
       for (const event of events) eventsStore.add(event);
-      transaction.objectStore(this.metaStore).put({ appVersion } satisfies Meta, IndexedDbService.SINGLETON_KEY);
+      transaction.objectStore(this.metaStore).put(appVersion, IndexedDbService.APP_VERSION_KEY);
     });
   }
 
@@ -95,12 +93,12 @@ export default class IndexedDbService<T> {
     });
   }
 
-  private getMeta(db: IDBDatabase): Promise<Meta | undefined> {
+  private getStoredAppVersion(db: IDBDatabase): Promise<string | undefined> {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(this.metaStore, 'readonly');
-      const request = transaction.objectStore(this.metaStore).get(IndexedDbService.SINGLETON_KEY);
+      const request = transaction.objectStore(this.metaStore).get(IndexedDbService.APP_VERSION_KEY);
       request.onsuccess = () => {
-        resolve(request.result as Meta | undefined);
+        resolve(request.result as string | undefined);
       };
       request.onerror = () => {
         reject(request.error ?? new Error('IndexedDB request failed'));

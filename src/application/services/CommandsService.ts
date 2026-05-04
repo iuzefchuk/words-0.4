@@ -186,7 +186,7 @@ export default class CommandsService {
       case GameEventType.MatchTypeChanged:
       case GameEventType.TilePlaced:
       case GameEventType.TileUndoPlaced:
-      case GameEventType.TurnValidated:
+      case GameEventType.TurnValidationSet:
         throw new ReferenceError(`unexpected opponent event type "${event.type}"`);
     }
   }

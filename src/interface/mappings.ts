@@ -17,7 +17,7 @@ export function getEventSound(event: GameEvent): null | Sound {
     case GameEventType.MatchDifficultyChanged:
     case GameEventType.MatchStarted:
     case GameEventType.MatchTypeChanged:
-    case GameEventType.TurnValidated:
+    case GameEventType.TurnValidationSet:
       return null;
     case GameEventType.MatchFinished:
       return getMatchFinishedSound(event.winner);

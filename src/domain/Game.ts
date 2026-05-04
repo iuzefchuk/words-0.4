@@ -151,7 +151,7 @@ export default class Game {
       if (tile === undefined) throw new ReferenceError(`expected tile at index ${String(idx)}, got undefined`);
       this.applyEvent({ cell, tile, type: GameEventType.TilePlaced });
     }
-    this.applyEvent({ result: result.validationResult, type: GameEventType.TurnValidated });
+    this.applyEvent({ result: result.validationResult, type: GameEventType.TurnValidationSet });
     const { score } = result.validationResult;
     const { words } = this.saveTurnForCurrentPlayer();
     return { score, words };
@@ -191,7 +191,7 @@ export default class Game {
       case GameEventType.TurnSaved:
         this.applyTurnSaved(event.player, event.score);
         break;
-      case GameEventType.TurnValidated:
+      case GameEventType.TurnValidationSet:
         this.turns.recordValidationResult(event.result);
         break;
       default: {
@@ -221,7 +221,7 @@ export default class Game {
       if (cell === undefined) throw new Error(`tile ${tile} is not on the board`);
       this.applyEvent({ cell, tile, type: GameEventType.TileUndoPlaced });
     }
-    this.applyEvent({ result: { status: GameValidationStatus.Unvalidated }, type: GameEventType.TurnValidated });
+    this.applyEvent({ result: { status: GameValidationStatus.Unvalidated }, type: GameEventType.TurnValidationSet });
   }
 
   createTurnGenerationContext(): GameGeneratorContext {
@@ -236,7 +236,7 @@ export default class Game {
   }
 
   invalidateTurnForCurrentPlayer(): void {
-    this.applyEvent({ result: { status: GameValidationStatus.Unvalidated }, type: GameEventType.TurnValidated });
+    this.applyEvent({ result: { status: GameValidationStatus.Unvalidated }, type: GameEventType.TurnValidationSet });
   }
 
   passTurnForCurrentPlayer(): void {
@@ -305,7 +305,7 @@ export default class Game {
       inventory: this.inventory,
       turns: this.turns,
     });
-    this.applyEvent({ result, type: GameEventType.TurnValidated });
+    this.applyEvent({ result, type: GameEventType.TurnValidationSet });
   }
 
   wasTileUsedInPreviousTurn(tile: GameTile): boolean {

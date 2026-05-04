@@ -7,5 +7,5 @@ export enum EventType {
   TileUndoPlaced = 'TileUndoPlaced',
   TurnPassed = 'TurnPassed',
   TurnSaved = 'TurnSaved',
-  TurnValidated = 'TurnValidated',
+  TurnValidationSet = 'TurnValidationSet',
 }

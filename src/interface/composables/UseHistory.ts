@@ -45,7 +45,7 @@ export default class UseHistory {
       case GameEventType.MatchTypeChanged:
       case GameEventType.TilePlaced:
       case GameEventType.TileUndoPlaced:
-      case GameEventType.TurnValidated:
+      case GameEventType.TurnValidationSet:
         return '';
       case GameEventType.TurnPassed:
         return UseHistory.getPassText(event.player);
