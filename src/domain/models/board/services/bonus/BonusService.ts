@@ -81,7 +81,7 @@ export default class BonusService {
   }
 
   private static createRandomDistribution(randomizer: () => number = Math.random): BonusDistribution {
-    const availableCells = LayoutService.CELLS_BY_INDEX.filter(cell => cell !== LayoutService.CENTER_CELL);
+    const availableCells = LayoutService.CELLS.filter(cell => cell !== LayoutService.CENTER_CELL);
     shuffleWithFisherYates({ array: availableCells, randomizer });
     const result = new Map<Cell, Bonus>();
     const bonuses = this.PRESET_DISTRIBUTION.values();

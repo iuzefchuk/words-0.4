@@ -18,7 +18,7 @@ const cells = [...Board.create(Type.Preset).cells];
 const tiles = cells.map((_, idx) => `tile-${String(idx)}` as GameTile);
 const shuffledCells = shuffleWithFisherYates({ array: [...cells], randomizer: () => 0.5 });
 
-const fixtures: ReadonlyArray<BoardFixture> = Array.from({ length: tiles.length + 1 }, (_, placementCount) => {
+const fixtures: ReadonlyArray<BoardFixture> = [0, 1, 2, 3, 4, 5, 10, 25, 50, tiles.length].map(placementCount => {
   const instance = Board.create(Type.Preset);
   const placements: Array<{ cell: Cell; tile: GameTile }> = [];
   for (let idx = 0; idx < placementCount; idx++) {

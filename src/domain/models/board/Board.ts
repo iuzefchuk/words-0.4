@@ -17,7 +17,7 @@ export default class Board {
   }
 
   get cells(): ReadonlyArray<Cell> {
-    return LayoutService.CELLS_BY_INDEX;
+    return LayoutService.CELLS;
   }
 
   get cellsPerAxis(): number {
@@ -75,17 +75,16 @@ export default class Board {
       const firstOccupiedAdjacent = occupiedAdjacents[0];
       normalizedSequence = firstOccupiedAdjacent === undefined ? [] : [firstOccupiedAdjacent, firstCell];
     }
-    if (normalizedSequence.length > 0) {
-      const [firstIndex] = normalizedSequence;
-      if (firstIndex === undefined) throw new ReferenceError('expected first index, got undefined');
-      const firstColumn = LayoutService.getCellPositionInColumn(firstIndex);
-      const isVertical = normalizedSequence.every(cell => LayoutService.getCellPositionInColumn(cell) === firstColumn);
-      if (isVertical) return Axis.Y;
-      const firstRow = LayoutService.getCellPositionInRow(firstIndex);
-      const isHorizontal = normalizedSequence.every(cell => LayoutService.getCellPositionInRow(cell) === firstRow);
-      if (isHorizontal) return Axis.X;
-    }
-    return LayoutService.DEFAULT_AXIS;
+    if (normalizedSequence.length === 0) return LayoutService.DEFAULT_AXIS;
+    const [firstIndex] = normalizedSequence;
+    if (firstIndex === undefined) throw new ReferenceError('expected first index, got undefined');
+    const firstColumn = LayoutService.getCellPositionInColumn(firstIndex);
+    const isVertical = normalizedSequence.every(cell => LayoutService.getCellPositionInColumn(cell) === firstColumn);
+    if (isVertical) return Axis.Y;
+    const firstRow = LayoutService.getCellPositionInRow(firstIndex);
+    const isHorizontal = normalizedSequence.every(cell => LayoutService.getCellPositionInRow(cell) === firstRow);
+    if (isHorizontal) return Axis.X;
+    throw new Error('cells are not aligned along a single axis');
   }
 
   findCellByTile(tile: GameTile): Cell | undefined {

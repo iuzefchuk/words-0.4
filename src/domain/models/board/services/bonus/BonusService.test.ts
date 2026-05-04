@@ -22,25 +22,27 @@ describe('BonusService', () => {
       const distributionsFromOtherTypes = Object.values(Type)
         .filter(someType => someType !== type)
         .map(otherType => BonusService.createDistribution(otherType));
-
-      test('creates distribution that is not empty', () => {
+      test('returns not empty result', () => {
         expect(distribution.size).toBeGreaterThan(0);
       });
-      describe.each(distributionsFromOtherTypes)('comparing with others', otherDistribution => {
-        test('creates different distribution', () => {
+      test('returns not full result', () => {
+        expect(distribution.size).toBeLessThan(LayoutService.CELLS.length);
+      });
+      describe.each(distributionsFromOtherTypes)('comparing w/ others', otherDistribution => {
+        test('returns different result', () => {
           expect(distribution).not.toEqual(otherDistribution);
         });
-        test('creates same size distribution', () => {
+        test('returns same size result', () => {
           expect(distribution.size).toBe(otherDistribution.size);
         });
       });
     });
     describe('only for Preset', () => {
       const presetDistribution = BonusService.createDistribution(Type.Preset);
-      test('creates distribution that is same', () => {
+      test('returns same result', () => {
         expect(presetDistribution).toEqual(BonusService.createDistribution(Type.Preset));
       });
-      test('creates distribution that is D4-symmetric', () => {
+      test('returns D4-symmetric result', () => {
         const symmetryQuadruples = buildSymmetryQuadruples(LayoutService.CELLS_PER_AXIS) as ReadonlyArray<
           readonly [Cell, Cell, Cell, Cell]
         >;
@@ -56,16 +58,16 @@ describe('BonusService', () => {
       });
     });
     describe('only for Random', () => {
-      describe('with same randomizer', () => {
-        test('creates distribution that is same', () => {
+      describe('w/ same randomizer', () => {
+        test('returns same result', () => {
           const randomizer = (): number => 0.5;
           const actual = BonusService.createDistribution(Type.Random, randomizer);
           const expected = BonusService.createDistribution(Type.Random, randomizer);
           expect(actual).toEqual(expected);
         });
       });
-      describe('with different randomizer', () => {
-        test('creates distribution that is different', () => {
+      describe('w/ different randomizers', () => {
+        test('returns different result', () => {
           const firstRandomizer = (): number => 0.25;
           const secondRandomizer = (): number => 0.5;
           const actual = BonusService.createDistribution(Type.Random, firstRandomizer);
@@ -73,8 +75,8 @@ describe('BonusService', () => {
           expect(actual).not.toEqual(notExpected);
         });
       });
-      describe('without randomizer', () => {
-        test('creates distribution that is different', () => {
+      describe('w/out randomizer', () => {
+        test('returns different result', () => {
           const actual = BonusService.createDistribution(Type.Random);
           const notExpected = BonusService.createDistribution(Type.Random);
           expect(actual).not.toEqual(notExpected);

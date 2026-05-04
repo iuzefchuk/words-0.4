@@ -1,82 +1,66 @@
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import Board from '@/domain/models/board/Board.ts';
+import { Axis, Bonus, Type } from '@/domain/models/board/enums.ts';
 import fixtures from '@/domain/models/board/fixtures.ts';
+import BonusService from '@/domain/models/board/services/bonus/BonusService.ts';
+import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
+import { BonusDistribution, Cell, Placement } from '@/domain/models/board/types.ts';
+import { GameTile } from '@/domain/types/index.ts';
 
 describe('Board', () => {
   describe.each(fixtures)('for $desc', ({ instance, meta: { placements, unusedCells, unusedTiles } }) => {
     describe('anchorCells', () => {
-      test('returns unique values', () => {
+      test('does not return duplicates', () => {
         const result = [...instance.anchorCells];
         const duplicates = result.filter((cell, idx) => result.indexOf(cell) !== idx);
         expect(duplicates).toEqual([]);
       });
-      test('returns unoccupied cells', () => {
+      test('does not return occupied', () => {
         const occupied = [...instance.anchorCells].filter(cell => instance.isCellOccupied(cell));
         expect(occupied).toEqual([]);
       });
-      test.skipIf(placements.length === 0)('returns cells w/ adjacent tiles for non-empty board', () => {
-        const withoutAdjacentTiles = [...instance.anchorCells].filter(
-          cell => !instance.getAdjacentCells(cell).some(adj => instance.isCellOccupied(adj)),
-        );
-        expect(withoutAdjacentTiles).toEqual([]);
-      });
+      if (placements.length > 0) {
+        test('does not return cells w/out adjacent tiles', () => {
+          const withoutAdjacentTiles = [...instance.anchorCells].filter(
+            cell => !instance.getAdjacentCells(cell).some(adj => instance.isCellOccupied(adj)),
+          );
+          expect(withoutAdjacentTiles).toEqual([]);
+        });
+      }
     });
-    describe('cells', () => {
-      // covered in LayoutService.test.ts
-    });
-    describe('cellsPerAxis', () => {
-      // covered in LayoutService.test.ts
-    });
+
     describe('clone', () => {
       test('returns instance w/ same state', () => {
         expect(Board.clone(instance)).toEqual(instance);
       });
     });
-    describe('buildPlacement', () => {
-      // --
-    });
+
     describe('findCellByTile', () => {
       describe.each(placements)('for placed tile $tile', ({ cell, tile }) => {
-        test('finds a cell $cell', () => {
+        test('returns a cell $cell', () => {
           expect(instance.findCellByTile(tile)).toBe(cell);
         });
       });
       describe.each(unusedTiles)('for unplaced tile %s', tile => {
-        test('does not find a cell', () => {
+        test('does not return a cell', () => {
           expect(instance.findCellByTile(tile)).toBeUndefined();
         });
       });
     });
+
     describe('findTileByCell', () => {
       describe.each(placements)('for occupied cell $cell', ({ cell, tile }) => {
-        test('finds a tile $tile', () => {
+        test('returns a tile $tile', () => {
           expect(instance.findTileByCell(cell)).toBe(tile);
         });
       });
       describe.each(unusedCells)('for unoccupied cell %i', cell => {
-        test('does not find a tile', () => {
+        test('does not return a tile', () => {
           expect(instance.findTileByCell(cell)).toBeUndefined();
         });
       });
     });
-    describe('getAdjacentCells', () => {
-      // covered in LayoutService.test.ts
-    });
-    describe('getAxisCells', () => {
-      // covered in LayoutService.test.ts
-    });
-    describe('getCellPositionInColumn', () => {
-      // covered in LayoutService.test.ts
-    });
-    describe('getCellPositionInRow', () => {
-      // covered in LayoutService.test.ts
-    });
-    describe('getOppositeAxis', () => {
-      // covered in LayoutService.test.ts
-    });
-    describe('isCellCenter', () => {
-      // not covered
-    });
+
     describe('isCellOccupied', () => {
       describe.each(placements)('for occupied cell $cell', ({ cell }) => {
         test('returns true', () => {
@@ -89,12 +73,7 @@ describe('Board', () => {
         });
       });
     });
-    describe('isCellPositionAtAxisEnd', () => {
-      // not covered
-    });
-    describe('isCellPositionAtAxisStart', () => {
-      // not covered
-    });
+
     describe('isTilePlaced', () => {
       describe.each(placements)('for placed tile $tile', ({ tile }) => {
         test('returns true', () => {
@@ -107,20 +86,7 @@ describe('Board', () => {
         });
       });
     });
-    describe('placeTile', () => {
-      test('assigns unplaced tile to unoccupied cell', () => {
-        // --
-      });
-      test('does not assign unplaced tile to occupied cell', () => {
-        // --
-      });
-      test('does not assign placed tile to unoccupied cell', () => {
-        // --
-      });
-      test('does not assign placed tile to occupied cell', () => {
-        // --
-      });
-    });
+
     describe('resolvePlacement', () => {
       describe.each(placements)('for $cell and $tile', ({ cell, tile }) => {
         test('resolves placement', () => {
@@ -128,48 +94,326 @@ describe('Board', () => {
         });
       });
     });
-    describe('undoPlaceTile', () => {
-      test('removes placed tile', () => {
-        // --
+  });
+
+  describe.each(Object.values(Type))('for %s', type => {
+    const randomizer = (): number => 0.5;
+    let board: Board;
+    let distribution: BonusDistribution;
+    beforeEach(() => {
+      board = Board.create(type, randomizer);
+      distribution = BonusService.createDistribution(type, randomizer);
+    });
+
+    describe('create', () => {
+      test('assigns bonuses according to distribution type', () => {
+        const mismatches = [...distribution.entries()]
+          .filter(([cell, bonus]) => board.getBonus(cell) !== bonus)
+          .map(([cell, bonus]) => ({ actual: board.getBonus(cell), cell, expected: bonus }));
+        expect(mismatches).toEqual([]);
       });
-      test('does not remove unplaced tile', () => {
-        // --
-      });
-      test('allows new placement after placed tile removal', () => {
-        // --
+    });
+
+    describe('getBonus', () => {
+      test('does not return bonus for cells w/out bonus', () => {
+        const distributionCells = new Set(distribution.keys());
+        const spurious = board.cells
+          .filter(cell => !distributionCells.has(cell) && board.getBonus(cell) !== null)
+          .map(cell => ({ actual: board.getBonus(cell), cell }));
+        expect(spurious).toEqual([]);
       });
     });
   });
-  describe('create', () => {
-    // --
-  });
+
   describe('calculateAxis', () => {
-    test('returns default for single cell w/ no occupied adjacents', () => {
-      // --
+    const xAxisStep = 1;
+    const yAxisStep = LayoutService.CELLS_PER_AXIS;
+    const inputCell = 112 as Cell;
+    const placedTile = 'A' as GameTile;
+    let board: Board;
+    beforeEach(() => {
+      board = Board.create(Type.Preset);
     });
-    test('returns result from combo w/ first occupied adjacent for single cell w/ occupied adjacents', () => {
-      // --
+    test('returns default for single cell w/out occupied adjacents', () => {
+      expect(board.calculateAxis([inputCell])).toBe(LayoutService.DEFAULT_AXIS);
+    });
+    test('returns x for single cell w/ first right occupied adjacent', () => {
+      board.placeTile(inputCell, placedTile);
+      expect(board.calculateAxis([inputCell - xAxisStep].map(idx => idx as Cell))).toBe(Axis.X);
+    });
+    test('returns x for single cell w/ first left occupied adjacent', () => {
+      board.placeTile(inputCell, placedTile);
+      expect(board.calculateAxis([inputCell + xAxisStep].map(idx => idx as Cell))).toBe(Axis.X);
+    });
+    test('returns y for single cell w/ first bottom occupied adjacent', () => {
+      board.placeTile(inputCell, placedTile);
+      expect(board.calculateAxis([inputCell - yAxisStep].map(idx => idx as Cell))).toBe(Axis.Y);
+    });
+    test('returns y for single cell w/ first top occupied adjacent', () => {
+      board.placeTile(inputCell, placedTile);
+      expect(board.calculateAxis([inputCell + yAxisStep].map(idx => idx as Cell))).toBe(Axis.Y);
     });
     test('returns x for horizontal cell combo', () => {
-      // --
+      expect(board.calculateAxis([inputCell, inputCell + xAxisStep, inputCell + xAxisStep * 2].map(idx => idx as Cell))).toBe(
+        Axis.X,
+      );
     });
     test('returns y for vertical cell combo', () => {
-      // --
+      expect(board.calculateAxis([inputCell, inputCell + yAxisStep, inputCell + yAxisStep * 2].map(idx => idx as Cell))).toBe(
+        Axis.Y,
+      );
     });
-    test('returns default for diagonal cell combo', () => {
-      // --
+    test('throws error for diagonal cell combo', () => {
+      expect(() => {
+        board.calculateAxis(
+          [inputCell, inputCell + xAxisStep + yAxisStep, inputCell + (xAxisStep + yAxisStep) * 2].map(idx => idx as Cell),
+        );
+      }).toThrow();
     });
-    test('returns default for unconnected cell combo', () => {
-      // --
+    test('throws error for unconnected cell combo', () => {
+      expect(() => {
+        board.calculateAxis([inputCell, 100, 200].map(idx => idx as Cell));
+      }).toThrow();
     });
   });
+
   describe('getMultiplierForLetter', () => {
-    // --
+    let board: Board;
+    beforeEach(() => {
+      board = Board.create(Type.Preset);
+    });
+    test('returns 1 for cell w/out bonus', () => {
+      const cellWithoutBonus = board.cells.find(cell => board.getBonus(cell) === null);
+      if (cellWithoutBonus !== undefined) {
+        expect(board.getMultiplierForLetter(cellWithoutBonus)).toBe(1);
+      }
+    });
+    test('returns greater than 1 for cell w/ double bonus', () => {
+      const cellDouble = board.cells.find(cell => board.getBonus(cell) === Bonus.DoubleLetter);
+      if (cellDouble !== undefined) {
+        expect(board.getMultiplierForLetter(cellDouble)).toBeGreaterThan(1);
+      }
+    });
+    test('returns greater than 1 for cell w/ triple bonus', () => {
+      const cellTriple = board.cells.find(cell => board.getBonus(cell) === Bonus.TripleLetter);
+      if (cellTriple !== undefined) {
+        expect(board.getMultiplierForLetter(cellTriple)).toBeGreaterThan(1);
+      }
+    });
+    test('returns different values for cells w/ different bonuses', () => {
+      const cellWithoutBonus = board.cells.find(cell => board.getBonus(cell) === null);
+      const cellDouble = board.cells.find(cell => board.getBonus(cell) === Bonus.DoubleLetter);
+      const cellTriple = board.cells.find(cell => board.getBonus(cell) === Bonus.TripleLetter);
+      if (cellWithoutBonus !== undefined && cellDouble !== undefined && cellTriple !== undefined) {
+        expect(board.getMultiplierForLetter(cellWithoutBonus)).not.toBe(board.getMultiplierForLetter(cellDouble));
+        expect(board.getMultiplierForLetter(cellWithoutBonus)).not.toBe(board.getMultiplierForLetter(cellTriple));
+        expect(board.getMultiplierForLetter(cellDouble)).not.toBe(board.getMultiplierForLetter(cellTriple));
+      }
+    });
   });
+
   describe('getMultiplierForWord', () => {
-    // --
+    let board: Board;
+    beforeEach(() => {
+      board = Board.create(Type.Preset);
+    });
+    test('returns 1 for cell w/out bonus', () => {
+      const cellWithoutBonus = board.cells.find(cell => board.getBonus(cell) === null);
+      if (cellWithoutBonus !== undefined) {
+        expect(board.getMultiplierForWord(cellWithoutBonus)).toBe(1);
+      }
+    });
+    test('returns greater than 1 for cell w/ double bonus', () => {
+      const cellDouble = board.cells.find(cell => board.getBonus(cell) === Bonus.DoubleWord);
+      if (cellDouble !== undefined) {
+        expect(board.getMultiplierForWord(cellDouble)).toBeGreaterThan(1);
+      }
+    });
+    test('returns greater than 1 for cell w/ triple bonus', () => {
+      const cellTriple = board.cells.find(cell => board.getBonus(cell) === Bonus.TripleWord);
+      if (cellTriple !== undefined) {
+        expect(board.getMultiplierForWord(cellTriple)).toBeGreaterThan(1);
+      }
+    });
+    test('returns different values for cells w/ different bonuses', () => {
+      const cellWithoutBonus = board.cells.find(cell => board.getBonus(cell) === null);
+      const cellDouble = board.cells.find(cell => board.getBonus(cell) === Bonus.DoubleWord);
+      const cellTriple = board.cells.find(cell => board.getBonus(cell) === Bonus.TripleWord);
+      if (cellWithoutBonus !== undefined && cellDouble !== undefined && cellTriple !== undefined) {
+        expect(board.getMultiplierForWord(cellWithoutBonus)).not.toBe(board.getMultiplierForWord(cellDouble));
+        expect(board.getMultiplierForWord(cellWithoutBonus)).not.toBe(board.getMultiplierForWord(cellTriple));
+        expect(board.getMultiplierForWord(cellDouble)).not.toBe(board.getMultiplierForWord(cellTriple));
+      }
+    });
   });
-  describe('getBonus', () => {
-    // --
+
+  describe('buildPlacement', () => {
+    const inputCell = 112 as Cell;
+    const inputTileA = 'A' as GameTile;
+    const inputTileB = 'B' as GameTile;
+    const inputTiles = [inputTileA, inputTileB];
+    describe.each([
+      { axis: Axis.X, step: 1 },
+      { axis: Axis.Y, step: LayoutService.CELLS_PER_AXIS },
+    ])('for $axis axis', ({ axis, step }) => {
+      let board: Board;
+      let placement: Placement;
+      beforeEach(() => {
+        board = Board.create(Type.Preset);
+        board.placeTile(inputCell, inputTileA);
+        board.placeTile((inputCell + step) as Cell, inputTileB);
+        placement = board.buildPlacement({ axis, cell: inputCell }, inputTiles);
+      });
+      test('returns placement w/ cells arranged by input axis', () => {
+        const cellsPerAxis = LayoutService.CELLS_PER_AXIS;
+        const cellsOffAxis = placement
+          .map(({ cell }) => cell)
+          .filter(cell =>
+            axis === Axis.X
+              ? Math.floor(cell / cellsPerAxis) !== Math.floor(inputCell / cellsPerAxis)
+              : cell % cellsPerAxis !== inputCell % cellsPerAxis,
+          );
+        expect(cellsOffAxis).toEqual([]);
+      });
+      test('returns placement w/ previous adjacent link', () => {
+        const previousCell = (inputCell - step) as Cell;
+        const previousTile = 'C' as GameTile;
+        board.placeTile(previousCell, previousTile);
+        const newPlacement = board.buildPlacement({ axis, cell: inputCell }, inputTiles);
+        const previousLinkIdx = newPlacement.findIndex(link => link.cell === previousCell && link.tile === previousTile);
+        const firstInputLinkIdx = newPlacement.findIndex(link => link.tile === inputTileA);
+        expect(previousLinkIdx).toBeGreaterThanOrEqual(0);
+        expect(previousLinkIdx).toBeLessThan(firstInputLinkIdx);
+      });
+      test('returns placement w/ next adjacent link', () => {
+        const nextCell = (inputCell + step * inputTiles.length) as Cell;
+        const nextTile = 'C' as GameTile;
+        board.placeTile(nextCell, nextTile);
+        const newPlacement = board.buildPlacement({ axis, cell: inputCell }, inputTiles);
+        const nextLinkIdx = newPlacement.findIndex(link => link.cell === nextCell && link.tile === nextTile);
+        const lastInputLinkIdx = newPlacement.findIndex(link => link.tile === inputTileB);
+        expect(nextLinkIdx).toBeGreaterThan(lastInputLinkIdx);
+      });
+      test('returns placement w/ incrementing cells according to axis step', () => {
+        const outputCells = placement.map(({ cell }) => cell);
+        const [firstOutputCell] = outputCells;
+        if (firstOutputCell === undefined) throw new ReferenceError('first output cell must be defined');
+        const expectedOutputCells = outputCells.map((_, idx) => firstOutputCell + idx * step);
+        expect(outputCells).toEqual(expectedOutputCells);
+      });
+      test('returns placement w/out missing input tiles', () => {
+        const outputTiles = placement.map(({ tile }) => tile);
+        const missingInputTiles = inputTiles.filter(tile => !outputTiles.includes(tile));
+        expect(missingInputTiles).toEqual([]);
+      });
+      test('returns placement w/ input cell', () => {
+        expect(placement.map(({ cell }) => cell)).toContain(inputCell);
+      });
+      test('returns placement w/ all unique cells', () => {
+        const outputCells = placement.map(({ cell }) => cell);
+        expect(new Set(outputCells).size).toBe(outputCells.length);
+      });
+      test('returns placement w/ all unique tiles', () => {
+        const outputTiles = placement.map(({ tile }) => tile);
+        expect(new Set(outputTiles).size).toBe(outputTiles.length);
+      });
+    });
+  });
+
+  describe('placeTile', () => {
+    const occupiedCell = 0 as Cell;
+    const unoccupiedCell = 1 as Cell;
+    const placedTile = 'A' as GameTile;
+    const unplacedTile = 'B' as GameTile;
+    let board: Board;
+    beforeEach(() => {
+      board = Board.create(Type.Preset);
+      board.placeTile(occupiedCell, placedTile);
+    });
+    test('assigns unplaced tile to unoccupied cell', () => {
+      board.placeTile(unoccupiedCell, unplacedTile);
+      expect(board.findTileByCell(unoccupiedCell)).toBe(unplacedTile);
+    });
+    test('does not assign unplaced tile to occupied cell', () => {
+      expect(() => {
+        board.placeTile(occupiedCell, unplacedTile);
+      }).toThrow();
+    });
+    test('does not assign placed tile to unoccupied cell', () => {
+      expect(() => {
+        board.placeTile(unoccupiedCell, placedTile);
+      }).toThrow();
+    });
+    test('does not assign placed tile to occupied cell', () => {
+      expect(() => {
+        board.placeTile(occupiedCell, placedTile);
+      }).toThrow();
+    });
+  });
+
+  describe('undoPlaceTile', () => {
+    const occupiedCell = 0 as Cell;
+    const placedTile = 'A' as GameTile;
+    const unplacedTile = 'B' as GameTile;
+    let board: Board;
+    beforeEach(() => {
+      board = Board.create(Type.Preset);
+      board.placeTile(occupiedCell, placedTile);
+    });
+    test('removes placed tile', () => {
+      board.undoPlaceTile(placedTile);
+      expect(board.findTileByCell(occupiedCell)).toBeUndefined();
+      expect(board.findCellByTile(placedTile)).toBeUndefined();
+    });
+    test('does not remove unplaced tile', () => {
+      expect(() => {
+        board.undoPlaceTile(unplacedTile);
+      }).toThrow();
+    });
+    test('allows new placement after placed tile removal', () => {
+      board.undoPlaceTile(placedTile);
+      board.placeTile(occupiedCell, unplacedTile);
+      expect(board.findTileByCell(occupiedCell)).toBe(unplacedTile);
+    });
+  });
+
+  describe('cells', () => {
+    // covered in LayoutService.test.ts
+  });
+
+  describe('cellsPerAxis', () => {
+    // covered in LayoutService.test.ts
+  });
+
+  describe('getAdjacentCells', () => {
+    // covered in LayoutService.test.ts
+  });
+
+  describe('getAxisCells', () => {
+    // covered in LayoutService.test.ts
+  });
+
+  describe('getCellPositionInColumn', () => {
+    // covered in LayoutService.test.ts
+  });
+
+  describe('getCellPositionInRow', () => {
+    // covered in LayoutService.test.ts
+  });
+
+  describe('getOppositeAxis', () => {
+    // covered in LayoutService.test.ts
+  });
+
+  describe('isCellCenter', () => {
+    // not covered
+  });
+
+  describe('isCellPositionAtAxisEnd', () => {
+    // not covered
+  });
+
+  describe('isCellPositionAtAxisStart', () => {
+    // not covered
   });
 });
