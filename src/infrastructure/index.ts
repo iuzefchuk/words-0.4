@@ -1,10 +1,10 @@
 import { AppDependencies } from '@/application/types/index.ts';
 import TurnGenerationWorker from '@/application/workers/turnGeneration.worker.ts?worker';
 import AsyncSchedulingService from '@/infrastructure/adapters/AsyncSchedulingService.ts';
+import CallbackObserverService from '@/infrastructure/adapters/CallbackObserverService.ts';
 import CryptoIdentityService from '@/infrastructure/adapters/CryptoIdentityService.ts';
 import CryptoSeedingService from '@/infrastructure/adapters/CryptoSeedingService.ts';
 import FetchFileService from '@/infrastructure/adapters/FetchFileService.ts';
-import MessageChannelObserverService from '@/infrastructure/adapters/MessageChannelObserverService.ts';
 import WebWorkerService from '@/infrastructure/adapters/WebWorkerService.ts';
 import IndexedDbEventRepository from '@/infrastructure/repositories/IndexedDbEventRepository.ts';
 import LocalStorageSettingsRepository from '@/infrastructure/repositories/LocalStorageSettingsRepository.ts';
@@ -24,7 +24,7 @@ export default class Infrastructure {
         settings: new LocalStorageSettingsRepository(),
       },
       services: {
-        bootObserver: new MessageChannelObserverService(),
+        bootObserver: new CallbackObserverService(),
         file: new FetchFileService(),
         identity,
         scheduling: new AsyncSchedulingService(),

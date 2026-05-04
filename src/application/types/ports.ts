@@ -22,8 +22,7 @@ export type ObserverService = {
 };
 
 export type SchedulingService = {
-  getCurrentTime(): number;
-  wait(ms: number): Promise<void>;
+  ensureMinimumDuration<T>(minimumMs: number, callback: () => Promise<T> | T): Promise<T>;
   yield(): Promise<void>;
 };
 

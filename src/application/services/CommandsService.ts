@@ -153,18 +153,10 @@ export default class CommandsService {
     return this.workerService.streamParallel<GameGeneratorResult>(this.turnGenerationTaskId, inputs);
   }
 
-  private async ensureMinimumDuration<T>(callback: () => Promise<T> | T): Promise<T> {
-    // TODO move this method to schedulingService
-    const startTime = this.schedulingService.getCurrentTime();
-    const result = await callback();
-    const elapsed = this.schedulingService.getCurrentTime() - startTime;
-    const delay = CommandsService.OPPONENT_RESPONSE_MIN_TIME - elapsed;
-    if (delay > 0) await this.schedulingService.wait(delay);
-    return result;
-  }
-
   private async executeOpponentTurn(): Promise<AppTurnResponse> {
-    const event = await this.ensureMinimumDuration(() => this.createOpponentTurn());
+    const event = await this.schedulingService.ensureMinimumDuration(CommandsService.OPPONENT_RESPONSE_MIN_TIME, () =>
+      this.createOpponentTurn(),
+    );
     const response = this.opponentResponseFor(event);
     if (this.game.matchView.isFinished) {
       this.clearPersistence();
