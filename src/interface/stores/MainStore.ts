@@ -92,7 +92,7 @@ class Actions {
   private readonly scheduleDeferredValidation = (): void => {
     const validationId = ++this.pendingValidationId;
     void this.requireApp()
-      .schedulingService.yield()
+      .scheduler.yield()
       .then(() => {
         if (validationId !== this.pendingValidationId) return;
         this.writeBoardAndPlaySound(() => {

@@ -2,7 +2,7 @@ import { GamePlayer } from '@/domain/enums.ts';
 import { ValidationError, ValidationStatus } from '@/domain/models/turns/enums.ts';
 import { ValidationResult } from '@/domain/models/turns/types.ts';
 import { GameCell, GameTile } from '@/domain/types/index.ts';
-import { IdentityService } from '@/domain/types/ports.ts';
+import { IdentifierService } from '@/domain/types/ports.ts';
 
 class Turn {
   get cells(): ReadonlyArray<GameCell> | undefined {
@@ -40,8 +40,8 @@ class Turn {
     return new Turn(source.id, source.player, [...source.tiles], { ...source.validationResult });
   }
 
-  static create({ identityService, player }: { identityService: IdentityService; player: GamePlayer }): Turn {
-    const id = identityService.createUniqueId();
+  static create({ identifier, player }: { identifier: IdentifierService; player: GamePlayer }): Turn {
+    const id = identifier.createUniqueId();
     return new Turn(id, player, []);
   }
 
@@ -113,19 +113,19 @@ export default class Turns {
   }
 
   private constructor(
-    private readonly identityService: IdentityService,
+    private readonly identifier: IdentifierService,
     private readonly history: Array<Turn>,
   ) {}
 
-  static clone(source: Turns, identityService?: IdentityService): Turns {
+  static clone(source: Turns, identifier?: IdentifierService): Turns {
     return new Turns(
-      identityService ?? source.identityService,
+      identifier ?? source.identifier,
       source.history.map(turn => Turn.clone(turn)),
     );
   }
 
-  static create(identityService: IdentityService): Turns {
-    return new Turns(identityService, []);
+  static create(identifier: IdentifierService): Turns {
+    return new Turns(identifier, []);
   }
 
   addPlacedTile(tile: GameTile): void {
@@ -146,7 +146,7 @@ export default class Turns {
 
   startTurnFor(player: GamePlayer): void {
     if (player !== this.nextPlayer) throw new Error(`expected next player to be ${this.nextPlayer}, got ${player}`);
-    const newTurn = Turn.create({ identityService: this.identityService, player });
+    const newTurn = Turn.create({ identifier: this.identifier, player });
     this.history.push(newTurn);
   }
 }

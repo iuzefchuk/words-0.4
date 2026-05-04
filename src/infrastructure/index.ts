@@ -1,11 +1,11 @@
 import { AppDependencies } from '@/application/types/index.ts';
 import TurnGenerationWorker from '@/application/workers/turnGeneration.worker.ts?worker';
-import AsyncSchedulingService from '@/infrastructure/adapters/AsyncSchedulingService.ts';
-import CallbackObserverService from '@/infrastructure/adapters/CallbackObserverService.ts';
-import CryptoIdentityService from '@/infrastructure/adapters/CryptoIdentityService.ts';
-import CryptoSeedingService from '@/infrastructure/adapters/CryptoSeedingService.ts';
-import FetchFileService from '@/infrastructure/adapters/FetchFileService.ts';
-import WebWorkerService from '@/infrastructure/adapters/WebWorkerService.ts';
+import IdentifierServiceAdapter from '@/infrastructure/adapters/IdentifierServiceAdapter.ts';
+import LoaderServiceAdapter from '@/infrastructure/adapters/LoaderServiceAdapter.ts';
+import ObserverServiceAdapter from '@/infrastructure/adapters/ObserverServiceAdapter.ts';
+import RandomizerServiceAdapter from '@/infrastructure/adapters/RandomizerServiceAdapter.ts';
+import SchedulerServiceAdapter from '@/infrastructure/adapters/SchedulerServiceAdapter.ts';
+import WorkerServiceAdapter from '@/infrastructure/adapters/WorkerServiceAdapter.ts';
 import IndexedDbEventRepository from '@/infrastructure/repositories/IndexedDbEventRepository.ts';
 import LocalStorageSettingsRepository from '@/infrastructure/repositories/LocalStorageSettingsRepository.ts';
 import VersioningService from '@/infrastructure/services/VersioningService.ts';
@@ -15,8 +15,8 @@ export default class Infrastructure {
 
   static createAppDependencies(): AppDependencies {
     const version = VersioningService.appVersion;
-    const identity = new CryptoIdentityService();
-    const turnGenerationTaskId = identity.createUniqueId();
+    const turnGenerationTaskId = IdentifierServiceAdapter.createUniqueId();
+    WorkerServiceAdapter.configure({ [turnGenerationTaskId]: TurnGenerationWorker });
     return {
       config: { dictionaryUrl: Infrastructure.DICTIONARY_URL },
       repositories: {
@@ -24,14 +24,12 @@ export default class Infrastructure {
         settings: new LocalStorageSettingsRepository(),
       },
       services: {
-        bootObserver: new CallbackObserverService(),
-        file: new FetchFileService(),
-        identity,
-        scheduling: new AsyncSchedulingService(),
-        seeding: new CryptoSeedingService(),
-        worker: new WebWorkerService({
-          [turnGenerationTaskId]: TurnGenerationWorker,
-        }),
+        bootObserver: ObserverServiceAdapter,
+        identifier: IdentifierServiceAdapter,
+        loader: LoaderServiceAdapter,
+        randomizer: RandomizerServiceAdapter,
+        scheduler: SchedulerServiceAdapter,
+        worker: WorkerServiceAdapter,
       },
       tasks: { turnGeneration: turnGenerationTaskId },
     };

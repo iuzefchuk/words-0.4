@@ -1,7 +1,7 @@
-import { FileService, ObserverService, SchedulingService, WorkerService } from '@/application/types/ports.ts';
+import { LoaderService, ObserverService, SchedulerService, WorkerService } from '@/application/types/ports.ts';
 import { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
 import { GameCell } from '@/domain/types/index.ts';
-import { IdentityService, SeedingService } from '@/domain/types/ports.ts';
+import { IdentifierService, RandomizerService } from '@/domain/types/ports.ts';
 
 export {
   GameBonus,
@@ -45,10 +45,10 @@ export type AppDependencies = {
 
 export type AppServices = {
   bootObserver: ObserverService;
-  file: FileService;
-  identity: IdentityService;
-  scheduling: SchedulingService;
-  seeding: SeedingService;
+  identifier: IdentifierService;
+  loader: LoaderService;
+  randomizer: RandomizerService;
+  scheduler: SchedulerService;
   worker: WorkerService;
 };
 

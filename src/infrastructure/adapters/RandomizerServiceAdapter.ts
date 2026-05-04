@@ -1,7 +1,7 @@
-import { SeedingService } from '@/application/types/ports.ts';
+import { RandomizerService } from '@/application/types/ports.ts';
 
-export default class CryptoSeedingService implements SeedingService {
-  createRandomizer(seed: number): () => number {
+export default class RandomizerServiceAdapter {
+  static createRandomizer(seed: number): () => number {
     let state = seed | 0;
     return () => {
       state = (state + 0x6d2b79f5) | 0;
@@ -11,10 +11,12 @@ export default class CryptoSeedingService implements SeedingService {
     };
   }
 
-  createSeed(): number {
+  static createSeed(): number {
     if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
       return crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
     }
     return Math.floor(Math.random() * 0x100000000);
   }
 }
+
+RandomizerServiceAdapter satisfies RandomizerService;

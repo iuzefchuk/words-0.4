@@ -1,8 +1,8 @@
-export type IdentityService = {
+export type IdentifierService = {
   createUniqueId(): string;
 };
 
-export type SeedingService = {
+export type RandomizerService = {
   createRandomizer(seed: number): () => number;
   createSeed(): number;
 };

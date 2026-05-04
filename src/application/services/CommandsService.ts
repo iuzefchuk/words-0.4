@@ -9,7 +9,7 @@ import {
   GamePlayer,
   GameTile,
 } from '@/application/types/index.ts';
-import { SchedulingService, WorkerService } from '@/application/types/ports.ts';
+import { SchedulerService, WorkerService } from '@/application/types/ports.ts';
 import { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
 import Game from '@/domain/Game.ts';
 import { TIME } from '@/shared/constants.ts';
@@ -23,8 +23,8 @@ export default class CommandsService {
 
   constructor(
     private readonly game: Game,
-    private readonly schedulingService: SchedulingService,
-    private readonly workerService: WorkerService,
+    private readonly scheduler: SchedulerService,
+    private readonly worker: WorkerService,
     private readonly turnGenerationTaskId: string,
     private readonly eventRepository: EventRepository,
     private readonly settingsRepository: SettingsRepository,
@@ -116,7 +116,7 @@ export default class CommandsService {
     const results =
       attemptsLimit === Infinity
         ? this.createWorkerParallelStream(workerInput, anchorCount)
-        : this.workerService.stream<GameGeneratorResult>(this.turnGenerationTaskId, workerInput);
+        : this.worker.stream<GameGeneratorResult>(this.turnGenerationTaskId, workerInput);
     let bestResult: GameGeneratorResult | null = null;
     let bestScore = -1;
     for await (const result of results) {
@@ -140,9 +140,9 @@ export default class CommandsService {
     workerInput: Record<string, unknown>,
     anchorCount: number,
   ): AsyncGenerator<GameGeneratorResult> {
-    const workerCount = Math.min(this.workerService.getPoolSize(this.turnGenerationTaskId), anchorCount);
+    const workerCount = Math.min(this.worker.getPoolSize(this.turnGenerationTaskId), anchorCount);
     if (workerCount <= 1) {
-      return this.workerService.stream<GameGeneratorResult>(this.turnGenerationTaskId, workerInput);
+      return this.worker.stream<GameGeneratorResult>(this.turnGenerationTaskId, workerInput);
     }
     const inputs: Array<unknown> = [];
     for (let idx = 0; idx < workerCount; idx++) {
@@ -150,11 +150,11 @@ export default class CommandsService {
       const end = Math.round((anchorCount * (idx + 1)) / workerCount);
       inputs.push({ ...workerInput, partition: { length: end - offset, offset } });
     }
-    return this.workerService.streamParallel<GameGeneratorResult>(this.turnGenerationTaskId, inputs);
+    return this.worker.streamParallel<GameGeneratorResult>(this.turnGenerationTaskId, inputs);
   }
 
   private async executeOpponentTurn(): Promise<AppTurnResponse> {
-    const event = await this.schedulingService.ensureMinimumDuration(CommandsService.OPPONENT_RESPONSE_MIN_TIME, () =>
+    const event = await this.scheduler.ensureMinimumDuration(CommandsService.OPPONENT_RESPONSE_MIN_TIME, () =>
       this.createOpponentTurn(),
     );
     const response = this.opponentResponseFor(event);

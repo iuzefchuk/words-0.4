@@ -1,4 +1,4 @@
-export type { IdentityService, SeedingService } from '@/domain/types/ports.ts';
+export type { IdentifierService, RandomizerService } from '@/domain/types/ports.ts';
 
 export const enum WorkerRequestType {
   Init = 'Init',
@@ -12,7 +12,7 @@ export const enum WorkerResponseType {
   Result = 'Result',
 }
 
-export type FileService = {
+export type LoaderService = {
   loadBuffer(url: string): Promise<ArrayBufferLike>;
 };
 
@@ -21,7 +21,7 @@ export type ObserverService = {
   subscribe(callback: (value: number) => void): void;
 };
 
-export type SchedulingService = {
+export type SchedulerService = {
   ensureMinimumDuration<T>(minimumMs: number, callback: () => Promise<T> | T): Promise<T>;
   yield(): Promise<void>;
 };

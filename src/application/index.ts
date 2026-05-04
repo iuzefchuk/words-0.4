@@ -9,7 +9,7 @@ import {
   GameEvent,
   GameMatchSettings,
 } from '@/application/types/index.ts';
-import { SchedulingService } from '@/application/types/ports.ts';
+import { SchedulerService } from '@/application/types/ports.ts';
 import Game from '@/domain/Game.ts';
 
 export default class Application {
@@ -21,8 +21,8 @@ export default class Application {
     };
   }
 
-  get schedulingService(): SchedulingService {
-    return this.dependencies.services.scheduling;
+  get scheduler(): SchedulerService {
+    return this.dependencies.services.scheduler;
   }
 
   private constructor(
@@ -42,7 +42,7 @@ export default class Application {
     const queriesService = new QueriesService(game);
     const commandsService = new CommandsService(
       game,
-      services.scheduling,
+      services.scheduler,
       services.worker,
       tasks.turnGeneration,
       repositories.events,
@@ -57,14 +57,14 @@ export default class Application {
     settings: GameMatchSettings,
   ): Game {
     return events !== null && events.length > 0
-      ? Game.createFromEvents(events, services.identity, services.seeding)
-      : Game.create(services.identity, services.seeding, settings);
+      ? Game.createFromEvents(events, services.identifier, services.randomizer)
+      : Game.create(services.identifier, services.randomizer, settings);
   }
 
   async bootDictionary(): Promise<void> {
     const { config, services, tasks } = this.dependencies;
     services.bootObserver.publish(BootProgress.Initialized);
-    const buffer = await services.file.loadBuffer(config.dictionaryUrl);
+    const buffer = await services.loader.loadBuffer(config.dictionaryUrl);
     services.bootObserver.publish(BootProgress.DictionaryFetched);
     this.game.setDictionary(GameDictionary.createFromBuffer(buffer));
     services.bootObserver.publish(BootProgress.DictionaryParsed);

@@ -1,7 +1,7 @@
-import { IdentityService } from '@/application/types/ports.ts';
+import { IdentifierService } from '@/application/types/ports.ts';
 
-export default class CryptoIdentityService implements IdentityService {
-  createUniqueId(): string {
+export default class IdentifierServiceAdapter {
+  static createUniqueId(): string {
     if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
     const bytes = crypto.getRandomValues(new Uint8Array(16));
     bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x40;
@@ -10,3 +10,5 @@ export default class CryptoIdentityService implements IdentityService {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
   }
 }
+
+IdentifierServiceAdapter satisfies IdentifierService;
