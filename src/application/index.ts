@@ -1,9 +1,15 @@
 import { BootProgress } from '@/application/enums.ts';
 import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
-import { AppConfig, AppDependencies, AppServices, GameDictionary, GameMatchSettings } from '@/application/types/index.ts';
+import {
+  AppConfig,
+  AppDependencies,
+  AppServices,
+  GameDictionary,
+  GameEvent,
+  GameMatchSettings,
+} from '@/application/types/index.ts';
 import { SchedulingService } from '@/application/types/ports.ts';
-import { EventRepository } from '@/application/types/repositories.ts';
 import Game from '@/domain/Game.ts';
 
 export default class Application {
@@ -31,7 +37,8 @@ export default class Application {
 
   static async create(dependencies: AppDependencies, settings: GameMatchSettings): Promise<Application> {
     const { repositories, services, tasks } = dependencies;
-    const game = await this.createGame(services, repositories.events, settings);
+    const events = await repositories.events.load();
+    const game = this.createGameInstance(services, events, settings);
     const queriesService = new QueriesService(game);
     const commandsService = new CommandsService(
       game,
@@ -44,12 +51,11 @@ export default class Application {
     return new Application(game, dependencies, commandsService, queriesService);
   }
 
-  private static async createGame(
+  private static createGameInstance(
     services: AppServices,
-    eventRepository: EventRepository,
+    events: null | ReadonlyArray<GameEvent>,
     settings: GameMatchSettings,
-  ): Promise<Game> {
-    const events = await eventRepository.load();
+  ): Game {
     return events !== null && events.length > 0
       ? Game.createFromEvents(events, services.identity, services.seeding)
       : Game.create(services.identity, services.seeding, settings);

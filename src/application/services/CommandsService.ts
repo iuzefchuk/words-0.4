@@ -198,6 +198,6 @@ export default class CommandsService {
   }
 
   private syncPersistence(): void {
-    void this.eventRepository.save(this.game.eventsLogView);
+    void this.eventRepository.append(this.game.eventsLogView);
   }
 }
