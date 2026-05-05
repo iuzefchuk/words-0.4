@@ -71,8 +71,7 @@ onUnmounted(() => {
   transition-duration: var(--transition-duration);
   transition-timing-function: var(--transition-timing-function);
   border: 1px solid transparent;
-  font-size: var(--btn-font-size);
-  font-weight: var(--btn-font-weight);
+  font-size: var(--font-size-small);
   display: grid;
   place-items: center;
   width: calc(var(--space-6xl) * 2);
@@ -84,6 +83,7 @@ onUnmounted(() => {
       color: var(--btn-color-#{$accent});
       border-color: var(--btn-border-color-#{$accent});
       box-shadow: var(--shadow-xs);
+      font-weight: var(--btn-font-weight-#{$accent});
       &:hover:not(:active):not(:disabled) {
         background: var(--btn-bg-#{$accent}-hover);
         color: var(--btn-color-#{$accent}-hover);
@@ -102,6 +102,7 @@ onUnmounted(() => {
     background: var(--btn-bg-disabled);
     color: var(--btn-color-disabled);
     border-color: var(--btn-border-color-disabled);
+    font-weight: var(--btn-font-weight-disabled);
     box-shadow: none;
   }
 }

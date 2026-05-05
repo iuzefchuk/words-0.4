@@ -83,6 +83,7 @@ watch(html, newValue => {
   z-index: var(--z-index-level-2);
   display: grid;
   place-items: center;
+  background: rgba(0 0 0 / 0.2);
   &__window {
     background: var(--primary-bg);
     border-radius: var(--space-s);

@@ -1,7 +1,7 @@
 @mixin dark-theme() {
-  --primary-font-weight: var(--font-weight-small);
+  --primary-font-weight: var(--font-weight-smaller);
   --primary-font-size: var(--font-size);
-  --primary-bg: var(--color-gray-900);
+  --primary-bg: var(--color-gray-800);
   --primary-color: var(--color-gray-100);
 
   --secondary-font-weight: var(--primary-font-weight);
@@ -9,61 +9,61 @@
   --secondary-bg: transparent;
   --secondary-color: var(--color-gray-400);
 
-  --cell-bg: var(--color-gray-800);
+  --cell-bg: var(--color-gray-900);
   --cell-bg-highlighted: var(--color-gray-700);
-  --cell-color-quaternary: var(--color-gray-500);
-  --cell-color-tertiary: var(--color-gray-400);
-  --cell-color-secondary: var(--color-gray-300);
-  --cell-color-primary: var(--color-gray-200);
-  --cell-shadow: none;
+  --cell-color-quaternary: var(--color-gray-700);
+  --cell-color-tertiary: var(--color-gray-600);
+  --cell-color-secondary: var(--color-gray-500);
+  --cell-color-primary: var(--color-gray-400);
+  --cell-shadow: var(--inset-shadow-s);
 
-  --tile-bg-primary: var(--color-gray-200);
-  --tile-color-primary: var(--color-gray-900);
-  --tile-pts-color-primary: var(--tile-color-primary);
+  --tile-bg-primary: var(--color-gray-100);
+  --tile-color-primary: var(--color-gray-800);
+  --tile-pts-color-primary: var(--color-gray-700);
 
-  --tile-bg-secondary: var(--color-gray-400);
-  --tile-color-secondary: var(--color-gray-900);
-  --tile-pts-color-secondary: var(--color-gray-800);
+  --tile-bg-secondary: var(--color-gray-300);
+  --tile-color-secondary: var(--color-gray-800);
+  --tile-pts-color-secondary: var(--color-gray-700);
 
-  --tile-bg-tertiary: var(--color-gray-500);
-  --tile-color-tertiary: var(--color-gray-950);
-  --tile-pts-color-tertiary: var(--color-gray-800);
+  --tile-bg-tertiary: var(--color-gray-400);
+  --tile-color-tertiary: var(--color-gray-800);
+  --tile-pts-color-tertiary: var(--color-gray-700);
 
-  --tile-outline: 2px solid var(--color-gray-100);
+  --tile-outline: 2px solid var(--color-gray-50);
 
-  --tooltip-bg: var(--color-gray-100);
-  --tooltip-color: var(--color-gray-900);
+  --tooltip-bg: var(--color-white);
+  --tooltip-color: var(--color-gray-950);
 
-  --error-bg: var(--color-gray-600);
+  --error-bg: var(--color-gray-950);
   --error-color: var(--color-gray-50);
 
-  --rack-cell-bg: var(--color-gray-800);
+  --rack-cell-bg: var(--color-gray-600);
   --rack-cell-shadow: var(--inset-shadow-s);
 
-  --btn-font-weight: var(--font-weight);
-  --btn-font-size: var(--font-size-small);
-
   --btn-bg-primary: var(--color-gray-100);
-  --btn-color-primary: var(--color-gray-900);
+  --btn-color-primary: var(--color-gray-800);
   --btn-border-color-primary: transparent;
-  --btn-bg-primary-hover: var(--color-gray-200);
+  --btn-bg-primary-hover: var(--color-white);
   --btn-color-primary-hover: var(--color-gray-950);
-  --btn-border-color-primary-hover: var(--btn-border-color-primary);
-  --btn-bg-primary-active: var(--color-gray-50);
+  --btn-border-color-primary-hover: transparent;
+  --btn-bg-primary-active: var(--color-gray-200);
   --btn-color-primary-active: var(--color-gray-800);
-  --btn-border-color-primary-active: var(--btn-border-color-primary);
+  --btn-border-color-primary-active: transparent;
+  --btn-font-weight-primary: var(--font-weight-big);
 
-  --btn-bg-secondary: var(--color-gray-800);
-  --btn-color-secondary: var(--color-gray-200);
-  --btn-border-color-secondary: var(--color-gray-600);
-  --btn-bg-secondary-hover: var(--color-gray-700);
-  --btn-color-secondary-hover: var(--color-gray-100);
-  --btn-border-color-secondary-hover: var(--btn-color-secondary-hover);
-  --btn-bg-secondary-active: var(--color-gray-900);
-  --btn-color-secondary-active: var(--color-gray-300);
-  --btn-border-color-secondary-active: var(--color-gray-500);
+  --btn-bg-secondary: var(--color-gray-600);
+  --btn-color-secondary: var(--color-gray-100);
+  --btn-border-color-secondary: var(--color-gray-500);
+  --btn-bg-secondary-hover: var(--color-gray-500);
+  --btn-color-secondary-hover: var(--color-white);
+  --btn-border-color-secondary-hover: var(--color-white);
+  --btn-bg-secondary-active: var(--color-gray-700);
+  --btn-color-secondary-active: var(--color-gray-200);
+  --btn-border-color-secondary-active: var(--color-gray-400);
+  --btn-font-weight-secondary: var(--font-weight-small);
 
   --btn-bg-disabled: var(--primary-bg);
   --btn-color-disabled: oklch(from var(--primary-color) l c h / 0.5);
   --btn-border-color-disabled: oklch(from var(--primary-color) l c h / 0.3);
+  --btn-font-weight-disabled: var(--font-weight-small);
 }
