@@ -11,10 +11,10 @@ const optionsAreDisabled = computed(() => !mainStore.settingsChangeIsAllowed);
 const options = [
   {
     items: [
-      { text: window.text('game.bonus_distribution_classic'), value: GameMatchType.Classic },
-      { text: window.text('game.bonus_distribution_random'), value: GameMatchType.Random },
+      { text: window.text('general.bonus_distribution_classic'), value: GameMatchType.Classic },
+      { text: window.text('general.bonus_distribution_random'), value: GameMatchType.Random },
     ],
-    label: window.text('game.settings_bonuses'),
+    label: window.text('general.settings_bonuses'),
     modelValue: () => mainStore.matchType,
     onChange: (value: OptionValue) => {
       eventHandlers.handleChangeMatchType(value as GameMatchType);
@@ -22,11 +22,11 @@ const options = [
   },
   {
     items: [
-      { text: window.text('game.difficulty_low'), value: GameMatchDifficulty.Low },
-      { text: window.text('game.difficulty_medium'), value: GameMatchDifficulty.Medium },
-      { text: window.text('game.difficulty_high'), value: GameMatchDifficulty.High },
+      { text: window.text('general.difficulty_low'), value: GameMatchDifficulty.Low },
+      { text: window.text('general.difficulty_medium'), value: GameMatchDifficulty.Medium },
+      { text: window.text('general.difficulty_high'), value: GameMatchDifficulty.High },
     ],
-    label: window.text('game.settings_difficulty'),
+    label: window.text('general.settings_difficulty'),
     modelValue: () => mainStore.matchDifficulty,
     onChange: (value: OptionValue) => {
       eventHandlers.handleChangeMatchDifficulty(value as GameMatchDifficulty);
@@ -35,11 +35,11 @@ const options = [
 ];
 const players = [
   {
-    name: window.text('game.player_user'),
+    name: window.text('general.player_user'),
     score: () => mainStore.userScore,
   },
   {
-    name: window.text('game.player_opponent'),
+    name: window.text('general.player_opponent'),
     score: () => mainStore.opponentScore,
   },
 ];

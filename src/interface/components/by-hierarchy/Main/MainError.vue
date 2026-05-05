@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import MainStore from '@/interface/stores/MainStore.ts';
 const { bootError } = storeToRefs(MainStore.INSTANCE());
-const message = computed(() => (bootError.value === null ? '' : window.text('game.error_launch', { error: bootError.value })));
+const message = computed(() => (bootError.value === null ? '' : window.text('general.error_launch', { error: bootError.value })));
 </script>
 
 <template>

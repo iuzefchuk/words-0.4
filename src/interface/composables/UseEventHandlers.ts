@@ -146,19 +146,19 @@ export default class UseEventHandlers {
 
   private async triggerPassDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
     return await this.dialogStore.trigger({
-      cancelText: window.text('game.dialog_cancel'),
-      confirmText: window.text('game.dialog_confirm'),
-      html: window.text('game.dialog_html_pass'),
-      title: window.text('game.dialog_title_pass'),
+      cancelText: window.text('general.dialog_cancel'),
+      confirmText: window.text('general.dialog_confirm'),
+      html: window.text('general.dialog_html_pass'),
+      title: window.text('general.dialog_title_pass'),
     });
   }
 
   private async triggerResignDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
     return await this.dialogStore.trigger({
-      cancelText: window.text('game.dialog_cancel'),
-      confirmText: window.text('game.dialog_confirm'),
-      html: window.text('game.dialog_html_resign'),
-      title: window.text('game.dialog_title_resign'),
+      cancelText: window.text('general.dialog_cancel'),
+      confirmText: window.text('general.dialog_confirm'),
+      html: window.text('general.dialog_html_resign'),
+      title: window.text('general.dialog_title_resign'),
     });
   }
 }

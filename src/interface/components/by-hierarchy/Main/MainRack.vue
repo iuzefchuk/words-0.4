@@ -53,7 +53,7 @@ const paddedTiles = computed<Array<GameTile | null>>(() => {
           }"
         >
           <span v-animate-number="{ number: tilesRemaining }" class="rack__count-item" />
-          {{ text('game.unassigned_count') }}
+          {{ text('general.unassigned_count') }}
         </p>
       </Transition>
     </ul>

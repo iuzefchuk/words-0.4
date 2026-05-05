@@ -27,14 +27,14 @@ export default class UseHistory {
   }
 
   private static getPassText(player: GamePlayer): string {
-    return player === GamePlayer.User ? window.text('game.event_pass_user') : window.text('game.event_pass_opponent');
+    return player === GamePlayer.User ? window.text('general.event_pass_user') : window.text('general.event_pass_opponent');
   }
 
   private static getSaveText(player: GamePlayer, score: number, words: ReadonlyArray<string>): string {
     const joinedWords = words.join(', ');
     return player === GamePlayer.User
-      ? window.text('game.event_save_user', { score, words: joinedWords })
-      : window.text('game.event_save_opponent', { score, words: joinedWords });
+      ? window.text('general.event_save_user', { score, words: joinedWords })
+      : window.text('general.event_save_opponent', { score, words: joinedWords });
   }
 
   private createEventHtml(event: GameEvent): string {

@@ -5,7 +5,7 @@ export enum LocaleType {
 }
 
 enum LocaleFile {
-  Game = 'game',
+  General = 'general',
 }
 
 enum NumberSeparatorType {

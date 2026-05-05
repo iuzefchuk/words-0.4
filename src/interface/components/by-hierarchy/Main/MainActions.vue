@@ -16,7 +16,7 @@ const items = reactive([
     },
     isDisabled: () => allActionsAreDisabled.value || !mainStore.currentTurnIsValid,
     keys: ['Enter'],
-    name: window.text('game.action_play'),
+    name: window.text('general.action_play'),
   },
   {
     accent: Accent.Secondary,
@@ -26,7 +26,7 @@ const items = reactive([
     isDisabled: () => allActionsAreDisabled.value,
     isRendered: () => true,
     keys: ['p'],
-    name: window.text('game.action_pass'),
+    name: window.text('general.action_pass'),
   },
   {
     accent: Accent.Secondary,
@@ -36,7 +36,7 @@ const items = reactive([
     isDisabled: () => allActionsAreDisabled.value,
     isRendered: () => true,
     keys: ['r'],
-    name: window.text('game.action_resign'),
+    name: window.text('general.action_resign'),
   },
 ]);
 </script>

@@ -13,7 +13,7 @@ const resultText = computed(() => getMatchResultText(matchResult.value, userScor
 <template>
   <button class="endscreen" @dblclick="eventHandlers.handleRestartGame()">
     <p class="endscreen__text">{{ resultText }}</p>
-    <p class="endscreen__hint app__make-secondary">{{ text('game.action_new_match') }}</p>
+    <p class="endscreen__hint app__make-secondary">{{ text('general.action_new_match') }}</p>
   </button>
 </template>
 
