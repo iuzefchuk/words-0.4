@@ -1,5 +1,5 @@
 @mixin emit-shadow() {
-  --shadow-color: black;
+  --shadow-color: oklch(from var(--primary-bg) calc(100% - l) c h);
 
   --shadow-2xs: 0 1px color-mix(in oklch, var(--shadow-color) 5%, transparent);
   --shadow-xs: 0 1px 2px 0 color-mix(in oklch, var(--shadow-color) 5%, transparent);

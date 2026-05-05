@@ -64,6 +64,6 @@
   --btn-border-color-secondary-active: var(--color-gray-500);
 
   --btn-bg-disabled: var(--primary-bg);
-  --btn-color-disabled: var(--color-gray-500);
-  --btn-border-color-disabled: var(--color-gray-400);
+  --btn-color-disabled: oklch(from var(--primary-color) l c h / 0.5);
+  --btn-border-color-disabled: oklch(from var(--primary-color) l c h / 0.3);
 }

@@ -65,7 +65,7 @@ onUnmounted(() => {
 .btn {
   cursor: pointer;
   text-align: center;
-  border-radius: var(--btn-radius);
+  border-radius: var(--space-xs);
   user-select: none;
   transition-property: box-shadow;
   transition-duration: var(--transition-duration);
@@ -75,8 +75,8 @@ onUnmounted(() => {
   font-weight: var(--btn-font-weight);
   display: grid;
   place-items: center;
-  width: var(--btn-width);
-  height: var(--btn-height);
+  width: calc(var(--space-6xl) * 2);
+  height: var(--space-5xl);
   $accents: 'primary', 'secondary';
   @each $accent in $accents {
     &--#{$accent} {

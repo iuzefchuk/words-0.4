@@ -1,9 +1,0 @@
-@mixin emit-layout() {
-  --primary-space: var(--space-m);
-  --grid-gap: var(--space-2xs);
-  --grid-item-size: var(--space-4xl);
-  --grid-item-radius: var(--space-xs);
-  --rack-height: calc(var(--space-l) + var(--space-5xl));
-  --feed-height: 7rem;
-  --opacity-disabled: 0.9;
-}

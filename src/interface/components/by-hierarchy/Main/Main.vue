@@ -64,8 +64,8 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   display: grid;
   grid-template-rows: 1fr auto 1fr;
   align-items: center;
-  padding-left: var(--primary-space);
-  padding-right: var(--primary-space);
+  padding-left: var(--main-padding);
+  padding-right: var(--main-padding);
   justify-items: center;
   &__top {
     align-self: flex-start;
@@ -76,13 +76,13 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   }
   &__mid-feed {
     position: absolute;
-    top: calc(var(--feed-height) * -1 - var(--primary-space));
+    top: calc(var(--main-feed-height) * -1 - var(--main-padding));
     right: 0rem;
   }
   &__bottom {
     justify-self: center;
     align-self: end;
-    padding: var(--primary-space) 0;
+    padding: var(--main-padding) 0;
     width: 100%;
     display: grid;
     grid-template-columns: 1px 2fr 1px;
@@ -94,7 +94,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
     grid-column: 2;
     align-self: flex-start;
     justify-self: center;
-    height: var(--rack-height);
+    height: var(--main-rack-height);
   }
   &__bottom-actions {
     grid-column: 3;

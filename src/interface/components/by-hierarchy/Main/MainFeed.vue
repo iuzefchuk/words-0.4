@@ -16,7 +16,7 @@ const { history } = new UseHistory();
   $padding-right: calc(var(--grid-item-size) / 4);
   width: calc(100% - $padding-right);
   &__list {
-    height: var(--feed-height);
+    height: var(--main-feed-height);
     border-right: 1px solid currentColor;
     padding-right: $padding-right;
     display: flex;

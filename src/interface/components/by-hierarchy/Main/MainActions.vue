@@ -62,7 +62,7 @@ const items = reactive([
     gap: var(--space-s);
     @media screen and (max-width: 750px) {
       flex-direction: row-reverse;
-      padding-top: calc(var(--rack-height) + var(--primary-space));
+      padding-top: calc(var(--main-rack-height) + var(--space-m));
     }
   }
 }

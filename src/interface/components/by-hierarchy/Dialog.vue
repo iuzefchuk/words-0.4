@@ -85,7 +85,7 @@ watch(html, newValue => {
   place-items: center;
   &__window {
     background: var(--primary-bg);
-    border-radius: var(--dialog-radius);
+    border-radius: var(--space-s);
     color: var(--primary-color);
     padding: var(--space-xl);
     border: none;
