@@ -12,6 +12,13 @@ export default defineConfig(({ mode }) => {
       outDir: path.resolve(__dirname, 'dist'),
       target: 'esnext',
     },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: `@use '@/interface/assets/scss/themes' as *;`,
+        },
+      },
+    },
     define: {
       APP_VERSION: JSON.stringify(process.env.npm_package_version),
     },

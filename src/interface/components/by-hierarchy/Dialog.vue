@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import AppButton from '@/interface/components/shared/AppButton/AppButton.vue';
 import { Accent } from '@/interface/enums.ts';
 import DialogStore, { DialogStatus } from '@/interface/stores/DialogStore.ts';
@@ -10,26 +10,18 @@ const isRendered = ref(false);
 const exitAnimation = ref(false);
 const buttons = reactive([
   {
-    accent: Accent.Primary,
-    keys: ['Enter'],
-    status: DialogStatus.Confirmed,
-    text: () => confirmText.value,
-  },
-  {
     accent: Accent.Secondary,
     keys: ['Escape'],
     status: DialogStatus.Canceled,
     text: () => cancelText.value,
   },
+  {
+    accent: Accent.Secondary,
+    keys: ['Enter'],
+    status: DialogStatus.Confirmed,
+    text: () => confirmText.value,
+  },
 ]);
-function handleKeydown(event: KeyboardEvent): void {
-  if (!isRendered.value) return;
-  const button = buttons.find(button => button.keys.includes(event.key));
-  if (button === undefined) return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  respond(button.status);
-}
 function respond(status: DialogStatus): void {
   isRendered.value = false;
   dialogStore.resolve({ status });
@@ -43,21 +35,11 @@ function toggleExitAnimation(): void {
 watch(html, newValue => {
   if (newValue !== null) isRendered.value = true;
 });
-onMounted(() => {
-  window.addEventListener('keydown', handleKeydown, true);
-});
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown, true);
-});
 </script>
 
 <template>
   <section v-if="isRendered" class="dialog" @mousedown="toggleExitAnimation">
-    <dialog
-      open
-      :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation, 'app__limit-max-width': true }"
-      @mousedown.stop
-    >
+    <dialog open :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation }" @mousedown.stop>
       <div class="dialog__content">
         <p v-if="title" class="dialog__content-title">{{ title }}</p>
         <p v-html="html" />
@@ -67,7 +49,7 @@ onUnmounted(() => {
           v-for="button in buttons"
           :key="button.status"
           :accent="button.accent"
-          :is-disabled="false"
+          :keys="button.keys"
           @click="respond(button.status)"
         >
           {{ button.text() }}
@@ -79,6 +61,10 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .dialog {
+  @include dark-theme;
+  @media (prefers-color-scheme: dark) {
+    @include light-theme;
+  }
   position: fixed;
   top: 0;
   left: 0;
@@ -88,13 +74,10 @@ onUnmounted(() => {
   display: grid;
   place-items: center;
   &__window {
-    $margin: var(--space-2xl);
-    background: var(--dialog-bg);
+    background: var(--primary-bg);
     border-radius: var(--dialog-radius);
-    color: var(--dialog-color);
-    width: calc(100% - $margin * 2);
-    height: calc(100% - $margin * 2);
-    margin: $margin;
+    color: var(--primary-color);
+    padding: var(--space-2xl) var(--space-xl);
     border: none;
     display: flex;
     flex-direction: column;
@@ -105,15 +88,11 @@ onUnmounted(() => {
     &--shaking {
       animation: horizontal-shake var(--transition-duration) linear forwards;
     }
-    & > * {
-      max-width: 14rem;
-      width: 100%;
-    }
   }
   &__content {
     display: flex;
     flex-direction: column;
-    gap: var(--space-m);
+    gap: var(--space-s);
     font-size: var(--dialog-font-size);
     font-weight: var(--dialog-font-weight);
   }
@@ -122,9 +101,11 @@ onUnmounted(() => {
     font-weight: var(--dialog-title-font-weight);
   }
   &__footer {
+    width: 100%;
     display: flex;
     flex-direction: row;
-    gap: var(--space-m);
+    justify-content: flex-end;
+    gap: var(--space-s);
   }
 }
 </style>

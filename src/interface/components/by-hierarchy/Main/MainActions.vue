@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { onMounted, onUnmounted, reactive } from 'vue';
+import { reactive } from 'vue';
 import AppButton from '@/interface/components/shared/AppButton/AppButton.vue';
 import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { Accent } from '@/interface/enums.ts';
@@ -39,24 +39,13 @@ const items = reactive([
     name: window.text('game.action_resign'),
   },
 ]);
-function handleKeydown(event: KeyboardEvent): void {
-  const item = items.find(item => 'keys' in item && item.keys.includes(event.key));
-  if (item === undefined || item.isDisabled()) return;
-  item.action();
-}
-onMounted(() => {
-  window.addEventListener('keydown', handleKeydown);
-});
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown);
-});
 </script>
 
 <template>
   <section class="actions">
     <ul class="actions__list">
-      <li v-for="{ name, action, accent, isDisabled } in items" :key="name">
-        <AppButton class="actions__btn" :accent="accent" :is-disabled="isDisabled()" @click="action()">
+      <li v-for="{ name, action, accent, isDisabled, keys } in items" :key="name">
+        <AppButton class="actions__btn" :accent="accent" :is-disabled="isDisabled()" :keys="keys" @click="action()">
           {{ name }}
         </AppButton>
       </li>

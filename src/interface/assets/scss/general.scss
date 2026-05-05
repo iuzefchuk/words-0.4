@@ -1,0 +1,61 @@
+:root {
+  --primary-space: var(--space-m);
+  --grid-gap: var(--space-2xs);
+  --grid-item-size: var(--space-4xl);
+  --grid-item-radius: var(--space-xs);
+  --tooltip-radius: var(--space-3xs);
+  --rack-height: calc(var(--space-l) + var(--space-5xl));
+  --btn-radius: var(--space-xs);
+  --btn-width: calc(var(--space-6xl) * 2);
+  --btn-height: var(--space-5xl);
+  --dialog-radius: var(--space-s);
+  --dialog-font-size: var(--secondary-font-size);
+  --dialog-font-weight: var(--secondary-font-weight);
+  --dialog-title-font-size: var(--primary-font-size);
+  --dialog-title-font-weight: var(--primary-font-weight);
+  --feed-height: 7rem;
+  --opacity-disabled: 0.9;
+  --transition-duration: 250ms;
+  --transition-duration-half: 125ms;
+}
+
+#app {
+  font-weight: var(--primary-font-weight);
+  font-size: var(--primary-font-size);
+  background: var(--primary-bg);
+  color: var(--primary-color);
+}
+
+.app {
+  &__limit-max-width {
+    max-width: calc(var(--grid-items-per-axis) * (var(--grid-gap) + var(--grid-item-size)) - var(--grid-gap));
+    width: 100%;
+  }
+  &__make-secondary {
+    font-weight: var(--secondary-font-weight);
+    font-size: var(--secondary-font-size);
+    background: var(--secondary-bg);
+    color: var(--secondary-color);
+  }
+  &__create-grid {
+    @mixin grid($columns, $rows, $gap: var(--grid-gap)) {
+      display: grid;
+      grid-template-columns: repeat($columns, minmax(0, 1fr));
+      grid-template-rows: repeat($rows, auto);
+      gap: $gap;
+      > * {
+        display: grid;
+        aspect-ratio: 1 / 1;
+        > * {
+          grid-area: 1 / 1;
+        }
+      }
+    }
+    &--for-board {
+      @include grid(var(--grid-items-per-axis), var(--grid-items-per-axis));
+    }
+    &--for-rack {
+      @include grid(8, 1, calc(var(--grid-gap) * 2));
+    }
+  }
+}

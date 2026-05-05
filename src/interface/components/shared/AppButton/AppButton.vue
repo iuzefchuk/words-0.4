@@ -1,12 +1,50 @@
 <script lang="ts" setup>
+import { onMounted, onUnmounted } from 'vue';
 import { Accent } from '@/interface/enums.ts';
-defineProps<{
+type KeydownHandler = (event: KeyboardEvent) => void;
+type KeydownStacks = Map<string, Array<KeydownHandler>>;
+const stacks: KeydownStacks = ((window as { appButtonKeydownStacks?: KeydownStacks } & Window).appButtonKeydownStacks ??=
+  new Map());
+const props = defineProps<{
   accent: Accent;
-  isDisabled: boolean;
+  isDisabled?: boolean;
+  keys?: ReadonlyArray<string>;
 }>();
-defineEmits<{
+const emit = defineEmits<{
   click: [];
 }>();
+function handleKeydown(event: KeyboardEvent): void {
+  if (props.keys?.includes(event.key) !== true) return;
+  if (props.isDisabled) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  emit('click');
+}
+onMounted(() => {
+  if (props.keys === undefined || props.keys.length === 0) return;
+  for (const key of props.keys) {
+    const stack = stacks.get(key) ?? [];
+    const previous = stack[stack.length - 1];
+    if (previous !== undefined) window.removeEventListener('keydown', previous, true);
+    stack.push(handleKeydown);
+    stacks.set(key, stack);
+  }
+  window.addEventListener('keydown', handleKeydown, true);
+});
+onUnmounted(() => {
+  if (props.keys === undefined || props.keys.length === 0) return;
+  window.removeEventListener('keydown', handleKeydown, true);
+  for (const key of props.keys) {
+    const stack = stacks.get(key);
+    if (stack === undefined) continue;
+    const index = stack.indexOf(handleKeydown);
+    if (index === -1) continue;
+    stack.splice(index, 1);
+    if (index !== stack.length) continue;
+    const restored = stack[stack.length - 1];
+    if (restored !== undefined) window.addEventListener('keydown', restored, true);
+  }
+});
 </script>
 
 <template>
@@ -15,8 +53,6 @@ defineEmits<{
       btn: true,
       'btn--primary': accent === Accent.Primary,
       'btn--secondary': accent === Accent.Secondary,
-      'btn--tertiary': accent === Accent.Tertiary,
-      'btn--quaternary': accent === Accent.Quaternary,
     }"
     :disabled="isDisabled"
     @click="$emit('click')"
@@ -41,7 +77,7 @@ defineEmits<{
   place-items: center;
   width: var(--btn-width);
   height: var(--btn-height);
-  $accents: 'primary', 'secondary', 'tertiary', 'quaternary';
+  $accents: 'primary', 'secondary';
   @each $accent in $accents {
     &--#{$accent} {
       background: var(--btn-bg-#{$accent});

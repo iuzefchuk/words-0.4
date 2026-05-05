@@ -15,10 +15,16 @@ import Main from '@/interface/components/by-hierarchy/Main/Main.vue';
 </template>
 
 <style lang="scss">
-@use '@/interface/assets/css/adjustments.scss';
-@use '@/interface/assets/css/animations.scss';
-@use '@/interface/assets/css/general.scss';
-@use '@/interface/assets/css/colors.scss';
-@use '@/interface/assets/css/transitions.scss';
-@use '@/interface/assets/css/variables.scss';
+@use '@/interface/assets/scss/adjustments.scss';
+@use '@/interface/assets/scss/animations.scss';
+@use '@/interface/assets/scss/general.scss';
+@use '@/interface/assets/scss/transitions.scss';
+@use '@/interface/assets/scss/variables/general.scss' as variables;
+@use '@/interface/assets/scss/variables/colors.scss';
+:root {
+  @include light-theme;
+  @media (prefers-color-scheme: dark) {
+    @include dark-theme;
+  }
+}
 </style>
