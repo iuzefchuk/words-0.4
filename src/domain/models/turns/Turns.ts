@@ -113,13 +113,13 @@ export default class Turns {
   }
 
   private constructor(
-    private readonly identifier: IdentifierService,
+    private readonly identifier: IdentifierService | null,
     private readonly history: Array<Turn>,
   ) {}
 
-  static clone(source: Turns, identifier?: IdentifierService): Turns {
+  static clone(source: Turns, identifier: IdentifierService | null = null): Turns {
     return new Turns(
-      identifier ?? source.identifier,
+      identifier,
       source.history.map(turn => Turn.clone(turn)),
     );
   }
@@ -145,6 +145,7 @@ export default class Turns {
   }
 
   startTurnFor(player: GamePlayer): void {
+    if (this.identifier === null) throw new Error('cannot start turn: identifier is null');
     if (player !== this.nextPlayer) throw new Error(`expected next player to be ${this.nextPlayer}, got ${player}`);
     const newTurn = Turn.create({ identifier: this.identifier, player });
     this.history.push(newTurn);

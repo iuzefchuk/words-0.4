@@ -7,7 +7,7 @@ export default class IndexedDbService {
 
   private static readonly PAYLOAD_NAME = 'payload';
 
-  private static readonly SCHEMA_VERSION = 3;
+  private static readonly SCHEMA_VERSION = 4;
 
   static async append(dbName: string, appVersion: string, payload: ReadonlyArray<unknown>): Promise<void> {
     if (payload.length === 0) return;
