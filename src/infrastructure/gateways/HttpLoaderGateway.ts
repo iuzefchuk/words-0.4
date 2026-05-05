@@ -1,4 +1,4 @@
-import { LoaderGateway } from '@/application/types/ports.ts';
+import { LoaderGateway } from '@/application/types/gateways.ts';
 
 export default class HttpLoaderGateway {
   static async load(url: string): Promise<ArrayBufferLike> {

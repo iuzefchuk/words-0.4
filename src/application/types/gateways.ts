@@ -1,4 +1,4 @@
-export type { IdentifierGateway, RandomizerGateway } from '@/domain/types/ports.ts';
+export type { IdentifierGateway, RandomizerGateway } from '@/domain/types/gateways.ts';
 
 export const enum WorkerRequestType {
   Init = 'Init',
@@ -11,11 +11,6 @@ export const enum WorkerResponseType {
   Ready = 'Ready',
   Result = 'Result',
 }
-
-export type BootProgressPublisher = {
-  publish(progress: number): void;
-  subscribe(handler: (progress: number) => void): void;
-};
 
 export type LoaderGateway = {
   load(url: string): Promise<ArrayBufferLike>;

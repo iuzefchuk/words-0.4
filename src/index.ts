@@ -1,6 +1,6 @@
 import Application from '@/application/index.ts';
 import { GameMatchDifficulty, GameMatchSettings, GameMatchType } from '@/application/types/index.ts';
-import { BootProgressPublisher } from '@/application/types/ports.ts';
+import { BootProgressPublisher } from '@/application/types/publishers.ts';
 import DependenciesFactory from '@/infrastructure/factories/DependenciesFactory.ts';
 
 const DEFAULT_SETTINGS: GameMatchSettings = {
@@ -20,6 +20,6 @@ export default function launchWords(): {
   };
   return {
     app: Application.create(dependencies, settings),
-    bootProgressPublisher: dependencies.services.bootProgressPublisher,
+    bootProgressPublisher: dependencies.publishers.bootProgress,
   };
 }

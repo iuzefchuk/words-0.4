@@ -1,7 +1,7 @@
 import { Bonus, Type } from '@/domain/models/board/enums.ts';
 import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
 import { BonusDistribution, Cell } from '@/domain/models/board/types.ts';
-import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
+import ShuffleService from '@/domain/services/ShuffleService.ts';
 
 type OctantLocation = readonly [row: number, col: number];
 
@@ -86,7 +86,7 @@ export default class BonusService {
 
   private static createRandomDistribution(randomizerFunction: () => number = Math.random): BonusDistribution {
     const cells = [...this.NON_CENTER_CELLS];
-    shuffleWithFisherYates({ array: cells, randomizerFunction });
+    ShuffleService.shuffle({ array: cells, randomizerFunction });
     const bonuses = [...this.PRESET_DISTRIBUTION.values()];
     const result = new Map<Cell, Bonus>();
     for (let idx = 0; idx < bonuses.length; idx++) {

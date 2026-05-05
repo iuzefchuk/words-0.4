@@ -1,4 +1,4 @@
-import { BootProgressPublisher } from '@/application/types/ports.ts';
+import { BootProgressPublisher } from '@/application/types/publishers.ts';
 
 export default class CallbackBootProgressPublisher implements BootProgressPublisher {
   private handler: ((progress: number) => void) | null = null;

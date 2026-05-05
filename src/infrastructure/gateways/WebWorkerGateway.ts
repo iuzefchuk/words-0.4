@@ -4,7 +4,7 @@ import {
   WorkerRequestType,
   WorkerResponse,
   WorkerResponseType,
-} from '@/application/types/ports.ts';
+} from '@/application/types/gateways.ts';
 import WorkerPoolGateway from '@/infrastructure/gateways/WorkerPoolGateway.ts';
 
 export default class WebWorkerGateway implements WorkerGateway {

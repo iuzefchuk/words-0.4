@@ -1,3 +1,4 @@
+import { SchedulerGateway, WorkerGateway } from '@/application/types/gateways.ts';
 import {
   AppTurnResponse,
   GameCell,
@@ -9,13 +10,11 @@ import {
   GamePlayer,
   GameTile,
 } from '@/application/types/index.ts';
-import { SchedulerGateway, WorkerGateway } from '@/application/types/ports.ts';
 import { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
 import Game from '@/domain/Game.ts';
-import { TIME } from '@/shared/constants.ts';
 
 export default class CommandsService {
-  private static readonly OPPONENT_RESPONSE_MIN_TIME = TIME.ms_in_second * 2;
+  private static readonly OPPONENT_RESPONSE_MIN_TIME_MS = 2_000;
 
   private get currentPlayer(): GamePlayer {
     return this.game.turnsView.currentPlayer;
@@ -154,7 +153,7 @@ export default class CommandsService {
   }
 
   private async executeOpponentTurn(): Promise<AppTurnResponse> {
-    const event = await this.scheduler.padTo(CommandsService.OPPONENT_RESPONSE_MIN_TIME, () => this.createOpponentTurn());
+    const event = await this.scheduler.padTo(CommandsService.OPPONENT_RESPONSE_MIN_TIME_MS, () => this.createOpponentTurn());
     const response = this.opponentResponseFor(event);
     if (this.game.matchView.isFinished) {
       this.clearPersistence();

@@ -30,9 +30,9 @@ import {
   Traversal,
   ValidateTask,
 } from '@/domain/services/generation/turn/types.ts';
+import ShuffleService from '@/domain/services/ShuffleService.ts';
 import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
 import { GameAnchorCoordinates, GameLink, GameTile } from '@/domain/types/index.ts';
-import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 class TaskCommandResolver {
   private constructor(private readonly stack: Array<Task>) {}
@@ -175,7 +175,7 @@ class TaskDispatcher {
       newTasks.push(applyTask, evaluateTask, reverseTask);
     });
     if (newTasks.length === 0) return this.emitStop();
-    shuffleWithFisherYates({ array: newTasks, groupSize: 3 });
+    ShuffleService.shuffle({ array: newTasks, groupSize: 3 });
     return this.emitContinue(newTasks);
   }
 

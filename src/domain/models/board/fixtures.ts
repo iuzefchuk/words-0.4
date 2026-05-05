@@ -1,8 +1,8 @@
 import Board from '@/domain/models/board/Board.ts';
 import { Type } from '@/domain/models/board/enums.ts';
 import { Cell } from '@/domain/models/board/types.ts';
+import ShuffleService from '@/domain/services/ShuffleService.ts';
 import { GameTile } from '@/domain/types/index.ts';
-import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 type BoardFixture = {
   desc: string;
@@ -16,7 +16,7 @@ type BoardFixture = {
 
 const cells = [...Board.create(Type.Preset).cells];
 const tiles = cells.map((_, idx) => `tile-${String(idx)}` as GameTile);
-const shuffledCells = shuffleWithFisherYates({ array: [...cells], randomizerFunction: () => 0.5 });
+const shuffledCells = ShuffleService.shuffle({ array: [...cells], randomizerFunction: () => 0.5 });
 
 const fixtures: ReadonlyArray<BoardFixture> = [0, 1, 2, 3, 4, 5, 10, 25, 50, tiles.length].map(placementCount => {
   const instance = Board.create(Type.Preset);

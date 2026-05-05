@@ -18,6 +18,7 @@ import Turns from '@/domain/models/turns/Turns.ts';
 import MatchTerminationPolicy from '@/domain/policies/MatchTerminationPolicy.ts';
 import TurnGenerationService from '@/domain/services/generation/turn/TurnGenerationService.ts';
 import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
+import { IdentifierGateway, RandomizerGateway } from '@/domain/types/gateways.ts';
 import {
   GameBoardView,
   GameCell,
@@ -30,7 +31,6 @@ import {
   GameTile,
   GameTurnsView,
 } from '@/domain/types/index.ts';
-import { IdentifierGateway, RandomizerGateway } from '@/domain/types/ports.ts';
 
 export default class Game {
   private static readonly TURN_GENERATION_ATTEMPTS: Record<GameMatchDifficulty, number> = {

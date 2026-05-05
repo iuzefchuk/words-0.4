@@ -1,4 +1,4 @@
-import { RandomizerGateway } from '@/application/types/ports.ts';
+import { RandomizerGateway } from '@/application/types/gateways.ts';
 
 export default class Mulberry32RandomizerGateway {
   static createFunctionFromSeed(seed: number): () => number {

@@ -1,8 +1,8 @@
 import { GamePlayer } from '@/domain/enums.ts';
 import { ValidationError, ValidationStatus } from '@/domain/models/turns/enums.ts';
 import { ValidationResult } from '@/domain/models/turns/types.ts';
+import { IdentifierGateway } from '@/domain/types/gateways.ts';
 import { GameCell, GameTile } from '@/domain/types/index.ts';
-import { IdentifierGateway } from '@/domain/types/ports.ts';
 
 class Turn {
   get cells(): ReadonlyArray<GameCell> | undefined {

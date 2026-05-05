@@ -2,7 +2,7 @@ import { default as GameDictionary } from '@/domain/models/dictionary/Dictionary
 import { default as GameTurnGenerator } from '@/domain/services/generation/turn/TurnGenerationService.ts';
 import type { Event } from '@/domain/events/types.ts';
 import type { AnchorCoordinates, BoardView, Cell, Link, Placement } from '@/domain/models/board/types.ts';
-import type { Node } from '@/domain/models/dictionary/types.ts';
+import type { DictionaryBuffer, Node } from '@/domain/models/dictionary/types.ts';
 import type { InventoryView, Tile, TileCollection } from '@/domain/models/inventory/types.ts';
 import type { MatchSettings, MatchView } from '@/domain/models/match/types.ts';
 import type {
@@ -34,6 +34,7 @@ export type {
   ComputedScore as GameComputedScore,
   ComputedValue as GameComputedValue,
   ComputedWords as GameComputedWords,
+  DictionaryBuffer as GameDictionaryBuffer,
   Event as GameEvent,
   GeneratorContext as GameGeneratorContext,
   GeneratorContextData as GameGeneratorContextData,

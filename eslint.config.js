@@ -144,8 +144,8 @@ export default defineConfigWithVueTs([
         {
           patterns: [
             {
-              group: ['@/interface/**'],
-              message: 'infrastructure must not import from interface',
+              group: ['@/domain/**', '@/interface/**'],
+              message: 'infrastructure must not import from domain or interface; depend on application aliases instead',
             },
           ],
         },
@@ -169,7 +169,7 @@ export default defineConfigWithVueTs([
     },
   },
   {
-    files: ['src/shared/**'],
+    files: ['src/globals/**'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -177,7 +177,7 @@ export default defineConfigWithVueTs([
           patterns: [
             {
               group: ['@/domain/**', '@/application/**', '@/infrastructure/**', '@/interface/**'],
-              message: 'shared must not import from any feature layer',
+              message: 'globals must not import from any feature layer',
             },
           ],
         },

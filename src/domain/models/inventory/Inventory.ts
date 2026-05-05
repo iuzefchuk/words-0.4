@@ -1,6 +1,6 @@
 import { GameLetter, GamePlayer } from '@/domain/enums.ts';
 import { Tile, TileCollection } from '@/domain/models/inventory/types.ts';
-import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
+import ShuffleService from '@/domain/services/ShuffleService.ts';
 
 class TilePool {
   get tileCount(): number {
@@ -118,7 +118,7 @@ export default class Inventory {
 
   static create(players: ReadonlyArray<GamePlayer>, randomizerFunction: () => number): Inventory {
     const tiles = [...Inventory.LETTER_BY_TILE.keys()];
-    shuffleWithFisherYates({ array: tiles, randomizerFunction });
+    ShuffleService.shuffle({ array: tiles, randomizerFunction });
     const drawPool = TilePool.create({ tiles });
     const playerPools = new Map(players.map(player => [player, TilePool.create({ capacity: this.PLAYER_POOL_CAPACITY })]));
     const discardPool = TilePool.create();

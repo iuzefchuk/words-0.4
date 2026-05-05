@@ -1,4 +1,4 @@
-import { IdentifierGateway } from '@/application/types/ports.ts';
+import { IdentifierGateway } from '@/application/types/gateways.ts';
 
 export default class CryptoIdentifierGateway {
   static create(): string {

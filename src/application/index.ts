@@ -1,15 +1,8 @@
 import { BootProgress } from '@/application/enums.ts';
 import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
-import {
-  AppConfig,
-  AppDependencies,
-  AppServices,
-  GameDictionary,
-  GameEvent,
-  GameMatchSettings,
-} from '@/application/types/index.ts';
-import { SchedulerGateway } from '@/application/types/ports.ts';
+import { SchedulerGateway } from '@/application/types/gateways.ts';
+import { AppConfig, AppDependencies, GameDictionary, GameEvent, GameMatchSettings } from '@/application/types/index.ts';
 import Game from '@/domain/Game.ts';
 
 export default class Application {
@@ -22,7 +15,7 @@ export default class Application {
   }
 
   get scheduler(): SchedulerGateway {
-    return this.dependencies.services.scheduler;
+    return this.dependencies.gateways.scheduler;
   }
 
   private constructor(
@@ -36,14 +29,14 @@ export default class Application {
   }
 
   static async create(dependencies: AppDependencies, settings: GameMatchSettings): Promise<Application> {
-    const { repositories, services, tasks } = dependencies;
+    const { gateways, repositories, tasks } = dependencies;
     const events = await repositories.events.load();
-    const game = this.createGameInstance(services, events, settings);
+    const game = this.createGameInstance(gateways, events, settings);
     const queriesService = new QueriesService(game);
     const commandsService = new CommandsService(
       game,
-      services.scheduler,
-      services.worker,
+      gateways.scheduler,
+      gateways.worker,
       tasks.turnGeneration,
       repositories.events,
       repositories.settings,
@@ -52,23 +45,23 @@ export default class Application {
   }
 
   private static createGameInstance(
-    services: AppServices,
+    gateways: AppDependencies['gateways'],
     events: null | ReadonlyArray<GameEvent>,
     settings: GameMatchSettings,
   ): Game {
     return events !== null && events.length > 0
-      ? Game.createFromEvents(events, services.identifier, services.randomizer)
-      : Game.create(services.identifier, services.randomizer, settings);
+      ? Game.createFromEvents(events, gateways.identifier, gateways.randomizer)
+      : Game.create(gateways.identifier, gateways.randomizer, settings);
   }
 
   async bootDictionary(): Promise<void> {
-    const { config, services, tasks } = this.dependencies;
-    services.bootProgressPublisher.publish(BootProgress.Initialized);
-    const buffer = await services.loader.load(config.dictionaryUrl);
-    services.bootProgressPublisher.publish(BootProgress.DictionaryFetched);
+    const { config, gateways, publishers, tasks } = this.dependencies;
+    publishers.bootProgress.publish(BootProgress.Initialized);
+    const buffer = await gateways.loader.load(config.dictionaryUrl);
+    publishers.bootProgress.publish(BootProgress.DictionaryFetched);
     this.game.setDictionary(GameDictionary.createFromBuffer(buffer));
-    services.bootProgressPublisher.publish(BootProgress.DictionaryParsed);
-    await services.worker.init(tasks.turnGeneration, buffer);
-    services.bootProgressPublisher.publish(BootProgress.Done);
+    publishers.bootProgress.publish(BootProgress.DictionaryParsed);
+    await gateways.worker.init(tasks.turnGeneration, buffer);
+    publishers.bootProgress.publish(BootProgress.Done);
   }
 }

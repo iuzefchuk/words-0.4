@@ -1,7 +1,8 @@
-import { BootProgressPublisher, LoaderGateway, SchedulerGateway, WorkerGateway } from '@/application/types/ports.ts';
+import { LoaderGateway, SchedulerGateway, WorkerGateway } from '@/application/types/gateways.ts';
+import { BootProgressPublisher } from '@/application/types/publishers.ts';
 import { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
+import { IdentifierGateway, RandomizerGateway } from '@/domain/types/gateways.ts';
 import { GameCell } from '@/domain/types/index.ts';
-import { IdentifierGateway, RandomizerGateway } from '@/domain/types/ports.ts';
 
 export {
   GameBonus,
@@ -18,6 +19,7 @@ export { GameDictionary, GameTurnGenerator } from '@/domain/types/index.ts';
 export type {
   GameBoardView,
   GameCell,
+  GameDictionaryBuffer,
   GameEvent,
   GameGeneratorContextData,
   GameGeneratorPartition,
@@ -38,19 +40,16 @@ export type AppConfig = {
 
 export type AppDependencies = {
   config: DependenciesConfig;
+  gateways: {
+    identifier: IdentifierGateway;
+    loader: LoaderGateway;
+    randomizer: RandomizerGateway;
+    scheduler: SchedulerGateway;
+    worker: WorkerGateway;
+  };
+  publishers: { bootProgress: BootProgressPublisher };
   repositories: { events: EventRepository; settings: SettingsRepository };
-  services: AppServices;
   tasks: { turnGeneration: string };
-};
-
-export type AppServices = {
-  // TODO move bootProgressPublisher & worker outside this type because they are not services
-  bootProgressPublisher: BootProgressPublisher;
-  identifier: IdentifierGateway;
-  loader: LoaderGateway;
-  randomizer: RandomizerGateway;
-  scheduler: SchedulerGateway;
-  worker: WorkerGateway;
 };
 
 export type AppTurnResponse = Result<{ words: ReadonlyArray<string> }, string>;

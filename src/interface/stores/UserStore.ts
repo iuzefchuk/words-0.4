@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import { computed, ref, shallowRef, triggerRef } from 'vue';
 import { GameTile } from '@/application/types/index.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-import shuffleWithFisherYates from '@/shared/shuffleWithFisherYates.ts';
 
 export default class UserStore {
   static readonly INSTANCE = defineStore('user', () => {
@@ -82,7 +81,16 @@ export default class UserStore {
   }
 
   private shuffleTiles(): void {
-    shuffleWithFisherYates({ array: this.tiles });
+    for (let idx = this.tiles.length - 1; idx > 0; idx--) {
+      const swapIdx = Math.floor(Math.random() * (idx + 1));
+      const current = this.tiles[idx];
+      const target = this.tiles[swapIdx];
+      if (current === undefined || target === undefined) {
+        throw new ReferenceError(`expected tiles at indices ${String(idx)} and ${String(swapIdx)}, got undefined`);
+      }
+      this.tiles[idx] = target;
+      this.tiles[swapIdx] = current;
+    }
     triggerRef(this.tilesRef);
   }
 

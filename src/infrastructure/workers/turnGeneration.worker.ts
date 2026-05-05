@@ -1,38 +1,37 @@
+import { WorkerRequestType, WorkerResponseType } from '@/application/types/gateways.ts';
 import {
   GameDictionary,
+  GameDictionaryBuffer,
   GameGeneratorContextData,
   GameGeneratorPartition,
+  GameGeneratorResult,
   GamePlayer,
   GameTurnGenerator,
 } from '@/application/types/index.ts';
-import { WorkerRequestType, WorkerResponseType } from '@/application/types/ports.ts';
-import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
-import { DictionaryBuffer } from '@/domain/models/dictionary/types.ts';
-import { GeneratorResult } from '@/domain/services/generation/turn/types.ts';
 
 type StreamInput = {
   attemptsLimit: number;
-  buffer: DictionaryBuffer;
+  buffer: GameDictionaryBuffer;
   crossCheckBuffer: ArrayBuffer | SharedArrayBuffer;
   partition?: GameGeneratorPartition;
   player: GamePlayer;
 } & GameGeneratorContextData;
 
 class TurnGenerationHandler {
-  private dictionary: Dictionary | null = null;
+  private dictionary: GameDictionary | null = null;
 
   handleMessage(event: MessageEvent<{ input: unknown; type: string }>): void {
     if (event.data.type === (WorkerRequestType.Init as string)) {
-      this.init(event.data.input as DictionaryBuffer);
+      this.init(event.data.input as GameDictionaryBuffer);
     } else {
       this.stream(event.data.input as StreamInput);
     }
   }
 
-  private findBestResult(input: StreamInput): GeneratorResult | null {
+  private findBestResult(input: StreamInput): GameGeneratorResult | null {
     const dictionary = this.dictionary ?? GameDictionary.createFromBuffer(input.buffer);
     const context = GameTurnGenerator.hydrateContext(input, dictionary, input.crossCheckBuffer);
-    let bestResult: GeneratorResult | null = null;
+    let bestResult: GameGeneratorResult | null = null;
     let bestScore = -1;
     let count = 0;
     for (const result of GameTurnGenerator.execute(context, input.player, input.partition)) {
@@ -45,7 +44,7 @@ class TurnGenerationHandler {
     return bestResult;
   }
 
-  private init(buffer: DictionaryBuffer): void {
+  private init(buffer: GameDictionaryBuffer): void {
     this.dictionary = GameDictionary.createFromBuffer(buffer);
     self.postMessage({ type: WorkerResponseType.Ready });
   }
