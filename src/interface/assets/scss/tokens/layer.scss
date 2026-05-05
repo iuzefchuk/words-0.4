@@ -1,0 +1,5 @@
+@mixin emit-layer() {
+  --z-index-level-1: 10;
+  --z-index-level-2: 20;
+  --z-index-level-3: 30;
+}

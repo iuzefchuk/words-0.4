@@ -1,0 +1,32 @@
+@forward 'colors';
+@forward 'space';
+@forward 'typography';
+@forward 'shadow';
+@forward 'motion';
+@forward 'layer';
+@forward 'layout';
+@forward 'components';
+@use 'colors' as *;
+@use 'space' as *;
+@use 'typography' as *;
+@use 'shadow' as *;
+@use 'motion' as *;
+@use 'layer' as *;
+@use 'layout' as *;
+@use 'components' as *;
+
+@mixin emit() {
+  @include emit-space;
+  @include emit-typography;
+  @include emit-shadow;
+  @include emit-motion;
+  @include emit-layer;
+  @include emit-layout;
+  @include emit-components;
+  @supports not (color: color(display-p3 1 1 1)) {
+    @include emit-colors;
+  }
+  @supports (color: color(display-p3 1 1 1)) {
+    @include emit-colors($is-wide-gamut: true);
+  }
+}

@@ -1,0 +1,17 @@
+@mixin emit-space() {
+  --space-6xs: 1px;
+  --space-5xs: 0.05rem;
+  --space-4xs: 0.1rem;
+  --space-3xs: 0.15rem;
+  --space-2xs: 0.2rem;
+  --space-xs: 0.25rem;
+  --space-s: 0.5rem;
+  --space-m: 0.75rem;
+  --space-l: 1rem;
+  --space-xl: 1.25rem;
+  --space-2xl: 1.5rem;
+  --space-3xl: 1.75rem;
+  --space-4xl: 2rem;
+  --space-5xl: 2.25rem;
+  --space-6xl: 2.5rem;
+}

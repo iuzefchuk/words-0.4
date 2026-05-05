@@ -1,0 +1,5 @@
+@mixin emit-motion() {
+  --transition-duration: 250ms;
+  --transition-duration-half: 125ms;
+  --transition-timing-function: ease;
+}

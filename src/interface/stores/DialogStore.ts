@@ -17,6 +17,7 @@ type DialogTriggerParams = {
   cancelText: string;
   confirmText: string;
   html: string;
+  isDestructive?: boolean;
   title?: string;
 };
 
@@ -27,6 +28,7 @@ export default class DialogStore {
       cancelText: store.cancelTextRef,
       confirmText: store.confirmTextRef,
       html: store.htmlRef,
+      isDestructive: store.isDestructiveRef,
       resolve: store.resolve.bind(store),
       title: store.titleRef,
       trigger: store.trigger.bind(store),
@@ -38,6 +40,8 @@ export default class DialogStore {
   private readonly confirmTextRef = ref<null | string>(null);
 
   private readonly htmlRef = ref<null | string>(null);
+
+  private readonly isDestructiveRef = ref(false);
 
   private pendingResolve: ((result: DialogResult) => void) | null = null;
 
@@ -55,6 +59,10 @@ export default class DialogStore {
     this.htmlRef.value = newValue;
   }
 
+  private set isDestructive(newValue: boolean) {
+    this.isDestructiveRef.value = newValue;
+  }
+
   private set title(newValue: null | string) {
     this.titleRef.value = newValue;
   }
@@ -64,6 +72,7 @@ export default class DialogStore {
     this.html = null;
     this.cancelText = null;
     this.confirmText = null;
+    this.isDestructive = false;
   }
 
   private resolve({ status }: { status: DialogStatus }): void {
@@ -77,11 +86,18 @@ export default class DialogStore {
     }
   }
 
-  private async trigger({ cancelText, confirmText, html, title }: DialogTriggerParams): Promise<DialogResult> {
+  private async trigger({
+    cancelText,
+    confirmText,
+    html,
+    isDestructive = false,
+    title,
+  }: DialogTriggerParams): Promise<DialogResult> {
     this.html = html;
     this.title = title ?? null;
     this.cancelText = cancelText;
     this.confirmText = confirmText;
+    this.isDestructive = isDestructive;
     const result = await new Promise<DialogResult>(resolve => {
       this.pendingResolve = resolve;
     });

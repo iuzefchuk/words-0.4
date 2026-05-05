@@ -299,21 +299,12 @@ $colors: (
   @return 'color(display-p3 #{getDisplayP3Value(color.channel($rgb, 'red', $space: rgb))} #{getDisplayP3Value(color.channel($rgb, 'green', $space: rgb))} #{getDisplayP3Value(color.channel($rgb, 'blue', $space: rgb))})';
 }
 
-@mixin setColors($is-wide-gamut: false) {
+@mixin emit-colors($is-wide-gamut: false) {
   @each $color, $value in $colors {
     @if $is-wide-gamut {
       --color-#{$color}: #{getWideGamutColor($value)};
     } @else {
       --color-#{$color}: #{$value};
     }
-  }
-}
-
-:root {
-  @supports not (color: color(display-p3 1 1 1)) {
-    @include setColors();
-  }
-  @supports (color: color(display-p3 1 1 1)) {
-    @include setColors(true);
   }
 }

@@ -1,25 +1,27 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { reactive, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import AppButton from '@/interface/components/shared/AppButton/AppButton.vue';
 import { Accent } from '@/interface/enums.ts';
 import DialogStore, { DialogStatus } from '@/interface/stores/DialogStore.ts';
 const dialogStore = DialogStore.INSTANCE();
-const { cancelText, confirmText, html, title } = storeToRefs(dialogStore);
+const { cancelText, confirmText, html, isDestructive, title } = storeToRefs(dialogStore);
 const isRendered = ref(false);
 const exitAnimation = ref(false);
-const buttons = reactive([
+const titleId = 'dialog-title';
+const bodyId = 'dialog-body';
+const buttons = computed(() => [
   {
-    accent: Accent.Secondary,
+    accent: isDestructive.value ? Accent.Primary : Accent.Secondary,
     keys: ['Escape'],
     status: DialogStatus.Canceled,
-    text: () => cancelText.value,
+    text: cancelText.value,
   },
   {
-    accent: Accent.Secondary,
+    accent: isDestructive.value ? Accent.Secondary : Accent.Primary,
     keys: ['Enter'],
     status: DialogStatus.Confirmed,
-    text: () => confirmText.value,
+    text: confirmText.value,
   },
 ]);
 function respond(status: DialogStatus): void {
@@ -39,10 +41,17 @@ watch(html, newValue => {
 
 <template>
   <section v-if="isRendered" class="dialog" @mousedown="toggleExitAnimation">
-    <dialog open :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation }" @mousedown.stop>
+    <dialog
+      open
+      role="alertdialog"
+      :aria-labelledby="title === null ? undefined : titleId"
+      :aria-describedby="bodyId"
+      :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation }"
+      @mousedown.stop
+    >
       <div class="dialog__content">
-        <p v-if="title" class="dialog__content-title">{{ title }}</p>
-        <p v-html="html" />
+        <h2 v-if="title" :id="titleId">{{ title }}</h2>
+        <p :id="bodyId" class="app__make-secondary" v-html="html" />
       </div>
       <div class="dialog__footer">
         <AppButton
@@ -52,7 +61,7 @@ watch(html, newValue => {
           :keys="button.keys"
           @click="respond(button.status)"
         >
-          {{ button.text() }}
+          {{ button.text }}
         </AppButton>
       </div>
     </dialog>
@@ -60,6 +69,7 @@ watch(html, newValue => {
 </template>
 
 <style lang="scss" scoped>
+@use '@/interface/assets/scss/themes' as *;
 .dialog {
   @include dark-theme;
   @media (prefers-color-scheme: dark) {
@@ -77,14 +87,13 @@ watch(html, newValue => {
     background: var(--primary-bg);
     border-radius: var(--dialog-radius);
     color: var(--primary-color);
-    padding: var(--space-2xl) var(--space-xl);
+    padding: var(--space-xl);
     border: none;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     gap: var(--space-2xl);
     box-shadow: var(--shadow-2xl);
+    max-width: min(28rem, calc(100vw - 2 * var(--space-l)));
     &--shaking {
       animation: horizontal-shake var(--transition-duration) linear forwards;
     }
@@ -93,19 +102,12 @@ watch(html, newValue => {
     display: flex;
     flex-direction: column;
     gap: var(--space-s);
-    font-size: var(--dialog-font-size);
-    font-weight: var(--dialog-font-weight);
-  }
-  &__content-title {
-    font-size: var(--dialog-title-font-size);
-    font-weight: var(--dialog-title-font-weight);
   }
   &__footer {
-    width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    gap: var(--space-s);
+    gap: var(--space-m);
   }
 }
 </style>

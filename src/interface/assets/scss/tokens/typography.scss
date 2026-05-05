@@ -1,0 +1,11 @@
+@mixin emit-typography() {
+  --font-size-small: 0.875rem;
+  --font-size: var(--space-l);
+  --font-size-big: 1.125rem;
+
+  --font-weight-smaller: 200;
+  --font-weight-small: 300;
+  --font-weight: 400;
+  --font-weight-big: 500;
+  --font-weight-bigger: 600;
+}

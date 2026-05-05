@@ -158,6 +158,7 @@ export default class UseEventHandlers {
       cancelText: window.text('general.dialog_cancel'),
       confirmText: window.text('general.dialog_confirm'),
       html: window.text('general.dialog_html_resign'),
+      isDestructive: true,
       title: window.text('general.dialog_title_resign'),
     });
   }
