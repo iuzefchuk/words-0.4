@@ -7,9 +7,6 @@ declare module '*?worker' {
 
 declare const brandSymbol: unique symbol;
 
-// TODO move to SchedulerGateway
-declare const schedulerService: { yield(): Promise<void> };
-
 type Brand<T, B extends string> = { readonly [brandSymbol]: B } & T;
 
 type Interval = ReturnType<typeof setInterval>;

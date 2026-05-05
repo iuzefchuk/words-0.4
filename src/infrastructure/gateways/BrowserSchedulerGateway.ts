@@ -11,7 +11,6 @@ export default class BrowserSchedulerGateway {
   }
 
   static yield(): Promise<void> {
-    if (typeof schedulerService !== 'undefined' && typeof schedulerService.yield === 'function') return schedulerService.yield();
     return new Promise(resolve => {
       queueMicrotask(resolve);
     });
