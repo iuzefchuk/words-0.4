@@ -63,7 +63,6 @@ watch(() => props.modelValue, updateIndicator, { flush: 'post' });
   &__legend {
     margin-block-end: var(--space-s);
     margin-left: var(--space-3xs);
-    font-weight: var(--font-weight);
   }
   &__option-group {
     position: relative;
@@ -116,12 +115,10 @@ watch(() => props.modelValue, updateIndicator, { flush: 'post' });
     position: absolute;
     width: 1px;
     height: 1px;
-    padding: 0;
     margin: -1px;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
-    border: 0;
   }
 }
 </style>

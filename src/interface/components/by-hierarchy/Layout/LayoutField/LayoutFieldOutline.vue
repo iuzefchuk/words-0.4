@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import MainPlayfieldTooltip from '@/interface/components/by-hierarchy/Main/MainPlayfield/MainPlayfieldTooltip.vue';
+import LayoutFieldScore from '@/interface/components/by-hierarchy/Layout/LayoutField/LayoutFieldScore.vue';
 import UseOutline from '@/interface/composables/UseOutline.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 const userStore = UserStore.INSTANCE();
@@ -15,6 +15,7 @@ const locations = computed(() => tileLocator.getLocationsFor(tiles.value));
     v-for="(group, idx) in locations"
     :key="idx"
     class="outline"
+    aria-hidden="true"
     :style="{
       '--outline-cell-step': `calc((100% + var(--grid-gap)) / var(--grid-items-per-axis))`,
       top: `calc(var(--outline-cell-step) * ${group.row})`,
@@ -24,7 +25,7 @@ const locations = computed(() => tileLocator.getLocationsFor(tiles.value));
     }"
   >
     <Transition name="fade" appear>
-      <MainPlayfieldTooltip
+      <LayoutFieldScore
         v-if="tileLocator.areLocationsForSelectedTiles(locations, idx)"
         :is-flipped="tileLocator.isLocationOnRightmostColumn(locations, idx)"
       />

@@ -24,7 +24,6 @@ const items = reactive([
       void eventHandlers.handlePass();
     },
     isDisabled: () => allActionsAreDisabled.value,
-    isRendered: () => true,
     keys: ['p'],
     name: window.text('general.action_pass'),
   },
@@ -34,7 +33,6 @@ const items = reactive([
       void eventHandlers.handleResign();
     },
     isDisabled: () => allActionsAreDisabled.value,
-    isRendered: () => true,
     keys: ['r'],
     name: window.text('general.action_resign'),
   },
@@ -42,28 +40,28 @@ const items = reactive([
 </script>
 
 <template>
-  <section class="actions">
-    <ul class="actions__list">
-      <li v-for="{ name, action, accent, isDisabled, keys } in items" :key="name">
-        <AppButton class="actions__btn" :accent="accent" :is-disabled="isDisabled()" :keys="keys" @click="action()">
-          {{ name }}
-        </AppButton>
-      </li>
-    </ul>
-  </section>
+  <div class="toolbar" role="toolbar" :aria-label="text('general.aria_footer_toolbar')">
+    <AppButton
+      v-for="{ name, action, accent, isDisabled, keys } in items"
+      :key="name"
+      :accent="accent"
+      :is-disabled="isDisabled()"
+      :keys="keys"
+      @click="action()"
+    >
+      {{ name }}
+    </AppButton>
+  </div>
 </template>
 
 <style lang="scss" scoped>
-.actions {
-  &__list {
-    z-index: var(--z-index-level-1);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-s);
-    @media screen and (max-width: 750px) {
-      flex-direction: row-reverse;
-     // padding-top: calc(var(--main-rack-height) + var(--space-m));
-    }
+.toolbar {
+  z-index: var(--z-index-level-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  @media screen and (max-width: 750px) {
+    flex-direction: row-reverse;
   }
 }
 </style>

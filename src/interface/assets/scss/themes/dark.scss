@@ -1,5 +1,5 @@
 @mixin dark-theme() {
-  --primary-font-weight: var(--font-weight-smaller);
+  --primary-font-weight: var(--font-weight-small);
   --primary-font-size: var(--font-size);
   --primary-bg: var(--color-gray-800);
   --primary-color: var(--color-gray-100);
@@ -8,6 +8,10 @@
   --secondary-font-size: var(--font-size-small);
   --secondary-bg: transparent;
   --secondary-color: var(--color-gray-400);
+
+  --outline-color: red; // TODO
+
+  --loader-color: blue; // TODO
 
   --cell-bg: var(--color-gray-900);
   --cell-bg-highlighted: var(--color-gray-700);

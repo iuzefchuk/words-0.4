@@ -1,13 +1,22 @@
 .app {
-  &__limit-max-width {
-    max-width: calc(var(--grid-items-per-axis) * (var(--grid-gap) + var(--grid-item-size)) - var(--grid-gap));
-    width: 100%;
+  &__make-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
   &__make-secondary {
     font-weight: var(--secondary-font-weight);
     font-size: var(--secondary-font-size);
     background: var(--secondary-bg);
     color: var(--secondary-color);
+  }
+  &__limit-max-width {
+    max-width: calc(var(--grid-items-per-axis) * (var(--grid-gap) + var(--grid-item-size)) - var(--grid-gap));
+    width: 100%;
   }
   &__create-grid {
     @mixin grid($columns, $rows, $gap: var(--grid-gap)) {

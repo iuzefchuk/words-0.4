@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { nextTick, onMounted, ref } from 'vue';
-import MainEndscreen from '@/interface/components/by-hierarchy/Main/MainEndscreen.vue';
-import MainFeed from '@/interface/components/by-hierarchy/Main/MainFeed.vue';
-import MainFooter from '@/interface/components/by-hierarchy/Main/MainFooter/MainFooter.vue';
-import MainHeader from '@/interface/components/by-hierarchy/Main/MainHeader/MainHeader.vue';
-import MainPlayfield from '@/interface/components/by-hierarchy/Main/MainPlayfield/MainPlayfield.vue';
+import LayoutError from '@/interface/components/by-hierarchy/Layout/LayoutError.vue';
+import LayoutField from '@/interface/components/by-hierarchy/Layout/LayoutField/LayoutField.vue';
+import LayoutFooter from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooter.vue';
+import LayoutHeader from '@/interface/components/by-hierarchy/Layout/LayoutHeader/LayoutHeader.vue';
+import LayoutHistory from '@/interface/components/by-hierarchy/Layout/LayoutHistory.vue';
+import LayoutRestart from '@/interface/components/by-hierarchy/Layout/LayoutRestart.vue';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 await MainStore.initiate();
@@ -20,23 +21,25 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   <div
     v-if="isMounted"
     :style="{ '--grid-items-per-axis': mainStore.boardCellsPerAxis }"
-    :class="{ main: true, 'main--blurred': matchIsFinished }"
+    :class="{ layout: true, 'layout--blurred': matchIsFinished }"
     @click="userStore.deselectTile()"
   >
-    <MainHeader class="main__top" />
-    <main class="main__mid app__limit-max-width">
-      <MainFeed class="main__mid-feed" />
-      <MainPlayfield />
-    </main>
-    <MainFooter class="main__bottom" />
+    <h1 class="app__make-sr-only">{{ text('general.aria_layout_heading') }}</h1>
+    <LayoutHeader class="layout__top" />
+    <div class="layout__mid app__limit-max-width">
+      <LayoutHistory class="layout__mid-history" />
+      <LayoutField />
+    </div>
+    <LayoutFooter class="layout__bottom" />
   </div>
+  <LayoutError />
   <Transition name="fade" appear>
-    <MainEndscreen v-if="matchIsFinished" />
+    <LayoutRestart v-if="matchIsFinished" />
   </Transition>
 </template>
 
 <style lang="scss" scoped>
-.main {
+.layout {
   transition-property: filter, opacity;
   transition-duration: var(--transition-duration);
   transition-timing-function: var(--transition-timing-function);
@@ -50,8 +53,9 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   align-items: center;
   justify-items: center;
   &__top,
+  &__mid,
   &__bottom {
-    padding: var(--main-padding);
+    padding: var(--layout-padding);
   }
   &__top {
     align-self: flex-start;
@@ -63,9 +67,9 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
     display: grid;
     place-items: center;
   }
-  &__mid-feed {
+  &__mid-history {
     position: absolute;
-    top: calc(var(--main-feed-height) * -1 - var(--main-padding));
+    top: calc(var(--layout-history-height) * -1 - var(--layout-padding));
     right: 0rem;
   }
   &__bottom {

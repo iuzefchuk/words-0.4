@@ -7,7 +7,7 @@ const message = computed(() => (bootError.value === null ? '' : window.text('gen
 </script>
 
 <template>
-  <section v-if="bootError" class="error" role="alert" v-html="message" />
+  <div v-if="bootError" class="error" role="status" v-html="message" />
 </template>
 
 <style lang="scss" scoped>

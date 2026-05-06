@@ -1,22 +1,26 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
+import { computed } from 'vue';
 import MainStore from '@/interface/stores/MainStore.ts';
 const props = defineProps<{ isFlipped?: boolean }>();
 const mainStore = MainStore.INSTANCE();
 const { currentTurnScore } = storeToRefs(mainStore);
-const SHIMMER_THRESHOLD_SCORE = 29;
+const SHIMMER_THRESHOLD = 29;
+const ariaLabel = computed(() =>
+  currentTurnScore.value === undefined ? '' : window.text('general.aria_layout_field_score', { score: currentTurnScore.value }),
+);
 </script>
 
 <template>
-  <section v-if="currentTurnScore" :class="{ tooltip: true, 'tooltip--flipped': props.isFlipped }">
-    <div :class="{ tooltip__score: true, 'tooltip__score--shimmer': currentTurnScore > SHIMMER_THRESHOLD_SCORE }">
+  <output v-if="currentTurnScore" :aria-label="ariaLabel" :class="{ score: true, 'score--flipped': props.isFlipped }">
+    <span aria-hidden="true" :class="{ score__value: true, 'score__value--shimmer': currentTurnScore > SHIMMER_THRESHOLD }">
       {{ currentTurnScore }}
-    </div>
-  </section>
+    </span>
+  </output>
 </template>
 
 <style lang="scss" scoped>
-.tooltip {
+.score {
   position: absolute;
   top: calc(-1 * var(--space-xl));
   right: calc(-1 * var(--space-xl));
@@ -29,7 +33,7 @@ const SHIMMER_THRESHOLD_SCORE = 29;
     right: auto;
     left: calc(-1 * var(--space-xl));
   }
-  &__score {
+  &__value {
     width: max-content;
     height: max-content;
     padding: var(--space-4xs) var(--space-2xs);

@@ -4,19 +4,19 @@ const { history } = new UseHistory();
 </script>
 
 <template>
-  <section v-if="history.length > 0" class="feed">
-    <TransitionGroup name="fade-from-left" tag="ul" class="feed__list app__make-secondary" appear>
+  <aside v-if="history.length > 0" class="history" role="log" :aria-label="text('general.aria_layout_history')">
+    <TransitionGroup name="fade-from-left" tag="ul" class="history__list app__make-secondary" appear>
       <li v-for="{ key, html } in history" :key="key" v-html="html" />
     </TransitionGroup>
-  </section>
+  </aside>
 </template>
 
 <style lang="scss" scoped>
-.feed {
+.history {
   $padding-right: calc(var(--grid-item-size) / 4);
   width: calc(100% - $padding-right);
   &__list {
-    height: var(--main-feed-height);
+    height: var(--layout-history-height);
     border-right: 1px solid currentColor;
     padding-right: $padding-right;
     display: flex;

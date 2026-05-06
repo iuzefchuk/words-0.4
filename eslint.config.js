@@ -97,8 +97,16 @@ export default defineConfigWithVueTs([
         },
       ],
       'prefer-const': 'error',
+      'vue/block-order': ['error', { order: ['script', 'template', 'style'] }],
       'vue/component-definition-name-casing': ['error', 'PascalCase'],
       'vue/component-name-in-template-casing': ['error', 'PascalCase', { registeredComponentsOnly: false }],
+      'vue/define-macros-order': [
+        'error',
+        {
+          defineExposeLast: true,
+          order: ['defineOptions', 'defineModel', 'defineProps', 'defineEmits', 'defineSlots'],
+        },
+      ],
       'vue/multi-word-component-names': 'off',
       'vue/no-unused-refs': 'error',
       'vue/no-v-html': 'off',

@@ -3,8 +3,6 @@ import { onMounted, onUnmounted } from 'vue';
 import { Accent } from '@/interface/enums.ts';
 type KeydownHandler = (event: KeyboardEvent) => void;
 type KeydownStacks = Map<string, Array<KeydownHandler>>;
-const stacks: KeydownStacks = ((window as { appButtonKeydownStacks?: KeydownStacks } & Window).appButtonKeydownStacks ??=
-  new Map());
 const props = defineProps<{
   accent: Accent;
   isDisabled?: boolean;
@@ -13,6 +11,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   click: [];
 }>();
+// TODO to composable
+const stacks: KeydownStacks = ((window as { appButtonKeydownStacks?: KeydownStacks } & Window).appButtonKeydownStacks ??=
+  new Map());
 function handleKeydown(event: KeyboardEvent): void {
   if (props.keys?.includes(event.key) !== true) return;
   if (props.isDisabled) return;

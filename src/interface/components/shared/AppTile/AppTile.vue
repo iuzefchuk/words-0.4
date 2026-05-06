@@ -5,6 +5,7 @@ import { Accent } from '@/interface/enums.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const props = defineProps<{
   accent: Accent;
+  isDisabled?: boolean;
   letter: GameLetter;
 }>();
 const mainStore = MainStore.INSTANCE();
@@ -12,13 +13,15 @@ const points = computed(() => mainStore.getLetterPoints(props.letter));
 </script>
 
 <template>
-  <section
+  <button
+    tabindex="-1"
     :class="{
       tile: true,
       'tile--primary': props.accent === Accent.Primary,
       'tile--secondary': props.accent === Accent.Secondary,
       'tile--tertiary': props.accent === Accent.Tertiary,
     }"
+    :disabled="props.isDisabled"
   >
     <svg viewBox="0 0 40 40">
       <text class="tile__letter" x="45%" y="45%" font-size="22" text-anchor="middle" dominant-baseline="central">
@@ -28,13 +31,14 @@ const points = computed(() => mainStore.getLetterPoints(props.letter));
         {{ points }}
       </text>
     </svg>
-  </section>
+  </button>
 </template>
 
 <style lang="scss" scoped>
 .tile {
   cursor: pointer;
   fill: currentColor;
+  display: block;
   aspect-ratio: 1 / 1;
   border-radius: inherit;
   box-shadow: var(--shadow-xs);

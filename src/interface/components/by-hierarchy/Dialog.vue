@@ -1,71 +1,82 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import AppButton from '@/interface/components/shared/AppButton/AppButton.vue';
 import { Accent } from '@/interface/enums.ts';
 import DialogStore, { DialogStatus } from '@/interface/stores/DialogStore.ts';
 const dialogStore = DialogStore.INSTANCE();
 const { cancelText, confirmText, html, isDestructive, title } = storeToRefs(dialogStore);
-const isRendered = ref(false);
-const exitAnimation = ref(false);
-const titleId = 'dialog-title';
-const bodyId = 'dialog-body';
+const ids = {
+  body: 'dialog-body',
+  title: 'dialog-title',
+};
+// TODO maybe to composable
+const dialogEl = useTemplateRef<HTMLDialogElement>('dialog');
+const previousFocus = ref<HTMLElement | null>(null);
+const dialogIsShaking = ref(false);
 const buttons = computed(() => [
   {
     accent: isDestructive.value ? Accent.Primary : Accent.Secondary,
-    keys: ['Escape'],
+    keys: ['Escape'] as ReadonlyArray<string>,
     status: DialogStatus.Canceled,
     text: cancelText.value,
   },
   {
     accent: isDestructive.value ? Accent.Secondary : Accent.Primary,
-    keys: ['Enter'],
+    keys: ['Enter'] as ReadonlyArray<string>,
     status: DialogStatus.Confirmed,
     text: confirmText.value,
   },
 ]);
-function respond(status: DialogStatus): void {
-  isRendered.value = false;
+function emitResponse(status: DialogStatus): void {
+  if (dialogEl.value?.open === true) dialogEl.value.close();
   dialogStore.resolve({ status });
+  previousFocus.value?.focus();
+  previousFocus.value = null;
 }
-function toggleExitAnimation(): void {
-  exitAnimation.value = true;
+function onBackdropClick(event: MouseEvent): void {
+  if (event.target === dialogEl.value) shake();
+}
+function shake(): void {
+  dialogIsShaking.value = true;
   setTimeout(() => {
-    exitAnimation.value = false;
+    dialogIsShaking.value = false;
   }, 250);
 }
-watch(html, newValue => {
-  if (newValue !== null) isRendered.value = true;
+watch(html, async newValue => {
+  if (newValue === null) return;
+  previousFocus.value = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  await nextTick();
+  dialogEl.value?.showModal();
 });
 </script>
 
 <template>
-  <section v-if="isRendered" class="dialog" @mousedown="toggleExitAnimation">
-    <dialog
-      open
-      role="alertdialog"
-      :aria-labelledby="title === null ? undefined : titleId"
-      :aria-describedby="bodyId"
-      :class="{ dialog__window: true, 'dialog__window--shaking': exitAnimation }"
-      @mousedown.stop
-    >
-      <div class="dialog__content">
-        <h2 v-if="title" :id="titleId">{{ title }}</h2>
-        <p :id="bodyId" class="app__make-secondary" v-html="html" />
-      </div>
-      <div class="dialog__footer">
-        <AppButton
-          v-for="button in buttons"
-          :key="button.status"
-          :accent="button.accent"
-          :keys="button.keys"
-          @click="respond(button.status)"
-        >
-          {{ button.text }}
-        </AppButton>
-      </div>
-    </dialog>
-  </section>
+  <dialog
+    ref="dialog"
+    role="alertdialog"
+    :aria-labelledby="title === null ? undefined : ids.title"
+    :aria-describedby="ids.body"
+    :class="{ dialog: true, 'dialog--shaking': dialogIsShaking }"
+    @click="onBackdropClick"
+    @cancel.prevent="emitResponse(DialogStatus.Canceled)"
+  >
+    <div class="dialog__content">
+      <h2 v-if="title" :id="ids.title">{{ title }}</h2>
+      <div :id="ids.body" class="app__make-secondary" v-html="html" />
+    </div>
+    <div class="dialog__footer">
+      <AppButton
+        v-for="button in buttons"
+        :key="button.status"
+        :accent="button.accent"
+        :keys="button.keys"
+        @click="emitResponse(button.status)"
+      >
+        {{ button.text }}
+      </AppButton>
+    </div>
+  </dialog>
 </template>
 
 <style lang="scss" scoped>
@@ -75,29 +86,42 @@ watch(html, newValue => {
   @media (prefers-color-scheme: dark) {
     @include light-theme;
   }
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: var(--z-index-level-2);
-  display: grid;
-  place-items: center;
-  background: rgba(0 0 0 / 0.2);
-  &__window {
-    background: var(--primary-bg);
-    border-radius: var(--space-s);
-    color: var(--primary-color);
-    padding: var(--space-xl);
-    border: none;
+  background: var(--primary-bg);
+  border-radius: var(--space-s);
+  color: var(--primary-color);
+  padding: var(--space-xl);
+  border: none;
+  flex-direction: column;
+  gap: var(--space-2xl);
+  box-shadow: var(--shadow-2xl);
+  max-width: min(28rem, calc(100vw - 2 * var(--space-l)));
+  opacity: 0;
+  transition:
+    opacity var(--transition-duration) var(--transition-timing-function),
+    display var(--transition-duration) allow-discrete,
+    overlay var(--transition-duration) allow-discrete;
+  &[open] {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-2xl);
-    box-shadow: var(--shadow-2xl);
-    max-width: min(28rem, calc(100vw - 2 * var(--space-l)));
-    &--shaking {
-      animation: horizontal-shake var(--transition-duration) linear forwards;
+    opacity: 1;
+    @starting-style {
+      opacity: 0;
     }
+  }
+  &--shaking {
+    animation: horizontal-shake var(--transition-duration) linear forwards;
+  }
+  &::backdrop {
+    background: rgba(0 0 0 / 0.2);
+    transition:
+      background var(--transition-duration) var(--transition-timing-function),
+      display var(--transition-duration) allow-discrete,
+      overlay var(--transition-duration) allow-discrete;
+    @starting-style {
+      background: rgba(0 0 0 / 0);
+    }
+  }
+  &:not([open])::backdrop {
+    background: rgba(0 0 0 / 0);
   }
   &__content {
     display: flex;

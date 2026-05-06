@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import MainFooterActions from '@/interface/components/by-hierarchy/Main/MainFooter/MainFooterActions.vue';
-import MainFooterRack from '@/interface/components/by-hierarchy/Main/MainFooter/MainFooterRack.vue';
+import LayoutFooterRack from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterRack.vue';
+import LayoutFooterToolbar from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterToolbar.vue';
 </script>
 
 <template>
   <footer class="footer">
     <Transition name="fade-from-bottom" appear>
-      <MainFooterRack class="footer__top" />
+      <LayoutFooterRack class="footer__top" />
     </Transition>
     <Transition name="fade-from-right" appear>
-      <MainFooterActions class="footer__bottom" />
+      <LayoutFooterToolbar class="footer__bottom" />
     </Transition>
   </footer>
 </template>

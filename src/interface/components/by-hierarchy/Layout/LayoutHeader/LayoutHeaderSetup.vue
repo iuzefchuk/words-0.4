@@ -34,7 +34,7 @@ const options = [
 </script>
 
 <template>
-  <section class="settings">
+  <form class="setup" :aria-label="text('general.aria_header_setup')" @submit.prevent>
     <AppRadioGroup
       v-for="{ items, legend, modelValue, onChange } in options"
       :key="legend"
@@ -43,11 +43,11 @@ const options = [
       :options="items"
       @change="onChange"
     />
-  </section>
+  </form>
 </template>
 
 <style lang="scss" scoped>
-.settings {
+.setup {
   display: flex;
   flex-direction: column;
   gap: var(--space-l);
