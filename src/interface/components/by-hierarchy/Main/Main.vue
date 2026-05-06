@@ -24,7 +24,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
     @click="userStore.deselectTile()"
   >
     <MainHeader class="main__top" />
-    <main class="main__mid">
+    <main class="main__mid app__limit-max-width">
       <MainFeed class="main__mid-feed" />
       <MainPlayfield />
     </main>
@@ -50,7 +50,6 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   align-items: center;
   justify-items: center;
   &__top,
-  &__mid,
   &__bottom {
     padding: var(--main-padding);
   }

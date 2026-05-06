@@ -34,9 +34,9 @@ const locations = computed(() => tileLocator.getLocationsFor(tiles.value));
 
 <style lang="scss" scoped>
 .outline {
+  position: absolute;
   z-index: var(--z-index-level-1);
   pointer-events: none;
-  position: absolute;
   outline: var(--tile-outline);
   border-radius: var(--grid-item-radius);
   transition-property: top, left, width, height, outline;
