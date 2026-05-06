@@ -1,13 +1,11 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { nextTick, onMounted, ref } from 'vue';
-import MainActions from '@/interface/components/by-hierarchy/Main/MainActions.vue';
 import MainEndscreen from '@/interface/components/by-hierarchy/Main/MainEndscreen.vue';
-import MainError from '@/interface/components/by-hierarchy/Main/MainError.vue';
 import MainFeed from '@/interface/components/by-hierarchy/Main/MainFeed.vue';
+import MainFooter from '@/interface/components/by-hierarchy/Main/MainFooter/MainFooter.vue';
+import MainHeader from '@/interface/components/by-hierarchy/Main/MainHeader/MainHeader.vue';
 import MainPlayfield from '@/interface/components/by-hierarchy/Main/MainPlayfield/MainPlayfield.vue';
-import MainRack from '@/interface/components/by-hierarchy/Main/MainRack.vue';
-import MainScoreline from '@/interface/components/by-hierarchy/Main/MainScoreline.vue';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 await MainStore.initiate();
@@ -25,26 +23,12 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
     :class="{ main: true, 'main--blurred': matchIsFinished }"
     @click="userStore.deselectTile()"
   >
-    <header class="main__top">
-      <Transition name="fade-down-up" appear>
-        <MainError />
-      </Transition>
-      <Transition name="fade-down-up" appear>
-        <MainScoreline />
-      </Transition>
-    </header>
+    <MainHeader class="main__top" />
     <div class="main__mid app__limit-max-width">
       <MainFeed class="main__mid-feed" />
       <MainPlayfield />
     </div>
-    <footer class="main__bottom">
-      <Transition name="fade-up-down" appear>
-        <MainRack class="main__bottom-rack app__limit-max-width" />
-      </Transition>
-      <Transition name="fade-from-left" appear>
-        <MainActions class="main__bottom-actions" />
-      </Transition>
-    </footer>
+    <MainFooter class="main__bottom" />
   </main>
   <Transition name="fade" appear>
     <MainEndscreen v-if="matchIsFinished" />
@@ -81,24 +65,6 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   }
   &__bottom {
     justify-self: center;
-    align-self: end;
-    padding: var(--main-padding) 0;
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1px 2fr 1px;
-    grid-template-rows: auto;
-    align-items: center;
-    overflow-x: hidden;
-  }
-  &__bottom-rack {
-    grid-column: 2;
-    align-self: flex-start;
-    justify-self: center;
-    height: var(--main-rack-height);
-  }
-  &__bottom-actions {
-    grid-column: 3;
-    justify-self: end;
     align-self: end;
   }
   &--blurred {

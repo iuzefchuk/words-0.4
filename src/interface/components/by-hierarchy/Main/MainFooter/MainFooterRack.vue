@@ -7,7 +7,7 @@ import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { Accent } from '@/interface/enums.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-const eventHandlers = UseEventHandlers.create();
+const eventHandlers = new UseEventHandlers();
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
 const { allActionsAreDisabled, tilesRemaining } = storeToRefs(mainStore);

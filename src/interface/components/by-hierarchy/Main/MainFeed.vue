@@ -5,7 +5,7 @@ const { history } = new UseHistory();
 
 <template>
   <section v-if="history.length > 0" class="feed">
-    <TransitionGroup name="fade-from-right" tag="ul" class="feed__list app__make-secondary" appear>
+    <TransitionGroup name="fade-from-left" tag="ul" class="feed__list app__make-secondary" appear>
       <li v-for="{ key, html } in history" :key="key" v-html="html" />
     </TransitionGroup>
   </section>

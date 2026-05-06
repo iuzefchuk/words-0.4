@@ -6,7 +6,7 @@ import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { Accent } from '@/interface/enums.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
-const eventHandlers = UseEventHandlers.create();
+const eventHandlers = new UseEventHandlers();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
 const items = reactive([
   {

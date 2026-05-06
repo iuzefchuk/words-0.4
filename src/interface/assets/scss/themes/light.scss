@@ -49,7 +49,6 @@
   --btn-bg-primary-active: var(--color-gray-950);
   --btn-color-primary-active: var(--color-gray-200);
   --btn-border-color-primary-active: transparent;
-  --btn-font-weight-primary: var(--font-weight);
 
   --btn-bg-secondary: var(--color-gray-50);
   --btn-color-secondary: var(--color-gray-800);
@@ -60,10 +59,14 @@
   --btn-bg-secondary-active: var(--color-gray-100);
   --btn-color-secondary-active: var(--color-gray-700);
   --btn-border-color-secondary-active: var(--color-gray-500);
-  --btn-font-weight-secondary: var(--font-weight);
 
   --btn-bg-disabled: var(--primary-bg);
   --btn-color-disabled: oklch(from var(--primary-color) l c h / 0.5);
   --btn-border-color-disabled: oklch(from var(--primary-color) l c h / 0.3);
-  --btn-font-weight-disabled: var(--font-weight);
+
+  --radio-group-bg: var(--color-gray-300);
+  --radio-group-color: var(--color-gray-600);
+  --radio-group-color-hover: var(--color-gray-900);
+  --radio-group-bg-selected: var(--color-gray-50);
+  --radio-group-color-selected: var(--color-gray-800);
 }

@@ -23,10 +23,6 @@ export default class UseEventHandlers {
     return UserStore.INSTANCE();
   }
 
-  static create(): UseEventHandlers {
-    return new UseEventHandlers();
-  }
-
   handleChangeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
     this.mainStore.changeMatchDifficulty(matchDifficulty);
   }

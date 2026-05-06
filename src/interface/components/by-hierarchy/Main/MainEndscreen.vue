@@ -5,7 +5,7 @@ import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { getMatchResultText } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
-const eventHandlers = UseEventHandlers.create();
+const eventHandlers = new UseEventHandlers();
 const { matchResult, opponentScore, userScore } = storeToRefs(mainStore);
 const resultText = computed(() => getMatchResultText(matchResult.value, userScore.value - opponentScore.value));
 </script>

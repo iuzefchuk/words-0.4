@@ -37,7 +37,7 @@
   --error-bg: var(--color-gray-950);
   --error-color: var(--color-gray-50);
 
-  --rack-cell-bg: var(--color-gray-600);
+  --rack-cell-bg: var(--color-gray-700);
   --rack-cell-shadow: var(--inset-shadow-s);
 
   --btn-bg-primary: var(--color-gray-100);
@@ -49,7 +49,6 @@
   --btn-bg-primary-active: var(--color-gray-200);
   --btn-color-primary-active: var(--color-gray-800);
   --btn-border-color-primary-active: transparent;
-  --btn-font-weight-primary: var(--font-weight-big);
 
   --btn-bg-secondary: var(--color-gray-600);
   --btn-color-secondary: var(--color-gray-100);
@@ -60,10 +59,14 @@
   --btn-bg-secondary-active: var(--color-gray-700);
   --btn-color-secondary-active: var(--color-gray-200);
   --btn-border-color-secondary-active: var(--color-gray-400);
-  --btn-font-weight-secondary: var(--font-weight-small);
 
   --btn-bg-disabled: var(--primary-bg);
   --btn-color-disabled: oklch(from var(--primary-color) l c h / 0.5);
   --btn-border-color-disabled: oklch(from var(--primary-color) l c h / 0.3);
-  --btn-font-weight-disabled: var(--font-weight-small);
+
+  --radio-group-bg: var(--color-gray-700);
+  --radio-group-color: var(--color-gray-400);
+  --radio-group-color-hover: var(--color-gray-50);
+  --radio-group-bg-selected: var(--color-gray-600);
+  --radio-group-color-selected: var(--color-gray-200);
 }

@@ -7,7 +7,7 @@ import { Accent } from '@/interface/enums.ts';
 import { getBonusName } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-const eventHandlers = UseEventHandlers.create();
+const eventHandlers = new UseEventHandlers();
 const props = defineProps<{
   cell: GameCell;
 }>();
