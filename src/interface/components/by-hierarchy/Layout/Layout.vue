@@ -53,7 +53,6 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   align-items: center;
   justify-items: center;
   &__top,
-  &__mid,
   &__bottom {
     padding: var(--layout-padding);
   }
