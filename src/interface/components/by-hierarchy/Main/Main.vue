@@ -17,19 +17,19 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
 </script>
 
 <template>
-  <main
+  <div
     v-if="isMounted"
     :style="{ '--grid-items-per-axis': mainStore.boardCellsPerAxis }"
     :class="{ main: true, 'main--blurred': matchIsFinished }"
     @click="userStore.deselectTile()"
   >
     <MainHeader class="main__top" />
-    <div class="main__mid app__limit-max-width">
+    <main class="main__mid">
       <MainFeed class="main__mid-feed" />
       <MainPlayfield />
-    </div>
+    </main>
     <MainFooter class="main__bottom" />
-  </main>
+  </div>
   <Transition name="fade" appear>
     <MainEndscreen v-if="matchIsFinished" />
   </Transition>
@@ -48,15 +48,21 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   display: grid;
   grid-template-rows: 1fr auto 1fr;
   align-items: center;
-  padding-left: var(--main-padding);
-  padding-right: var(--main-padding);
   justify-items: center;
+  &__top,
+  &__mid,
+  &__bottom {
+    padding: var(--main-padding);
+  }
   &__top {
     align-self: flex-start;
     justify-self: flex-start;
   }
   &__mid {
     position: relative;
+    width: 100%;
+    display: grid;
+    place-items: center;
   }
   &__mid-feed {
     position: absolute;

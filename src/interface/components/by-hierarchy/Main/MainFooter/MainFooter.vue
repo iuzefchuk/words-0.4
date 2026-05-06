@@ -6,7 +6,7 @@ import MainFooterRack from '@/interface/components/by-hierarchy/Main/MainFooter/
 <template>
   <footer class="footer">
     <Transition name="fade-from-bottom" appear>
-      <MainFooterRack class="footer__top app__limit-max-width" />
+      <MainFooterRack class="footer__top" />
     </Transition>
     <Transition name="fade-from-right" appear>
       <MainFooterActions class="footer__bottom" />
@@ -16,7 +16,6 @@ import MainFooterRack from '@/interface/components/by-hierarchy/Main/MainFooter/
 
 <style lang="scss" scoped>
 .footer {
-  padding: var(--main-padding) 0;
   width: 100%;
   display: grid;
   grid-template-columns: 1px 2fr 1px;
@@ -27,7 +26,6 @@ import MainFooterRack from '@/interface/components/by-hierarchy/Main/MainFooter/
     grid-column: 2;
     align-self: flex-start;
     justify-self: center;
-    height: var(--main-rack-height);
   }
   &__bottom {
     grid-column: 3;

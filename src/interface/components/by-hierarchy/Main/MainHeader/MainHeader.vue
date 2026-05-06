@@ -12,7 +12,7 @@ const { settingsChangeIsAllowed } = storeToRefs(MainStore.INSTANCE());
     <Transition name="fade-from-top" appear>
       <MainHeaderError />
     </Transition>
-    <Transition name="fade" mode="out-in" appear>
+    <Transition name="fade-from-top" mode="out-in" appear>
       <MainHeaderSettings v-if="settingsChangeIsAllowed" />
       <MainHeaderScoreline v-else />
     </Transition>
@@ -22,6 +22,5 @@ const { settingsChangeIsAllowed } = storeToRefs(MainStore.INSTANCE());
 <style lang="scss" scoped>
 .header {
   width: 100%;
-  padding: var(--main-padding) 0;
 }
 </style>

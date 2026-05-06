@@ -20,14 +20,8 @@ const paddedTiles = computed<Array<GameTile | null>>(() => {
 </script>
 
 <template>
-  <section class="rack">
-    <ul
-      :class="{
-        rack__grid: true,
-        'app__limit-max-width': true,
-        'app__create-grid--for-rack': true,
-      }"
-    >
+  <section class="rack app__limit-max-width">
+    <ul class="rack__grid app__create-grid--for-rack">
       <li
         v-for="(tile, idx) in paddedTiles"
         :key="idx"
@@ -67,6 +61,9 @@ const paddedTiles = computed<Array<GameTile | null>>(() => {
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-l);
+  &__grid {
+    width: 100%;
+  }
   &__cell {
     cursor: pointer;
     background: var(--rack-cell-bg);
