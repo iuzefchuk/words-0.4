@@ -1,18 +1,12 @@
 <script lang="ts" setup>
-import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
 import LayoutGridTooltip from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridTooltip.vue';
-import UseTileLocator from '@/interface/composables/UseTileLocator.ts';
-import UserStore from '@/interface/stores/UserStore.ts';
-const userStore = UserStore.INSTANCE();
-const tileLocator = new UseTileLocator();
-const { tiles } = storeToRefs(userStore);
-const locations = computed(() => tileLocator.getLocationsFor(tiles.value));
+import UseOutline from '@/interface/composables/UseOutline.ts';
+const { bounds, isAnchorAt, isOnRightmostColumnAt } = new UseOutline();
 </script>
 
 <template>
   <div
-    v-for="(group, idx) in locations"
+    v-for="(group, idx) in bounds"
     :key="idx"
     class="outline"
     aria-hidden="true"
@@ -25,10 +19,7 @@ const locations = computed(() => tileLocator.getLocationsFor(tiles.value));
     }"
   >
     <Transition name="fade" appear>
-      <LayoutGridTooltip
-        v-if="tileLocator.areLocationsForSelectedTiles(locations, idx)"
-        :is-flipped="tileLocator.isLocationOnRightmostColumn(locations, idx)"
-      />
+      <LayoutGridTooltip v-if="isAnchorAt(idx)" :is-flipped="isOnRightmostColumnAt(idx)" />
     </Transition>
   </div>
 </template>
