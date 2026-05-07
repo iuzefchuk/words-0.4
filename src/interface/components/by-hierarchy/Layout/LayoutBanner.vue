@@ -7,18 +7,18 @@ const message = computed(() => (bootError.value === null ? '' : window.text('gen
 </script>
 
 <template>
-  <div v-if="bootError" class="error" role="status" v-html="message" />
+  <div v-if="bootError" class="banner" role="status" v-html="message" />
 </template>
 
 <style lang="scss" scoped>
-.error {
+.banner {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   padding: var(--space-l);
-  background: var(--error-bg);
-  color: var(--error-color);
+  background: var(--banner-bg);
+  color: var(--banner-color);
   text-align: center;
   z-index: var(--z-index-level-3);
 }

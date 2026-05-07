@@ -6,9 +6,7 @@ import { Accent } from '@/interface/enums.ts';
 import DialogStore, { DialogStatus } from '@/interface/stores/DialogStore.ts';
 const dialogStore = DialogStore.INSTANCE();
 const { cancelText, confirmText, html, isDestructive, title } = storeToRefs(dialogStore);
-const ids = {
-  body: 'dialog-body',
-};
+const BODY_ID = 'dialog-body';
 const dialogEl = useTemplateRef<HTMLDialogElement>('dialog');
 const previousFocus = ref<HTMLElement | null>(null);
 const dialogIsShaking = ref(false);
@@ -54,14 +52,14 @@ watch(html, async newValue => {
     ref="dialog"
     role="alertdialog"
     :aria-label="title ?? undefined"
-    :aria-describedby="ids.body"
+    :aria-describedby="BODY_ID"
     :class="{ dialog: true, 'dialog--shaking': dialogIsShaking }"
     @click="onBackdropClick"
     @cancel.prevent="emitResponse(DialogStatus.Canceled)"
   >
     <div class="dialog__content">
       <h2 v-if="title">{{ title }}</h2>
-      <div :id="ids.body" class="app__make-secondary" v-html="html" />
+      <div :id="BODY_ID" class="app__make-secondary" v-html="html" />
     </div>
     <div class="dialog__footer">
       <AppButton

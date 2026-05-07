@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import LayoutFieldScore from '@/interface/components/by-hierarchy/Layout/LayoutField/LayoutFieldScore.vue';
+import LayoutGridTooltip from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridTooltip.vue';
 import UseOutline from '@/interface/composables/UseOutline.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 const userStore = UserStore.INSTANCE();
@@ -25,7 +25,7 @@ const locations = computed(() => tileLocator.getLocationsFor(tiles.value));
     }"
   >
     <Transition name="fade" appear>
-      <LayoutFieldScore
+      <LayoutGridTooltip
         v-if="tileLocator.areLocationsForSelectedTiles(locations, idx)"
         :is-flipped="tileLocator.isLocationOnRightmostColumn(locations, idx)"
       />

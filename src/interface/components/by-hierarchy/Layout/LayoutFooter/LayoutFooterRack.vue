@@ -2,7 +2,7 @@
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { GameTile } from '@/application/types/index.ts';
-import LayoutFooterPool from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterPool.vue';
+import LayoutFooterAnnotation from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterAnnotation.vue';
 import AppTile from '@/interface/components/shared/AppTile/AppTile.vue';
 import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { Accent, LabeledElement } from '@/interface/enums.ts';
@@ -52,8 +52,8 @@ function onTileClick(idx: number, tile: GameTile | null): void {
           />
         </button>
       </li>
-      <li role="none" class="rack__pool">
-        <LayoutFooterPool />
+      <li role="none" class="rack__annotation">
+        <LayoutFooterAnnotation />
       </li>
     </ul>
   </section>
@@ -84,7 +84,7 @@ function onTileClick(idx: number, tile: GameTile | null): void {
       cursor: not-allowed;
     }
   }
-  &__pool {
+  &__annotation {
     place-items: center;
   }
 }

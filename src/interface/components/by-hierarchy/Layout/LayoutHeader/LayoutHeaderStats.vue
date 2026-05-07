@@ -17,15 +17,15 @@ const players = computed(() => [
 </script>
 
 <template>
-  <dl class="score">
+  <dl class="stats">
     <div
       v-for="player in players"
       :key="player.name"
-      class="score__row app__make-secondary"
-      :aria-label="getElementLabel(LabeledElement.LayoutHeaderScore, { player: player.name })"
+      class="stats__row app__make-secondary"
+      :aria-label="getElementLabel(LabeledElement.LayoutHeaderStats, { player: player.name })"
     >
-      <dt class="score__title">{{ player.name }}</dt>
-      <dd class="score__desc">
+      <dt class="stats__title">{{ player.name }}</dt>
+      <dd class="stats__desc">
         <span v-animate-number="{ number: player.score }" aria-hidden="true" />
         <span class="app__make-sr-only">{{ player.score }}</span>
       </dd>
@@ -34,7 +34,7 @@ const players = computed(() => [
 </template>
 
 <style lang="scss" scoped>
-.score {
+.stats {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);

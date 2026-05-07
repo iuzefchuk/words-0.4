@@ -37,6 +37,8 @@ export default class UseRovingTabindex {
         break;
       case Key.Enter:
       case Key.Escape:
+      case Key.P:
+      case Key.R:
       case Key.Space:
       default:
         return;

@@ -9,20 +9,22 @@ const mainStore = MainStore.INSTANCE();
 const { currentTurnScore } = storeToRefs(mainStore);
 const SHIMMER_THRESHOLD = 29;
 const ariaLabel = computed(() =>
-  currentTurnScore.value === undefined ? '' : getElementLabel(LabeledElement.LayoutFieldScore, { score: currentTurnScore.value }),
+  currentTurnScore.value === undefined
+    ? ''
+    : getElementLabel(LabeledElement.LayoutGridTooltip, { score: currentTurnScore.value }),
 );
 </script>
 
 <template>
-  <output v-if="currentTurnScore" :aria-label="ariaLabel" :class="{ score: true, 'score--flipped': props.isFlipped }">
-    <span aria-hidden="true" :class="{ score__value: true, 'score__value--shimmer': currentTurnScore > SHIMMER_THRESHOLD }">
+  <output v-if="currentTurnScore" :aria-label="ariaLabel" :class="{ tooltip: true, 'tooltip--flipped': props.isFlipped }">
+    <span aria-hidden="true" :class="{ tooltip__value: true, 'tooltip__value--shimmer': currentTurnScore > SHIMMER_THRESHOLD }">
       {{ currentTurnScore }}
     </span>
   </output>
 </template>
 
 <style lang="scss" scoped>
-.score {
+.tooltip {
   position: absolute;
   top: calc(-1 * var(--space-xl));
   right: calc(-1 * var(--space-xl));

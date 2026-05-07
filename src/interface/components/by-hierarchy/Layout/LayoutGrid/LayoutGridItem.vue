@@ -15,8 +15,8 @@ const eventHandlers = new UseEventHandlers();
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
 const cellRole = inject<string>('cellRole');
-if (cellRole === undefined) throw new Error('LayoutFieldSquare: cellRole must be provided');
-const focusedSquareIndex = inject<Ref<number>>('focusedSquareIndex');
+if (cellRole === undefined) throw new Error('LayoutGridItem: cellRole must be provided');
+const focusedItemIndex = inject<Ref<number>>('focusedItemIndex');
 const isCenter = computed(() => mainStore.isCellCenter(props.cell));
 const bonus = computed(() => mainStore.getCellBonus(props.cell));
 const tile = computed(() => mainStore.findTileOnCell(props.cell));
@@ -27,15 +27,15 @@ const tileAccent = computed(() => {
   if (mainStore.wasTileUsedInPreviousTurn(tile.value)) return Accent.Secondary;
   return Accent.Tertiary;
 });
-const isFocused = computed(() => focusedSquareIndex?.value === props.index);
+const isFocused = computed(() => focusedItemIndex?.value === props.index);
 const ariaLabel = computed(() => {
   if (tile.value !== undefined) {
     const letter = mainStore.getTileLetter(tile.value);
-    return getElementLabel(LabeledElement.LayoutFieldSquareTile, { letter, points: mainStore.getLetterPoints(letter) });
+    return getElementLabel(LabeledElement.LayoutGridItemTile, { letter, points: mainStore.getLetterPoints(letter) });
   }
-  if (isCenter.value) return getElementLabel(LabeledElement.LayoutFieldSquareCellCenter);
+  if (isCenter.value) return getElementLabel(LabeledElement.LayoutGridItemCellCenter);
   if (bonus.value !== null) {
-    return getElementLabel(LabeledElement.LayoutFieldSquareCellWithBonus, { bonus: getElementLabel(getBonusLabel(bonus.value)) });
+    return getElementLabel(LabeledElement.LayoutGridItemCellWithBonus, { bonus: getElementLabel(getBonusLabel(bonus.value)) });
   }
   return undefined;
 });
@@ -56,9 +56,9 @@ function activate(): void {
     :aria-pressed="tile === undefined ? undefined : tileIsSelected"
     :aria-label="ariaLabel"
     :class="{
-      square: true,
-      'square--highlighted': isCenter,
-      'square--occupied': tile !== undefined,
+      item: true,
+      'item--highlighted': isCenter,
+      'item--occupied': tile !== undefined,
     }"
     @click.stop="activate"
     @keydown.enter.prevent.stop="activate"
@@ -68,11 +68,11 @@ function activate(): void {
       v-if="bonus"
       aria-hidden="true"
       :class="{
-        square__bonus: true,
-        'square__bonus--quaternary': bonus === GameBonus.DoubleLetter,
-        'square__bonus--tertiary': bonus === GameBonus.TripleLetter,
-        'square__bonus--secondary': bonus === GameBonus.DoubleWord,
-        'square__bonus--primary': bonus === GameBonus.TripleWord,
+        item__bonus: true,
+        'item__bonus--quaternary': bonus === GameBonus.DoubleLetter,
+        'item__bonus--tertiary': bonus === GameBonus.TripleLetter,
+        'item__bonus--secondary': bonus === GameBonus.DoubleWord,
+        'item__bonus--primary': bonus === GameBonus.TripleWord,
       }"
       viewBox="0 0 40 40"
     >
@@ -91,7 +91,7 @@ function activate(): void {
 </template>
 
 <style lang="scss" scoped>
-.square {
+.item {
   max-width: var(--grid-item-size);
   border-radius: var(--grid-item-radius);
   background: var(--cell-bg);

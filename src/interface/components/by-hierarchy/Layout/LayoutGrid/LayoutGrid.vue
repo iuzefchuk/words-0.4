@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { provide, useTemplateRef } from 'vue';
-import LayoutFieldOutline from '@/interface/components/by-hierarchy/Layout/LayoutField/LayoutFieldOutline.vue';
-import LayoutFieldSquare from '@/interface/components/by-hierarchy/Layout/LayoutField/LayoutFieldSquare.vue';
+import LayoutGridItem from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridItem.vue';
+import LayoutGridOutline from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridOutline.vue';
 import UseRovingTabindex from '@/interface/composables/UseRovingTabindex.ts';
 import { LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
@@ -15,30 +15,30 @@ const rovingTabindex = new UseRovingTabindex(
   mainStore.boardCellsPerAxis,
 );
 provide('cellRole', CELL_ROLE);
-provide('focusedSquareIndex', rovingTabindex.focusedIndex);
+provide('focusedItemIndex', rovingTabindex.focusedIndex);
 </script>
 
 <template>
-  <main class="field app__limit-max-width" :aria-label="getElementLabel(LabeledElement.LayoutField)">
+  <main class="grid app__limit-max-width" :aria-label="getElementLabel(LabeledElement.LayoutGrid)">
     <div
       :ref="GRID_REF"
-      class="field__grid app__create-grid--for-board"
+      class="grid__inner app__create-grid--for-board"
       role="grid"
       :aria-rowcount="mainStore.boardCellsPerAxis"
       :aria-colcount="mainStore.boardCellsPerAxis"
       @keydown="rovingTabindex.onKeydown"
     >
-      <LayoutFieldSquare v-for="(cell, idx) in mainStore.boardCells" :key="cell" :cell="cell" :index="idx" />
+      <LayoutGridItem v-for="(cell, idx) in mainStore.boardCells" :key="cell" :cell="cell" :index="idx" />
     </div>
-    <LayoutFieldOutline />
+    <LayoutGridOutline />
   </main>
 </template>
 
 <style lang="scss" scoped>
-.field {
+.grid {
   width: 100%;
   position: relative;
-  &__grid {
+  &__inner {
     width: 100%;
   }
 }

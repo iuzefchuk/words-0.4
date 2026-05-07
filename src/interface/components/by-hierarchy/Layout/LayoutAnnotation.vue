@@ -6,19 +6,19 @@ const { history } = new UseHistory();
 </script>
 
 <template>
-  <aside v-if="history.length > 0" class="history" role="log" :aria-label="getElementLabel(LabeledElement.LayoutHistory)">
-    <TransitionGroup name="fade-from-left" tag="ul" class="history__list app__make-secondary" appear>
+  <aside v-if="history.length > 0" class="annotation" role="log" :aria-label="getElementLabel(LabeledElement.LayoutAnnotation)">
+    <TransitionGroup name="fade-from-left" tag="ul" class="annotation__list app__make-secondary" appear>
       <li v-for="{ key, html } in history" :key="key" v-html="html" />
     </TransitionGroup>
   </aside>
 </template>
 
 <style lang="scss" scoped>
-.history {
+.annotation {
   $padding-right: calc(var(--grid-item-size) / 4);
   width: calc(100% - $padding-right);
   &__list {
-    height: var(--layout-history-height);
+    height: var(--layout-annotation-height);
     border-right: 1px solid currentColor;
     padding-right: $padding-right;
     display: flex;

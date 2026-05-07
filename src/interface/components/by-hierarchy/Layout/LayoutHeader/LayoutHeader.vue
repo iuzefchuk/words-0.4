@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import LayoutHeaderScore from '@/interface/components/by-hierarchy/Layout/LayoutHeader/LayoutHeaderScore.vue';
 import LayoutHeaderSetup from '@/interface/components/by-hierarchy/Layout/LayoutHeader/LayoutHeaderSetup.vue';
+import LayoutHeaderStats from '@/interface/components/by-hierarchy/Layout/LayoutHeader/LayoutHeaderStats.vue';
 import MainStore from '@/interface/stores/MainStore.ts';
 const { settingsChangeIsAllowed } = storeToRefs(MainStore.INSTANCE());
 </script>
@@ -10,7 +10,7 @@ const { settingsChangeIsAllowed } = storeToRefs(MainStore.INSTANCE());
   <header class="header">
     <Transition name="fade-from-top" mode="out-in" appear>
       <LayoutHeaderSetup v-if="settingsChangeIsAllowed" />
-      <LayoutHeaderScore v-else />
+      <LayoutHeaderStats v-else />
     </Transition>
   </header>
 </template>
