@@ -40,6 +40,7 @@ export default defineConfig(({ mode }) => {
     root: path.resolve(__dirname, './src/interface'),
     server: {
       port: Number.isNaN(Number(env.VITE_PORT)) || Number(env.VITE_PORT) === 0 ? 5173 : Number(env.VITE_PORT),
+      strictPort: true,
     },
     test: {
       environment: 'happy-dom',

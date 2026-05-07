@@ -1,9 +1,11 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@playwright/test';
+import { loadEnv } from 'vite';
 
 const dirName = path.dirname(fileURLToPath(import.meta.url));
-const URL = `http://localhost:${String(process.env.VITE_PORT ?? 5173)}`;
+const env = loadEnv('', dirName, '');
+const URL = `http://localhost:${String(env.VITE_PORT || 5173)}`;
 const isCi = Boolean(process.env.CI);
 
 export default defineConfig({
@@ -29,7 +31,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'npm run serve',
+    command: 'node ./node_modules/vite/bin/vite.js',
     reuseExistingServer: !isCi,
     timeout: 120_000,
     url: URL,
