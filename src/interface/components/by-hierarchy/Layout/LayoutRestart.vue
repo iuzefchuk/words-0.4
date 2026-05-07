@@ -16,7 +16,7 @@ function restart(): void {
 
 <template>
   <div class="restart">
-    <output class="app__make-sr-only">{{ resultText }}</output>
+    <p role="status" class="app__make-sr-only">{{ resultText }}</p>
     <button class="restart__button" :aria-label="ariaLabel" @dblclick.stop="restart" @keydown.space.prevent.stop="restart">
       <span aria-hidden="true" class="restart__text">{{ resultText }}</span>
       <span aria-hidden="true" class="restart__hint app__make-secondary">{{ text('general.action_new_match') }}</span>

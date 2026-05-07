@@ -7,10 +7,10 @@ import { LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const CELL_ROLE = 'gridcell';
-const GRID_REF = 'grid';
+const REF_GRID = 'grid';
 const mainStore = MainStore.INSTANCE();
 const rovingTabindex = new UseRovingTabindex(
-  useTemplateRef<HTMLElement>(GRID_REF),
+  useTemplateRef<HTMLElement>(REF_GRID),
   `[role="${CELL_ROLE}"]`,
   mainStore.boardCellsPerAxis,
 );
@@ -21,7 +21,7 @@ provide('focusedItemIndex', rovingTabindex.focusedIndex);
 <template>
   <main class="grid app__limit-max-width" :aria-label="getElementLabel(LabeledElement.LayoutGrid)">
     <div
-      :ref="GRID_REF"
+      :ref="REF_GRID"
       class="grid__inner app__create-grid--for-board"
       role="grid"
       :aria-rowcount="mainStore.boardCellsPerAxis"

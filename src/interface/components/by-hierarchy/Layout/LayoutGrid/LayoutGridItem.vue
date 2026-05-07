@@ -46,8 +46,9 @@ function activate(): void {
 </script>
 
 <template>
-  <div
+  <button
     v-memo="[tile, bonus, tileAccent, tileIsSelected, isFocused]"
+    type="button"
     :role="cellRole"
     :tabindex="isFocused ? 0 : -1"
     :aria-rowindex="mainStore.getCellRowIndex(cell) + 1"
@@ -78,15 +79,9 @@ function activate(): void {
       <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central">{{ getBonusName(bonus) }}</text>
     </svg>
     <Transition name="fade" appear>
-      <AppTile
-        v-if="tile && tileAccent"
-        aria-hidden="true"
-        :letter="mainStore.getTileLetter(tile)"
-        :accent="tileAccent"
-        :is-disabled="!userStore.isTileInRack(tile)"
-      />
+      <AppTile v-if="tile && tileAccent" :letter="mainStore.getTileLetter(tile)" :accent="tileAccent" />
     </Transition>
-  </div>
+  </button>
 </template>
 
 <style lang="scss" scoped>

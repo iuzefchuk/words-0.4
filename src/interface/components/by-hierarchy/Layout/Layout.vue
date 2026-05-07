@@ -1,22 +1,35 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { nextTick, onMounted, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import LayoutAnnotation from '@/interface/components/by-hierarchy/Layout/LayoutAnnotation.vue';
 import LayoutBanner from '@/interface/components/by-hierarchy/Layout/LayoutBanner.vue';
 import LayoutFooter from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooter.vue';
 import LayoutGrid from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGrid.vue';
 import LayoutHeader from '@/interface/components/by-hierarchy/Layout/LayoutHeader/LayoutHeader.vue';
 import LayoutRestart from '@/interface/components/by-hierarchy/Layout/LayoutRestart.vue';
-import { LabeledElement } from '@/interface/enums.ts';
+import { Key, LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
+import DialogStore from '@/interface/stores/DialogStore.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 await MainStore.initiate();
 const mainStore = MainStore.INSTANCE();
 const { matchIsFinished } = storeToRefs(mainStore);
 const userStore = UserStore.INSTANCE();
+const dialogStore = DialogStore.INSTANCE();
 const isMounted = ref(false);
 onMounted(() => nextTick(() => (isMounted.value = true)));
+function onKeydown(event: KeyboardEvent): void {
+  if ((event.key as Key) !== Key.Escape) return;
+  if (dialogStore.isOpen) return;
+  userStore.deselectTile();
+}
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown);
+});
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown);
+});
 </script>
 
 <template>

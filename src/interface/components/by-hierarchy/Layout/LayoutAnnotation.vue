@@ -6,7 +6,14 @@ const { history } = new UseHistory();
 </script>
 
 <template>
-  <aside v-if="history.length > 0" class="annotation" role="log" :aria-label="getElementLabel(LabeledElement.LayoutAnnotation)">
+  <aside
+    v-if="history.length > 0"
+    class="annotation"
+    role="log"
+    aria-live="polite"
+    aria-relevant="additions"
+    :aria-label="getElementLabel(LabeledElement.LayoutAnnotation)"
+  >
     <TransitionGroup name="fade-from-left" tag="ul" class="annotation__list app__make-secondary" appear>
       <li v-for="{ key, html } in history" :key="key" v-html="html" />
     </TransitionGroup>

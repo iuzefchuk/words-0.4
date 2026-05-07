@@ -7,31 +7,33 @@ import DialogStore, { DialogStatus } from '@/interface/stores/DialogStore.ts';
 const dialogStore = DialogStore.INSTANCE();
 const { cancelText, confirmText, html, isDestructive, title } = storeToRefs(dialogStore);
 const BODY_ID = 'dialog-body';
-const dialogEl = useTemplateRef<HTMLDialogElement>('dialog');
+const REF_BUTTONS = 'buttons';
+const REF_DIALOG = 'dialog';
+const dialogRef = useTemplateRef<HTMLDialogElement>(REF_DIALOG);
+const buttonRefs = useTemplateRef<Array<{ focus: () => void }>>(REF_BUTTONS);
 const previousFocus = ref<HTMLElement | null>(null);
 const dialogIsShaking = ref(false);
 const buttons = computed(() => [
   {
     accent: isDestructive.value ? Accent.Primary : Accent.Secondary,
-    autofocus: isDestructive.value,
     status: DialogStatus.Canceled,
     text: cancelText.value,
   },
   {
     accent: isDestructive.value ? Accent.Secondary : Accent.Primary,
-    autofocus: !isDestructive.value,
     status: DialogStatus.Confirmed,
     text: confirmText.value,
   },
 ]);
+const focusedButtonIdx = computed(() => (isDestructive.value ? 0 : 1));
 function emitResponse(status: DialogStatus): void {
-  if (dialogEl.value?.open === true) dialogEl.value.close();
+  if (dialogRef.value?.open === true) dialogRef.value.close();
   dialogStore.resolve({ status });
   previousFocus.value?.focus();
   previousFocus.value = null;
 }
 function onBackdropClick(event: MouseEvent): void {
-  if (event.target === dialogEl.value) shake();
+  if (event.target === dialogRef.value) shake();
 }
 function shake(): void {
   dialogIsShaking.value = true;
@@ -43,14 +45,16 @@ watch(html, async newValue => {
   if (newValue === null) return;
   previousFocus.value = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   await nextTick();
-  dialogEl.value?.showModal();
+  dialogRef.value?.showModal();
+  buttonRefs.value?.[focusedButtonIdx.value]?.focus();
 });
 </script>
 
 <template>
   <dialog
-    ref="dialog"
+    :ref="REF_DIALOG"
     role="alertdialog"
+    aria-modal="true"
     :aria-label="title ?? undefined"
     :aria-describedby="BODY_ID"
     :class="{ dialog: true, 'dialog--shaking': dialogIsShaking }"
@@ -65,8 +69,8 @@ watch(html, async newValue => {
       <AppButton
         v-for="button in buttons"
         :key="button.status"
+        :ref="REF_BUTTONS"
         :accent="button.accent"
-        :autofocus="button.autofocus"
         @trigger="emitResponse(button.status)"
       >
         {{ button.text }}

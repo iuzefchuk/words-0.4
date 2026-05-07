@@ -45,7 +45,6 @@ function onTileClick(idx: number, tile: GameTile | null): void {
         >
           <AppTile
             v-if="tile !== null && userStore.isTileInRack(tile) && !mainStore.isTilePlaced(tile)"
-            aria-hidden="true"
             :letter="mainStore.getTileLetter(tile)"
             :accent="userStore.isTileSelected(tile) ? Accent.Primary : Accent.Tertiary"
           />

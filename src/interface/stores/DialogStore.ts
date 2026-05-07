@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 export enum DialogStatus {
   Canceled = 'Canceled',
@@ -29,6 +29,7 @@ export default class DialogStore {
       confirmText: store.confirmTextRef,
       html: store.htmlRef,
       isDestructive: store.isDestructiveRef,
+      isOpen: store.isOpenRef,
       resolve: store.resolve.bind(store),
       title: store.titleRef,
       trigger: store.trigger.bind(store),
@@ -42,6 +43,8 @@ export default class DialogStore {
   private readonly htmlRef = ref<null | string>(null);
 
   private readonly isDestructiveRef = ref(false);
+
+  private readonly isOpenRef = computed(() => this.htmlRef.value !== null);
 
   private pendingResolve: ((result: DialogResult) => void) | null = null;
 

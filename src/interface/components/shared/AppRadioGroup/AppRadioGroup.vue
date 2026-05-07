@@ -8,8 +8,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   change: [value: T];
 }>();
+const REF_LABELS = 'labels';
 const groupName = useId();
-const labels = useTemplateRef<Array<HTMLLabelElement>>('labels');
+const labels = useTemplateRef<Array<HTMLLabelElement>>(REF_LABELS);
 const indicatorStyle = ref({ transform: 'translateX(0)', width: '0' });
 const isReady = ref(false);
 function updateIndicator(): void {
@@ -38,7 +39,7 @@ watch(() => props.modelValue, updateIndicator, { flush: 'post' });
       <label
         v-for="option in options"
         :key="option.value"
-        ref="labels"
+        :ref="REF_LABELS"
         :class="{
           'radio-group__option': true,
           'radio-group__option--selected': option.value === modelValue,

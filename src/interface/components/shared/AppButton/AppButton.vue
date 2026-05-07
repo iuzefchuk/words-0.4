@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, useTemplateRef } from 'vue';
 import { Accent } from '@/interface/enums.ts';
+import DialogStore from '@/interface/stores/DialogStore.ts';
 const props = defineProps<{
   accent: Accent;
   isDisabled?: boolean;
@@ -9,10 +10,13 @@ const props = defineProps<{
 const emit = defineEmits<{
   trigger: [];
 }>();
+const REF_BUTTON = 'button';
+const buttonEl = useTemplateRef<HTMLButtonElement>(REF_BUTTON);
+const dialogStore = DialogStore.INSTANCE();
 if (props.keys !== undefined) {
   const { keys } = props;
   const onKeydown = (event: KeyboardEvent): void => {
-    if (document.querySelector('dialog[open]') !== null) return;
+    if (dialogStore.isOpen) return;
     if (!keys.includes(event.key)) return;
     if (props.isDisabled) return;
     event.preventDefault();
@@ -26,10 +30,14 @@ if (props.keys !== undefined) {
     window.removeEventListener('keydown', onKeydown, true);
   });
 }
+defineExpose({
+  focus: () => buttonEl.value?.focus(),
+});
 </script>
 
 <template>
   <button
+    :ref="REF_BUTTON"
     :class="{
       btn: true,
       'btn--primary': accent === Accent.Primary,
