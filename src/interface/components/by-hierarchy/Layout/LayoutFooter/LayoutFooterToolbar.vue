@@ -62,6 +62,7 @@ const buttons = reactive([
   gap: var(--space-s);
   @media screen and (max-width: 750px) {
     flex-direction: row-reverse;
+    padding-top: 5rem;
   }
 }
 </style>
