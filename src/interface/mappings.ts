@@ -2,6 +2,15 @@ import { GameBonus, GameEvent, GameEventType, GameMatchResult, GamePlayer } from
 import { LabeledElement } from '@/interface/enums.ts';
 import { Sound } from '@/interface/services/SoundPlayer.ts';
 
+export function getBonusLabel(bonus: GameBonus): LabeledElement {
+  return {
+    [GameBonus.DoubleLetter]: LabeledElement.LayoutFieldSquareBonusDoubleLetter,
+    [GameBonus.DoubleWord]: LabeledElement.LayoutFieldSquareBonusDoubleWord,
+    [GameBonus.TripleLetter]: LabeledElement.LayoutFieldSquareBonusTripleLetter,
+    [GameBonus.TripleWord]: LabeledElement.LayoutFieldSquareBonusTripleWord,
+  }[bonus];
+}
+
 export function getBonusName(bonus: GameBonus): string {
   return window.text(
     {

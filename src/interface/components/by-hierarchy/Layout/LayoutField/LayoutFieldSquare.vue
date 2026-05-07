@@ -1,70 +1,97 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, inject, Ref } from 'vue';
 import { GameBonus, GameCell } from '@/application/types/index.ts';
 import AppTile from '@/interface/components/shared/AppTile/AppTile.vue';
 import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
-import { Accent } from '@/interface/enums.ts';
-import { getBonusName } from '@/interface/mappings.ts';
+import { Accent, LabeledElement } from '@/interface/enums.ts';
+import { getBonusLabel, getBonusName, getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-const eventHandlers = new UseEventHandlers();
 const props = defineProps<{
   cell: GameCell;
+  index: number;
 }>();
+const eventHandlers = new UseEventHandlers();
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
+const cellRole = inject<string>('cellRole');
+if (cellRole === undefined) throw new Error('LayoutFieldSquare: cellRole must be provided');
+const focusedSquareIndex = inject<Ref<number>>('focusedSquareIndex');
 const isCenter = computed(() => mainStore.isCellCenter(props.cell));
 const bonus = computed(() => mainStore.getCellBonus(props.cell));
-const bonusName = computed(() => (bonus.value !== null ? getBonusName(bonus.value) : ''));
 const tile = computed(() => mainStore.findTileOnCell(props.cell));
+const tileIsSelected = computed(() => tile.value !== undefined && userStore.isTileSelected(tile.value));
 const tileAccent = computed(() => {
   if (tile.value === undefined) return null;
-  if (userStore.isTileSelected(tile.value)) return Accent.Primary;
-  else if (mainStore.wasTileUsedInPreviousTurn(tile.value)) return Accent.Secondary;
+  if (tileIsSelected.value) return Accent.Primary;
+  if (mainStore.wasTileUsedInPreviousTurn(tile.value)) return Accent.Secondary;
   return Accent.Tertiary;
 });
+const isFocused = computed(() => focusedSquareIndex?.value === props.index);
+const ariaLabel = computed(() => {
+  if (tile.value !== undefined) {
+    const letter = mainStore.getTileLetter(tile.value);
+    return getElementLabel(LabeledElement.LayoutFieldSquareTile, { letter, points: mainStore.getLetterPoints(letter) });
+  }
+  if (isCenter.value) return getElementLabel(LabeledElement.LayoutFieldSquareCellCenter);
+  if (bonus.value !== null) {
+    return getElementLabel(LabeledElement.LayoutFieldSquareCellWithBonus, { bonus: getElementLabel(getBonusLabel(bonus.value)) });
+  }
+  return undefined;
+});
+
+function activate(): void {
+  if (tile.value !== undefined) eventHandlers.handleClickBoardTile(tile.value);
+  else eventHandlers.handleClickBoardCell(props.cell);
+}
 </script>
 
 <template>
-  <li
-    v-memo="[tile, bonus, tileAccent, tile ? userStore.isTileSelected(tile) : false]"
+  <div
+    v-memo="[tile, bonus, tileAccent, tileIsSelected, isFocused]"
+    :role="cellRole"
+    :tabindex="isFocused ? 0 : -1"
+    :aria-rowindex="mainStore.getCellRowIndex(cell) + 1"
+    :aria-colindex="mainStore.getCellColumnIndex(cell) + 1"
+    :aria-pressed="tile === undefined ? undefined : tileIsSelected"
+    :aria-label="ariaLabel"
     :class="{
-      cell: true,
-      'cell--highlighted': isCenter,
-      'cell--occupied': tile !== undefined,
+      square: true,
+      'square--highlighted': isCenter,
+      'square--occupied': tile !== undefined,
     }"
-    @click.stop="eventHandlers.handleClickBoardCell(cell)"
+    @click.stop="activate"
+    @keydown.enter.prevent.stop="activate"
+    @dblclick.stop="tile !== undefined && eventHandlers.handleDoubleClickBoardTile(tile)"
   >
     <svg
       v-if="bonus"
+      aria-hidden="true"
       :class="{
-        cell__bonus: true,
-        'cell__bonus--quaternary': bonus === GameBonus.DoubleLetter,
-        'cell__bonus--tertiary': bonus === GameBonus.TripleLetter,
-        'cell__bonus--secondary': bonus === GameBonus.DoubleWord,
-        'cell__bonus--primary': bonus === GameBonus.TripleWord,
+        square__bonus: true,
+        'square__bonus--quaternary': bonus === GameBonus.DoubleLetter,
+        'square__bonus--tertiary': bonus === GameBonus.TripleLetter,
+        'square__bonus--secondary': bonus === GameBonus.DoubleWord,
+        'square__bonus--primary': bonus === GameBonus.TripleWord,
       }"
-      class="cell__bonus"
       viewBox="0 0 40 40"
     >
-      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central">
-        {{ bonusName }}
-      </text>
+      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central">{{ getBonusName(bonus) }}</text>
     </svg>
     <Transition name="fade" appear>
       <AppTile
         v-if="tile && tileAccent"
+        aria-hidden="true"
         :letter="mainStore.getTileLetter(tile)"
         :accent="tileAccent"
-        @click.stop="eventHandlers.handleClickBoardTile(tile)"
-        @dblclick.stop="eventHandlers.handleDoubleClickBoardTile(tile)"
+        :is-disabled="!userStore.isTileInRack(tile)"
       />
     </Transition>
-  </li>
+  </div>
 </template>
 
 <style lang="scss" scoped>
-.cell {
+.square {
   max-width: var(--grid-item-size);
   border-radius: var(--grid-item-radius);
   background: var(--cell-bg);
@@ -89,10 +116,6 @@ const tileAccent = computed(() => {
         fill: var(--cell-color-#{$accent});
       }
     }
-  }
-  &__tile {
-    width: 100%;
-    max-width: var(--grid-item-size);
   }
 }
 </style>
