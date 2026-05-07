@@ -10,7 +10,7 @@ const emit = defineEmits<{
   trigger: [];
 }>();
 if (props.keys !== undefined) {
-  const keys = props.keys.map(key => (key === 'Space' ? ' ' : key));
+  const { keys } = props;
   const onKeydown = (event: KeyboardEvent): void => {
     if (document.querySelector('dialog[open]') !== null) return;
     if (!keys.includes(event.key)) return;

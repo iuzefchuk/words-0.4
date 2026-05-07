@@ -3,20 +3,20 @@ import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
 import AppButton from '@/interface/components/shared/AppButton/AppButton.vue';
 import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
-import { Accent, LabeledElement } from '@/interface/enums.ts';
+import { Accent, Key, LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const eventHandlers = new UseEventHandlers();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
-const items = reactive([
+const buttons = reactive([
   {
     accent: Accent.Primary,
     action: () => {
       eventHandlers.handleSave();
     },
     isDisabled: () => allActionsAreDisabled.value || !mainStore.currentTurnIsValid,
-    keys: ['Enter'],
+    keys: [Key.Enter],
     name: window.text('general.action_play'),
   },
   {
@@ -25,7 +25,7 @@ const items = reactive([
       void eventHandlers.handlePass();
     },
     isDisabled: () => allActionsAreDisabled.value,
-    keys: ['p'],
+    keys: [Key.P],
     name: window.text('general.action_pass'),
   },
   {
@@ -34,7 +34,7 @@ const items = reactive([
       void eventHandlers.handleResign();
     },
     isDisabled: () => allActionsAreDisabled.value,
-    keys: ['r'],
+    keys: [Key.R],
     name: window.text('general.action_resign'),
   },
 ]);
@@ -43,7 +43,7 @@ const items = reactive([
 <template>
   <div class="toolbar" role="toolbar" :aria-label="getElementLabel(LabeledElement.LayoutFooterToolbar)">
     <AppButton
-      v-for="{ name, action, accent, isDisabled, keys } in items"
+      v-for="{ name, action, accent, isDisabled, keys } in buttons"
       :key="name"
       :accent="accent"
       :is-disabled="isDisabled()"
