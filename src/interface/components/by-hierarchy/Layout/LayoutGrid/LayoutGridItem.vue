@@ -2,8 +2,8 @@
 import { computed, inject, Ref } from 'vue';
 import { GameBonus, GameCell } from '@/application/types/index.ts';
 import AppTile from '@/interface/components/shared/AppTile/AppTile.vue';
-import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { Accent, LabeledElement } from '@/interface/enums.ts';
+import { handleClickGridCell, handleClickGridTile, handleDoubleClickGridTile } from '@/interface/handlers/grid.ts';
 import { getBonusLabel, getBonusName, getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
@@ -11,7 +11,6 @@ const props = defineProps<{
   cell: GameCell;
   index: number;
 }>();
-const eventHandlers = new UseEventHandlers();
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
 const cellRole = inject<string>('cellRole');
@@ -41,8 +40,8 @@ const ariaLabel = computed(() => {
 });
 
 function activate(): void {
-  if (tile.value !== undefined) eventHandlers.handleClickBoardTile(tile.value);
-  else eventHandlers.handleClickBoardCell(props.cell);
+  if (tile.value !== undefined) handleClickGridTile(tile.value);
+  else handleClickGridCell(props.cell);
 }
 </script>
 
@@ -62,7 +61,7 @@ function activate(): void {
     }"
     @click.stop="activate"
     @keydown.enter.prevent.stop="activate"
-    @dblclick.stop="tile !== undefined && eventHandlers.handleDoubleClickBoardTile(tile)"
+    @dblclick.stop="tile !== undefined && handleDoubleClickGridTile(tile)"
   >
     <svg
       v-if="bonus"

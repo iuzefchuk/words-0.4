@@ -3,9 +3,7 @@ import MainStore from '@/interface/stores/MainStore.ts';
 
 type Location = { col: number; colSpan: number; row: number; rowSpan: number };
 
-// TODO replace with domain methods?
-
-export default class UseOutline {
+export default class UseTileLocator {
   private get mainStore(): ReturnType<typeof MainStore.INSTANCE> {
     return MainStore.INSTANCE();
   }

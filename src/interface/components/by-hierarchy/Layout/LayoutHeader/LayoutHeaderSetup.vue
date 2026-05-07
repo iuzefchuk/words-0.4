@@ -1,13 +1,12 @@
 <script lang="ts" setup>
 import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
 import AppRadioGroup from '@/interface/components/shared/AppRadioGroup/AppRadioGroup.vue';
-import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { LabeledElement } from '@/interface/enums.ts';
+import { handleChangeMatchDifficulty, handleChangeMatchType } from '@/interface/handlers/setup.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 type OptionValue = GameMatchDifficulty | GameMatchType;
 const mainStore = MainStore.INSTANCE();
-const eventHandlers = new UseEventHandlers();
 const options = [
   {
     items: [
@@ -18,7 +17,7 @@ const options = [
     legend: window.text('general.settings_difficulty'),
     modelValue: () => mainStore.matchDifficulty,
     onChange: (value: OptionValue) => {
-      eventHandlers.handleChangeMatchDifficulty(value as GameMatchDifficulty);
+      handleChangeMatchDifficulty(value as GameMatchDifficulty);
     },
   },
   {
@@ -29,7 +28,7 @@ const options = [
     legend: window.text('general.settings_bonuses'),
     modelValue: () => mainStore.matchType,
     onChange: (value: OptionValue) => {
-      eventHandlers.handleChangeMatchType(value as GameMatchType);
+      handleChangeMatchType(value as GameMatchType);
     },
   },
 ];

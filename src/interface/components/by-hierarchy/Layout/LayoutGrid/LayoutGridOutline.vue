@@ -2,10 +2,10 @@
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import LayoutGridTooltip from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridTooltip.vue';
-import UseOutline from '@/interface/composables/UseOutline.ts';
+import UseTileLocator from '@/interface/composables/UseTileLocator.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 const userStore = UserStore.INSTANCE();
-const tileLocator = new UseOutline();
+const tileLocator = new UseTileLocator();
 const { tiles } = storeToRefs(userStore);
 const locations = computed(() => tileLocator.getLocationsFor(tiles.value));
 </script>

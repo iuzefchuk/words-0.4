@@ -1,17 +1,16 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { LabeledElement } from '@/interface/enums.ts';
+import { handleRestartGame } from '@/interface/handlers/restart.ts';
 import { getElementLabel, getMatchResultText } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
-const eventHandlers = new UseEventHandlers();
 const { matchResult, opponentScore, userScore } = storeToRefs(mainStore);
 const resultText = computed(() => getMatchResultText(matchResult.value, userScore.value - opponentScore.value));
 const ariaLabel = computed(() => getElementLabel(LabeledElement.LayoutRestart, { result: resultText.value }));
 function restart(): void {
-  eventHandlers.handleRestartGame();
+  handleRestartGame();
 }
 </script>
 

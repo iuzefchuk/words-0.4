@@ -2,18 +2,17 @@
 import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
 import AppButton from '@/interface/components/shared/AppButton/AppButton.vue';
-import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { Accent, Key, LabeledElement } from '@/interface/enums.ts';
+import { handlePass, handleResign, handleSave } from '@/interface/handlers/toolbar.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
-const eventHandlers = new UseEventHandlers();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
 const buttons = reactive([
   {
     accent: Accent.Primary,
     action: () => {
-      eventHandlers.handleSave();
+      handleSave();
     },
     isDisabled: () => allActionsAreDisabled.value || !mainStore.currentTurnIsValid,
     keys: [Key.Enter],
@@ -22,7 +21,7 @@ const buttons = reactive([
   {
     accent: Accent.Secondary,
     action: () => {
-      void eventHandlers.handlePass();
+      void handlePass();
     },
     isDisabled: () => allActionsAreDisabled.value,
     keys: [Key.P],
@@ -31,7 +30,7 @@ const buttons = reactive([
   {
     accent: Accent.Secondary,
     action: () => {
-      void eventHandlers.handleResign();
+      void handleResign();
     },
     isDisabled: () => allActionsAreDisabled.value,
     keys: [Key.R],

@@ -4,12 +4,11 @@ import { computed } from 'vue';
 import { GameTile } from '@/application/types/index.ts';
 import LayoutFooterRackAnnotation from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterRack/LayoutFooterRackAnnotation.vue';
 import AppTile from '@/interface/components/shared/AppTile/AppTile.vue';
-import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
 import { Accent, LabeledElement } from '@/interface/enums.ts';
+import { handleClickRackCell, handleClickRackTile } from '@/interface/handlers/rack.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-const eventHandlers = new UseEventHandlers();
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
@@ -25,10 +24,10 @@ function ariaLabelFor(tile: GameTile | null): string {
 function onTileClick(idx: number, tile: GameTile | null): void {
   if (tile === null) return;
   if (mainStore.isTilePlaced(tile)) {
-    eventHandlers.handleClickRackCell(idx);
+    handleClickRackCell(idx);
     return;
   }
-  eventHandlers.handleClickRackTile(tile);
+  handleClickRackTile(tile);
 }
 </script>
 
