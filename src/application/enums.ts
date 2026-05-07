@@ -1,6 +1,6 @@
 export enum BootProgress {
-  Initialized = 25,
+  Started = 25,
   DictionaryFetched = 50,
   DictionaryParsed = 75,
-  Done = 100,
+  Finished = 100,
 }

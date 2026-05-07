@@ -1,1 +1,1 @@
-Delpoyed at https://playwords.fun/
+**[Play it →](https://playwords.fun/)**
