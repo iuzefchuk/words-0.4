@@ -52,5 +52,13 @@ provide('focusedItemIndex', rovingTabindex.focusedIndex);
   &__row {
     display: contents;
   }
+  &__inner > &__row > * {
+    display: grid;
+    aspect-ratio: 1 / 1;
+    grid-area: auto;
+    > * {
+      grid-area: 1 / 1;
+    }
+  }
 }
 </style>

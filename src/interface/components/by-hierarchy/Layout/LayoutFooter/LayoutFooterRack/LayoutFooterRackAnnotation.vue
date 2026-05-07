@@ -6,15 +6,16 @@ import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { tilesRemaining } = storeToRefs(mainStore);
-const ariaLabel = computed(() => getElementLabel(LabeledElement.LayoutFooterRackAnnotation, { count: tilesRemaining.value }));
+const srLabel = computed(() => getElementLabel(LabeledElement.LayoutFooterRackAnnotation, { count: tilesRemaining.value }));
 </script>
 
 <template>
   <Transition name="fade">
-    <div v-if="tilesRemaining > 0" class="annotation app__make-secondary" :aria-label="ariaLabel">
+    <p v-if="tilesRemaining > 0" class="annotation app__make-secondary">
+      <span class="app__make-sr-only">{{ srLabel }}</span>
       <span v-animate-number="{ number: tilesRemaining }" aria-hidden="true" class="annotation__number" />
       <span aria-hidden="true">{{ text('general.unassigned_count') }}</span>
-    </div>
+    </p>
   </Transition>
 </template>
 
