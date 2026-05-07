@@ -22,8 +22,8 @@ export enum Key {
 export enum LabeledElement {
   Layout = 'Layout',
   LayoutAnnotation = 'LayoutAnnotation',
-  LayoutFooterAnnotation = 'LayoutFooterAnnotation',
   LayoutFooterRack = 'LayoutFooterRack',
+  LayoutFooterRackAnnotation = 'LayoutFooterRackAnnotation',
   LayoutFooterRackEmpty = 'LayoutFooterRackEmpty',
   LayoutFooterRackTile = 'LayoutFooterRackTile',
   LayoutFooterToolbar = 'LayoutFooterToolbar',

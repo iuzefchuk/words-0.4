@@ -1,8 +1,8 @@
 {
   "layout": "Words",
   "layout_annotation": "Turn history",
-  "layout_footer_annotation": "{count} tiles remaining in the bag",
   "layout_footer_rack": "Your tile rack",
+  "layout_footer_rack_annotation": "{count} tiles remaining in the bag",
   "layout_footer_rack_empty": "Empty rack slot",
   "layout_footer_rack_tile": "Tile {letter}, {points} points",
   "layout_footer_toolbar": "Turn actions",

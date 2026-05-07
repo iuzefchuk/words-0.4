@@ -6,7 +6,7 @@ import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { tilesRemaining } = storeToRefs(mainStore);
-const ariaLabel = computed(() => getElementLabel(LabeledElement.LayoutFooterAnnotation, { count: tilesRemaining.value }));
+const ariaLabel = computed(() => getElementLabel(LabeledElement.LayoutFooterRackAnnotation, { count: tilesRemaining.value }));
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import LayoutFooterRack from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterRack.vue';
+import LayoutFooterRack from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterRack/LayoutFooterRack.vue';
 import LayoutFooterToolbar from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterToolbar.vue';
 </script>
 
