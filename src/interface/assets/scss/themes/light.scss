@@ -9,9 +9,9 @@
   --secondary-bg: transparent;
   --secondary-color: var(--color-gray-500);
 
-  --outline-color: red; // TODO
+  --outline-color: var(--color-rose-500);
 
-  --loader-color: blue; // TODO
+  --loader-color: var(--primary-color);
 
   --cell-bg: var(--color-gray-50);
   --cell-bg-highlighted: var(--color-gray-300);

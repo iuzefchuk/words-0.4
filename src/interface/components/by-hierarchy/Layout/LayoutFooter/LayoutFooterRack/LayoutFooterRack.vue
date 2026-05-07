@@ -41,7 +41,7 @@ function onTileClick(idx: number, tile: GameTile | null): void {
           :disabled="allActionsAreDisabled || tile === null"
           :aria-pressed="tile !== null && userStore.isTileSelected(tile)"
           :aria-label="ariaLabelFor(tile)"
-          @click="onTileClick(idx, tile)"
+          @click.stop="onTileClick(idx, tile)"
         >
           <AppTile
             v-if="tile !== null && userStore.isTileInRack(tile) && !mainStore.isTilePlaced(tile)"
@@ -50,7 +50,7 @@ function onTileClick(idx: number, tile: GameTile | null): void {
           />
         </button>
       </li>
-      <li role="none" class="rack__annotation">
+      <li role="none">
         <LayoutFooterRackAnnotation />
       </li>
     </ul>
@@ -81,9 +81,6 @@ function onTileClick(idx: number, tile: GameTile | null): void {
     &:disabled {
       cursor: not-allowed;
     }
-  }
-  &__annotation {
-    place-items: center;
   }
 }
 </style>
