@@ -47,7 +47,7 @@ const items = reactive([
       :accent="accent"
       :is-disabled="isDisabled()"
       :keys="keys"
-      @click="action()"
+      @trigger="action()"
     >
       {{ name }}
     </AppButton>

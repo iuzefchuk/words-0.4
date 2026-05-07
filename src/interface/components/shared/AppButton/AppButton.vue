@@ -1,51 +1,31 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted } from 'vue';
 import { Accent } from '@/interface/enums.ts';
-type KeydownHandler = (event: KeyboardEvent) => void;
-type KeydownStacks = Map<string, Array<KeydownHandler>>;
 const props = defineProps<{
   accent: Accent;
   isDisabled?: boolean;
   keys?: ReadonlyArray<string>;
 }>();
 const emit = defineEmits<{
-  click: [];
+  trigger: [];
 }>();
-// TODO to composable
-const stacks: KeydownStacks = ((window as { appButtonKeydownStacks?: KeydownStacks } & Window).appButtonKeydownStacks ??=
-  new Map());
-function handleKeydown(event: KeyboardEvent): void {
-  if (props.keys?.includes(event.key) !== true) return;
-  if (props.isDisabled) return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  emit('click');
+if (props.keys !== undefined) {
+  const keys = props.keys.map(key => (key === 'Space' ? ' ' : key));
+  const onKeydown = (event: KeyboardEvent): void => {
+    if (document.querySelector('dialog[open]') !== null) return;
+    if (!keys.includes(event.key)) return;
+    if (props.isDisabled) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    emit('trigger');
+  };
+  onMounted(() => {
+    window.addEventListener('keydown', onKeydown, true);
+  });
+  onUnmounted(() => {
+    window.removeEventListener('keydown', onKeydown, true);
+  });
 }
-onMounted(() => {
-  if (props.keys === undefined || props.keys.length === 0) return;
-  for (const key of props.keys) {
-    const stack = stacks.get(key) ?? [];
-    const previous = stack[stack.length - 1];
-    if (previous !== undefined) window.removeEventListener('keydown', previous, true);
-    stack.push(handleKeydown);
-    stacks.set(key, stack);
-  }
-  window.addEventListener('keydown', handleKeydown, true);
-});
-onUnmounted(() => {
-  if (props.keys === undefined || props.keys.length === 0) return;
-  window.removeEventListener('keydown', handleKeydown, true);
-  for (const key of props.keys) {
-    const stack = stacks.get(key);
-    if (stack === undefined) continue;
-    const index = stack.indexOf(handleKeydown);
-    if (index === -1) continue;
-    stack.splice(index, 1);
-    if (index !== stack.length) continue;
-    const restored = stack[stack.length - 1];
-    if (restored !== undefined) window.addEventListener('keydown', restored, true);
-  }
-});
 </script>
 
 <template>
@@ -56,7 +36,7 @@ onUnmounted(() => {
       'btn--secondary': accent === Accent.Secondary,
     }"
     :disabled="isDisabled"
-    @click="$emit('click')"
+    @click="$emit('trigger')"
   >
     <slot />
   </button>

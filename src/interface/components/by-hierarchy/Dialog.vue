@@ -10,20 +10,19 @@ const ids = {
   body: 'dialog-body',
   title: 'dialog-title',
 };
-// TODO maybe to composable
 const dialogEl = useTemplateRef<HTMLDialogElement>('dialog');
 const previousFocus = ref<HTMLElement | null>(null);
 const dialogIsShaking = ref(false);
 const buttons = computed(() => [
   {
     accent: isDestructive.value ? Accent.Primary : Accent.Secondary,
-    keys: ['Escape'] as ReadonlyArray<string>,
+    autofocus: isDestructive.value,
     status: DialogStatus.Canceled,
     text: cancelText.value,
   },
   {
     accent: isDestructive.value ? Accent.Secondary : Accent.Primary,
-    keys: ['Enter'] as ReadonlyArray<string>,
+    autofocus: !isDestructive.value,
     status: DialogStatus.Confirmed,
     text: confirmText.value,
   },
@@ -70,8 +69,8 @@ watch(html, async newValue => {
         v-for="button in buttons"
         :key="button.status"
         :accent="button.accent"
-        :keys="button.keys"
-        @click="emitResponse(button.status)"
+        :autofocus="button.autofocus"
+        @trigger="emitResponse(button.status)"
       >
         {{ button.text }}
       </AppButton>
