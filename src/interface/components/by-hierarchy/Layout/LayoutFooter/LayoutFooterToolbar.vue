@@ -3,7 +3,8 @@ import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
 import AppButton from '@/interface/components/shared/AppButton/AppButton.vue';
 import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
-import { Accent } from '@/interface/enums.ts';
+import { Accent, LabeledElement } from '@/interface/enums.ts';
+import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const eventHandlers = new UseEventHandlers();
@@ -40,7 +41,7 @@ const items = reactive([
 </script>
 
 <template>
-  <div class="toolbar" role="toolbar" :aria-label="text('general.aria_footer_toolbar')">
+  <div class="toolbar" role="toolbar" :aria-label="getElementLabel(LabeledElement.LayoutFooterToolbar)">
     <AppButton
       v-for="{ name, action, accent, isDisabled, keys } in items"
       :key="name"

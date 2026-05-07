@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
+import { LabeledElement } from '@/interface/enums.ts';
+import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { bootProgress } = storeToRefs(mainStore);
@@ -10,7 +12,7 @@ const { bootProgress } = storeToRefs(mainStore);
     class="loader"
     :value="bootProgress"
     max="100"
-    :aria-label="text('general.aria_loader')"
+    :aria-label="getElementLabel(LabeledElement.Loader)"
     :style="{ '--loader-progress': `${String(bootProgress)}%` }"
   />
 </template>

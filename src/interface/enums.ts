@@ -3,3 +3,26 @@ export enum Accent {
   Secondary = 'Secondary',
   Tertiary = 'Tertiary',
 }
+
+export enum LabeledElement {
+  Layout = 'Layout',
+  LayoutField = 'LayoutField',
+  LayoutFieldScore = 'LayoutFieldScore',
+  LayoutFieldSquareBonusDoubleLetter = 'LayoutFieldSquareBonusDoubleLetter',
+  LayoutFieldSquareBonusDoubleWord = 'LayoutFieldSquareBonusDoubleWord',
+  LayoutFieldSquareBonusTripleLetter = 'LayoutFieldSquareBonusTripleLetter',
+  LayoutFieldSquareBonusTripleWord = 'LayoutFieldSquareBonusTripleWord',
+  LayoutFieldSquareCellCenter = 'LayoutFieldSquareCellCenter',
+  LayoutFieldSquareCellWithBonus = 'LayoutFieldSquareCellWithBonus',
+  LayoutFieldSquareTile = 'LayoutFieldSquareTile',
+  LayoutFooterPool = 'LayoutFooterPool',
+  LayoutFooterRack = 'LayoutFooterRack',
+  LayoutFooterRackEmpty = 'LayoutFooterRackEmpty',
+  LayoutFooterRackTile = 'LayoutFooterRackTile',
+  LayoutFooterToolbar = 'LayoutFooterToolbar',
+  LayoutHeaderScore = 'LayoutHeaderScore',
+  LayoutHeaderSetup = 'LayoutHeaderSetup',
+  LayoutHistory = 'LayoutHistory',
+  LayoutRestart = 'LayoutRestart',
+  Loader = 'Loader',
+}

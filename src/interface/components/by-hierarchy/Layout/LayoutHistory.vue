@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 import UseHistory from '@/interface/composables/UseHistory.ts';
+import { LabeledElement } from '@/interface/enums.ts';
+import { getElementLabel } from '@/interface/mappings.ts';
 const { history } = new UseHistory();
 </script>
 
 <template>
-  <aside v-if="history.length > 0" class="history" role="log" :aria-label="text('general.aria_layout_history')">
+  <aside v-if="history.length > 0" class="history" role="log" :aria-label="getElementLabel(LabeledElement.LayoutHistory)">
     <TransitionGroup name="fade-from-left" tag="ul" class="history__list app__make-secondary" appear>
       <li v-for="{ key, html } in history" :key="key" v-html="html" />
     </TransitionGroup>

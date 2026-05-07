@@ -1,0 +1,21 @@
+{
+  "bonus_dl": "Double letter bonus",
+  "bonus_dw": "Double word bonus",
+  "bonus_tl": "Triple letter bonus",
+  "bonus_tw": "Triple word bonus",
+  "cell_center": "Center cell",
+  "cell_with_bonus": "Cell with {bonus}",
+  "field": "Game board",
+  "field_score": "Current turn score: {score}",
+  "header_score": "{player} score",
+  "header_setup": "Match settings",
+  "layout_heading": "Words",
+  "layout_history": "Turn history",
+  "loader": "Loading the game",
+  "pool": "{count} tiles remaining in the bag",
+  "rack": "Your tile rack",
+  "rack_empty": "Empty rack slot",
+  "restart": "{result}. Tap twice to start new match",
+  "tile": "Tile {letter}, {points} points",
+  "toolbar": "Turn actions"
+}

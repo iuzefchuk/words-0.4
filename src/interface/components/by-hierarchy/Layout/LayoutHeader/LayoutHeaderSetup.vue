@@ -2,6 +2,8 @@
 import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
 import AppRadioGroup from '@/interface/components/shared/AppRadioGroup/AppRadioGroup.vue';
 import UseEventHandlers from '@/interface/composables/UseEventHandlers.ts';
+import { LabeledElement } from '@/interface/enums.ts';
+import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 type OptionValue = GameMatchDifficulty | GameMatchType;
 const mainStore = MainStore.INSTANCE();
@@ -34,7 +36,7 @@ const options = [
 </script>
 
 <template>
-  <form class="setup" :aria-label="text('general.aria_header_setup')" @submit.prevent>
+  <form class="setup" :aria-label="getElementLabel(LabeledElement.LayoutHeaderSetup)" @submit.prevent>
     <AppRadioGroup
       v-for="{ items, legend, modelValue, onChange } in options"
       :key="legend"

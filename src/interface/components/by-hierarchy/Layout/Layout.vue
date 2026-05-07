@@ -7,6 +7,8 @@ import LayoutFooter from '@/interface/components/by-hierarchy/Layout/LayoutFoote
 import LayoutHeader from '@/interface/components/by-hierarchy/Layout/LayoutHeader/LayoutHeader.vue';
 import LayoutHistory from '@/interface/components/by-hierarchy/Layout/LayoutHistory.vue';
 import LayoutRestart from '@/interface/components/by-hierarchy/Layout/LayoutRestart.vue';
+import { LabeledElement } from '@/interface/enums.ts';
+import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 await MainStore.initiate();
@@ -24,7 +26,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
     :class="{ layout: true, 'layout--blurred': matchIsFinished }"
     @click="userStore.deselectTile()"
   >
-    <h1 class="app__make-sr-only">{{ text('general.aria_layout_heading') }}</h1>
+    <h1 class="app__make-sr-only">{{ getElementLabel(LabeledElement.Layout) }}</h1>
     <LayoutHeader class="layout__top" />
     <div class="layout__mid app__limit-max-width">
       <LayoutHistory class="layout__mid-history" />

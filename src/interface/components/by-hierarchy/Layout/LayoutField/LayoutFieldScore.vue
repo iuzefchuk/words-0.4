@@ -1,13 +1,15 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
+import { LabeledElement } from '@/interface/enums.ts';
+import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const props = defineProps<{ isFlipped?: boolean }>();
 const mainStore = MainStore.INSTANCE();
 const { currentTurnScore } = storeToRefs(mainStore);
 const SHIMMER_THRESHOLD = 29;
 const ariaLabel = computed(() =>
-  currentTurnScore.value === undefined ? '' : window.text('general.aria_layout_field_score', { score: currentTurnScore.value }),
+  currentTurnScore.value === undefined ? '' : getElementLabel(LabeledElement.LayoutFieldScore, { score: currentTurnScore.value }),
 );
 </script>
 

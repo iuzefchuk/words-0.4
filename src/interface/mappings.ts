@@ -1,4 +1,5 @@
 import { GameBonus, GameEvent, GameEventType, GameMatchResult, GamePlayer } from '@/application/types/index.ts';
+import { LabeledElement } from '@/interface/enums.ts';
 import { Sound } from '@/interface/services/SoundPlayer.ts';
 
 export function getBonusName(bonus: GameBonus): string {
@@ -12,6 +13,34 @@ export function getBonusName(bonus: GameBonus): string {
   );
 }
 
+export function getElementLabel(element: LabeledElement, params?: Record<string, number | string>): string {
+  return window.text(
+    {
+      [LabeledElement.Layout]: 'labels.layout_heading',
+      [LabeledElement.LayoutField]: 'labels.field',
+      [LabeledElement.LayoutFieldScore]: 'labels.field_score',
+      [LabeledElement.LayoutFieldSquareBonusDoubleLetter]: 'labels.bonus_dl',
+      [LabeledElement.LayoutFieldSquareBonusDoubleWord]: 'labels.bonus_dw',
+      [LabeledElement.LayoutFieldSquareBonusTripleLetter]: 'labels.bonus_tl',
+      [LabeledElement.LayoutFieldSquareBonusTripleWord]: 'labels.bonus_tw',
+      [LabeledElement.LayoutFieldSquareCellCenter]: 'labels.cell_center',
+      [LabeledElement.LayoutFieldSquareCellWithBonus]: 'labels.cell_with_bonus',
+      [LabeledElement.LayoutFieldSquareTile]: 'labels.tile',
+      [LabeledElement.LayoutFooterPool]: 'labels.pool',
+      [LabeledElement.LayoutFooterRack]: 'labels.rack',
+      [LabeledElement.LayoutFooterRackEmpty]: 'labels.rack_empty',
+      [LabeledElement.LayoutFooterRackTile]: 'labels.tile',
+      [LabeledElement.LayoutFooterToolbar]: 'labels.toolbar',
+      [LabeledElement.LayoutHeaderScore]: 'labels.header_score',
+      [LabeledElement.LayoutHeaderSetup]: 'labels.header_setup',
+      [LabeledElement.LayoutHistory]: 'labels.layout_history',
+      [LabeledElement.LayoutRestart]: 'labels.restart',
+      [LabeledElement.Loader]: 'labels.loader',
+    }[element],
+    params,
+  );
+}
+
 export function getEventSound(event: GameEvent): null | Sound {
   switch (event.type) {
     case GameEventType.MatchDifficultyChanged:
@@ -20,7 +49,11 @@ export function getEventSound(event: GameEvent): null | Sound {
     case GameEventType.TurnValidationSet:
       return null;
     case GameEventType.MatchFinished:
-      return getMatchFinishedSound(event.winner);
+      return event.winner === null
+        ? Sound.GameLongNeutral
+        : event.winner === GamePlayer.User
+          ? Sound.GameLongGood
+          : Sound.GameLongBad;
     case GameEventType.TilePlaced:
       return Sound.GameShortNeutral;
     case GameEventType.TileUndoPlaced:
@@ -33,7 +66,9 @@ export function getEventSound(event: GameEvent): null | Sound {
 }
 
 export function getMatchResultText(result: GameMatchResult, scoreDiff: number): string {
-  if (result === GameMatchResult.Undecided) throw new Error('cannot render match result text: result is Undecided');
+  if (result === GameMatchResult.Undecided) {
+    throw new Error(`cannot render match result text: result is ${GameMatchResult.Undecided}`);
+  }
   return window.text(
     {
       [GameMatchResult.Lose]: scoreDiff < 0 ? 'general.end_lose_by' : 'general.end_lose',
@@ -42,9 +77,4 @@ export function getMatchResultText(result: GameMatchResult, scoreDiff: number): 
     }[result],
     { points: Math.abs(scoreDiff) },
   );
-}
-
-function getMatchFinishedSound(winner: GamePlayer | null): Sound {
-  if (winner === null) return Sound.GameLongNeutral;
-  return winner === GamePlayer.User ? Sound.GameLongGood : Sound.GameLongBad;
 }

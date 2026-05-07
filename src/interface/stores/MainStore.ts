@@ -90,7 +90,7 @@ class Actions {
       if (sound !== null) lastSound = sound;
     }
     this.lastDrainedEventCount = log.length;
-    if (lastSound !== null) SoundPlayer.play(lastSound);
+    if (lastSound !== null) SoundPlayer.execute(lastSound);
   }
 
   private readonly scheduleDeferredValidation = (): void => {

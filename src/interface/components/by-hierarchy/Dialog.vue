@@ -8,7 +8,6 @@ const dialogStore = DialogStore.INSTANCE();
 const { cancelText, confirmText, html, isDestructive, title } = storeToRefs(dialogStore);
 const ids = {
   body: 'dialog-body',
-  title: 'dialog-title',
 };
 const dialogEl = useTemplateRef<HTMLDialogElement>('dialog');
 const previousFocus = ref<HTMLElement | null>(null);
@@ -54,14 +53,14 @@ watch(html, async newValue => {
   <dialog
     ref="dialog"
     role="alertdialog"
-    :aria-labelledby="title === null ? undefined : ids.title"
+    :aria-label="title ?? undefined"
     :aria-describedby="ids.body"
     :class="{ dialog: true, 'dialog--shaking': dialogIsShaking }"
     @click="onBackdropClick"
     @cancel.prevent="emitResponse(DialogStatus.Canceled)"
   >
     <div class="dialog__content">
-      <h2 v-if="title" :id="ids.title">{{ title }}</h2>
+      <h2 v-if="title">{{ title }}</h2>
       <div :id="ids.body" class="app__make-secondary" v-html="html" />
     </div>
     <div class="dialog__footer">

@@ -4,6 +4,7 @@ import DialogStore from '@/interface/stores/DialogStore.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 
+// TODO rename
 export default class UseEventHandlers {
   private static readonly RESIGN_DELAY_MS = 500;
 
@@ -35,7 +36,7 @@ export default class UseEventHandlers {
   handleClearTiles(): void {
     this.mainStore.clearTiles();
     this.userStore.initialize();
-    SoundPlayer.play(Sound.SystemClear);
+    SoundPlayer.execute(Sound.SystemClear);
   }
 
   handleClickBoardCell(cell: GameCell): void {
@@ -137,7 +138,7 @@ export default class UseEventHandlers {
 
   handleShuffle(): void {
     this.userStore.shuffleTiles();
-    SoundPlayer.play(Sound.SystemShuffle);
+    SoundPlayer.execute(Sound.SystemShuffle);
   }
 
   private async triggerPassDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {

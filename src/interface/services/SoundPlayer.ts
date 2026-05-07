@@ -73,7 +73,7 @@ export default class SoundPlayer {
 
   private static queueEnd = 0;
 
-  static play(sound: Sound): void {
+  static execute(sound: Sound): void {
     const notes = this.NOTES[sound];
     setTimeout(() => {
       this.playNotes(notes);
