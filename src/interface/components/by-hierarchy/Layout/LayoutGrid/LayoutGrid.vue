@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { provide, useTemplateRef } from 'vue';
+import { computed, provide, useTemplateRef } from 'vue';
 import LayoutGridItem from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridItem.vue';
 import LayoutGridOutline from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridOutline.vue';
 import UseRovingTabindex from '@/interface/composables/UseRovingTabindex.ts';
@@ -14,6 +14,12 @@ const rovingTabindex = new UseRovingTabindex(
   `[role="${CELL_ROLE}"]`,
   mainStore.boardCellsPerAxis,
 );
+const rows = computed(() => {
+  const size = mainStore.boardCellsPerAxis;
+  return Array.from({ length: size }, (_, row) =>
+    mainStore.boardCells.slice(row * size, (row + 1) * size).map((cell, col) => ({ cell, index: row * size + col })),
+  );
+});
 provide('cellRole', CELL_ROLE);
 provide('focusedItemIndex', rovingTabindex.focusedIndex);
 </script>
@@ -28,7 +34,9 @@ provide('focusedItemIndex', rovingTabindex.focusedIndex);
       :aria-colcount="mainStore.boardCellsPerAxis"
       @keydown="rovingTabindex.onKeydown"
     >
-      <LayoutGridItem v-for="(cell, idx) in mainStore.boardCells" :key="cell" :cell="cell" :index="idx" />
+      <div v-for="(row, rowIdx) in rows" :key="rowIdx" role="row" :aria-rowindex="rowIdx + 1" class="grid__row">
+        <LayoutGridItem v-for="{ cell, index } in row" :key="cell" :cell="cell" :index="index" />
+      </div>
     </div>
     <LayoutGridOutline />
   </main>
@@ -40,6 +48,9 @@ provide('focusedItemIndex', rovingTabindex.focusedIndex);
   position: relative;
   &__inner {
     width: 100%;
+  }
+  &__row {
+    display: contents;
   }
 }
 </style>

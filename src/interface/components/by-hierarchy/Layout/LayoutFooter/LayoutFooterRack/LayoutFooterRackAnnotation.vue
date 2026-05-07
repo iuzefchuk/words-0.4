@@ -11,10 +11,10 @@ const ariaLabel = computed(() => getElementLabel(LabeledElement.LayoutFooterRack
 
 <template>
   <Transition name="fade">
-    <p v-if="tilesRemaining > 0" class="annotation app__make-secondary" :aria-label="ariaLabel">
+    <div v-if="tilesRemaining > 0" class="annotation app__make-secondary" :aria-label="ariaLabel">
       <span v-animate-number="{ number: tilesRemaining }" aria-hidden="true" class="annotation__number" />
       <span aria-hidden="true">{{ text('general.unassigned_count') }}</span>
-    </p>
+    </div>
   </Transition>
 </template>
 

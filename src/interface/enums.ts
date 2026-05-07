@@ -19,6 +19,7 @@ export enum Key {
   Space = ' ',
 }
 
+// TODO rethink
 export enum LabeledElement {
   Layout = 'Layout',
   LayoutAnnotation = 'LayoutAnnotation',

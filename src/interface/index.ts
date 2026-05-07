@@ -4,7 +4,7 @@ import Index from '@/interface/components/by-hierarchy/index.vue';
 import DirectivesPlugin from '@/interface/plugins/DirectivesPlugin/DirectivesPlugin.ts';
 import LocalesPlugin from '@/interface/plugins/LocalesPlugin/LocalesPlugin.ts';
 
-class Presentation {
+class Interface {
   private readonly app = createApp(Index);
 
   async start(): Promise<void> {
@@ -27,4 +27,4 @@ class Presentation {
   }
 }
 
-void new Presentation().start();
+void new Interface().start();
