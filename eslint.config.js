@@ -199,5 +199,11 @@ export default defineConfigWithVueTs([
       '@typescript-eslint/prefer-for-of': 'off',
     },
   },
+  {
+    files: ['src/**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
   prettierConfig,
 ]);

@@ -19,24 +19,21 @@ describe('Board', () => {
         const occupiedCells = [...instance.anchorCells].filter(cell => instance.isCellOccupied(cell));
         expect(occupiedCells).toEqual([]);
       });
-      if (placements.length === 0) {
+      if (placements.length === 0)
         test('returns only CENTER_CELL on empty board', () => {
           expect([...instance.anchorCells]).toEqual([LayoutService.CENTER_CELL]);
         });
-      }
-      if (placements.length > 0) {
+      if (placements.length > 0)
         test('does not return cells w/out adjacent tiles', () => {
           const withoutAdjacentTiles = [...instance.anchorCells].filter(
             cell => !instance.getAdjacentCells(cell).some(adj => instance.isCellOccupied(adj)),
           );
           expect(withoutAdjacentTiles).toEqual([]);
         });
-      }
-      if (placements.length > 0 && unusedCells.length > 0) {
+      if (placements.length > 0 && unusedCells.length > 0)
         test('returns non-empty set on partial board', () => {
           expect(instance.anchorCells.size).toBeGreaterThan(0);
         });
-      }
     });
     describe('clone', () => {
       test('returns instance w/ same state', () => {
@@ -97,14 +94,13 @@ describe('Board', () => {
           expect(instance.resolvePlacement([tile])).toEqual([{ cell, tile }]);
         });
       });
-      if (placements.length >= 2) {
+      if (placements.length >= 2)
         test('returns links sorted by cell ascending', () => {
           const tilesInReverseOrder = [...placements].sort((first, second) => second.cell - first.cell).map(({ tile }) => tile);
           const result = instance.resolvePlacement(tilesInReverseOrder);
           const cellsAscending = [...placements].sort((first, second) => first.cell - second.cell).map(({ cell }) => cell);
           expect(result.map(({ cell }) => cell)).toEqual(cellsAscending);
         });
-      }
     });
   });
   describe.each(Object.values(Type))('for %s type', type => {
@@ -185,56 +181,48 @@ describe('Board', () => {
     const cellWithoutBonus = board.cells.find(cell => board.getBonus(cell) === null);
     const cellDouble = board.cells.find(cell => board.getBonus(cell) === Bonus.DoubleLetter);
     const cellTriple = board.cells.find(cell => board.getBonus(cell) === Bonus.TripleLetter);
-    if (cellWithoutBonus !== undefined) {
+    if (cellWithoutBonus !== undefined)
       test('returns 1 for cell w/out bonus', () => {
         expect(board.getMultiplierForLetter(cellWithoutBonus)).toBe(1);
       });
-    }
-    if (cellDouble !== undefined) {
+    if (cellDouble !== undefined)
       test('returns greater than 1 for cell w/ double bonus', () => {
         expect(board.getMultiplierForLetter(cellDouble)).toBeGreaterThan(1);
       });
-    }
-    if (cellTriple !== undefined) {
+    if (cellTriple !== undefined)
       test('returns greater than 1 for cell w/ triple bonus', () => {
         expect(board.getMultiplierForLetter(cellTriple)).toBeGreaterThan(1);
       });
-    }
-    if (cellWithoutBonus !== undefined && cellDouble !== undefined && cellTriple !== undefined) {
+    if (cellWithoutBonus !== undefined && cellDouble !== undefined && cellTriple !== undefined)
       test('returns different values for cells w/ different bonuses', () => {
         expect(board.getMultiplierForLetter(cellWithoutBonus)).not.toBe(board.getMultiplierForLetter(cellDouble));
         expect(board.getMultiplierForLetter(cellWithoutBonus)).not.toBe(board.getMultiplierForLetter(cellTriple));
         expect(board.getMultiplierForLetter(cellDouble)).not.toBe(board.getMultiplierForLetter(cellTriple));
       });
-    }
   });
   describe('getMultiplierForWord', () => {
     const board = Board.create(Type.Preset);
     const cellWithoutBonus = board.cells.find(cell => board.getBonus(cell) === null);
     const cellDouble = board.cells.find(cell => board.getBonus(cell) === Bonus.DoubleWord);
     const cellTriple = board.cells.find(cell => board.getBonus(cell) === Bonus.TripleWord);
-    if (cellWithoutBonus !== undefined) {
+    if (cellWithoutBonus !== undefined)
       test('returns 1 for cell w/out bonus', () => {
         expect(board.getMultiplierForWord(cellWithoutBonus)).toBe(1);
       });
-    }
-    if (cellDouble !== undefined) {
+    if (cellDouble !== undefined)
       test('returns greater than 1 for cell w/ double bonus', () => {
         expect(board.getMultiplierForWord(cellDouble)).toBeGreaterThan(1);
       });
-    }
-    if (cellTriple !== undefined) {
+    if (cellTriple !== undefined)
       test('returns greater than 1 for cell w/ triple bonus', () => {
         expect(board.getMultiplierForWord(cellTriple)).toBeGreaterThan(1);
       });
-    }
-    if (cellWithoutBonus !== undefined && cellDouble !== undefined && cellTriple !== undefined) {
+    if (cellWithoutBonus !== undefined && cellDouble !== undefined && cellTriple !== undefined)
       test('returns different values for cells w/ different bonuses', () => {
         expect(board.getMultiplierForWord(cellWithoutBonus)).not.toBe(board.getMultiplierForWord(cellDouble));
         expect(board.getMultiplierForWord(cellWithoutBonus)).not.toBe(board.getMultiplierForWord(cellTriple));
         expect(board.getMultiplierForWord(cellDouble)).not.toBe(board.getMultiplierForWord(cellTriple));
       });
-    }
   });
   describe('buildPlacement', () => {
     const inputCell = 112 as Cell;

@@ -13,6 +13,10 @@ const emit = defineEmits<{
 const REF_BUTTON = 'button';
 const buttonEl = useTemplateRef<HTMLButtonElement>(REF_BUTTON);
 const dialogStore = DialogStore.INSTANCE();
+const onClick = (): void => {
+  if (dialogStore.isOpen) return;
+  emit('trigger');
+};
 if (props.keys !== undefined) {
   const { keys } = props;
   const onKeydown = (event: KeyboardEvent): void => {
@@ -44,7 +48,7 @@ defineExpose({
       'btn--secondary': accent === Accent.Secondary,
     }"
     :disabled="isDisabled"
-    @click="$emit('trigger')"
+    @click="onClick"
   >
     <slot />
   </button>
