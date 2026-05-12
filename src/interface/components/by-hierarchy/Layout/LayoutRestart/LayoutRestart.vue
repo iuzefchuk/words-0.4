@@ -2,9 +2,9 @@
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { LabeledElement } from '@/interface/enums.ts';
-import { handleRestartGame } from '@/interface/handlers/restart.ts';
+import { handleRestartGame } from '@/interface/handlers/restart/restart.ts';
 import { getElementLabel, getMatchResultText } from '@/interface/mappings.ts';
-import MainStore from '@/interface/stores/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { matchResult, opponentScore, userScore } = storeToRefs(mainStore);
 const resultText = computed(() => getMatchResultText(matchResult.value, userScore.value - opponentScore.value));

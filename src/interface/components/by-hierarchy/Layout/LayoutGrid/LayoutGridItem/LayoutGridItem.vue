@@ -4,10 +4,10 @@ import { GameBonus, GameCell } from '@/application/types/index.ts';
 import AppCell from '@/interface/components/shared/AppCell/AppCell.vue';
 import AppTile from '@/interface/components/shared/AppTile/AppTile.vue';
 import { Accent, LabeledElement } from '@/interface/enums.ts';
-import { handleClickGridCell, handleClickGridTile, handleDoubleClickGridTile } from '@/interface/handlers/grid.ts';
+import { handleClickGridCell, handleClickGridTile, handleDoubleClickGridTile } from '@/interface/handlers/grid/grid.ts';
 import { getBonusLabel, getBonusName, getElementLabel } from '@/interface/mappings.ts';
-import MainStore from '@/interface/stores/MainStore.ts';
-import UserStore from '@/interface/stores/UserStore.ts';
+import MainStore from '@/interface/stores/MainStore/MainStore.ts';
+import UserStore from '@/interface/stores/UserStore/UserStore.ts';
 const props = defineProps<{
   cell: GameCell;
   index: number;

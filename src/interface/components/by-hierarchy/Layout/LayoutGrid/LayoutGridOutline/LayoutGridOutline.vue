@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import LayoutGridTooltip from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridTooltip.vue';
-import UseOutline from '@/interface/composables/UseOutline.ts';
+import LayoutGridTooltip from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridTooltip/LayoutGridTooltip.vue';
+import UseOutline from '@/interface/composables/UseOutline/UseOutline.ts';
 const { bounds, isAnchorAt, isOnRightmostColumnAt } = new UseOutline();
 </script>
 

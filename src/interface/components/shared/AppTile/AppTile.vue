@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { GameLetter } from '@/application/types/index.ts';
 import { Accent } from '@/interface/enums.ts';
-import MainStore from '@/interface/stores/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore/MainStore.ts';
 const props = defineProps<{
   accent: Accent;
   letter: GameLetter;

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import MainStore from '@/interface/stores/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore/MainStore.ts';
 const { bootError } = storeToRefs(MainStore.INSTANCE());
 const message = computed(() => (bootError.value === null ? '' : window.text('general.error_launch', { error: bootError.value })));
 </script>

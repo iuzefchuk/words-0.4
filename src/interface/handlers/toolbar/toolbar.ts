@@ -1,6 +1,6 @@
-import DialogStore from '@/interface/stores/DialogStore.ts';
-import MainStore from '@/interface/stores/MainStore.ts';
-import UserStore from '@/interface/stores/UserStore.ts';
+import DialogStore from '@/interface/stores/DialogStore/DialogStore.ts';
+import MainStore from '@/interface/stores/MainStore/MainStore.ts';
+import UserStore from '@/interface/stores/UserStore/UserStore.ts';
 
 const RESIGN_DELAY_MS = 500;
 

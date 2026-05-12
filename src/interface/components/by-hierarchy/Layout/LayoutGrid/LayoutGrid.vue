@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { computed, provide, useTemplateRef } from 'vue';
-import LayoutGridItem from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridItem.vue';
-import LayoutGridOutline from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridOutline.vue';
-import UseRovingTabindex from '@/interface/composables/UseRovingTabindex.ts';
+import LayoutGridItem from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridItem/LayoutGridItem.vue';
+import LayoutGridOutline from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridOutline/LayoutGridOutline.vue';
+import UseRovingTabindex from '@/interface/composables/UseRovingTabindex/UseRovingTabindex.ts';
 import { LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
-import MainStore from '@/interface/stores/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore/MainStore.ts';
 const CELL_ROLE = 'gridcell';
 const REF_GRID = 'grid';
 const mainStore = MainStore.INSTANCE();

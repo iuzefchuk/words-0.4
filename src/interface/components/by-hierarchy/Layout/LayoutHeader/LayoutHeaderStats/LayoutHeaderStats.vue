@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
-import MainStore from '@/interface/stores/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const players = computed(() => [
   {

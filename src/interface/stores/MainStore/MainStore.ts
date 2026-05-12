@@ -5,7 +5,7 @@ import QueriesService from '@/application/services/QueriesService.ts';
 import { GameCell, GameLetter, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
 import launchWords from '@/index.ts';
 import { getEventSound } from '@/interface/mappings.ts';
-import SoundPlayer, { Sound } from '@/interface/services/SoundPlayer.ts';
+import SoundPlayer, { Sound } from '@/interface/services/SoundPlayer/SoundPlayer.ts';
 
 class Actions {
   private lastDrainedEventCount = 0;

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import Dialog from '@/interface/components/by-hierarchy/Dialog.vue';
+import Dialog from '@/interface/components/by-hierarchy/Dialog/Dialog.vue';
 import Layout from '@/interface/components/by-hierarchy/Layout/Layout.vue';
-import Loader from '@/interface/components/by-hierarchy/Loader.vue';
+import Loader from '@/interface/components/by-hierarchy/Loader/Loader.vue';
 </script>
 
 <template>

@@ -2,13 +2,13 @@
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { GameTile } from '@/application/types/index.ts';
-import LayoutFooterRackAnnotation from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterRack/LayoutFooterRackAnnotation.vue';
+import LayoutFooterRackAnnotation from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterRack/LayoutFooterRackAnnotation/LayoutFooterRackAnnotation.vue';
 import AppTile from '@/interface/components/shared/AppTile/AppTile.vue';
 import { Accent, LabeledElement } from '@/interface/enums.ts';
-import { handleClickRackCell, handleClickRackTile } from '@/interface/handlers/rack.ts';
+import { handleClickRackCell, handleClickRackTile } from '@/interface/handlers/rack/rack.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
-import MainStore from '@/interface/stores/MainStore.ts';
-import UserStore from '@/interface/stores/UserStore.ts';
+import MainStore from '@/interface/stores/MainStore/MainStore.ts';
+import UserStore from '@/interface/stores/UserStore/UserStore.ts';
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);

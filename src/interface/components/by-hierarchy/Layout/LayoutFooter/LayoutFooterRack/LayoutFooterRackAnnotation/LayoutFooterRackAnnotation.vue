@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
-import MainStore from '@/interface/stores/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { tilesRemaining } = storeToRefs(mainStore);
 const srLabel = computed(() => getElementLabel(LabeledElement.LayoutFooterRackAnnotation, { count: tilesRemaining.value }));
