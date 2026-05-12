@@ -1,6 +1,8 @@
-import { enableAutoUnmount } from '@vue/test-utils';
+import { enableAutoUnmount, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { defineComponent, h } from 'vue';
+import AppButton from '@/interface/components/shared/AppButton/AppButton.vue';
 import fixtures from '@/interface/components/shared/AppButton/fixtures.ts';
 import DialogStore from '@/interface/stores/DialogStore/DialogStore.ts';
 
@@ -58,7 +60,11 @@ describe('AppButton', () => {
         expect(addCall).toBeDefined();
         const handler = addCall?.[1] as EventListener;
         wrapper.unmount();
-        expect(removeSpy).toHaveBeenCalledWith('keydown', handler, true);
+        const keydownRemoves = removeSpy.mock.calls.filter(
+          ([eventName, callHandler]) => eventName === 'keydown' && callHandler === handler,
+        );
+        expect(keydownRemoves).toHaveLength(1);
+        expect(keydownRemoves[0]).toEqual(['keydown', handler, true]);
       });
 
     if (!hasKeys)
@@ -98,8 +104,32 @@ describe('AppButton', () => {
     if (!isDisabled)
       test('is focusable', () => {
         const wrapper = mountInstance({ attachTo: document.body });
+        document.body.focus();
+        expect(document.activeElement).not.toBe(wrapper.element);
         (wrapper.vm as unknown as { focus: () => void }).focus();
         expect(document.activeElement).toBe(wrapper.element);
+      });
+
+    if (!isDisabled)
+      test('exposes focus method via template ref', () => {
+        let exposed: { focus: () => void } | null = null;
+        const parent = defineComponent({
+          render: () =>
+            h(AppButton, {
+              ...fixture.props,
+              ref: (el: unknown) => {
+                exposed = el as { focus: () => void } | null;
+              },
+            }),
+        });
+        mount(parent, { attachTo: document.body });
+        expect(exposed).not.toBeNull();
+        expect((exposed as { focus: () => void } | null)?.focus).toBeInstanceOf(Function);
+        document.body.focus();
+        expect(document.activeElement).toBe(document.body);
+        (exposed as { focus: () => void } | null)?.focus();
+        expect(document.activeElement).not.toBe(document.body);
+        expect((document.activeElement as HTMLElement).tagName).toBe('BUTTON');
       });
 
     if (!isDisabled)
