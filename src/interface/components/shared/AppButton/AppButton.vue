@@ -1,12 +1,18 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, useTemplateRef } from 'vue';
 import { Accent } from '@/interface/enums.ts';
-import DialogStore from '@/interface/stores/DialogStore.ts';
-const props = defineProps<{
-  accent: Accent;
-  isDisabled?: boolean;
-  keys?: ReadonlyArray<string>;
-}>();
+import DialogStore from '@/interface/stores/DialogStore/DialogStore.ts';
+const props = withDefaults(
+  defineProps<{
+    accent: Accent;
+    isDisabled?: boolean;
+    keys?: ReadonlyArray<string>;
+  }>(),
+  {
+    isDisabled: false,
+    keys: () => [],
+  },
+);
 const emit = defineEmits<{
   trigger: [];
 }>();
@@ -17,7 +23,7 @@ const onClick = (): void => {
   if (dialogStore.isOpen) return;
   emit('trigger');
 };
-if (props.keys !== undefined) {
+if (props.keys.length > 0) {
   const { keys } = props;
   const onKeydown = (event: KeyboardEvent): void => {
     if (dialogStore.isOpen) return;

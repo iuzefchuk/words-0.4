@@ -20,9 +20,11 @@ describe('BonusService', () => {
     describe.each(Object.values(Type))('for %s type', type => {
       const distribution = BonusService.createDistribution(type);
       const otherTypes = Object.values(Type).filter(someType => someType !== type);
+
       test('excludes CENTER_CELL', () => {
         expect(distribution.has(LayoutService.CENTER_CELL)).toBe(false);
       });
+
       test('returns expected count per bonus', () => {
         const counts = new Map<Bonus, number>();
         for (const bonus of distribution.values()) {
@@ -35,6 +37,7 @@ describe('BonusService', () => {
           [Bonus.TripleWord]: 8,
         });
       });
+
       describe.each(otherTypes)('comparing w/ %s', otherType => {
         const otherDistribution = BonusService.createDistribution(otherType);
         test('returns different result', () => {
@@ -42,11 +45,14 @@ describe('BonusService', () => {
         });
       });
     });
+
     describe('for Preset type', () => {
       const presetDistribution = BonusService.createDistribution(Type.Preset);
+
       test('always returns same result', () => {
         expect(presetDistribution).toEqual(BonusService.createDistribution(Type.Preset));
       });
+
       test('returns D4-symmetric result', () => {
         const symmetryQuadruples = buildSymmetryQuadruples(LayoutService.CELLS_PER_AXIS) as ReadonlyArray<
           readonly [Cell, Cell, Cell, Cell]
@@ -62,6 +68,7 @@ describe('BonusService', () => {
         expect(asymmetric).toEqual([]);
       });
     });
+
     describe('for Random type', () => {
       describe('w/ same randomizer', () => {
         test('always returns same result', () => {
@@ -71,6 +78,7 @@ describe('BonusService', () => {
           expect(actual).toEqual(expected);
         });
       });
+
       describe('w/ different randomizers', () => {
         test('always returns different result', () => {
           const firstRandomizer = (): number => 0.25;
@@ -80,6 +88,7 @@ describe('BonusService', () => {
           expect(actual).not.toEqual(unexpected);
         });
       });
+
       describe('w/out randomizer', () => {
         test('always returns different result', () => {
           const actual = BonusService.createDistribution(Type.Random);

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed, inject, Ref } from 'vue';
 import { GameBonus, GameCell } from '@/application/types/index.ts';
+import AppCell from '@/interface/components/shared/AppCell/AppCell.vue';
 import AppTile from '@/interface/components/shared/AppTile/AppTile.vue';
 import { Accent, LabeledElement } from '@/interface/enums.ts';
 import { handleClickGridCell, handleClickGridTile, handleDoubleClickGridTile } from '@/interface/handlers/grid.ts';
@@ -16,6 +17,12 @@ const userStore = UserStore.INSTANCE();
 const cellRole = inject<string>('cellRole');
 if (cellRole === undefined) throw new Error('LayoutGridItem: cellRole must be provided');
 const focusedItemIndex = inject<Ref<number>>('focusedItemIndex');
+const BONUS_ACCENT: Readonly<Record<GameBonus, Accent>> = {
+  [GameBonus.DoubleLetter]: Accent.Quaternary,
+  [GameBonus.DoubleWord]: Accent.Secondary,
+  [GameBonus.TripleLetter]: Accent.Tertiary,
+  [GameBonus.TripleWord]: Accent.Primary,
+};
 const isCenter = computed(() => mainStore.isCellCenter(props.cell));
 const bonus = computed(() => mainStore.getCellBonus(props.cell));
 const tile = computed(() => mainStore.findTileOnCell(props.cell));
@@ -27,6 +34,10 @@ const tileAccent = computed(() => {
   return Accent.Tertiary;
 });
 const isFocused = computed(() => focusedItemIndex?.value === props.index);
+const bonusProp = computed(() =>
+  bonus.value === null ? undefined : { accent: BONUS_ACCENT[bonus.value], name: getBonusName(bonus.value) },
+);
+const pressedState = computed(() => (tile.value === undefined ? undefined : tileIsSelected.value));
 const ariaLabel = computed(() => {
   if (tile.value !== undefined) {
     const letter = mainStore.getTileLetter(tile.value);
@@ -43,73 +54,28 @@ function activate(): void {
   if (tile.value !== undefined) handleClickGridTile(tile.value);
   else handleClickGridCell(props.cell);
 }
+function doubleActivate(): void {
+  if (tile.value !== undefined) handleDoubleClickGridTile(tile.value);
+}
 </script>
 
 <template>
-  <button
+  <AppCell
     v-memo="[tile, bonus, tileAccent, tileIsSelected, isFocused]"
-    type="button"
-    :role="cellRole"
-    :tabindex="isFocused ? 0 : -1"
-    :aria-rowindex="mainStore.getCellRowIndex(cell) + 1"
-    :aria-colindex="mainStore.getCellColumnIndex(cell) + 1"
-    :aria-pressed="tile === undefined ? undefined : tileIsSelected"
+    :cell-role="cellRole"
+    :row-index="mainStore.getCellRowIndex(cell) + 1"
+    :col-index="mainStore.getCellColumnIndex(cell) + 1"
+    :is-focused="isFocused"
+    :is-highlighted="isCenter"
+    :is-occupied="tile !== undefined"
+    :is-pressed="pressedState"
     :aria-label="ariaLabel"
-    :class="{
-      item: true,
-      'item--highlighted': isCenter,
-      'item--occupied': tile !== undefined,
-    }"
-    @click.stop="activate"
-    @keydown.enter.prevent.stop="activate"
-    @dblclick.stop="tile !== undefined && handleDoubleClickGridTile(tile)"
+    :bonus="bonusProp"
+    @activate="activate"
+    @double-activate="doubleActivate"
   >
-    <svg
-      v-if="bonus"
-      aria-hidden="true"
-      :class="{
-        item__bonus: true,
-        'item__bonus--quaternary': bonus === GameBonus.DoubleLetter,
-        'item__bonus--tertiary': bonus === GameBonus.TripleLetter,
-        'item__bonus--secondary': bonus === GameBonus.DoubleWord,
-        'item__bonus--primary': bonus === GameBonus.TripleWord,
-      }"
-      viewBox="0 0 40 40"
-    >
-      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central">{{ getBonusName(bonus) }}</text>
-    </svg>
     <Transition name="fade" appear>
       <AppTile v-if="tile && tileAccent" :letter="mainStore.getTileLetter(tile)" :accent="tileAccent" />
     </Transition>
-  </button>
+  </AppCell>
 </template>
-
-<style lang="scss" scoped>
-.item {
-  max-width: var(--grid-item-size);
-  border-radius: var(--grid-item-radius);
-  background: var(--cell-bg);
-  user-select: none;
-  box-shadow: var(--cell-shadow);
-  cursor: pointer;
-  &--highlighted {
-    background: var(--cell-bg-highlighted);
-  }
-  &--highlighted,
-  &--occupied {
-    box-shadow: none;
-  }
-  &__bonus {
-    font-weight: var(--font-weight-big);
-    z-index: var(--z-index-level-1);
-    opacity: var(--cell-opacity-bonus);
-    font-size: 15px;
-    $accents: 'primary', 'secondary', 'tertiary', 'quaternary';
-    @each $accent in $accents {
-      &--#{$accent} text {
-        fill: var(--cell-color-#{$accent});
-      }
-    }
-  }
-}
-</style>
