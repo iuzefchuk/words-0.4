@@ -23,10 +23,10 @@ type Combo<A extends Axes> = { readonly [K in keyof A]: A[K][number] };
 export default class FixtureFactory {
   static createForComponent<A extends Axes>(params: CreateParams<A>): ReadonlyArray<Fixture<Combo<A>>> {
     const slots: ReadonlyArray<null | string> = params.slot ?? [null];
-    return FixtureFactory.cartesian(params.props).flatMap(props =>
+    return this.cartesian(params.props).flatMap(props =>
       slots.map(slot => ({
-        desc: FixtureFactory.describe({ ...props, slot }),
-        mountInstance: FixtureFactory.mountInstance(params.loadComponent, props, slot),
+        desc: this.describe({ ...props, slot }),
+        mountInstance: this.mountVueComponentInstance(params.loadComponent, props, slot),
         props,
         slot,
       })),
@@ -47,7 +47,7 @@ export default class FixtureFactory {
       .join(', ');
   }
 
-  private static mountInstance(
+  private static mountVueComponentInstance(
     loadComponent: () => Promise<Component>,
     props: Record<string, unknown>,
     slot: null | string,

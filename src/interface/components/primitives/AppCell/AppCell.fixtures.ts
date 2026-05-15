@@ -1,6 +1,6 @@
-import type { Component } from 'vue';
 import { type GameBonus } from '@/application/types/index.ts';
 import FixtureFactory from '@/globals/FixtureFactory.ts';
+import type { Component } from 'vue';
 
 export default FixtureFactory.createForComponent({
   loadComponent: (): Promise<Component> =>
