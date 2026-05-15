@@ -21,7 +21,7 @@ const players = computed(() => [
     <div
       v-for="player in players"
       :key="player.name"
-      class="stats__row app__make-secondary"
+      class="stats__row"
       :aria-label="getElementLabel(LabeledElement.LayoutHeaderStats, { player: player.name })"
     >
       <dt class="stats__title">{{ player.name }}</dt>

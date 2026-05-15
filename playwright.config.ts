@@ -5,7 +5,7 @@ import { loadEnv } from 'vite';
 
 const dirName = path.dirname(fileURLToPath(import.meta.url));
 const env = loadEnv('', dirName, '');
-const URL = `http://localhost:${String(env.VITE_PORT || 5173)}`;
+const URL = `http://localhost:${(env.VITE_PORT ??= '5173')}`;
 const isCi = Boolean(process.env.CI);
 
 export default defineConfig({
@@ -24,7 +24,8 @@ export default defineConfig({
   ],
   reporter: isCi ? [['dot'], ['html', { open: 'never' }]] : 'list',
   retries: isCi ? 2 : 0,
-  testDir: path.resolve(dirName, './tests/'),
+  testDir: dirName,
+  testMatch: ['tests/**/*.test.ts', 'src/**/*.spec.ts'],
   timeout: 30_000,
   use: {
     baseURL: URL,

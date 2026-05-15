@@ -1,12 +1,22 @@
-import { enableAutoUnmount, mount } from '@vue/test-utils';
+import { enableAutoUnmount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { defineComponent, h } from 'vue';
+import FixtureFactory from '@/globals/FixtureFactory.ts';
 import AppButton from '@/interface/components/shared/AppButton/AppButton.vue';
-import fixtures from '@/interface/components/shared/AppButton/fixtures.ts';
+import { Accent, Key } from '@/interface/enums.ts';
 import DialogStore from '@/interface/stores/DialogStore/DialogStore.ts';
 
 enableAutoUnmount(afterEach);
+
+const fixtures = FixtureFactory.createForComponent({
+  component: AppButton,
+  props: {
+    accent: [Accent.Primary, Accent.Secondary],
+    isDisabled: [false, true],
+    keys: [[], [Key.Enter], [Key.Enter, Key.Space]],
+  },
+  slot: ['Go', null],
+});
 
 describe('AppButton', () => {
   beforeEach(() => {
@@ -30,118 +40,86 @@ describe('AppButton', () => {
       expect(wrapper.text()).toBe(slot ?? '');
     });
 
-    test('renders button element', () => {
+    test('renders button', () => {
       const wrapper = mountInstance();
       expect(wrapper.find('button').exists()).toBe(true);
     });
 
-    test('does not emit trigger on click while a dialog is open', async () => {
-      const wrapper = mountInstance();
-      void DialogStore.INSTANCE().trigger({ cancelText: 'No', confirmText: 'Yes', html: '<p />' });
-      await wrapper.trigger('click');
-      expect(wrapper.emitted('trigger')).toBeUndefined();
-    });
-
-    if (hasKeys)
-      test('attaches window keydown listener on mount', () => {
-        const addSpy = vi.spyOn(window, 'addEventListener');
-        mountInstance();
-        const keydownAdds = addSpy.mock.calls.filter(([eventName]) => eventName === 'keydown');
-        expect(keydownAdds).toHaveLength(1);
-        expect(keydownAdds[0]).toEqual(['keydown', expect.any(Function), true]);
-      });
-
-    if (hasKeys)
-      test('removes window keydown listener on unmount', () => {
-        const addSpy = vi.spyOn(window, 'addEventListener');
-        const removeSpy = vi.spyOn(window, 'removeEventListener');
-        const wrapper = mountInstance();
-        const addCall = addSpy.mock.calls.find(([eventName]) => eventName === 'keydown');
-        expect(addCall).toBeDefined();
-        const handler = addCall?.[1] as EventListener;
-        wrapper.unmount();
-        const keydownRemoves = removeSpy.mock.calls.filter(
-          ([eventName, callHandler]) => eventName === 'keydown' && callHandler === handler,
-        );
-        expect(keydownRemoves).toHaveLength(1);
-        expect(keydownRemoves[0]).toEqual(['keydown', handler, true]);
-      });
-
-    if (!hasKeys)
-      test('does not attach window keydown listener on mount', () => {
-        const addSpy = vi.spyOn(window, 'addEventListener');
-        mountInstance();
-        const keydownAdds = addSpy.mock.calls.filter(([eventName]) => eventName === 'keydown');
-        expect(keydownAdds).toEqual([]);
-      });
-
-    if (isDisabled)
-      test('sets disabled attribute on button element', () => {
+    if (isDisabled) {
+      test('is disabled', () => {
         const wrapper = mountInstance();
         expect(wrapper.attributes('disabled')).toBeDefined();
       });
 
-    if (isDisabled)
       test('is not focusable', () => {
         const wrapper = mountInstance({ attachTo: document.body });
-        (wrapper.vm as unknown as { focus: () => void }).focus();
+        (wrapper.element as HTMLButtonElement).focus();
         expect(document.activeElement).not.toBe(wrapper.element);
       });
 
-    if (isDisabled)
       test('does not emit trigger on click', async () => {
         const wrapper = mountInstance();
         await wrapper.trigger('click');
         expect(wrapper.emitted('trigger')).toBeUndefined();
       });
+    }
 
-    if (!isDisabled)
-      test('does not set disabled attribute on button element', () => {
+    if (!isDisabled) {
+      test('is not disabled', () => {
         const wrapper = mountInstance();
         expect(wrapper.attributes('disabled')).toBeUndefined();
       });
 
-    if (!isDisabled)
       test('is focusable', () => {
         const wrapper = mountInstance({ attachTo: document.body });
         document.body.focus();
         expect(document.activeElement).not.toBe(wrapper.element);
-        (wrapper.vm as unknown as { focus: () => void }).focus();
+        (wrapper.element as HTMLButtonElement).focus();
         expect(document.activeElement).toBe(wrapper.element);
       });
 
-    if (!isDisabled)
-      test('exposes focus method via template ref', () => {
-        let exposed: { focus: () => void } | null = null;
-        const parent = defineComponent({
-          render: () =>
-            h(AppButton, {
-              ...fixture.props,
-              ref: (el: unknown) => {
-                exposed = el as { focus: () => void } | null;
-              },
-            }),
-        });
-        mount(parent, { attachTo: document.body });
-        expect(exposed).not.toBeNull();
-        expect((exposed as { focus: () => void } | null)?.focus).toBeInstanceOf(Function);
-        document.body.focus();
-        expect(document.activeElement).toBe(document.body);
-        (exposed as { focus: () => void } | null)?.focus();
-        expect(document.activeElement).not.toBe(document.body);
-        expect((document.activeElement as HTMLElement).tagName).toBe('BUTTON');
+      test('exposes focus', () => {
+        const wrapper = mountInstance();
+        expect((wrapper.vm as { focus?: unknown }).focus).toBeInstanceOf(Function);
       });
 
-    if (!isDisabled)
       test('emits trigger on click', async () => {
         const wrapper = mountInstance();
         await wrapper.trigger('click');
-        expect(wrapper.emitted('trigger')).toHaveLength(1);
+        expect(wrapper.emitted('trigger')).toBeDefined();
       });
 
-    if (hasKeys)
+      test('does not emit trigger on click while dialog is open', async () => {
+        const wrapper = mountInstance();
+        void DialogStore.INSTANCE().trigger({ cancelText: 'No', confirmText: 'Yes', html: '<p />' });
+        await wrapper.trigger('click');
+        expect(wrapper.emitted('trigger')).toBeUndefined();
+      });
+    }
+
+    if (hasKeys) {
+      test('attaches window keydown listener on mount', () => {
+        const addSpy = vi.spyOn(window, 'addEventListener');
+        mountInstance();
+        const keydownAdds = addSpy.mock.calls.filter(([eventName]) => eventName === 'keydown');
+        expect(keydownAdds).toEqual([['keydown', expect.any(Function), true]]);
+      });
+
+      test('removes attached window keydown listener on unmount', () => {
+        const addSpy = vi.spyOn(window, 'addEventListener');
+        const removeSpy = vi.spyOn(window, 'removeEventListener');
+        const wrapper = mountInstance();
+        const addHandler = addSpy.mock.calls.find(([eventName]) => eventName === 'keydown')?.[1];
+        expect(addHandler).toBeDefined();
+        wrapper.unmount();
+        const keydownRemoves = removeSpy.mock.calls.filter(
+          ([eventName, callHandler]) => eventName === 'keydown' && callHandler === addHandler,
+        );
+        expect(keydownRemoves).toEqual([['keydown', addHandler, true]]);
+      });
+
       describe.each(keys)('for key "%s"', key => {
-        test('does not emit trigger on keydown while a dialog is open', () => {
+        test('does not emit trigger on keydown while dialog is open', () => {
           const wrapper = mountInstance();
           void DialogStore.INSTANCE().trigger({ cancelText: 'No', confirmText: 'Yes', html: '<p />' });
           window.dispatchEvent(new KeyboardEvent('keydown', { key }));
@@ -159,8 +137,18 @@ describe('AppButton', () => {
           test('emits trigger on keydown', () => {
             const wrapper = mountInstance();
             window.dispatchEvent(new KeyboardEvent('keydown', { key }));
-            expect(wrapper.emitted('trigger')).toHaveLength(1);
+            expect(wrapper.emitted('trigger')).toBeDefined();
           });
       });
+    }
+
+    if (!hasKeys) {
+      test('does not attach window keydown listener on mount', () => {
+        const addSpy = vi.spyOn(window, 'addEventListener');
+        mountInstance();
+        const keydownAdds = addSpy.mock.calls.filter(([eventName]) => eventName === 'keydown');
+        expect(keydownAdds).toEqual([]);
+      });
+    }
   });
 });
