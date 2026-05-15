@@ -1,7 +1,7 @@
 import { enableAutoUnmount } from '@vue/test-utils';
 import { afterEach, describe, expect, test } from 'vitest';
 import { nextTick } from 'vue';
-import fixtures from '@/interface/components/shared/AppRadioGroup/AppRadioGroup.fixtures.ts';
+import fixtures from '@/interface/components/primitives/AppRadioGroup/AppRadioGroup.fixtures.ts';
 
 enableAutoUnmount(afterEach);
 

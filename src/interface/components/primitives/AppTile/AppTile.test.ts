@@ -1,6 +1,6 @@
 import { enableAutoUnmount } from '@vue/test-utils';
 import { afterEach, describe, expect, test } from 'vitest';
-import fixtures from '@/interface/components/shared/AppTile/AppTile.fixtures.ts';
+import fixtures from '@/interface/components/primitives/AppTile/AppTile.fixtures.ts';
 
 enableAutoUnmount(afterEach);
 

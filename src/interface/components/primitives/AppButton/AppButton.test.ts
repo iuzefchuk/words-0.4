@@ -1,7 +1,7 @@
 import { enableAutoUnmount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import fixtures from '@/interface/components/shared/AppButton/AppButton.fixtures.ts';
+import fixtures from '@/interface/components/primitives/AppButton/AppButton.fixtures.ts';
 import DialogStore from '@/interface/stores/DialogStore/DialogStore.ts';
 
 enableAutoUnmount(afterEach);

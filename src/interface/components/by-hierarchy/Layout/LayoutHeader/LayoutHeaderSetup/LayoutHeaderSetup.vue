@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
-import AppRadioGroup from '@/interface/components/shared/AppRadioGroup/AppRadioGroup.vue';
+import AppRadioGroup from '@/interface/components/primitives/AppRadioGroup/AppRadioGroup.vue';
 import { LabeledElement } from '@/interface/enums.ts';
 import { handleChangeMatchDifficulty, handleChangeMatchType } from '@/interface/handlers/setup/setup.ts';
 import { getElementLabel } from '@/interface/mappings.ts';

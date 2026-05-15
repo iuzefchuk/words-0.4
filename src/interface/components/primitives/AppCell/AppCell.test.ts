@@ -1,7 +1,7 @@
 import { enableAutoUnmount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, test } from 'vitest';
-import fixtures from '@/interface/components/shared/AppCell/AppCell.fixtures.ts';
+import fixtures from '@/interface/components/primitives/AppCell/AppCell.fixtures.ts';
 
 enableAutoUnmount(afterEach);
 
