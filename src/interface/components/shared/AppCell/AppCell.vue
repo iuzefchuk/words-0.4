@@ -1,31 +1,32 @@
 <script lang="ts" setup>
+import { computed } from 'vue';
+import { GameBonus } from '@/application/types/index.ts';
 import { Accent } from '@/interface/enums.ts';
-defineProps<{
-  ariaLabel?: string | undefined;
-  bonus?: { accent: Accent; name: string } | undefined;
-  cellRole: string;
+import { getBonusAccent, getBonusName } from '@/interface/mappings.ts';
+const props = defineProps<{
+  bonus: GameBonus | null;
   colIndex: number;
   isFocused: boolean;
-  isHighlighted?: boolean | undefined;
-  isOccupied?: boolean | undefined;
-  isPressed?: boolean | undefined;
+  isHighlighted: boolean;
+  isOccupied: boolean;
+  label: string | undefined;
+  role: string;
   rowIndex: number;
 }>();
 defineEmits<{
   activate: [];
   doubleActivate: [];
 }>();
+const bonusAccent = computed(() => (props.bonus === null ? undefined : getBonusAccent(props.bonus)));
 </script>
 
 <template>
   <button
-    type="button"
-    :role="cellRole"
+    :role="role"
     :tabindex="isFocused ? 0 : -1"
     :aria-rowindex="rowIndex"
     :aria-colindex="colIndex"
-    :aria-pressed="isPressed"
-    :aria-label="ariaLabel"
+    :aria-label="label"
     :class="{
       cell: true,
       'cell--highlighted': isHighlighted,
@@ -40,14 +41,14 @@ defineEmits<{
       aria-hidden="true"
       :class="{
         cell__bonus: true,
-        'cell__bonus--primary': bonus.accent === Accent.Primary,
-        'cell__bonus--secondary': bonus.accent === Accent.Secondary,
-        'cell__bonus--tertiary': bonus.accent === Accent.Tertiary,
-        'cell__bonus--quaternary': bonus.accent === Accent.Quaternary,
+        'cell__bonus--primary': bonusAccent === Accent.Primary,
+        'cell__bonus--secondary': bonusAccent === Accent.Secondary,
+        'cell__bonus--tertiary': bonusAccent === Accent.Tertiary,
+        'cell__bonus--quaternary': bonusAccent === Accent.Quaternary,
       }"
       viewBox="0 0 40 40"
     >
-      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central">{{ bonus.name }}</text>
+      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central">{{ getBonusName(bonus) }}</text>
     </svg>
     <slot />
   </button>

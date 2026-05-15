@@ -1,6 +1,15 @@
 import { GameBonus, GameEvent, GameEventType, GameMatchResult, GamePlayer } from '@/application/types/index.ts';
-import { LabeledElement } from '@/interface/enums.ts';
+import { Accent, LabeledElement } from '@/interface/enums.ts';
 import { Sound } from '@/interface/services/SoundPlayer/SoundPlayer.ts';
+
+export function getBonusAccent(bonus: GameBonus): Accent {
+  return {
+    [GameBonus.DoubleLetter]: Accent.Quaternary,
+    [GameBonus.DoubleWord]: Accent.Secondary,
+    [GameBonus.TripleLetter]: Accent.Tertiary,
+    [GameBonus.TripleWord]: Accent.Primary,
+  }[bonus];
+}
 
 export function getBonusLabel(bonus: GameBonus): LabeledElement {
   return {

@@ -2,7 +2,7 @@ import { mount, type VueWrapper } from '@vue/test-utils';
 import type { Component } from 'vue';
 
 export type CreateParams<A extends Axes> = {
-  readonly component: Component;
+  readonly loadComponent: () => Promise<Component>;
   readonly props: A;
   readonly slot?: ReadonlyArray<null | string>;
 };
@@ -14,7 +14,7 @@ export type Fixture<Props> = {
   readonly slot: null | string;
 };
 
-export type MountInstance = (options?: { attachTo?: HTMLElement }) => VueWrapper;
+export type MountInstance = (options?: { attachTo?: HTMLElement }) => Promise<VueWrapper>;
 
 type Axes = Record<string, ReadonlyArray<unknown>>;
 
@@ -26,7 +26,7 @@ export default class FixtureFactory {
     return FixtureFactory.cartesian(params.props).flatMap(props =>
       slots.map(slot => ({
         desc: FixtureFactory.describe({ ...props, slot }),
-        mountInstance: FixtureFactory.mountInstance(params.component, props, slot),
+        mountInstance: FixtureFactory.mountInstance(params.loadComponent, props, slot),
         props,
         slot,
       })),
@@ -47,12 +47,18 @@ export default class FixtureFactory {
       .join(', ');
   }
 
-  private static mountInstance(component: Component, props: Record<string, unknown>, slot: null | string): MountInstance {
-    return (options: { attachTo?: HTMLElement } = {}): VueWrapper =>
-      mount(component, {
+  private static mountInstance(
+    loadComponent: () => Promise<Component>,
+    props: Record<string, unknown>,
+    slot: null | string,
+  ): MountInstance {
+    return async (options: { attachTo?: HTMLElement } = {}): Promise<VueWrapper> => {
+      const component = await loadComponent();
+      return mount(component, {
         ...options,
         props,
         ...(slot === null ? {} : { slots: { default: slot } }),
       });
+    };
   }
 }

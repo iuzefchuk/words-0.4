@@ -12,8 +12,9 @@ const points = computed(() => mainStore.getLetterPoints(props.letter));
 </script>
 
 <template>
-  <span
+  <svg
     aria-hidden="true"
+    viewBox="0 0 40 40"
     :class="{
       tile: true,
       'tile--primary': props.accent === Accent.Primary,
@@ -21,15 +22,13 @@ const points = computed(() => mainStore.getLetterPoints(props.letter));
       'tile--tertiary': props.accent === Accent.Tertiary,
     }"
   >
-    <svg viewBox="0 0 40 40">
-      <text class="tile__letter" x="45%" y="45%" font-size="22" text-anchor="middle" dominant-baseline="central">
-        {{ letter }}
-      </text>
-      <text class="tile__points" x="78%" y="78%" font-size="13" text-anchor="middle" dominant-baseline="central">
-        {{ points }}
-      </text>
-    </svg>
-  </span>
+    <text class="tile__letter" x="45%" y="45%" font-size="22" text-anchor="middle" dominant-baseline="central">
+      {{ letter }}
+    </text>
+    <text class="tile__points" x="78%" y="78%" font-size="13" text-anchor="middle" dominant-baseline="central">
+      {{ points }}
+    </text>
+  </svg>
 </template>
 
 <style lang="scss" scoped>

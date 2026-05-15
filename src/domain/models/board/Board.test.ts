@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
+import fixtures from '@/domain/models/board/Board.fixtures.ts';
 import Board from '@/domain/models/board/Board.ts';
 import { Axis, Bonus, Type } from '@/domain/models/board/enums.ts';
-import fixtures from '@/domain/models/board/fixtures.ts';
 import BonusService from '@/domain/models/board/services/bonus/BonusService.ts';
 import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
 import { BonusDistribution, Cell, Placement } from '@/domain/models/board/types.ts';

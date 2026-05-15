@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { computed, inject, Ref } from 'vue';
-import { GameBonus, GameCell } from '@/application/types/index.ts';
+import { GameCell } from '@/application/types/index.ts';
 import AppCell from '@/interface/components/shared/AppCell/AppCell.vue';
 import AppTile from '@/interface/components/shared/AppTile/AppTile.vue';
 import { Accent, LabeledElement } from '@/interface/enums.ts';
 import { handleClickGridCell, handleClickGridTile, handleDoubleClickGridTile } from '@/interface/handlers/grid/grid.ts';
-import { getBonusLabel, getBonusName, getElementLabel } from '@/interface/mappings.ts';
+import { getBonusLabel, getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore/UserStore.ts';
 const props = defineProps<{
@@ -14,15 +14,9 @@ const props = defineProps<{
 }>();
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
-const cellRole = inject<string>('cellRole');
-if (cellRole === undefined) throw new Error('LayoutGridItem: cellRole must be provided');
+const role = inject<string>('cellRole');
+if (role === undefined) throw new Error('LayoutGridItem: cellRole must be provided');
 const focusedItemIndex = inject<Ref<number>>('focusedItemIndex');
-const BONUS_ACCENT: Readonly<Record<GameBonus, Accent>> = {
-  [GameBonus.DoubleLetter]: Accent.Quaternary,
-  [GameBonus.DoubleWord]: Accent.Secondary,
-  [GameBonus.TripleLetter]: Accent.Tertiary,
-  [GameBonus.TripleWord]: Accent.Primary,
-};
 const isCenter = computed(() => mainStore.isCellCenter(props.cell));
 const bonus = computed(() => mainStore.getCellBonus(props.cell));
 const tile = computed(() => mainStore.findTileOnCell(props.cell));
@@ -34,11 +28,7 @@ const tileAccent = computed(() => {
   return Accent.Tertiary;
 });
 const isFocused = computed(() => focusedItemIndex?.value === props.index);
-const bonusProp = computed(() =>
-  bonus.value === null ? undefined : { accent: BONUS_ACCENT[bonus.value], name: getBonusName(bonus.value) },
-);
-const pressedState = computed(() => (tile.value === undefined ? undefined : tileIsSelected.value));
-const ariaLabel = computed(() => {
+const label = computed(() => {
   if (tile.value !== undefined) {
     const letter = mainStore.getTileLetter(tile.value);
     return getElementLabel(LabeledElement.LayoutGridItemTile, { letter, points: mainStore.getLetterPoints(letter) });
@@ -62,15 +52,14 @@ function doubleActivate(): void {
 <template>
   <AppCell
     v-memo="[tile, bonus, tileAccent, tileIsSelected, isFocused]"
-    :cell-role="cellRole"
+    :role="role"
     :row-index="mainStore.getCellRowIndex(cell) + 1"
     :col-index="mainStore.getCellColumnIndex(cell) + 1"
     :is-focused="isFocused"
     :is-highlighted="isCenter"
     :is-occupied="tile !== undefined"
-    :is-pressed="pressedState"
-    :aria-label="ariaLabel"
-    :bonus="bonusProp"
+    :label="label"
+    :bonus="bonus"
     @activate="activate"
     @double-activate="doubleActivate"
   >
