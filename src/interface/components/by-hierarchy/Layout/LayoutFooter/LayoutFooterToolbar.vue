@@ -33,6 +33,7 @@ const buttons = reactive([
       void handleResign();
     },
     isDisabled: () => allActionsAreDisabled.value,
+    // TODO disable key controls on endscreen
     keys: [Key.R],
     name: window.text('general.action_resign'),
   },
