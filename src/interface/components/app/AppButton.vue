@@ -20,7 +20,6 @@ const REF_BUTTON = 'button';
 const buttonEl = useTemplateRef<HTMLButtonElement>(REF_BUTTON);
 const dialogStore = DialogStore.INSTANCE();
 const onClick = (): void => {
-  if (dialogStore.isOpen) return;
   emit('trigger');
 };
 if (props.keys.length > 0) {
