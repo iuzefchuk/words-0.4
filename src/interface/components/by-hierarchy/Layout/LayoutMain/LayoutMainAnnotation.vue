@@ -22,7 +22,7 @@ const { history } = new UseHistory();
 
 <style lang="scss" scoped>
 .annotation {
-  $padding-right: calc(var(--grid-item-size) / 4);
+  $padding-right: var(--layout-padding);
   width: calc(100% - $padding-right);
   &__list {
     height: var(--layout-annotation-height);

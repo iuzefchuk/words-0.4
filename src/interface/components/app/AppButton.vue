@@ -74,7 +74,7 @@ defineExpose({
   display: grid;
   place-items: center;
   width: calc(var(--space-6xl) * 2);
-  @media screen and (max-width: $mobile-breakpoint) {
+  @media screen and (max-width: $breakpoint-mobile) {
     width: 100%;
   }
   height: var(--space-5xl);

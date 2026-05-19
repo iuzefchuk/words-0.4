@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import LayoutGridTooltip from '@/interface/components/by-hierarchy/Layout/LayoutGrid/LayoutGridTooltip.vue';
+import LayoutMainGridOutlineTooltip from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainGrid/LayoutMainGridOutline/LayoutMainGridOutlineTooltip.vue';
 import UseOutline from '@/interface/composables/UseOutline/UseOutline.ts';
 const { bounds, isAnchorAt, isOnRightmostColumnAt } = new UseOutline();
 </script>
@@ -11,15 +11,15 @@ const { bounds, isAnchorAt, isOnRightmostColumnAt } = new UseOutline();
     class="outline"
     aria-hidden="true"
     :style="{
-      '--outline-cell-step': `calc((100% + var(--grid-gap)) / var(--grid-items-per-axis))`,
-      top: `calc(var(--outline-cell-step) * ${group.row})`,
-      left: `calc(var(--outline-cell-step) * ${group.col})`,
-      width: `calc(var(--outline-cell-step) * ${group.colSpan} - var(--grid-gap) - 1px)`,
-      height: `calc(var(--outline-cell-step) * ${group.rowSpan} - var(--grid-gap) - 1px)`,
+      '--outline-grid-step': `calc((100% + var(--grid-gap)) / var(--grid-items-per-axis))`,
+      top: `calc(var(--outline-grid-step) * ${group.row})`,
+      left: `calc(var(--outline-grid-step) * ${group.col})`,
+      width: `calc(var(--outline-grid-step) * ${group.colSpan} - var(--grid-gap) - 1px)`,
+      height: `calc(var(--outline-grid-step) * ${group.rowSpan} - var(--grid-gap) - 1px)`,
     }"
   >
     <Transition name="fade" appear>
-      <LayoutGridTooltip v-if="isAnchorAt(idx)" :is-flipped="isOnRightmostColumnAt(idx)" />
+      <LayoutMainGridOutlineTooltip v-if="isAnchorAt(idx)" :is-flipped="isOnRightmostColumnAt(idx)" />
     </Transition>
   </div>
 </template>

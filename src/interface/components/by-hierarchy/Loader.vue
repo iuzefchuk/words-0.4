@@ -5,6 +5,7 @@ import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { bootProgress } = storeToRefs(mainStore);
+// TODO improve design
 </script>
 
 <template>
@@ -23,7 +24,7 @@ const { bootProgress } = storeToRefs(mainStore);
   top: 0;
   left: 0;
   right: 0;
-  // TODO why value & width together ?
+  // TODO value & width ?
   width: var(--loader-progress, 0%);
   height: 2px;
   background: var(--loader-color);

@@ -61,7 +61,8 @@ const buttons = reactive([
   display: flex;
   flex-direction: column;
   gap: var(--space-s);
-  @media screen and (max-width: $mobile-breakpoint) {
+  padding: var(--layout-padding);
+  @media screen and (max-width: $breakpoint-mobile) {
     flex-direction: row-reverse;
   }
 }

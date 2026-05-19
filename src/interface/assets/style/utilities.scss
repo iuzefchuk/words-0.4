@@ -14,10 +14,6 @@
     background: var(--secondary-bg);
     color: var(--secondary-color);
   }
-  &__limit-max-width {
-    max-width: calc(var(--grid-items-per-axis) * (var(--grid-gap) + var(--grid-item-size)) - var(--grid-gap));
-    width: 100%;
-  }
   &__create-grid {
     @mixin grid($columns, $rows, $gap: var(--grid-gap)) {
       display: grid;

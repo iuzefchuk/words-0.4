@@ -7,7 +7,10 @@ import { getElementLabel, getMatchResultText } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { matchResult, opponentScore, userScore } = storeToRefs(mainStore);
-const resultText = computed(() => getMatchResultText(matchResult.value, userScore.value - opponentScore.value));
+const resultText = computed(() => {
+  // TODO change
+  return getMatchResultText(matchResult.value, userScore.value - opponentScore.value);
+});
 const ariaLabel = computed(() => getElementLabel(LabeledElement.LayoutRestart, { result: resultText.value }));
 function restart(): void {
   handleRestartGame();
