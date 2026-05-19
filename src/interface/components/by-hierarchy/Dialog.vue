@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
-import AppButton from '@/interface/components/primitives/AppButton/AppButton.vue';
+import AppButton from '@/interface/components/app/AppButton.vue';
 import { Accent } from '@/interface/enums.ts';
 import DialogStore, { DialogStatus } from '@/interface/stores/DialogStore/DialogStore.ts';
 const dialogStore = DialogStore.INSTANCE();

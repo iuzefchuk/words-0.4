@@ -1,6 +1,6 @@
 import { BootProgress } from '@/application/enums.ts';
-import CommandsService from '@/application/services/CommandsService.ts';
-import QueriesService from '@/application/services/QueriesService.ts';
+import CommandsService from '@/application/services/commands/CommandsService.ts';
+import QueriesService from '@/application/services/queries/QueriesService.ts';
 import { SchedulerGateway } from '@/application/types/gateways.ts';
 import { AppConfig, AppDependencies, GameDictionary, GameEvent, GameMatchSettings } from '@/application/types/index.ts';
 import Game from '@/domain/Game.ts';
@@ -23,10 +23,7 @@ export default class Application {
     private readonly dependencies: AppDependencies,
     readonly commandsService: CommandsService,
     readonly queriesService: QueriesService,
-  ) {
-    this.commandsService = commandsService;
-    this.queriesService = queriesService;
-  }
+  ) {}
 
   static async create(dependencies: AppDependencies, settings: GameMatchSettings): Promise<Application> {
     const { gateways, repositories, tasks } = dependencies;

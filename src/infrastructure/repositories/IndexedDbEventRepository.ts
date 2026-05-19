@@ -11,7 +11,7 @@ export default class IndexedDbEventRepository implements EventRepository {
 
   async append(events: ReadonlyArray<GameEvent>): Promise<void> {
     const start = this.persistedEventsCount;
-    // Claim the range synchronously so back-to-back fire-and-forget calls don't double-write.
+    // claim the range synchronously so back-to-back fire-and-forget calls don't double-write.
     this.persistedEventsCount = events.length;
     await IndexedDbGateway.append(IndexedDbEventRepository.DB_NAME, this.appVersion, events.slice(start));
   }

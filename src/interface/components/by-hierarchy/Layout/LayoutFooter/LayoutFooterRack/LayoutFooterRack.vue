@@ -2,8 +2,8 @@
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { GameTile } from '@/application/types/index.ts';
-import LayoutFooterRackAnnotation from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterRack/LayoutFooterRackAnnotation/LayoutFooterRackAnnotation.vue';
-import AppTile from '@/interface/components/primitives/AppTile/AppTile.vue';
+import LayoutFooterRackAnnotation from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterRack/LayoutFooterRackAnnotation.vue';
+import AppTile from '@/interface/components/app/AppTile.vue';
 import { Accent, LabeledElement } from '@/interface/enums.ts';
 import { handleClickRackCell, handleClickRackTile } from '@/interface/handlers/rack/rack.ts';
 import { getElementLabel } from '@/interface/mappings.ts';

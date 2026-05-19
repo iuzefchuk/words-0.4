@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ComputedRef, markRaw, reactive, ref, shallowRef, ShallowRef, watch } from 'vue';
 import Application from '@/application/index.ts';
-import QueriesService from '@/application/services/QueriesService.ts';
-import { GameCell, GameLetter, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
+import { GameBonus, GameCell, GameLetter, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
 import launchWords from '@/index.ts';
 import { getEventSound } from '@/interface/mappings.ts';
 import SoundPlayer, { Sound } from '@/interface/services/SoundPlayer/SoundPlayer.ts';
@@ -173,7 +172,7 @@ class Getters {
 
   getAdjacentCells = (cell: GameCell): ReadonlyArray<GameCell> => this.requireApp().queriesService.getAdjacentCells(cell);
 
-  getCellBonus = (cell: GameCell): ReturnType<QueriesService['getCellBonus']> =>
+  getCellBonus = (cell: GameCell): GameBonus | null =>
     this.state.readBoard(() => this.requireApp().queriesService.getCellBonus(cell));
 
   getCellColumnIndex = (cell: GameCell): number => this.requireApp().queriesService.getCellColumnIndex(cell);
@@ -182,8 +181,7 @@ class Getters {
 
   getLetterPoints = (letter: GameLetter): number => this.requireApp().queriesService.getLetterPoints(letter);
 
-  getTileLetter = (tile: GameTile): ReturnType<QueriesService['getTileLetter']> =>
-    this.requireApp().queriesService.getTileLetter(tile);
+  getTileLetter = (tile: GameTile): GameLetter => this.requireApp().queriesService.getTileLetter(tile);
 
   isCellCenter = (cell: GameCell): boolean => this.requireApp().queriesService.isCellCenter(cell);
 
@@ -192,11 +190,11 @@ class Getters {
   wasTileUsedInPreviousTurn = (tile: GameTile): boolean =>
     this.state.readBoard(() => this.requireApp().queriesService.wasTileUsedInPreviousTurn(tile));
 
-  private read<T>(fn: (queries: QueriesService) => T): ComputedRef<T> {
+  private read<T>(fn: (queries: Application['queriesService']) => T): ComputedRef<T> {
     return computed(() => this.state.read(() => fn(this.requireApp().queriesService)));
   }
 
-  private readBoard<T>(fn: (queries: QueriesService) => T): ComputedRef<T> {
+  private readBoard<T>(fn: (queries: Application['queriesService']) => T): ComputedRef<T> {
     return computed(() => this.state.readBoard(() => fn(this.requireApp().queriesService)));
   }
 }

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { computed, inject, Ref } from 'vue';
 import { GameCell } from '@/application/types/index.ts';
-import AppCell from '@/interface/components/primitives/AppCell/AppCell.vue';
-import AppTile from '@/interface/components/primitives/AppTile/AppTile.vue';
+import AppCell from '@/interface/components/app/AppCell.vue';
+import AppTile from '@/interface/components/app/AppTile.vue';
 import { Accent, LabeledElement } from '@/interface/enums.ts';
 import { handleClickGridCell, handleClickGridTile, handleDoubleClickGridTile } from '@/interface/handlers/grid/grid.ts';
 import { getBonusLabel, getElementLabel } from '@/interface/mappings.ts';

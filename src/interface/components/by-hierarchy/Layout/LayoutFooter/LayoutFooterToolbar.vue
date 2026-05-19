@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
-import AppButton from '@/interface/components/primitives/AppButton/AppButton.vue';
+import AppButton from '@/interface/components/app/AppButton.vue';
 import { Accent, Key, LabeledElement } from '@/interface/enums.ts';
 import { handlePass, handleResign, handleSave } from '@/interface/handlers/toolbar/toolbar.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
