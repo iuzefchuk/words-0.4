@@ -6,6 +6,7 @@
     "moduleResolution": "nodenext",
     "paths": {
       "@/*": ["./src/*"],
+      "@style/*": ["./src/interface/assets/style/*"],
       "$/*": ["./tests/*"]
     },
     "types": ["vite/client", "vitest/globals", "vue"],

@@ -80,7 +80,7 @@ watch(html, async newValue => {
 </template>
 
 <style lang="scss" scoped>
-@use '@/interface/assets/scss/themes' as *;
+@use '@style/themes' as *;
 .dialog {
   @include dark-theme;
   @media (prefers-color-scheme: dark) {

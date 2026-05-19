@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        '@style': path.resolve(__dirname, './src/interface/assets/style'),
       },
     },
     root: path.resolve(__dirname, './src/interface'),

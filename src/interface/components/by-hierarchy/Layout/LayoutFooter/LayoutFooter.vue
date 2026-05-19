@@ -15,22 +15,35 @@ import LayoutFooterToolbar from '@/interface/components/by-hierarchy/Layout/Layo
 </template>
 
 <style lang="scss" scoped>
+@use '@style/breakpoints.scss' as *;
 .footer {
   width: 100%;
   display: grid;
   grid-template-columns: 1px 2fr 1px;
   grid-template-rows: auto;
+  gap: var(--space-s);
   align-items: center;
   overflow-x: hidden;
+  @media screen and (max-width: $mobile-breakpoint) {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, 1fr);
+  }
   &__top {
     grid-column: 2;
     align-self: flex-start;
     justify-self: center;
+    @media screen and (max-width: $mobile-breakpoint) {
+      grid-column: 1;
+    }
   }
   &__bottom {
     grid-column: 3;
     justify-self: end;
     align-self: end;
+    @media screen and (max-width: $mobile-breakpoint) {
+      grid-column: 1;
+      width: 100%;
+    }
   }
 }
 </style>

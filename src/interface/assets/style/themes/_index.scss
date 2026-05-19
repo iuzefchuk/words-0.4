@@ -1,0 +1,11 @@
+@forward 'light';
+@forward 'dark';
+@use 'light' as *;
+@use 'dark' as *;
+
+@mixin emit() {
+  @include light-theme;
+  @media (prefers-color-scheme: dark) {
+    @include dark-theme;
+  }
+}

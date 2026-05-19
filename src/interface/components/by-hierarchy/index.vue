@@ -13,13 +13,13 @@ import Loader from '@/interface/components/by-hierarchy/Loader.vue';
 </template>
 
 <style lang="scss">
-@use '@/interface/assets/scss/reset.scss';
-@use '@/interface/assets/scss/animations.scss';
-@use '@/interface/assets/scss/transitions.scss';
-@use '@/interface/assets/scss/base.scss';
-@use '@/interface/assets/scss/utilities.scss';
-@use '@/interface/assets/scss/tokens' as tokens;
-@use '@/interface/assets/scss/themes' as themes;
+@use '@style/reset.scss';
+@use '@style/animations.scss';
+@use '@style/transitions.scss';
+@use '@style/base.scss';
+@use '@style/utilities.scss';
+@use '@style/tokens' as tokens;
+@use '@style/themes' as themes;
 :root {
   @include tokens.emit;
   @include themes.emit;

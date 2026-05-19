@@ -61,6 +61,7 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
+@use '@style/breakpoints.scss' as *;
 .btn {
   cursor: pointer;
   text-align: center;
@@ -74,6 +75,9 @@ defineExpose({
   display: grid;
   place-items: center;
   width: calc(var(--space-6xl) * 2);
+  @media screen and (max-width: $mobile-breakpoint) {
+    width: 100%;
+  }
   height: var(--space-5xl);
   box-shadow: var(--shadow-xs);
   font-weight: var(--font-weight);

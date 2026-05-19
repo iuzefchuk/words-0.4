@@ -55,14 +55,14 @@ const buttons = reactive([
 </template>
 
 <style lang="scss" scoped>
+@use '@style/breakpoints.scss' as *;
 .toolbar {
   z-index: var(--z-index-level-1);
   display: flex;
   flex-direction: column;
   gap: var(--space-s);
-  @media screen and (max-width: 750px) {
+  @media screen and (max-width: $mobile-breakpoint) {
     flex-direction: row-reverse;
-    padding-top: 5rem;
   }
 }
 </style>
