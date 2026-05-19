@@ -24,10 +24,10 @@ const players = computed(() => [
       class="stats__row"
       :aria-label="getElementLabel(LabeledElement.LayoutHeaderStats, { player: player.name })"
     >
-      <dt class="stats__title">{{ player.name }}</dt>
+      <dt class="stats__title">{{ player.name }}:</dt>
       <dd class="stats__desc">
-        <span v-animate-number="{ number: player.score }" aria-hidden="true" />
         <span class="app__make-sr-only">{{ player.score }}</span>
+        <span v-animate-number="{ number: player.score }" aria-hidden="true" />
       </dd>
     </div>
   </dl>
@@ -37,17 +37,12 @@ const players = computed(() => [
 .stats {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-s);
   width: max-content;
   &__row {
     display: flex;
     flex-direction: row;
-    gap: var(--space-3xl);
-    justify-content: space-between;
-    &:first-child {
-      border-bottom: 1px solid currentColor;
-      padding-bottom: 4px;
-    }
+    gap: var(--space-xs);
   }
 }
 </style>
