@@ -2,7 +2,7 @@
 import { storeToRefs } from 'pinia';
 import { LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
-import MainStore from '@/interface/stores/MainStore/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { bootProgress } = storeToRefs(mainStore);
 // TODO improve design

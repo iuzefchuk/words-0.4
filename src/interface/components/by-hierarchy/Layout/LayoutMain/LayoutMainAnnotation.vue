@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import UseHistory from '@/interface/composables/UseHistory/UseHistory.ts';
+import UseHistory from '@/interface/composables/UseHistory.ts';
 import { LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
 const { history } = new UseHistory();

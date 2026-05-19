@@ -8,9 +8,9 @@ import LayoutMain from '@/interface/components/by-hierarchy/Layout/LayoutMain/La
 import LayoutRestart from '@/interface/components/by-hierarchy/Layout/LayoutRestart.vue';
 import { Key, LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
-import DialogStore from '@/interface/stores/DialogStore/DialogStore.ts';
-import MainStore from '@/interface/stores/MainStore/MainStore.ts';
-import UserStore from '@/interface/stores/UserStore/UserStore.ts';
+import DialogStore from '@/interface/stores/DialogStore.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
+import UserStore from '@/interface/stores/UserStore.ts';
 await MainStore.initiate();
 const mainStore = MainStore.INSTANCE();
 const { matchIsFinished } = storeToRefs(mainStore);

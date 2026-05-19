@@ -24,8 +24,7 @@ export default defineConfig({
   ],
   reporter: isCi ? [['dot'], ['html', { open: 'never' }]] : 'list',
   retries: isCi ? 2 : 0,
-  testDir: dirName,
-  testMatch: ['tests/**/*.test.ts', 'src/**/*.spec.ts'],
+  testDir: path.resolve(dirName, './tests'),
   timeout: 30_000,
   use: {
     baseURL: URL,

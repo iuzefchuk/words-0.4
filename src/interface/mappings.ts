@@ -1,6 +1,6 @@
 import { GameBonus, GameEvent, GameEventType, GameMatchResult, GamePlayer } from '@/application/types/index.ts';
 import { Accent, LabeledElement } from '@/interface/enums.ts';
-import { Sound } from '@/interface/services/SoundPlayer/SoundPlayer.ts';
+import { Sound } from '@/interface/services/SoundPlayer.ts';
 
 export function getBonusAccent(bonus: GameBonus): Accent {
   return {

@@ -31,6 +31,7 @@ export default class CommandsService {
   ) {}
 
   changeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
+    // TODO dont reset inventory
     this.game.changeMatchDifficulty(matchDifficulty);
     this.settingsRepository.save({ difficulty: matchDifficulty });
   }

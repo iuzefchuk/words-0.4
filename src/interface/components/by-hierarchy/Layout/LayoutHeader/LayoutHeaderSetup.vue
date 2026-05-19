@@ -2,9 +2,9 @@
 import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
 import AppRadioGroup from '@/interface/components/app/AppRadioGroup.vue';
 import { LabeledElement } from '@/interface/enums.ts';
-import { handleChangeMatchDifficulty, handleChangeMatchType } from '@/interface/handlers/setup/setup.ts';
+import { handleChangeMatchDifficulty, handleChangeMatchType } from '@/interface/handlers/setup.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
-import MainStore from '@/interface/stores/MainStore/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
 type OptionValue = GameMatchDifficulty | GameMatchType;
 const mainStore = MainStore.INSTANCE();
 const options = [

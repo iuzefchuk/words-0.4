@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { LabeledElement } from '@/interface/enums.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
-import MainStore from '@/interface/stores/MainStore/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
 const props = defineProps<{ isFlipped?: boolean }>();
 const mainStore = MainStore.INSTANCE();
 const { currentTurnScore } = storeToRefs(mainStore);

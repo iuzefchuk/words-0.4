@@ -1,6 +1,6 @@
 import { BootProgress } from '@/application/enums.ts';
-import CommandsService from '@/application/services/commands/CommandsService.ts';
-import QueriesService from '@/application/services/queries/QueriesService.ts';
+import CommandsService from '@/application/services/CommandsService.ts';
+import QueriesService from '@/application/services/QueriesService.ts';
 import { SchedulerGateway } from '@/application/types/gateways.ts';
 import { AppConfig, AppDependencies, GameDictionary, GameEvent, GameMatchSettings } from '@/application/types/index.ts';
 import Game from '@/domain/Game.ts';

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, useTemplateRef } from 'vue';
 import { Accent } from '@/interface/enums.ts';
-import DialogStore from '@/interface/stores/DialogStore/DialogStore.ts';
+import DialogStore from '@/interface/stores/DialogStore.ts';
 const props = withDefaults(
   defineProps<{
     accent: Accent;

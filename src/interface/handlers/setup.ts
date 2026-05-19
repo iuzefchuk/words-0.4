@@ -1,6 +1,6 @@
 import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
-import MainStore from '@/interface/stores/MainStore/MainStore.ts';
-import UserStore from '@/interface/stores/UserStore/UserStore.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
+import UserStore from '@/interface/stores/UserStore.ts';
 
 export function handleChangeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
   MainStore.INSTANCE().changeMatchDifficulty(matchDifficulty);

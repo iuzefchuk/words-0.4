@@ -3,9 +3,9 @@ import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
 import AppButton from '@/interface/components/app/AppButton.vue';
 import { Accent, Key, LabeledElement } from '@/interface/enums.ts';
-import { handlePass, handleResign, handleSave } from '@/interface/handlers/toolbar/toolbar.ts';
+import { handlePass, handleResign, handleSave } from '@/interface/handlers/toolbar.ts';
 import { getElementLabel } from '@/interface/mappings.ts';
-import MainStore from '@/interface/stores/MainStore/MainStore.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
 const buttons = reactive([

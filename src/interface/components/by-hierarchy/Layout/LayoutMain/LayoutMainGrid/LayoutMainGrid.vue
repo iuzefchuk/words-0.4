@@ -2,8 +2,8 @@
 import { computed, provide, useTemplateRef } from 'vue';
 import LayoutMainGridItem from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainGrid/LayoutMainGridItem.vue';
 import LayoutMainGridOutline from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainGrid/LayoutMainGridOutline/LayoutMainGridOutline.vue';
-import UseRovingTabindex from '@/interface/composables/UseRovingTabindex/UseRovingTabindex.ts';
-import MainStore from '@/interface/stores/MainStore/MainStore.ts';
+import UseRovingTabindex from '@/interface/composables/UseRovingTabindex.ts';
+import MainStore from '@/interface/stores/MainStore.ts';
 const CELL_ROLE = 'gridcell';
 const REF_GRID = 'grid';
 const mainStore = MainStore.INSTANCE();
