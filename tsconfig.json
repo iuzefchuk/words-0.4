@@ -18,5 +18,5 @@
     "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true
   },
-  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts", "playwright.config.ts", "stryker.config.mjs"]
+  "include": ["src", "tests"]
 }

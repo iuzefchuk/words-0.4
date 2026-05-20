@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vitest/config';
@@ -5,24 +6,14 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [vue()],
   resolve: {
-    alias: [
-      { find: '@', replacement: path.resolve(__dirname, './src') },
-      { find: '$', replacement: path.resolve(__dirname, './tests') },
-    ],
+    tsconfigPaths: true,
   },
   test: {
     clearMocks: true,
-    coverage: {
-      exclude: ['**/*.d.ts', '**/index.ts'],
-      include: ['src'],
-      provider: 'v8',
-      reporter: ['text', 'html', 'lcov'],
-      reportsDirectory: path.resolve(__dirname, '.coverage'),
-    },
     environment: 'happy-dom',
-    exclude: ['node_modules', 'dist'],
+    exclude: readFileSync(path.resolve(__dirname, '.gitignore'), 'utf-8').split('\n'),
     globals: false,
-    include: ['**/*.test.ts'],
+    include: ['src/**/*.test.ts'],
     passWithNoTests: true,
     restoreMocks: true,
     watch: false,

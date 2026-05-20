@@ -4,7 +4,8 @@ import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, __dirname, '');
+  const ENV = loadEnv(mode, __dirname, '');
+  const PORT = Number(ENV.VITE_PORT);
   return {
     build: {
       chunkSizeWarningLimit: 1000,
@@ -33,21 +34,12 @@ export default defineConfig(({ mode }) => {
     ],
     publicDir: path.resolve(__dirname, 'public'),
     resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-        '@style': path.resolve(__dirname, './src/interface/assets/style'),
-      },
+      tsconfigPaths: true,
     },
     root: path.resolve(__dirname, './src/interface'),
     server: {
-      port: Number.isNaN(Number(env.VITE_PORT)) || Number(env.VITE_PORT) === 0 ? 5173 : Number(env.VITE_PORT),
+      port: Number.isNaN(PORT) || PORT === 0 ? 5173 : PORT,
       strictPort: true,
-    },
-    test: {
-      environment: 'happy-dom',
-      globals: true,
-      include: ['tests/**/*.test.ts'],
-      restoreMocks: true,
     },
   };
 });
