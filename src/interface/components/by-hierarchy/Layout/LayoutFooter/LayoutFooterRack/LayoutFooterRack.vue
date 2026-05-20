@@ -4,24 +4,20 @@ import { computed } from 'vue';
 import { GameTile } from '@/application/types/index.ts';
 import AppTile from '@/interface/components/app/AppTile.vue';
 import LayoutFooterRackAnnotation from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterRack/LayoutFooterRackAnnotation.vue';
-import { Accent, LabeledElement } from '@/interface/enums.ts';
+import { Accent } from '@/interface/enums.ts';
 import { handleClickRackCell, handleClickRackTile } from '@/interface/handlers/rack.ts';
-import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
 const { tiles } = storeToRefs(userStore);
+
 const paddedTiles = computed<Array<GameTile | null>>(() =>
   Array.from({ length: mainStore.tilesPerPlayer }, (_, idx) => tiles.value[idx] ?? null),
 );
-function ariaLabelFor(tile: GameTile | null): string {
-  if (tile === null) return getElementLabel(LabeledElement.LayoutFooterRackEmpty);
-  const letter = mainStore.getTileLetter(tile);
-  return getElementLabel(LabeledElement.LayoutFooterRackTile, { letter, points: mainStore.getLetterPoints(letter) });
-}
-function onTileClick(idx: number, tile: GameTile | null): void {
+
+function onClickTile(idx: number, tile: GameTile | null): void {
   if (tile === null) return;
   if (mainStore.isTilePlaced(tile)) {
     handleClickRackCell(idx);
@@ -32,7 +28,7 @@ function onTileClick(idx: number, tile: GameTile | null): void {
 </script>
 
 <template>
-  <section class="rack" :aria-label="getElementLabel(LabeledElement.LayoutFooterRack)">
+  <section class="rack">
     <ul class="rack__grid app__create-grid--for-rack">
       <li v-for="(tile, idx) in paddedTiles" :key="idx" class="rack__cell">
         <button
@@ -40,13 +36,13 @@ function onTileClick(idx: number, tile: GameTile | null): void {
           class="rack__button"
           :disabled="allActionsAreDisabled || tile === null"
           :aria-pressed="tile !== null && userStore.isTileSelected(tile)"
-          :aria-label="ariaLabelFor(tile)"
-          @click.stop="onTileClick(idx, tile)"
+          @click.stop="onClickTile(idx, tile)"
         >
           <AppTile
             v-if="tile !== null && userStore.isTileInRack(tile) && !mainStore.isTilePlaced(tile)"
             :letter="mainStore.getTileLetter(tile)"
             :accent="userStore.isTileSelected(tile) ? Accent.Primary : Accent.Tertiary"
+            :points="mainStore.getLetterPoints(mainStore.getTileLetter(tile))"
           />
         </button>
       </li>

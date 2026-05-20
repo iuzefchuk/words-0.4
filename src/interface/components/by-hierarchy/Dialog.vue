@@ -4,77 +4,80 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import AppButton from '@/interface/components/app/AppButton.vue';
 import { Accent } from '@/interface/enums.ts';
 import DialogStore, { DialogStatus } from '@/interface/stores/DialogStore.ts';
+const ID_TITLE = 'title';
+const ID_HTML = 'html';
+const REF_KEY_BUTTONS = 'buttons';
+const REF_KEY_DIALOG = 'dialog';
 const dialogStore = DialogStore.INSTANCE();
-const { cancelText, confirmText, html, isDestructive, title } = storeToRefs(dialogStore);
-const BODY_ID = 'dialog-body';
-const REF_BUTTONS = 'buttons';
-const REF_DIALOG = 'dialog';
-const dialogRef = useTemplateRef<HTMLDialogElement>(REF_DIALOG);
-const buttonRefs = useTemplateRef<Array<{ focus: () => void }>>(REF_BUTTONS);
-const previousFocus = ref<HTMLElement | null>(null);
+const { html, isDestructive, title } = storeToRefs(dialogStore);
+const refDialog = useTemplateRef<HTMLDialogElement>(REF_KEY_DIALOG);
+const refButtons = useTemplateRef<Array<{ focus: () => void }>>(REF_KEY_BUTTONS);
+const lastFocusedElement = ref<HTMLElement | null>(null);
 const dialogIsShaking = ref(false);
-const buttons = computed(() => [
-  {
-    accent: isDestructive.value ? Accent.Primary : Accent.Secondary,
-    status: DialogStatus.Canceled,
-    text: cancelText.value,
-  },
-  {
-    accent: isDestructive.value ? Accent.Secondary : Accent.Primary,
-    status: DialogStatus.Confirmed,
-    text: confirmText.value,
-  },
-]);
 const focusedButtonIdx = computed(() => (isDestructive.value ? 0 : 1));
+
 function emitResponse(status: DialogStatus): void {
-  if (dialogRef.value?.open === true) dialogRef.value.close();
+  if (refDialog.value?.open === true) refDialog.value.close();
   dialogStore.resolve({ status });
-  previousFocus.value?.focus();
-  previousFocus.value = null;
+  lastFocusedElement.value?.focus();
+  lastFocusedElement.value = null;
 }
+
 function onBackdropClick(event: MouseEvent): void {
-  if (event.target === dialogRef.value) shake();
+  if (event.target === refDialog.value) shake();
 }
+
 function shake(): void {
   dialogIsShaking.value = true;
   setTimeout(() => {
     dialogIsShaking.value = false;
   }, 250);
 }
+
 watch(html, async newValue => {
   if (newValue === null) return;
-  previousFocus.value = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  lastFocusedElement.value = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   await nextTick();
-  dialogRef.value?.showModal();
-  buttonRefs.value?.[focusedButtonIdx.value]?.focus();
+  refDialog.value?.showModal();
+  refButtons.value?.[focusedButtonIdx.value]?.focus();
 });
 </script>
 
 <template>
   <dialog
-    :ref="REF_DIALOG"
+    :ref="REF_KEY_DIALOG"
     role="alertdialog"
     aria-modal="true"
-    :aria-label="title ?? undefined"
-    :aria-describedby="BODY_ID"
+    :aria-labelledby="title ? ID_TITLE : undefined"
+    :aria-describedby="ID_HTML"
     :class="{ dialog: true, 'dialog--shaking': dialogIsShaking }"
     @click="onBackdropClick"
     @cancel.prevent="emitResponse(DialogStatus.Canceled)"
   >
     <div class="dialog__content">
-      <h2 v-if="title">{{ title }}</h2>
-      <div :id="BODY_ID" class="app__make-secondary" v-html="html" />
+      <h2 v-if="title" :id="ID_TITLE">{{ title }}</h2>
+      <div :id="ID_HTML" class="app__make-secondary" v-html="html" />
     </div>
     <div class="dialog__footer">
       <AppButton
-        v-for="button in buttons"
+        v-for="button in [
+          {
+            accent: isDestructive ? Accent.Primary : Accent.Secondary,
+            status: DialogStatus.Canceled,
+            text: text('general.dialog_cancel'),
+          },
+          {
+            accent: isDestructive ? Accent.Secondary : Accent.Primary,
+            status: DialogStatus.Confirmed,
+            text: text('general.dialog_confirm'),
+          },
+        ]"
         :key="button.status"
-        :ref="REF_BUTTONS"
+        :ref="REF_KEY_BUTTONS"
         :accent="button.accent"
+        :text="button.text"
         @trigger="emitResponse(button.status)"
-      >
-        {{ button.text }}
-      </AppButton>
+      />
     </div>
   </dialog>
 </template>

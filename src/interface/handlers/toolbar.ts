@@ -27,8 +27,6 @@ export function handleSave(): void {
 
 async function triggerPassDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
   return await DialogStore.INSTANCE().trigger({
-    cancelText: window.text('general.dialog_cancel'),
-    confirmText: window.text('general.dialog_confirm'),
     html: window.text('general.dialog_html_pass'),
     title: window.text('general.dialog_title_pass'),
   });
@@ -36,8 +34,6 @@ async function triggerPassDialog(): Promise<{ isCanceled: boolean; isConfirmed: 
 
 async function triggerResignDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
   return await DialogStore.INSTANCE().trigger({
-    cancelText: window.text('general.dialog_cancel'),
-    confirmText: window.text('general.dialog_confirm'),
     html: window.text('general.dialog_html_resign'),
     isDestructive: true,
     title: window.text('general.dialog_title_resign'),

@@ -1,19 +1,17 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
 import { GameLetter } from '@/application/types/index.ts';
 import { Accent } from '@/interface/enums.ts';
-import MainStore from '@/interface/stores/MainStore.ts';
 const props = defineProps<{
   accent: Accent;
   letter: GameLetter;
+  points: number;
 }>();
-const mainStore = MainStore.INSTANCE();
-const points = computed(() => mainStore.getLetterPoints(props.letter));
 </script>
 
 <template>
   <svg
-    aria-hidden="true"
+    role="note"
+    :aria-label="`${letter} letter / ${points} pts`"
     viewBox="0 0 40 40"
     :class="{
       tile: true,

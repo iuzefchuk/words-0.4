@@ -9,24 +9,23 @@ const props = defineProps<{
   isFocused: boolean;
   isHighlighted: boolean;
   isOccupied: boolean;
-  label: string | undefined;
-  role: string;
   rowIndex: number;
 }>();
 defineEmits<{
   activate: [];
   doubleActivate: [];
 }>();
+
 const bonusAccent = computed(() => (props.bonus === null ? undefined : getBonusAccent(props.bonus)));
 </script>
 
 <template>
   <button
-    :role="role"
+    role="gridcell"
     :tabindex="isFocused ? 0 : -1"
     :aria-rowindex="rowIndex"
     :aria-colindex="colIndex"
-    :aria-label="label"
+    :aria-label="!isOccupied && bonus === null ? `Row ${rowIndex}, Column ${colIndex}, empty` : undefined"
     :class="{
       cell: true,
       'cell--highlighted': isHighlighted,
@@ -38,7 +37,7 @@ const bonusAccent = computed(() => (props.bonus === null ? undefined : getBonusA
   >
     <svg
       v-if="bonus"
-      aria-hidden="true"
+      role="note"
       :class="{
         cell__bonus: true,
         'cell__bonus--primary': bonusAccent === Accent.Primary,

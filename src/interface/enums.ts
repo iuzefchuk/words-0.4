@@ -18,27 +18,3 @@ export enum Key {
   R = 'r',
   Space = ' ',
 }
-
-// TODO rethink
-export enum LabeledElement {
-  Layout = 'Layout',
-  LayoutAnnotation = 'LayoutAnnotation',
-  LayoutFooterRack = 'LayoutFooterRack',
-  LayoutFooterRackAnnotation = 'LayoutFooterRackAnnotation',
-  LayoutFooterRackEmpty = 'LayoutFooterRackEmpty',
-  LayoutFooterRackTile = 'LayoutFooterRackTile',
-  LayoutFooterToolbar = 'LayoutFooterToolbar',
-  LayoutGrid = 'LayoutGrid',
-  LayoutGridItemBonusDoubleLetter = 'LayoutGridItemBonusDoubleLetter',
-  LayoutGridItemBonusDoubleWord = 'LayoutGridItemBonusDoubleWord',
-  LayoutGridItemBonusTripleLetter = 'LayoutGridItemBonusTripleLetter',
-  LayoutGridItemBonusTripleWord = 'LayoutGridItemBonusTripleWord',
-  LayoutGridItemCellCenter = 'LayoutGridItemCellCenter',
-  LayoutGridItemCellWithBonus = 'LayoutGridItemCellWithBonus',
-  LayoutGridItemTile = 'LayoutGridItemTile',
-  LayoutGridTooltip = 'LayoutGridTooltip',
-  LayoutHeaderSetup = 'LayoutHeaderSetup',
-  LayoutHeaderStats = 'LayoutHeaderStats',
-  LayoutRestart = 'LayoutRestart',
-  Loader = 'Loader',
-}

@@ -1,30 +1,28 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import { LabeledElement } from '@/interface/enums.ts';
 import { handleRestartGame } from '@/interface/handlers/restart.ts';
-import { getElementLabel, getMatchResultText } from '@/interface/mappings.ts';
+import { getMatchResultText } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+const ID_RESULT = 'result';
 const mainStore = MainStore.INSTANCE();
 const { matchResult, opponentScore, userScore } = storeToRefs(mainStore);
-const resultText = computed(() => {
+const result = computed(() => {
   // TODO change
   return getMatchResultText(matchResult.value, userScore.value - opponentScore.value);
 });
-const ariaLabel = computed(() => getElementLabel(LabeledElement.LayoutRestart, { result: resultText.value }));
 function restart(): void {
   handleRestartGame();
 }
 </script>
 
 <template>
-  <div class="restart">
-    <p role="status" class="app__make-sr-only">{{ resultText }}</p>
-    <button class="restart__button" :aria-label="ariaLabel" @dblclick.stop="restart" @keydown.space.prevent.stop="restart">
-      <span aria-hidden="true" class="restart__text">{{ resultText }}</span>
-      <span aria-hidden="true" class="restart__hint app__make-secondary">{{ text('general.action_new_match') }}</span>
+  <section role="alertdialog" aria-modal="true" :aria-labelledby="ID_RESULT" class="restart">
+    <p :id="ID_RESULT" role="status">{{ result }}</p>
+    <button class="restart__button app__make-secondary" @dblclick.stop="restart" @keydown.space.prevent.stop="restart">
+      {{ text('general.action_new_match') }}
     </button>
-  </div>
+  </section>
 </template>
 
 <style lang="scss" scoped>

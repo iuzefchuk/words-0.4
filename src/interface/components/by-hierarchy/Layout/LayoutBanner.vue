@@ -1,13 +1,11 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
 import MainStore from '@/interface/stores/MainStore.ts';
 const { bootError } = storeToRefs(MainStore.INSTANCE());
-const message = computed(() => (bootError.value === null ? '' : window.text('general.error_launch', { error: bootError.value })));
 </script>
 
 <template>
-  <div v-if="bootError" class="banner" role="status" v-html="message" />
+  <p v-if="bootError" class="banner" role="alert" v-html="text('general.error_launch', { error: bootError })" />
 </template>
 
 <style lang="scss" scoped>

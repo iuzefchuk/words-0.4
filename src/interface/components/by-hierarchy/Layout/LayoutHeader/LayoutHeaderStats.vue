@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { LabeledElement } from '@/interface/enums.ts';
-import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const players = computed(() => [
@@ -18,12 +16,7 @@ const players = computed(() => [
 
 <template>
   <dl class="stats">
-    <div
-      v-for="player in players"
-      :key="player.name"
-      class="stats__row"
-      :aria-label="getElementLabel(LabeledElement.LayoutHeaderStats, { player: player.name })"
-    >
+    <div v-for="player in players" :key="player.name" class="stats__row">
       <dt class="stats__title">{{ player.name }}:</dt>
       <dd class="stats__desc">
         <span class="app__make-sr-only">{{ player.score }}</span>

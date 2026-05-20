@@ -1,20 +1,16 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
-import { LabeledElement } from '@/interface/enums.ts';
-import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { tilesRemaining } = storeToRefs(mainStore);
-const srLabel = computed(() => getElementLabel(LabeledElement.LayoutFooterRackAnnotation, { count: tilesRemaining.value }));
 </script>
 
 <template>
   <Transition name="fade">
-    <p v-if="tilesRemaining > 0" class="annotation app__make-secondary">
-      <span class="app__make-sr-only">{{ srLabel }}</span>
+    <p v-if="tilesRemaining > 0" role="note" class="annotation app__make-secondary">
+      <span class="app__make-sr-only">{{ tilesRemaining }}</span>
       <span v-animate-number="{ number: tilesRemaining }" aria-hidden="true" class="annotation__number" />
-      <span aria-hidden="true">{{ text('general.unassigned_count') }}</span>
+      <span>{{ text('general.unassigned_count') }}</span>
     </p>
   </Transition>
 </template>

@@ -101,8 +101,7 @@ export default defineConfigWithVueTs([
       'vue/define-macros-order': [
         'error',
         {
-          defineExposeLast: true,
-          order: ['defineOptions', 'defineModel', 'defineProps', 'defineEmits', 'defineSlots'],
+          order: ['defineOptions', 'defineModel', 'defineProps', 'defineEmits', 'defineSlots', 'defineExpose'],
         },
       ],
       'vue/multi-word-component-names': 'off',

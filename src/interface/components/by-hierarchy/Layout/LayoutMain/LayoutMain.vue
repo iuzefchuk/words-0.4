@@ -1,12 +1,11 @@
 <script lang="ts" setup>
-import LayoutMainAnnotation from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainAnnotation.vue';
 import LayoutMainGrid from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainGrid/LayoutMainGrid.vue';
-import { LabeledElement } from '@/interface/enums.ts';
-import { getElementLabel } from '@/interface/mappings.ts';
+import LayoutMainLog from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainLog.vue';
 </script>
+
 <template>
-  <main class="main" :aria-label="getElementLabel(LabeledElement.LayoutGrid)">
-    <LayoutMainAnnotation class="main__annotation" />
+  <main class="main">
+    <LayoutMainLog class="main__log" />
     <LayoutMainGrid />
   </main>
 </template>
@@ -17,9 +16,9 @@ import { getElementLabel } from '@/interface/mappings.ts';
   width: 100%;
   position: relative;
   max-width: $breakpoint-mobile;
-  &__annotation {
+  &__log {
     position: absolute;
-    top: calc(var(--layout-annotation-height) * -1 - var(--layout-padding));
+    top: calc(var(--layout-main-log-height) * -1 - var(--layout-padding));
     right: var(--layout-padding);
   }
 }

@@ -1,31 +1,22 @@
 <script lang="ts" setup>
 import UseHistory from '@/interface/composables/UseHistory.ts';
-import { LabeledElement } from '@/interface/enums.ts';
-import { getElementLabel } from '@/interface/mappings.ts';
 const { history } = new UseHistory();
 </script>
 
 <template>
-  <aside
-    v-if="history.length > 0"
-    class="annotation"
-    role="log"
-    aria-live="polite"
-    aria-relevant="additions"
-    :aria-label="getElementLabel(LabeledElement.LayoutAnnotation)"
-  >
-    <TransitionGroup name="fade-from-left" tag="ul" class="annotation__list app__make-secondary" appear>
+  <aside v-if="history.length > 0" class="log" role="log">
+    <TransitionGroup name="fade-from-left" tag="ul" class="log__list app__make-secondary" appear>
       <li v-for="{ key, html } in history" :key="key" v-html="html" />
     </TransitionGroup>
   </aside>
 </template>
 
 <style lang="scss" scoped>
-.annotation {
+.log {
   $padding-right: var(--layout-padding);
   width: calc(100% - $padding-right);
   &__list {
-    height: var(--layout-annotation-height);
+    height: var(--layout-main-log-height);
     border-right: 1px solid currentColor;
     padding-right: $padding-right;
     display: flex;

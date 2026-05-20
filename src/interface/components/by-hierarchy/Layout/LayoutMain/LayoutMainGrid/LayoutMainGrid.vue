@@ -4,27 +4,27 @@ import LayoutMainGridItem from '@/interface/components/by-hierarchy/Layout/Layou
 import LayoutMainGridOutline from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainGrid/LayoutMainGridOutline/LayoutMainGridOutline.vue';
 import UseRovingTabindex from '@/interface/composables/UseRovingTabindex.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-const CELL_ROLE = 'gridcell';
-const REF_GRID = 'grid';
+const REF_KEY = 'grid';
 const mainStore = MainStore.INSTANCE();
 const rovingTabindex = new UseRovingTabindex(
-  useTemplateRef<HTMLElement>(REF_GRID),
-  `[role="${CELL_ROLE}"]`,
+  useTemplateRef<HTMLElement>(REF_KEY),
+  `[role="gridcell"]`,
   mainStore.boardCellsPerAxis,
 );
+
 const rows = computed(() => {
   const size = mainStore.boardCellsPerAxis;
   return Array.from({ length: size }, (_, row) =>
     mainStore.boardCells.slice(row * size, (row + 1) * size).map((cell, col) => ({ cell, index: row * size + col })),
   );
 });
-provide('cellRole', CELL_ROLE);
+
 provide('focusedItemIndex', rovingTabindex.focusedIndex);
 </script>
 
 <template>
   <div
-    :ref="REF_GRID"
+    :ref="REF_KEY"
     class="grid app__create-grid--for-board"
     role="grid"
     :aria-rowcount="mainStore.boardCellsPerAxis"

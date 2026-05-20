@@ -6,8 +6,7 @@ import LayoutFooter from '@/interface/components/by-hierarchy/Layout/LayoutFoote
 import LayoutHeader from '@/interface/components/by-hierarchy/Layout/LayoutHeader/LayoutHeader.vue';
 import LayoutMain from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMain.vue';
 import LayoutRestart from '@/interface/components/by-hierarchy/Layout/LayoutRestart.vue';
-import { Key, LabeledElement } from '@/interface/enums.ts';
-import { getElementLabel } from '@/interface/mappings.ts';
+import { Key } from '@/interface/enums.ts';
 import DialogStore from '@/interface/stores/DialogStore.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
@@ -17,7 +16,8 @@ const { matchIsFinished } = storeToRefs(mainStore);
 const userStore = UserStore.INSTANCE();
 const dialogStore = DialogStore.INSTANCE();
 const isMounted = ref(false);
-onMounted(() => nextTick(() => (isMounted.value = true)));
+
+// TODO to composable
 function onKeydown(event: KeyboardEvent): void {
   if ((event.key as Key) !== Key.Escape) return;
   if (dialogStore.isOpen) return;
@@ -29,6 +29,8 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown);
 });
+
+onMounted(() => nextTick(() => (isMounted.value = true)));
 </script>
 
 <template>
@@ -39,7 +41,7 @@ onUnmounted(() => {
     :class="{ layout: true, 'layout--blurred': matchIsFinished }"
     @click="userStore.deselectTile()"
   >
-    <h1 class="app__make-sr-only">{{ getElementLabel(LabeledElement.Layout) }}</h1>
+    <h1 class="app__make-sr-only">Words</h1>
     <LayoutHeader class="layout__top" />
     <LayoutMain class="layout__mid" />
     <LayoutFooter class="layout__bottom" />

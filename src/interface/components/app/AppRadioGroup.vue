@@ -8,26 +8,29 @@ const props = defineProps<{
 const emit = defineEmits<{
   change: [value: T];
 }>();
-const REF_LABELS = 'labels';
-const groupName = useId();
-const labels = useTemplateRef<Array<HTMLLabelElement>>(REF_LABELS);
+const INPUT_NAME = useId();
+const REF_KEY_LABELS = 'labels';
+const refLabels = useTemplateRef<Array<HTMLLabelElement>>(REF_KEY_LABELS);
 const indicatorStyle = ref({ transform: 'translateX(0)', width: '0' });
-const isReady = ref(false);
+const isMounted = ref(false);
+
 function updateIndicator(): void {
-  const selectedIdx = props.options.findIndex(item => item.value === props.modelValue);
-  const el = labels.value?.[selectedIdx];
-  if (el === undefined) return;
+  const selectedLabelIdx = props.options.findIndex(item => item.value === props.modelValue);
+  const selectedLabel = refLabels.value?.[selectedLabelIdx];
+  if (selectedLabel === undefined) return;
   indicatorStyle.value = {
-    transform: `translateX(${String(el.offsetLeft + 1)}px)`,
-    width: `${String(el.offsetWidth - 1)}px`,
+    transform: `translateX(${String(selectedLabel.offsetLeft + 1)}px)`,
+    width: `${String(selectedLabel.offsetWidth - 1)}px`,
   };
 }
+
 onMounted(() => {
   void nextTick(() => {
     updateIndicator();
-    isReady.value = true;
+    isMounted.value = true;
   });
 });
+
 watch(() => props.modelValue, updateIndicator, { flush: 'post' });
 </script>
 
@@ -35,11 +38,11 @@ watch(() => props.modelValue, updateIndicator, { flush: 'post' });
   <fieldset class="radio-group">
     <legend class="radio-group__legend app__make-secondary">{{ legend }}</legend>
     <div class="radio-group__option-group">
-      <div v-if="isReady" class="radio-group__indicator" :style="indicatorStyle" />
+      <div v-if="isMounted" class="radio-group__indicator" :style="indicatorStyle" />
       <label
         v-for="option in options"
         :key="option.value"
-        :ref="REF_LABELS"
+        :ref="REF_KEY_LABELS"
         :class="{
           'radio-group__option': true,
           'radio-group__option--selected': option.value === modelValue,
@@ -48,7 +51,7 @@ watch(() => props.modelValue, updateIndicator, { flush: 'post' });
         <input
           type="radio"
           class="radio-group__input"
-          :name="groupName"
+          :name="INPUT_NAME"
           :value="option.value"
           :checked="option.value === modelValue"
           @change="emit('change', option.value)"

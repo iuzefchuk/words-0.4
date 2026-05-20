@@ -7,31 +7,36 @@ const props = withDefaults(
     accent: Accent;
     isDisabled?: boolean;
     keys?: ReadonlyArray<string>;
+    text: string;
   }>(),
   {
     isDisabled: false,
     keys: () => [],
   },
 );
-const emit = defineEmits<{
-  trigger: [];
-}>();
-const REF_BUTTON = 'button';
-const buttonEl = useTemplateRef<HTMLButtonElement>(REF_BUTTON);
+const emits = defineEmits<{ trigger: [] }>();
+defineExpose({
+  focus: () => ref.value?.focus(),
+});
+const REF_KEY = 'button';
+const ref = useTemplateRef<HTMLButtonElement>(REF_KEY);
 const dialogStore = DialogStore.INSTANCE();
-const onClick = (): void => {
-  emit('trigger');
-};
-if (props.keys.length > 0) {
-  const { keys } = props;
-  const onKeydown = (event: KeyboardEvent): void => {
-    if (dialogStore.isOpen) return;
-    if (!keys.includes(event.key)) return;
-    if (props.isDisabled) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    emit('trigger');
-  };
+
+function onClick(): void {
+  emits('trigger');
+}
+
+function onKeydown(event: KeyboardEvent): void {
+  if (dialogStore.isOpen) return;
+  if (!props.keys.includes(event.key)) return;
+  if (props.isDisabled) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  emits('trigger');
+}
+
+function useKeys(): void {
+  // TODO to separate composable
   onMounted(() => {
     window.addEventListener('keydown', onKeydown, true);
   });
@@ -39,14 +44,13 @@ if (props.keys.length > 0) {
     window.removeEventListener('keydown', onKeydown, true);
   });
 }
-defineExpose({
-  focus: () => buttonEl.value?.focus(),
-});
+
+if (props.keys.length > 0) useKeys();
 </script>
 
 <template>
   <button
-    :ref="REF_BUTTON"
+    :ref="REF_KEY"
     :class="{
       btn: true,
       'btn--primary': accent === Accent.Primary,
@@ -55,7 +59,7 @@ defineExpose({
     :disabled="isDisabled"
     @click="onClick"
   >
-    <slot />
+    {{ text }}
   </button>
 </template>
 

@@ -9,7 +9,6 @@ const { bounds, isAnchorAt, isOnRightmostColumnAt } = new UseOutline();
     v-for="(group, idx) in bounds"
     :key="idx"
     class="outline"
-    aria-hidden="true"
     :style="{
       '--outline-grid-step': `calc((100% + var(--grid-gap)) / var(--grid-items-per-axis))`,
       top: `calc(var(--outline-grid-step) * ${group.row})`,

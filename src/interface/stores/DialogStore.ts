@@ -14,8 +14,6 @@ type DialogResult = {
 };
 
 type DialogTriggerParams = {
-  cancelText: string;
-  confirmText: string;
   html: string;
   isDestructive?: boolean;
   title?: string;
@@ -25,8 +23,6 @@ export default class DialogStore {
   static readonly INSTANCE = defineStore('dialog', () => {
     const store = new DialogStore();
     return {
-      cancelText: store.cancelTextRef,
-      confirmText: store.confirmTextRef,
       html: store.htmlRef,
       isDestructive: store.isDestructiveRef,
       isOpen: store.isOpenRef,
@@ -35,10 +31,6 @@ export default class DialogStore {
       trigger: store.trigger.bind(store),
     };
   });
-
-  private readonly cancelTextRef = ref<null | string>(null);
-
-  private readonly confirmTextRef = ref<null | string>(null);
 
   private readonly htmlRef = ref<null | string>(null);
 
@@ -49,14 +41,6 @@ export default class DialogStore {
   private pendingResolve: ((result: DialogResult) => void) | null = null;
 
   private readonly titleRef = ref<null | string>(null);
-
-  private set cancelText(newValue: null | string) {
-    this.cancelTextRef.value = newValue;
-  }
-
-  private set confirmText(newValue: null | string) {
-    this.confirmTextRef.value = newValue;
-  }
 
   private set html(newValue: null | string) {
     this.htmlRef.value = newValue;
@@ -73,8 +57,6 @@ export default class DialogStore {
   private resetState(): void {
     this.title = null;
     this.html = null;
-    this.cancelText = null;
-    this.confirmText = null;
     this.isDestructive = false;
   }
 
@@ -89,17 +71,9 @@ export default class DialogStore {
     }
   }
 
-  private async trigger({
-    cancelText,
-    confirmText,
-    html,
-    isDestructive = false,
-    title,
-  }: DialogTriggerParams): Promise<DialogResult> {
+  private async trigger({ html, isDestructive = false, title }: DialogTriggerParams): Promise<DialogResult> {
     this.html = html;
     this.title = title ?? null;
-    this.cancelText = cancelText;
-    this.confirmText = confirmText;
     this.isDestructive = isDestructive;
     const result = await new Promise<DialogResult>(resolve => {
       this.pendingResolve = resolve;

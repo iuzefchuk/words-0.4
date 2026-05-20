@@ -1,23 +1,15 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
-import { LabeledElement } from '@/interface/enums.ts';
-import { getElementLabel } from '@/interface/mappings.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const props = defineProps<{ isFlipped?: boolean }>();
+const SHIMMER_THRESHOLD = 29;
 const mainStore = MainStore.INSTANCE();
 const { currentTurnScore } = storeToRefs(mainStore);
-const SHIMMER_THRESHOLD = 29;
-const ariaLabel = computed(() =>
-  currentTurnScore.value === undefined
-    ? ''
-    : getElementLabel(LabeledElement.LayoutGridTooltip, { score: currentTurnScore.value }),
-);
 </script>
 
 <template>
-  <output v-if="currentTurnScore" :aria-label="ariaLabel" :class="{ tooltip: true, 'tooltip--flipped': props.isFlipped }">
-    <span aria-hidden="true" :class="{ tooltip__value: true, 'tooltip__value--shimmer': currentTurnScore > SHIMMER_THRESHOLD }">
+  <output v-if="currentTurnScore" :class="{ tooltip: true, 'tooltip--flipped': props.isFlipped }">
+    <span :class="{ tooltip__value: true, 'tooltip__value--shimmer': currentTurnScore > SHIMMER_THRESHOLD }">
       {{ currentTurnScore }}
     </span>
   </output>
