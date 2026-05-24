@@ -8,7 +8,7 @@ const mainStore = MainStore.INSTANCE();
 </script>
 
 <template>
-  <form class="setup" aria-label="Match settings" @submit.prevent>
+  <form class="setup" aria-label="Match setup" @submit.prevent>
     <AppRadioGroup
       v-for="{ items, legend, modelValue, onChange } in [
         {

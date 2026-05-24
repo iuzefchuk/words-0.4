@@ -28,14 +28,13 @@ function onClickTile(idx: number, tile: GameTile | null): void {
 </script>
 
 <template>
-  <section class="rack">
+  <section class="rack" role="toolbar" aria-label="Tile rack">
     <ul class="rack__grid app__create-grid--for-rack">
       <li v-for="(tile, idx) in paddedTiles" :key="idx" class="rack__cell">
         <button
           type="button"
           class="rack__button"
           :disabled="allActionsAreDisabled || tile === null"
-          :aria-pressed="tile !== null && userStore.isTileSelected(tile)"
           @click.stop="onClickTile(idx, tile)"
         >
           <AppTile

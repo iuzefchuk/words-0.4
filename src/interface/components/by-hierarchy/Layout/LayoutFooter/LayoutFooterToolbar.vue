@@ -40,7 +40,7 @@ const buttons = reactive([
 </script>
 
 <template>
-  <div class="toolbar" role="toolbar" aria-label="Match actions">
+  <section class="toolbar" role="toolbar" aria-label="Match actions">
     <AppButton
       v-for="{ name, action, accent, isDisabled, keys } in buttons"
       :key="name"
@@ -50,7 +50,7 @@ const buttons = reactive([
       :text="name"
       @trigger="action()"
     />
-  </div>
+  </section>
 </template>
 
 <style lang="scss" scoped>
