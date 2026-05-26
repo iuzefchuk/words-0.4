@@ -5,7 +5,7 @@ import { GameTile } from '@/application/types/index.ts';
 import AppTile from '@/interface/components/app/AppTile.vue';
 import LayoutFooterToolbarStats from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterToolbar/LayoutFooterToolbarStats.vue';
 import { Accent } from '@/interface/enums.ts';
-import { handleClickToolbarCell, handleClickToolbarTile } from '@/interface/handlers/toolbar.ts';
+import { handlePressToolbarCell, handlePressToolbarTile } from '@/interface/handlers/toolbar.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 const mainStore = MainStore.INSTANCE();
@@ -17,13 +17,13 @@ const paddedTiles = computed<Array<GameTile | null>>(() =>
   Array.from({ length: mainStore.tilesPerPlayer }, (_, idx) => tiles.value[idx] ?? null),
 );
 
-function onClickTile(idx: number, tile: GameTile | null): void {
+function activate(idx: number, tile: GameTile | null): void {
   if (tile === null) return;
   if (mainStore.isTilePlaced(tile)) {
-    handleClickToolbarCell(idx);
+    handlePressToolbarCell(idx);
     return;
   }
-  handleClickToolbarTile(tile);
+  handlePressToolbarTile(tile);
 }
 </script>
 
@@ -35,7 +35,7 @@ function onClickTile(idx: number, tile: GameTile | null): void {
           type="button"
           class="toolbar__button"
           :disabled="allActionsAreDisabled || tile === null"
-          @click.stop="onClickTile(idx, tile)"
+          @click.stop="activate(idx, tile)"
         >
           <AppTile
             v-if="tile !== null && userStore.isTileInToolbar(tile) && !mainStore.isTilePlaced(tile)"

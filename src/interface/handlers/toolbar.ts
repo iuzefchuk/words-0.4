@@ -2,7 +2,7 @@ import { GameTile } from '@/application/types/index.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 
-export function handleClickToolbarCell(idx: number): void {
+export function handlePressToolbarCell(idx: number): void {
   const mainStore = MainStore.INSTANCE();
   const userStore = UserStore.INSTANCE();
   const tile = userStore.tiles[idx];
@@ -17,7 +17,7 @@ export function handleClickToolbarCell(idx: number): void {
   userStore.deselectTile();
 }
 
-export function handleClickToolbarTile(tile: GameTile): void {
+export function handlePressToolbarTile(tile: GameTile): void {
   const mainStore = MainStore.INSTANCE();
   const userStore = UserStore.INSTANCE();
   const selected = userStore.selectedTile;

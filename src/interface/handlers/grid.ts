@@ -2,7 +2,15 @@ import { GameCell, GameTile } from '@/application/types/index.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 
-export function handleClickGridCell(cell: GameCell): void {
+export function handleDoublePressGridTile(tile: GameTile): void {
+  const mainStore = MainStore.INSTANCE();
+  const userStore = UserStore.INSTANCE();
+  if (!userStore.isTileInToolbar(tile)) return;
+  userStore.deselectTile();
+  mainStore.undoPlaceTile(tile);
+}
+
+export function handlePressGridCell(cell: GameCell): void {
   const mainStore = MainStore.INSTANCE();
   const userStore = UserStore.INSTANCE();
   const selected = userStore.selectedTile;
@@ -13,7 +21,7 @@ export function handleClickGridCell(cell: GameCell): void {
   userStore.deselectTile();
 }
 
-export function handleClickGridTile(tile: GameTile): void {
+export function handlePressGridTile(tile: GameTile): void {
   const mainStore = MainStore.INSTANCE();
   const userStore = UserStore.INSTANCE();
   if (!userStore.isTileInToolbar(tile)) return;
@@ -40,12 +48,4 @@ export function handleClickGridTile(tile: GameTile): void {
     userStore.switchTiles(selected, tile);
   }
   userStore.deselectTile();
-}
-
-export function handleDoubleClickGridTile(tile: GameTile): void {
-  const mainStore = MainStore.INSTANCE();
-  const userStore = UserStore.INSTANCE();
-  if (!userStore.isTileInToolbar(tile)) return;
-  userStore.deselectTile();
-  mainStore.undoPlaceTile(tile);
 }

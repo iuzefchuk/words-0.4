@@ -4,7 +4,7 @@ import { GameCell } from '@/application/types/index.ts';
 import AppCell from '@/interface/components/app/AppCell.vue';
 import AppTile from '@/interface/components/app/AppTile.vue';
 import { Accent } from '@/interface/enums.ts';
-import { handleClickGridCell, handleClickGridTile, handleDoubleClickGridTile } from '@/interface/handlers/grid.ts';
+import { handleDoublePressGridTile, handlePressGridCell, handlePressGridTile } from '@/interface/handlers/grid.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 const props = defineProps<{
@@ -33,12 +33,12 @@ const tileAccent = computed(() => {
 const isFocused = computed(() => focusedItemIndex?.value === props.index);
 
 function activate(): void {
-  if (tile.value !== undefined) handleClickGridTile(tile.value);
-  else handleClickGridCell(props.cell);
+  if (tile.value !== undefined) handlePressGridTile(tile.value);
+  else handlePressGridCell(props.cell);
 }
 
 function doubleActivate(): void {
-  if (tile.value !== undefined) handleDoubleClickGridTile(tile.value);
+  if (tile.value !== undefined) handleDoublePressGridTile(tile.value);
 }
 </script>
 
