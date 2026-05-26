@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 import Alert from '@/interface/components/by-hierarchy/Alert.vue';
 import Dialog from '@/interface/components/by-hierarchy/Dialog.vue';
 import Layout from '@/interface/components/by-hierarchy/Layout/Layout.vue';
-import Loader from '@/interface/components/by-hierarchy/Loader.vue';
+import Progress from '@/interface/components/by-hierarchy/Progress.vue';
 import MainStore from '@/interface/stores/MainStore.ts';
 const { bootError } = storeToRefs(MainStore.INSTANCE());
 </script>
@@ -12,7 +12,7 @@ const { bootError } = storeToRefs(MainStore.INSTANCE());
   <Alert v-if="bootError" :html="text('general.boot_error', { error: bootError })" />
   <Suspense v-else>
     <Layout />
-    <template #fallback><Loader /></template>
+    <template #fallback><Progress /></template>
   </Suspense>
   <Dialog />
 </template>

@@ -8,37 +8,35 @@ const { bootProgress } = storeToRefs(mainStore);
 
 <template>
   <progress
-    class="loader"
+    class="progress"
     :value="bootProgress"
     min="0"
     max="100"
     aria-label="Boot progress"
-    :style="{ '--loader-progress': `${String(bootProgress)}%` }"
+    :style="{ '--boot-progress': `${String(bootProgress)}%` }"
   />
 </template>
 
 <style lang="scss" scoped>
-.loader {
+.progress {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  width: var(--loader-progress, 0%);
+  width: var(--boot-progress, 0%);
   height: 2px;
-  background: var(--loader-color);
   transition-property: width;
   transition-duration: var(--transition-duration);
   transition-timing-function: var(--transition-timing-function);
   appearance: none;
   display: block;
+  &,
+  &::-webkit-progress-value,
+  &::-moz-progress-bar {
+    background: var(--progress-color);
+  }
   &::-webkit-progress-bar {
     background: transparent;
-  }
-  &::-webkit-progress-value {
-    background: var(--loader-color);
-  }
-  &::-moz-progress-bar {
-    background: var(--loader-color);
   }
 }
 </style>

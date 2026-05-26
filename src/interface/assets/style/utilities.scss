@@ -28,10 +28,10 @@
         }
       }
     }
-    &--for-board {
+    &--for-main-grid {
       @include grid(var(--grid-items-per-axis), var(--grid-items-per-axis));
     }
-    &--for-rack {
+    &--for-footer-toolbar {
       @include grid(8, 1, calc(var(--grid-gap) * 2));
     }
   }

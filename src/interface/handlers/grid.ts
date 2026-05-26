@@ -16,7 +16,7 @@ export function handleClickGridCell(cell: GameCell): void {
 export function handleClickGridTile(tile: GameTile): void {
   const mainStore = MainStore.INSTANCE();
   const userStore = UserStore.INSTANCE();
-  if (!userStore.isTileInRack(tile)) return;
+  if (!userStore.isTileInToolbar(tile)) return;
   if (userStore.isTileSelected(tile)) {
     userStore.deselectTile();
     return;
@@ -45,7 +45,7 @@ export function handleClickGridTile(tile: GameTile): void {
 export function handleDoubleClickGridTile(tile: GameTile): void {
   const mainStore = MainStore.INSTANCE();
   const userStore = UserStore.INSTANCE();
-  if (!userStore.isTileInRack(tile)) return;
+  if (!userStore.isTileInToolbar(tile)) return;
   userStore.deselectTile();
   mainStore.undoPlaceTile(tile);
 }

@@ -1,41 +1,37 @@
-import DialogStore from '@/interface/stores/DialogStore.ts';
+import { GameTile } from '@/application/types/index.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 
-const RESIGN_DELAY_MS = 500;
-
-export async function handlePass(): Promise<void> {
+export function handleClickToolbarCell(idx: number): void {
   const mainStore = MainStore.INSTANCE();
-  if (mainStore.userPassWillBeResign) return handleResign();
-  const { isConfirmed } = await triggerPassDialog();
-  if (!isConfirmed) return;
-  mainStore.pass();
+  const userStore = UserStore.INSTANCE();
+  const tile = userStore.tiles[idx];
+  if (tile === undefined) throw new ReferenceError(`expected tile at inventory index ${String(idx)}, got undefined`);
+  const selected = userStore.selectedTile;
+  if (selected === null) {
+    if (mainStore.isTilePlaced(tile)) mainStore.undoPlaceTile(tile);
+    return;
+  }
+  if (userStore.selectedTileIsPlaced) mainStore.undoPlaceTile(selected);
+  userStore.switchTiles(selected, tile);
+  userStore.deselectTile();
 }
 
-export async function handleResign(): Promise<void> {
-  const { isConfirmed } = await triggerResignDialog();
-  if (!isConfirmed) return;
-  setTimeout(() => {
-    MainStore.INSTANCE().resign();
-  }, RESIGN_DELAY_MS);
-}
-
-export function handleSave(): void {
-  MainStore.INSTANCE().save();
-  UserStore.INSTANCE().initialize();
-}
-
-async function triggerPassDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
-  return await DialogStore.INSTANCE().trigger({
-    html: window.text('general.dialog_html_pass'),
-    title: window.text('general.dialog_title_pass'),
-  });
-}
-
-async function triggerResignDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
-  return await DialogStore.INSTANCE().trigger({
-    html: window.text('general.dialog_html_resign'),
-    isDestructive: true,
-    title: window.text('general.dialog_title_resign'),
-  });
+export function handleClickToolbarTile(tile: GameTile): void {
+  const mainStore = MainStore.INSTANCE();
+  const userStore = UserStore.INSTANCE();
+  const selected = userStore.selectedTile;
+  if (selected === null) {
+    userStore.selectTile(tile);
+    return;
+  }
+  if (!userStore.isTileSelected(tile)) {
+    const selectedCell = mainStore.findCellWithTile(selected);
+    if (selectedCell !== undefined) {
+      mainStore.undoPlaceTile(selected);
+      mainStore.placeTile({ cell: selectedCell, tile });
+    }
+    userStore.switchTiles(selected, tile);
+  }
+  userStore.deselectTile();
 }

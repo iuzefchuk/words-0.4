@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 import { reactive } from 'vue';
 import AppButton from '@/interface/components/app/AppButton.vue';
 import { Accent, Key } from '@/interface/enums.ts';
-import { handlePass, handleResign, handleSave } from '@/interface/handlers/toolbar.ts';
+import { handlePass, handleResign, handleSave } from '@/interface/handlers/menubar.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 const mainStore = MainStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
@@ -40,7 +40,7 @@ const buttons = reactive([
 </script>
 
 <template>
-  <section class="toolbar" role="toolbar" aria-label="Match actions">
+  <section class="menubar" role="menubar" aria-label="Match actions">
     <AppButton
       v-for="{ name, action, accent, isDisabled, keys } in buttons"
       :key="name"
@@ -55,7 +55,7 @@ const buttons = reactive([
 
 <style lang="scss" scoped>
 @use '@style/breakpoints.scss' as *;
-.toolbar {
+.menubar {
   z-index: var(--z-index-level-1);
   display: flex;
   flex-direction: column;

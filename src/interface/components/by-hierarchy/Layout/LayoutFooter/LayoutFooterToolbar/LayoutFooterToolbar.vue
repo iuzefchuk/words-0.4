@@ -3,9 +3,9 @@ import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { GameTile } from '@/application/types/index.ts';
 import AppTile from '@/interface/components/app/AppTile.vue';
-import LayoutFooterRackAnnotation from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterRack/LayoutFooterRackAnnotation.vue';
+import LayoutFooterToolbarStats from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterToolbar/LayoutFooterToolbarStats.vue';
 import { Accent } from '@/interface/enums.ts';
-import { handleClickRackCell, handleClickRackTile } from '@/interface/handlers/rack.ts';
+import { handleClickToolbarCell, handleClickToolbarTile } from '@/interface/handlers/toolbar.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 const mainStore = MainStore.INSTANCE();
@@ -20,25 +20,25 @@ const paddedTiles = computed<Array<GameTile | null>>(() =>
 function onClickTile(idx: number, tile: GameTile | null): void {
   if (tile === null) return;
   if (mainStore.isTilePlaced(tile)) {
-    handleClickRackCell(idx);
+    handleClickToolbarCell(idx);
     return;
   }
-  handleClickRackTile(tile);
+  handleClickToolbarTile(tile);
 }
 </script>
 
 <template>
-  <section class="rack" role="toolbar" aria-label="Tile rack">
-    <ul class="rack__grid app__create-grid--for-rack">
-      <li v-for="(tile, idx) in paddedTiles" :key="idx" class="rack__cell">
+  <section class="toolbar" role="toolbar">
+    <ul class="toolbar__grid app__create-grid--for-footer-toolbar">
+      <li v-for="(tile, idx) in paddedTiles" :key="idx" class="toolbar__cell">
         <button
           type="button"
-          class="rack__button"
+          class="toolbar__button"
           :disabled="allActionsAreDisabled || tile === null"
           @click.stop="onClickTile(idx, tile)"
         >
           <AppTile
-            v-if="tile !== null && userStore.isTileInRack(tile) && !mainStore.isTilePlaced(tile)"
+            v-if="tile !== null && userStore.isTileInToolbar(tile) && !mainStore.isTilePlaced(tile)"
             :letter="mainStore.getTileLetter(tile)"
             :accent="userStore.isTileSelected(tile) ? Accent.Primary : Accent.Tertiary"
             :points="mainStore.getLetterPoints(mainStore.getTileLetter(tile))"
@@ -46,7 +46,7 @@ function onClickTile(idx: number, tile: GameTile | null): void {
         </button>
       </li>
       <li role="none">
-        <LayoutFooterRackAnnotation />
+        <LayoutFooterToolbarStats />
       </li>
     </ul>
   </section>
@@ -54,7 +54,7 @@ function onClickTile(idx: number, tile: GameTile | null): void {
 
 <style lang="scss" scoped>
 @use '@style/breakpoints.scss' as *;
-.rack {
+.toolbar {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -66,9 +66,9 @@ function onClickTile(idx: number, tile: GameTile | null): void {
     width: 100%;
   }
   &__cell {
-    background: var(--rack-cell-bg);
+    background: var(--toolbar-cell-bg);
     border-radius: calc(var(--grid-item-radius) * 2);
-    box-shadow: var(--rack-cell-shadow);
+    box-shadow: var(--toolbar-cell-shadow);
   }
   &__button {
     width: 100%;

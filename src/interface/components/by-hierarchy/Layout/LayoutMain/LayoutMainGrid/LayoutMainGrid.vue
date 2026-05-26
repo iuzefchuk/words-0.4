@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, provide, useTemplateRef } from 'vue';
-import LayoutMainGridItem from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainGrid/LayoutMainGridItem.vue';
+import LayoutMainGridCell from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainGrid/LayoutMainGridCell.vue';
 import LayoutMainGridOutline from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainGrid/LayoutMainGridOutline/LayoutMainGridOutline.vue';
 import UseRovingTabindex from '@/interface/composables/UseRovingTabindex.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
@@ -25,14 +25,14 @@ provide('focusedItemIndex', rovingTabindex.focusedIndex);
 <template>
   <div
     :ref="REF_KEY"
-    class="grid app__create-grid--for-board"
+    class="grid app__create-grid--for-main-grid"
     role="grid"
     :aria-rowcount="mainStore.boardCellsPerAxis"
     :aria-colcount="mainStore.boardCellsPerAxis"
     @keydown="rovingTabindex.onKeydown"
   >
     <div v-for="(row, rowIdx) in rows" :key="rowIdx" role="row" :aria-rowindex="rowIdx + 1" class="grid__row">
-      <LayoutMainGridItem v-for="{ cell, index } in row" :key="cell" :cell="cell" :index="index" />
+      <LayoutMainGridCell v-for="{ cell, index } in row" :key="cell" :cell="cell" :index="index" />
     </div>
     <LayoutMainGridOutline />
   </div>
