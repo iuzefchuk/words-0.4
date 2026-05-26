@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import Banner from '@/interface/components/by-hierarchy/Banner.vue';
 import Dialog from '@/interface/components/by-hierarchy/Dialog.vue';
 import Layout from '@/interface/components/by-hierarchy/Layout/Layout.vue';
 import Loader from '@/interface/components/by-hierarchy/Loader.vue';
@@ -6,6 +7,7 @@ import Loader from '@/interface/components/by-hierarchy/Loader.vue';
 
 <template>
   <Suspense>
+    <Banner />
     <Layout />
     <template #fallback><Loader /></template>
   </Suspense>

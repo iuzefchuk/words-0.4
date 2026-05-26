@@ -24,8 +24,7 @@ export type SchedulerGateway = {
 export type WorkerGateway = {
   getPoolSize(taskId: string): number;
   init(taskId: string, data: unknown): Promise<void>;
-  stream<O>(taskId: string, data: unknown): AsyncGenerator<O>;
-  streamParallel<O>(taskId: string, inputs: ReadonlyArray<unknown>): AsyncGenerator<O>;
+  stream<O>(taskId: string, inputs: ReadonlyArray<unknown>): AsyncGenerator<O>;
 };
 
 export type WorkerRequest = { input: unknown; type: WorkerRequestType };

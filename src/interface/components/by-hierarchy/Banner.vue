@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import MainStore from '@/interface/stores/MainStore.ts';
-const { bootError } = storeToRefs(MainStore.INSTANCE());
+const mainStore = MainStore.INSTANCE();
+const { bootError } = storeToRefs(mainStore);
 </script>
 
 <template>

@@ -20,22 +20,7 @@ export default class WebWorkerGateway implements WorkerGateway {
     for (const worker of workers) WorkerPoolGateway.returnToPool(taskId, worker);
   }
 
-  async *stream<O>(taskId: string, data: unknown): AsyncGenerator<O> {
-    const worker = this.createWorker(taskId);
-    const state = WorkerPoolGateway.createStreamState<WorkerResponse>();
-    WorkerPoolGateway.wireWorker(worker, state, msg => msg.type === WorkerResponseType.Done);
-    worker.postMessage({ input: data, type: WorkerRequestType.Stream } satisfies WorkerRequest);
-    try {
-      for await (const msg of WorkerPoolGateway.drainStream(state, () => state.doneCount > 0)) {
-        if (msg.type === WorkerResponseType.Error) throw new Error(msg.error);
-        if (msg.type === WorkerResponseType.Result) yield msg.value as O;
-      }
-    } finally {
-      worker.terminate();
-    }
-  }
-
-  async *streamParallel<O>(taskId: string, inputs: ReadonlyArray<unknown>): AsyncGenerator<O> {
+  async *stream<O>(taskId: string, inputs: ReadonlyArray<unknown>): AsyncGenerator<O> {
     const workers: Array<Worker> = inputs.map(() => WorkerPoolGateway.takeFromPool(taskId) ?? this.createWorker(taskId));
     const state = WorkerPoolGateway.createStreamState<WorkerResponse>();
     const totalWorkers = workers.length;

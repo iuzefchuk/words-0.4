@@ -23,7 +23,6 @@ const { bootProgress } = storeToRefs(mainStore);
   top: 0;
   left: 0;
   right: 0;
-  // TODO value & width ?
   width: var(--loader-progress, 0%);
   height: 2px;
   background: var(--loader-color);

@@ -102,6 +102,18 @@ export default class CommandsService {
     this.syncPersistence();
   }
 
+  private buildPartitionedInputs(workerInput: Record<string, unknown>, anchorCount: number): Array<unknown> {
+    const workerCount = Math.min(this.worker.getPoolSize(this.turnGenerationTaskId), anchorCount);
+    if (workerCount <= 1) return [workerInput];
+    const inputs: Array<unknown> = [];
+    for (let idx = 0; idx < workerCount; idx++) {
+      const offset = Math.round((anchorCount * idx) / workerCount);
+      const end = Math.round((anchorCount * (idx + 1)) / workerCount);
+      inputs.push({ ...workerInput, partition: { length: end - offset, offset } });
+    }
+    return inputs;
+  }
+
   private clearPersistence(): void {
     void this.eventRepository.delete();
   }
@@ -118,10 +130,8 @@ export default class CommandsService {
       ...data,
       player,
     };
-    const results =
-      attemptsLimit === Infinity
-        ? this.createWorkerParallelStream(workerInput, anchorCount)
-        : this.worker.stream<GameGeneratorResult>(this.turnGenerationTaskId, workerInput);
+    const inputs = attemptsLimit === Infinity ? this.buildPartitionedInputs(workerInput, anchorCount) : [workerInput];
+    const results = this.worker.stream<GameGeneratorResult>(this.turnGenerationTaskId, inputs);
     let bestResult: GameGeneratorResult | null = null;
     let bestScore = -1;
     for await (const result of results) {
@@ -139,23 +149,6 @@ export default class CommandsService {
     }
     const { score, words } = this.game.applyGeneratedTurn(bestResult);
     return { player: GamePlayer.Opponent, score, type: GameEventType.TurnSaved, words };
-  }
-
-  private createWorkerParallelStream(
-    workerInput: Record<string, unknown>,
-    anchorCount: number,
-  ): AsyncGenerator<GameGeneratorResult> {
-    const workerCount = Math.min(this.worker.getPoolSize(this.turnGenerationTaskId), anchorCount);
-    if (workerCount <= 1) {
-      return this.worker.stream<GameGeneratorResult>(this.turnGenerationTaskId, workerInput);
-    }
-    const inputs: Array<unknown> = [];
-    for (let idx = 0; idx < workerCount; idx++) {
-      const offset = Math.round((anchorCount * idx) / workerCount);
-      const end = Math.round((anchorCount * (idx + 1)) / workerCount);
-      inputs.push({ ...workerInput, partition: { length: end - offset, offset } });
-    }
-    return this.worker.streamParallel<GameGeneratorResult>(this.turnGenerationTaskId, inputs);
   }
 
   private async executeOpponentTurn(): Promise<AppTurnResponse> {

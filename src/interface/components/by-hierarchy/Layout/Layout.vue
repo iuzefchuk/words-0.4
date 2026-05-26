@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
-import LayoutBanner from '@/interface/components/by-hierarchy/Layout/LayoutBanner.vue';
 import LayoutFooter from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooter.vue';
 import LayoutHeader from '@/interface/components/by-hierarchy/Layout/LayoutHeader/LayoutHeader.vue';
 import LayoutMain from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMain.vue';
@@ -34,7 +33,6 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
 </script>
 
 <template>
-  <LayoutBanner />
   <div
     v-if="isMounted"
     :style="{ '--grid-items-per-axis': mainStore.boardCellsPerAxis }"

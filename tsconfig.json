@@ -9,7 +9,7 @@
       "@style/*": ["./src/interface/assets/style/*"],
       "$/*": ["./tests/*"]
     },
-    "types": ["vite/client", "vitest/globals", "vue"],
+    "types": ["node", "vite/client", "vitest/globals", "vue"],
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "jsx": "preserve",
