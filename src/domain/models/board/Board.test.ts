@@ -2,12 +2,69 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import fixtures from '@/domain/models/board/Board.fixtures.ts';
 import Board from '@/domain/models/board/Board.ts';
 import { Axis, Bonus, Type } from '@/domain/models/board/enums.ts';
-import BonusService from '@/domain/models/board/services/bonus/BonusService.ts';
 import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
-import { BonusDistribution, Cell, Placement } from '@/domain/models/board/types.ts';
+import { Cell, Placement } from '@/domain/models/board/types.ts';
 import { GameTile } from '@/domain/types/index.ts';
 
+class IndexMatrix {
+  get entries(): ReadonlyArray<{ cell: number; column: number; row: number }> {
+    return this.grid.flatMap((rowCells, row) => rowCells.map((cell, column) => ({ cell, column, row })));
+  }
+
+  private get grid(): ReadonlyArray<ReadonlyArray<number>> {
+    return Array.from({ length: this.size }, (_, row) =>
+      Array.from({ length: this.size }, (_, column) => row * this.size + column),
+    );
+  }
+
+  constructor(public readonly size: number) {}
+
+  getCollinearIndices(axis: Axis, row: number, column: number): ReadonlyArray<number> {
+    switch (axis) {
+      case Axis.X: {
+        const rowCells = this.grid[row];
+        if (rowCells === undefined) throw new ReferenceError(`expected row at index ${String(row)}, got undefined`);
+        return rowCells;
+      }
+      case Axis.Y: {
+        return this.grid.map(otherRow => {
+          const columnCell = otherRow[column];
+          if (columnCell === undefined) throw new ReferenceError(`expected cell at column ${String(column)}, got undefined`);
+          return columnCell;
+        });
+      }
+      default:
+        throw new ReferenceError(`expected axis to be one of ${Object.values(Axis).join(', ')}, got ${String(axis)}`);
+    }
+  }
+
+  getOrthogonalNeighbors(row: number, column: number): ReadonlyArray<number> {
+    const offsets: ReadonlyArray<readonly [number, number]> = [
+      [0, -1],
+      [0, 1],
+      [-1, 0],
+      [1, 0],
+    ];
+    return offsets
+      .map(([rowOffset, columnOffset]) => this.grid[row + rowOffset]?.[column + columnOffset])
+      .filter((value): value is number => value !== undefined);
+  }
+}
+
+function buildSymmetryQuadruples(size: number): ReadonlyArray<readonly [number, number, number, number]> {
+  const last = size - 1;
+  const quadruples: Array<readonly [number, number, number, number]> = [];
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
+      quadruples.push([row * size + col, row * size + (last - col), (last - row) * size + col, col * size + row]);
+    }
+  }
+  return quadruples;
+}
+
 describe('Board', () => {
+  const matrix = new IndexMatrix(LayoutService.CELLS_PER_AXIS);
+
   describe.each(fixtures)('for $desc', ({ instance, meta: { placements, unusedCells, unusedTiles } }) => {
     describe('anchorCells', () => {
       test('does not return duplicate cells', () => {
@@ -120,31 +177,90 @@ describe('Board', () => {
   });
 
   describe.each(Object.values(Type))('for %s type', type => {
-    const randomizer = (): number => 0.5;
-    let board: Board;
-    let distribution: BonusDistribution;
+    describe('create', () => {
+      test('does not assign bonus to center cell', () => {
+        const board = Board.create(type, () => 0.5);
+        const centerCell = board.cells.find(cell => board.isCellCenter(cell));
+        if (centerCell === undefined) throw new ReferenceError('expected center cell, got undefined');
+        expect(board.getBonus(centerCell)).toBeNull();
+      });
 
-    beforeEach(() => {
-      board = Board.create(type, randomizer);
-      distribution = BonusService.createDistribution(type, randomizer);
+      test('assigns expected count per bonus', () => {
+        const board = Board.create(type, () => 0.5);
+        const counts = new Map<Bonus, number>();
+        for (const cell of board.cells) {
+          const bonus = board.getBonus(cell);
+          if (bonus !== null) counts.set(bonus, (counts.get(bonus) ?? 0) + 1);
+        }
+        expect(Object.fromEntries(counts)).toEqual({
+          [Bonus.DoubleLetter]: 24,
+          [Bonus.DoubleWord]: 16,
+          [Bonus.TripleLetter]: 12,
+          [Bonus.TripleWord]: 8,
+        });
+      });
     });
 
-    describe('create', () => {
-      test('assigns bonuses according to distribution type', () => {
-        const mismatches = [...distribution.entries()]
-          .filter(([cell, bonus]) => board.getBonus(cell) !== bonus)
-          .map(([cell, bonus]) => ({ actual: board.getBonus(cell), cell, expected: bonus }));
+    describe.each(Object.values(Type).filter(otherType => otherType !== type))('comparing w/ %s type', otherType => {
+      test('assigns different bonuses', () => {
+        const randomizer = (): number => 0.5;
+        const board = Board.create(type, randomizer);
+        const otherBoard = Board.create(otherType, randomizer);
+        const sameBonuses = board.cells.every(cell => board.getBonus(cell) === otherBoard.getBonus(cell));
+        expect(sameBonuses).toBe(false);
+      });
+    });
+  });
+
+  describe('for Preset type', () => {
+    test('assigns same bonuses across boards', () => {
+      const first = Board.create(Type.Preset);
+      const second = Board.create(Type.Preset);
+      const mismatches = first.cells.filter(cell => first.getBonus(cell) !== second.getBonus(cell));
+      expect(mismatches).toEqual([]);
+    });
+
+    test('assigns D4-symmetric bonuses', () => {
+      const board = Board.create(Type.Preset);
+      const symmetryQuadruples = buildSymmetryQuadruples(board.cellsPerAxis) as ReadonlyArray<readonly [Cell, Cell, Cell, Cell]>;
+      const asymmetric = symmetryQuadruples.filter(([origin, horizontal, vertical, diagonal]) => {
+        const originBonus = board.getBonus(origin);
+        return (
+          board.getBonus(horizontal) !== originBonus ||
+          board.getBonus(vertical) !== originBonus ||
+          board.getBonus(diagonal) !== originBonus
+        );
+      });
+      expect(asymmetric).toEqual([]);
+    });
+  });
+
+  describe('for Random type', () => {
+    describe('w/ same randomizer', () => {
+      test('assigns same bonuses', () => {
+        const randomizer = (): number => 0.5;
+        const first = Board.create(Type.Random, randomizer);
+        const second = Board.create(Type.Random, randomizer);
+        const mismatches = first.cells.filter(cell => first.getBonus(cell) !== second.getBonus(cell));
         expect(mismatches).toEqual([]);
       });
     });
 
-    describe('getBonus', () => {
-      test('does not return bonus for cells w/out bonus', () => {
-        const distributionCells = new Set(distribution.keys());
-        const spurious = board.cells
-          .filter(cell => !distributionCells.has(cell) && board.getBonus(cell) !== null)
-          .map(cell => ({ actual: board.getBonus(cell), cell }));
-        expect(spurious).toEqual([]);
+    describe('w/ different randomizers', () => {
+      test('assigns different bonuses', () => {
+        const first = Board.create(Type.Random, () => 0.25);
+        const second = Board.create(Type.Random, () => 0.5);
+        const sameBonuses = first.cells.every(cell => first.getBonus(cell) === second.getBonus(cell));
+        expect(sameBonuses).toBe(false);
+      });
+    });
+
+    describe('w/out randomizer', () => {
+      test('assigns different bonuses', () => {
+        const first = Board.create(Type.Random);
+        const second = Board.create(Type.Random);
+        const sameBonuses = first.cells.every(cell => first.getBonus(cell) === second.getBonus(cell));
+        expect(sameBonuses).toBe(false);
       });
     });
   });
@@ -454,42 +570,115 @@ describe('Board', () => {
   });
 
   describe('cells', () => {
-    // covered in LayoutService.test.ts
+    test('returns all cell indices in row-major order', () => {
+      const board = Board.create(Type.Preset);
+      expect(board.cells).toEqual(matrix.entries.map(entry => entry.cell));
+    });
   });
 
   describe('cellsPerAxis', () => {
-    // covered in LayoutService.test.ts
+    const board = Board.create(Type.Preset);
+
+    test('is greater than 0', () => {
+      expect(board.cellsPerAxis).toBeGreaterThan(0);
+    });
+
+    test('is odd', () => {
+      expect(board.cellsPerAxis % 2).not.toBe(0);
+    });
   });
 
-  describe('getAdjacentCells', () => {
-    // covered in LayoutService.test.ts
-  });
+  describe.each(matrix.entries)('for $cell', ({ cell, column, row }) => {
+    const board = Board.create(Type.Preset);
 
-  describe('getAxisCells', () => {
-    // covered in LayoutService.test.ts
-  });
+    describe('getAdjacentCells', () => {
+      test('returns orthogonal neighbors', () => {
+        const actual = board.getAdjacentCells(cell as Cell);
+        const expected = matrix.getOrthogonalNeighbors(row, column);
+        expect(actual).toEqual(expected);
+      });
+    });
 
-  describe('getCellPositionInColumn', () => {
-    // covered in LayoutService.test.ts
-  });
+    describe.each(Object.values(Axis))('for %s', axis => {
+      describe('getAxisCells', () => {
+        test('returns cells on input axis', () => {
+          const actual = board.getAxisCells({ axis, cell: cell as Cell });
+          const expected = matrix.getCollinearIndices(axis, row, column);
+          expect(actual).toEqual(expected);
+        });
+      });
+    });
 
-  describe('getCellPositionInRow', () => {
-    // covered in LayoutService.test.ts
+    describe('getCellPositionInColumn', () => {
+      test('returns column index', () => {
+        expect(board.getCellPositionInColumn(cell as Cell)).toEqual(column);
+      });
+    });
+
+    describe('getCellPositionInRow', () => {
+      test('returns row index', () => {
+        expect(board.getCellPositionInRow(cell as Cell)).toEqual(row);
+      });
+    });
   });
 
   describe('getOppositeAxis', () => {
-    // covered in LayoutService.test.ts
+    const board = Board.create(Type.Preset);
+
+    test('returns Y for X', () => {
+      expect(board.getOppositeAxis(Axis.X)).toBe(Axis.Y);
+    });
+
+    test('returns X for Y', () => {
+      expect(board.getOppositeAxis(Axis.Y)).toBe(Axis.X);
+    });
   });
 
   describe('isCellCenter', () => {
-    // covered in LayoutService.test.ts
+    const board = Board.create(Type.Preset);
+    const centerCell = board.cells[Math.floor(board.cells.length / 2)];
+
+    test('returns true for cell in middle of cells', () => {
+      if (centerCell === undefined) throw new ReferenceError('expected center cell, got undefined');
+      expect(board.isCellCenter(centerCell)).toBe(true);
+    });
+
+    test('returns false for non-center cell', () => {
+      const nonCenterCell = board.cells.find(cell => cell !== centerCell);
+      if (nonCenterCell === undefined) throw new ReferenceError('expected non-center cell, got undefined');
+      expect(board.isCellCenter(nonCenterCell)).toBe(false);
+    });
   });
 
   describe('isCellPositionAtAxisEnd', () => {
-    // covered in LayoutService.test.ts
+    const board = Board.create(Type.Preset);
+
+    test('returns true for last position', () => {
+      expect(board.isCellPositionAtAxisEnd(board.cellsPerAxis - 1)).toBe(true);
+    });
+
+    test('returns false for first position', () => {
+      expect(board.isCellPositionAtAxisEnd(0)).toBe(false);
+    });
+
+    test('returns false for middle position', () => {
+      expect(board.isCellPositionAtAxisEnd(Math.floor(board.cellsPerAxis / 2))).toBe(false);
+    });
   });
 
   describe('isCellPositionAtAxisStart', () => {
-    // covered in LayoutService.test.ts
+    const board = Board.create(Type.Preset);
+
+    test('returns true for first position', () => {
+      expect(board.isCellPositionAtAxisStart(0)).toBe(true);
+    });
+
+    test('returns false for last position', () => {
+      expect(board.isCellPositionAtAxisStart(board.cellsPerAxis - 1)).toBe(false);
+    });
+
+    test('returns false for middle position', () => {
+      expect(board.isCellPositionAtAxisStart(Math.floor(board.cellsPerAxis / 2))).toBe(false);
+    });
   });
 });

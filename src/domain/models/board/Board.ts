@@ -1,6 +1,6 @@
 import { Axis, Bonus, Type } from '@/domain/models/board/enums.ts';
-import BonusService from '@/domain/models/board/services/bonus/BonusService.ts';
-import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
+import BonusService from '@/domain/models/board/services/BonusService.ts';
+import LayoutService from '@/domain/models/board/services/LayoutService.ts';
 import { AnchorCoordinates, BonusDistribution, Cell, Link, Placement } from '@/domain/models/board/types.ts';
 import { GameTile } from '@/domain/types/index.ts';
 

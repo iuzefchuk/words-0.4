@@ -81,22 +81,6 @@ export default class LayoutService {
     return cell === this.CENTER_CELL;
   }
 
-  static isCellOnBottomEdge(cell: Cell): boolean {
-    return this.isCellPositionAtAxisEnd(this.getCellPositionInRow(cell));
-  }
-
-  static isCellOnLeftEdge(cell: Cell): boolean {
-    return this.isCellPositionAtAxisStart(this.getCellPositionInColumn(cell));
-  }
-
-  static isCellOnRightEdge(cell: Cell): boolean {
-    return this.isCellPositionAtAxisEnd(this.getCellPositionInColumn(cell));
-  }
-
-  static isCellOnTopEdge(cell: Cell): boolean {
-    return this.isCellPositionAtAxisStart(this.getCellPositionInRow(cell));
-  }
-
   static isCellPositionAtAxisEnd(position: number): boolean {
     return position === this.LAST_CELL_POSITION;
   }

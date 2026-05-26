@@ -1,5 +1,5 @@
 import { Bonus, Type } from '@/domain/models/board/enums.ts';
-import LayoutService from '@/domain/models/board/services/layout/LayoutService.ts';
+import LayoutService from '@/domain/models/board/services/LayoutService.ts';
 import { BonusDistribution, Cell } from '@/domain/models/board/types.ts';
 import ShuffleService from '@/domain/services/ShuffleService.ts';
 
