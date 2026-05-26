@@ -25,7 +25,7 @@
   "end_tie": "It's a tie 👔",
   "end_win": "You won 🏆",
   "end_win_by": "You won by {points} pts 🏆",
-  "error_launch": "Something went wrong: <em>{error}</em>. Try reloading the page or using different browser.",
+  "boot_error": "Something went wrong: <em>{error}</em>. Try reloading the page or using different browser.",
   "event_pass_opponent": "Opponent passed",
   "event_pass_user": "You passed",
   "event_save_opponent": "Opponent played <em>{words}</em> for {score} pts",

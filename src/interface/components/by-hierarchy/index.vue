@@ -1,13 +1,16 @@
 <script lang="ts" setup>
-import Banner from '@/interface/components/by-hierarchy/Banner.vue';
+import { storeToRefs } from 'pinia';
+import Alert from '@/interface/components/by-hierarchy/Alert.vue';
 import Dialog from '@/interface/components/by-hierarchy/Dialog.vue';
 import Layout from '@/interface/components/by-hierarchy/Layout/Layout.vue';
 import Loader from '@/interface/components/by-hierarchy/Loader.vue';
+import MainStore from '@/interface/stores/MainStore.ts';
+const { bootError } = storeToRefs(MainStore.INSTANCE());
 </script>
 
 <template>
-  <Suspense>
-    <Banner />
+  <Alert v-if="bootError" :html="text('general.boot_error', { error: bootError })" />
+  <Suspense v-else>
     <Layout />
     <template #fallback><Loader /></template>
   </Suspense>
