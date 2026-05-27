@@ -3,35 +3,33 @@ import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 
 export function handlePressToolbarCell(idx: number): void {
-  const mainStore = MainStore.INSTANCE();
-  const userStore = UserStore.INSTANCE();
-  const tile = userStore.tiles[idx];
+  const { isTilePlaced, undoPlaceTile } = MainStore.INSTANCE();
+  const { deselectTile, selectedTile, selectedTileIsPlaced, switchTiles, tiles } = UserStore.INSTANCE();
+  const tile = tiles[idx];
   if (tile === undefined) throw new ReferenceError(`expected tile at inventory index ${String(idx)}, got undefined`);
-  const selected = userStore.selectedTile;
-  if (selected === null) {
-    if (mainStore.isTilePlaced(tile)) mainStore.undoPlaceTile(tile);
+  if (selectedTile === null) {
+    if (isTilePlaced(tile)) undoPlaceTile(tile);
     return;
   }
-  if (userStore.selectedTileIsPlaced) mainStore.undoPlaceTile(selected);
-  userStore.switchTiles(selected, tile);
-  userStore.deselectTile();
+  if (selectedTileIsPlaced) undoPlaceTile(selectedTile);
+  switchTiles(selectedTile, tile);
+  deselectTile();
 }
 
 export function handlePressToolbarTile(tile: GameTile): void {
-  const mainStore = MainStore.INSTANCE();
-  const userStore = UserStore.INSTANCE();
-  const selected = userStore.selectedTile;
-  if (selected === null) {
-    userStore.selectTile(tile);
+  const { findCellWithTile, placeTile, undoPlaceTile } = MainStore.INSTANCE();
+  const { deselectTile, isTileSelected, selectedTile, selectTile, switchTiles } = UserStore.INSTANCE();
+  if (selectedTile === null) {
+    selectTile(tile);
     return;
   }
-  if (!userStore.isTileSelected(tile)) {
-    const selectedCell = mainStore.findCellWithTile(selected);
+  if (!isTileSelected(tile)) {
+    const selectedCell = findCellWithTile(selectedTile);
     if (selectedCell !== undefined) {
-      mainStore.undoPlaceTile(selected);
-      mainStore.placeTile({ cell: selectedCell, tile });
+      undoPlaceTile(selectedTile);
+      placeTile({ cell: selectedCell, tile });
     }
-    userStore.switchTiles(selected, tile);
+    switchTiles(selectedTile, tile);
   }
-  userStore.deselectTile();
+  deselectTile();
 }

@@ -3,49 +3,47 @@ import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 
 export function handleDoublePressGridTile(tile: GameTile): void {
-  const mainStore = MainStore.INSTANCE();
-  const userStore = UserStore.INSTANCE();
-  if (!userStore.isTileInToolbar(tile)) return;
-  userStore.deselectTile();
-  mainStore.undoPlaceTile(tile);
+  const { undoPlaceTile } = MainStore.INSTANCE();
+  const { deselectTile, isTileInToolbar } = UserStore.INSTANCE();
+  if (!isTileInToolbar(tile)) return;
+  deselectTile();
+  undoPlaceTile(tile);
 }
 
 export function handlePressGridCell(cell: GameCell): void {
-  const mainStore = MainStore.INSTANCE();
-  const userStore = UserStore.INSTANCE();
-  const selected = userStore.selectedTile;
-  if (selected === null) return;
-  if (mainStore.findTileOnCell(cell) !== undefined) return;
-  if (userStore.selectedTileIsPlaced) mainStore.undoPlaceTile(selected);
-  mainStore.placeTile({ cell, tile: selected });
-  userStore.deselectTile();
+  const { findTileOnCell, placeTile, undoPlaceTile } = MainStore.INSTANCE();
+  const { deselectTile, selectedTile, selectedTileIsPlaced } = UserStore.INSTANCE();
+  if (selectedTile === null) return;
+  if (findTileOnCell(cell) !== undefined) return;
+  if (selectedTileIsPlaced) undoPlaceTile(selectedTile);
+  placeTile({ cell, tile: selectedTile });
+  deselectTile();
 }
 
 export function handlePressGridTile(tile: GameTile): void {
-  const mainStore = MainStore.INSTANCE();
-  const userStore = UserStore.INSTANCE();
-  if (!userStore.isTileInToolbar(tile)) return;
-  if (userStore.isTileSelected(tile)) {
-    userStore.deselectTile();
+  const { findCellWithTile, placeTile, undoPlaceTile } = MainStore.INSTANCE();
+  const { deselectTile, isTileInToolbar, isTileSelected, selectedTile, selectTile, switchTiles } = UserStore.INSTANCE();
+  if (!isTileInToolbar(tile)) return;
+  if (isTileSelected(tile)) {
+    deselectTile();
     return;
   }
-  const selected = userStore.selectedTile;
-  if (selected === null) {
-    userStore.selectTile(tile);
+  if (selectedTile === null) {
+    selectTile(tile);
     return;
   }
-  const targetCell = mainStore.findCellWithTile(tile);
+  const targetCell = findCellWithTile(tile);
   if (targetCell === undefined) return;
-  const selectedCell = mainStore.findCellWithTile(selected);
+  const selectedCell = findCellWithTile(selectedTile);
   if (selectedCell !== undefined) {
-    mainStore.undoPlaceTile(selected);
-    mainStore.undoPlaceTile(tile);
-    mainStore.placeTile({ cell: selectedCell, tile });
-    mainStore.placeTile({ cell: targetCell, tile: selected });
+    undoPlaceTile(selectedTile);
+    undoPlaceTile(tile);
+    placeTile({ cell: selectedCell, tile });
+    placeTile({ cell: targetCell, tile: selectedTile });
   } else {
-    mainStore.undoPlaceTile(tile);
-    mainStore.placeTile({ cell: targetCell, tile: selected });
-    userStore.switchTiles(selected, tile);
+    undoPlaceTile(tile);
+    placeTile({ cell: targetCell, tile: selectedTile });
+    switchTiles(selectedTile, tile);
   }
-  userStore.deselectTile();
+  deselectTile();
 }

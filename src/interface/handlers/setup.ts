@@ -3,10 +3,13 @@ import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
 
 export function handleChangeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
-  MainStore.INSTANCE().changeMatchDifficulty(matchDifficulty);
+  const { changeMatchDifficulty } = MainStore.INSTANCE();
+  changeMatchDifficulty(matchDifficulty);
 }
 
 export function handleChangeMatchType(matchType: GameMatchType): void {
-  MainStore.INSTANCE().changeMatchType(matchType);
-  UserStore.INSTANCE().initialize();
+  const { changeMatchType } = MainStore.INSTANCE();
+  const { initialize } = UserStore.INSTANCE();
+  changeMatchType(matchType);
+  initialize();
 }

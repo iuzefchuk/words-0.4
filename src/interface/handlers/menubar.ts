@@ -5,35 +5,40 @@ import UserStore from '@/interface/stores/UserStore.ts';
 const RESIGN_DELAY_MS = 500;
 
 export async function handlePass(): Promise<void> {
-  const mainStore = MainStore.INSTANCE();
-  if (mainStore.userPassWillBeResign) return handleResign();
+  const { pass, userPassWillBeResign } = MainStore.INSTANCE();
+  if (userPassWillBeResign) return handleResign();
   const { isConfirmed } = await triggerPassDialog();
   if (!isConfirmed) return;
-  mainStore.pass();
+  pass();
 }
 
 export async function handleResign(): Promise<void> {
+  const { resign } = MainStore.INSTANCE();
   const { isConfirmed } = await triggerResignDialog();
   if (!isConfirmed) return;
   setTimeout(() => {
-    MainStore.INSTANCE().resign();
+    resign();
   }, RESIGN_DELAY_MS);
 }
 
 export function handleSave(): void {
-  MainStore.INSTANCE().save();
-  UserStore.INSTANCE().initialize();
+  const { save } = MainStore.INSTANCE();
+  const { initialize } = UserStore.INSTANCE();
+  save();
+  initialize();
 }
 
 async function triggerPassDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
-  return await DialogStore.INSTANCE().trigger({
+  const { trigger } = DialogStore.INSTANCE();
+  return await trigger({
     html: window.text('general.dialog_html_pass'),
     title: window.text('general.dialog_title_pass'),
   });
 }
 
 async function triggerResignDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
-  return await DialogStore.INSTANCE().trigger({
+  const { trigger } = DialogStore.INSTANCE();
+  return await trigger({
     html: window.text('general.dialog_html_resign'),
     isDestructive: true,
     title: window.text('general.dialog_title_resign'),
