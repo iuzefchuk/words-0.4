@@ -5,32 +5,38 @@
     height: 1px;
     margin: -1px;
     overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
     white-space: nowrap;
   }
+
   &__make-secondary {
     font-weight: var(--secondary-font-weight);
     font-size: var(--secondary-font-size);
     background: var(--secondary-bg);
     color: var(--secondary-color);
   }
+
   &__create-grid {
     @mixin grid($columns, $rows, $gap: var(--grid-gap)) {
       display: grid;
       grid-template-columns: repeat($columns, minmax(0, 1fr));
       grid-template-rows: repeat($rows, auto);
       gap: $gap;
+
       > * {
         display: grid;
         aspect-ratio: 1 / 1;
+
         > * {
           grid-area: 1 / 1;
         }
       }
     }
+
     &--for-main-grid {
       @include grid(var(--grid-items-per-axis), var(--grid-items-per-axis));
     }
+
     &--for-footer-toolbar {
       @include grid(8, 1, calc(var(--grid-gap) * 2));
     }

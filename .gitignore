@@ -1,6 +1,6 @@
 .DS_STORE
 .playwright
+playwright-report
 node_modules
 dist
-yarn.lock
 package-lock.json

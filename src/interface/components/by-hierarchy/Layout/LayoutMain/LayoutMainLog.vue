@@ -14,17 +14,19 @@ const { history } = new UseHistory();
 <style lang="scss" scoped>
 .log {
   $padding-right: var(--layout-padding);
+
   width: calc(100% - $padding-right);
+
   &__list {
     height: var(--layout-main-log-height);
-    border-right: 1px solid currentColor;
+    border-right: 1px solid currentcolor;
     padding-right: $padding-right;
     display: flex;
     flex-direction: column;
     gap: var(--space-s);
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden auto;
     text-align: right;
+
     :deep(em) {
       font-style: italic;
     }

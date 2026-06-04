@@ -25,10 +25,12 @@ const { currentTurnScore } = storeToRefs(mainStore);
   z-index: var(--z-index-level-2);
   display: grid;
   place-items: center;
+
   &--flipped {
     right: auto;
     left: calc(-1 * var(--space-xl));
   }
+
   &__value {
     width: max-content;
     height: max-content;
@@ -39,6 +41,7 @@ const { currentTurnScore } = storeToRefs(mainStore);
     font-size: var(--font-size-small);
     border-radius: var(--space-3xs);
     box-shadow: var(--shadow-2xl);
+
     &--shimmer {
       background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet, red);
       background-size: 300% 100%;

@@ -61,19 +61,24 @@ const bonusAccent = computed(() => (props.bonus === null ? undefined : getBonusA
   user-select: none;
   box-shadow: var(--cell-shadow);
   cursor: pointer;
+
   &--highlighted {
     background: var(--cell-bg-highlighted);
   }
+
   &--highlighted,
   &--occupied {
     box-shadow: none;
   }
+
   &__bonus {
     font-weight: var(--font-weight-big);
     z-index: var(--z-index-level-1);
     opacity: var(--cell-opacity-bonus);
     font-size: 15px;
+
     $accents: 'primary', 'secondary', 'tertiary', 'quaternary';
+
     @each $accent in $accents {
       &--#{$accent} text {
         fill: var(--cell-color-#{$accent});

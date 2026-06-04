@@ -4,12 +4,11 @@ import { defineConfig, devices } from '@playwright/test';
 import { loadEnv } from 'vite';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
-const ENV = loadEnv('', DIR, '');
-const URL = `http://localhost:${(ENV.VITE_PORT ??= '5173')}`;
+const ENV = loadEnv('', DIR, '') as Partial<Record<string, string>>;
+const URL = `http://localhost:${ENV.VITE_PORT ?? '5173'}`;
 const ENV_PROCESS_IS_CI = Boolean(process.env.CI);
 
 export default defineConfig({
-  fullyParallel: true,
   expect: {
     timeout: 5_000,
     toHaveScreenshot: {
@@ -17,9 +16,8 @@ export default defineConfig({
       maxDiffPixelRatio: 0.02,
     },
   },
+  fullyParallel: true,
   outputDir: path.resolve(DIR, '.playwright'),
-  snapshotDir: path.resolve(DIR, './tests/snapshots'),
-  snapshotPathTemplate: '{snapshotDir}/{arg}/{projectName}-{platform}{ext}',
   projects: [
     {
       name: 'chromium',
@@ -42,35 +40,37 @@ export default defineConfig({
       use: { ...devices['iPhone 14'] },
     },
   ],
+  snapshotDir: path.resolve(DIR, './tests/snapshots'),
+  snapshotPathTemplate: '{snapshotDir}/{arg}/{projectName}-{platform}{ext}',
   testDir: path.resolve(DIR, './tests'),
   timeout: 30_000,
   use: {
-    baseURL: URL,
     actionTimeout: 10_000,
-    navigationTimeout: 15_000,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    locale: 'en-US',
-    timezoneId: 'America/New_York',
+    baseURL: URL,
     extraHTTPHeaders: {
       'x-test-automation': 'playwright',
     },
+    locale: 'en-US',
+    navigationTimeout: 15_000,
+    screenshot: 'only-on-failure',
+    timezoneId: 'America/New_York',
+    trace: 'on-first-retry',
+    video: 'retain-on-failure',
   },
   webServer: {
-    url: URL,
-    command: 'npm run serve',
+    command: 'yarn serve',
     reuseExistingServer: !ENV_PROCESS_IS_CI,
-    timeout: 120_000,
-    stdout: 'pipe',
     stderr: 'pipe',
+    stdout: 'pipe',
+    timeout: 120_000,
+    url: URL,
   },
   ...(ENV_PROCESS_IS_CI
     ? {
         forbidOnly: true,
-        workers: '50%',
-        retries: 2,
         reporter: [['html', { open: 'never' }], ['github']],
+        retries: 2,
+        workers: '50%',
       }
     : {
         forbidOnly: false,

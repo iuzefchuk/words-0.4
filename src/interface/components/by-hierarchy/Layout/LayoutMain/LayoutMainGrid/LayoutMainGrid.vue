@@ -40,16 +40,20 @@ provide('focusedItemIndex', rovingTabindex.focusedIndex);
 
 <style lang="scss" scoped>
 @use '@style/breakpoints.scss' as *;
+
 .grid {
   width: 100%;
   position: relative;
+
   &__row {
     display: contents;
   }
+
   & > &__row > * {
     display: grid;
     aspect-ratio: 1 / 1;
     grid-area: auto;
+
     > * {
       grid-area: 1 / 1;
     }

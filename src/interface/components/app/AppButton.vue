@@ -65,6 +65,7 @@ if (props.keys.length > 0) useKeys();
 
 <style lang="scss" scoped>
 @use '@style/breakpoints.scss' as *;
+
 .btn {
   cursor: pointer;
   text-align: center;
@@ -78,24 +79,30 @@ if (props.keys.length > 0) useKeys();
   display: grid;
   place-items: center;
   width: calc(var(--space-6xl) * 2);
+
   @media screen and (max-width: $breakpoint-mobile) {
     width: 100%;
   }
+
   height: var(--space-5xl);
   box-shadow: var(--shadow-xs);
   font-weight: var(--font-weight);
+
   $accents: 'primary', 'secondary';
+
   @each $accent in $accents {
     &--#{$accent} {
       background: var(--btn-bg-#{$accent});
       color: var(--btn-color-#{$accent});
       border-color: var(--btn-border-color-#{$accent});
-      &:hover:not(:active):not(:disabled) {
+
+      &:hover:not(:active, :disabled) {
         background: var(--btn-bg-#{$accent}-hover);
         color: var(--btn-color-#{$accent}-hover);
         border-color: var(--btn-border-color-#{$accent}-hover);
         box-shadow: var(--shadow-s);
       }
+
       &:active:not(:disabled) {
         background: var(--btn-bg-#{$accent}-active);
         color: var(--btn-color-#{$accent}-active);
@@ -103,6 +110,7 @@ if (props.keys.length > 0) useKeys();
       }
     }
   }
+
   &:disabled {
     cursor: not-allowed;
     background: var(--btn-bg-disabled);

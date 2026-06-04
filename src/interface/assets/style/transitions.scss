@@ -6,9 +6,11 @@
 .fade {
   &-enter-active,
   &-leave-active {
-    @include transition();
+    @include transition;
+
     transition-property: opacity;
   }
+
   &-enter-from,
   &-leave-to {
     opacity: 0;
@@ -18,9 +20,11 @@
 .fade-from-bottom {
   &-enter-active,
   &-leave-active {
-    @include transition();
+    @include transition;
+
     transition-property: opacity, transform;
   }
+
   &-enter-from,
   &-leave-to {
     opacity: 0;
@@ -31,9 +35,11 @@
 .fade-from-top {
   &-enter-active,
   &-leave-active {
-    @include transition();
+    @include transition;
+
     transition-property: opacity, transform;
   }
+
   &-enter-from,
   &-leave-to {
     opacity: 0;
@@ -44,9 +50,11 @@
 .fade-from-right {
   &-enter-active,
   &-leave-active {
-    @include transition();
+    @include transition;
+
     transition-property: opacity, transform;
   }
+
   &-enter-from,
   &-leave-to {
     opacity: 0;
@@ -57,9 +65,11 @@
 .fade-from-left {
   &-enter-active,
   &-leave-active {
-    @include transition();
+    @include transition;
+
     transition-property: opacity, transform;
   }
+
   &-enter-from,
   &-leave-to {
     opacity: 0;

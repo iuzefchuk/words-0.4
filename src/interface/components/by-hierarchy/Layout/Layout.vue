@@ -51,6 +51,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
 
 <style lang="scss" scoped>
 @use '@style/breakpoints.scss' as *;
+
 .layout {
   transition-property: filter, opacity;
   transition-duration: var(--transition-duration);
@@ -62,20 +63,21 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   gap: var(--space-s);
   display: grid;
   grid-template-rows: 1fr auto 1fr;
-  align-items: center;
-  justify-items: center;
+  place-items: center center;
+
   &__top,
   &__mid {
     padding: var(--layout-padding);
   }
+
   &__top {
-    align-self: flex-start;
-    justify-self: flex-start;
+    place-self: flex-start flex-start;
   }
+
   &__bottom {
-    justify-self: center;
-    align-self: stretch;
+    place-self: stretch center;
   }
+
   &--blurred {
     filter: blur(1rem);
     opacity: 0.5;

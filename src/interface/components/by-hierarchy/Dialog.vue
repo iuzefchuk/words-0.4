@@ -84,11 +84,14 @@ watch(html, async newValue => {
 
 <style lang="scss" scoped>
 @use '@style/themes' as *;
+
 .dialog {
   @include dark-theme;
+
   @media (prefers-color-scheme: dark) {
     @include light-theme;
   }
+
   background: var(--primary-bg);
   border-radius: var(--space-s);
   color: var(--primary-color);
@@ -103,34 +106,42 @@ watch(html, async newValue => {
     opacity var(--transition-duration) var(--transition-timing-function),
     display var(--transition-duration) allow-discrete,
     overlay var(--transition-duration) allow-discrete;
+
   &[open] {
     display: flex;
     opacity: 1;
+
     @starting-style {
       opacity: 0;
     }
   }
+
   &--shaking {
     animation: horizontal-shake var(--transition-duration) linear forwards;
   }
+
   &::backdrop {
-    background: rgba(0 0 0 / 0.2);
+    background: rgb(0 0 0 / 20%);
     transition:
       background var(--transition-duration) var(--transition-timing-function),
       display var(--transition-duration) allow-discrete,
       overlay var(--transition-duration) allow-discrete;
+
     @starting-style {
-      background: rgba(0 0 0 / 0);
+      background: rgb(0 0 0 / 0%);
     }
   }
+
   &:not([open])::backdrop {
-    background: rgba(0 0 0 / 0);
+    background: rgb(0 0 0 / 0%);
   }
+
   &__content {
     display: flex;
     flex-direction: column;
     gap: var(--space-s);
   }
+
   &__footer {
     display: flex;
     flex-direction: row;

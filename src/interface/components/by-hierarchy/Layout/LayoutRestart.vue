@@ -40,8 +40,10 @@ function restart(): void {
     user-select: none;
     touch-action: manipulation;
   }
+
   &__hint {
     $ms: calc(var(--transition-duration) * 10);
+
     animation: double-tap $ms var(--transition-timing-function) infinite;
     animation-delay: $ms;
     transform-origin: center;

@@ -30,11 +30,13 @@ const { bootProgress } = storeToRefs(mainStore);
   transition-timing-function: var(--transition-timing-function);
   appearance: none;
   display: block;
+
   &,
   &::-webkit-progress-value,
   &::-moz-progress-bar {
     background: var(--progress-color);
   }
+
   &::-webkit-progress-bar {
     background: transparent;
   }

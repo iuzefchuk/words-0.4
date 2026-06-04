@@ -54,6 +54,7 @@ function activate(idx: number, tile: GameTile | null): void {
 
 <style lang="scss" scoped>
 @use '@style/breakpoints.scss' as *;
+
 .toolbar {
   display: flex;
   flex-direction: column;
@@ -62,14 +63,17 @@ function activate(idx: number, tile: GameTile | null): void {
   max-width: $breakpoint-mobile;
   width: 100%;
   padding: calc(var(--layout-padding) * 2) var(--layout-padding) 0;
+
   &__grid {
     width: 100%;
   }
+
   &__cell {
     background: var(--toolbar-cell-bg);
     border-radius: calc(var(--grid-item-radius) * 2);
     box-shadow: var(--toolbar-cell-shadow);
   }
+
   &__button {
     width: 100%;
     height: 100%;
@@ -77,6 +81,7 @@ function activate(idx: number, tile: GameTile | null): void {
     place-items: center;
     border-radius: inherit;
     cursor: pointer;
+
     &:disabled {
       cursor: not-allowed;
     }

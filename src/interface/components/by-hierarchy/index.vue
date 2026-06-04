@@ -18,13 +18,14 @@ const { bootError } = storeToRefs(MainStore.INSTANCE());
 </template>
 
 <style lang="scss">
-@use '@style/reset.scss';
-@use '@style/animations.scss';
-@use '@style/transitions.scss';
-@use '@style/base.scss';
-@use '@style/utilities.scss';
+@use '@style/reset';
+@use '@style/animations';
+@use '@style/transitions';
+@use '@style/base';
+@use '@style/utilities';
 @use '@style/tokens' as tokens;
 @use '@style/themes' as themes;
+
 :root {
   @include tokens.emit;
   @include themes.emit;

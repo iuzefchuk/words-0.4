@@ -55,12 +55,14 @@ const buttons = reactive([
 
 <style lang="scss" scoped>
 @use '@style/breakpoints.scss' as *;
+
 .menubar {
   z-index: var(--z-index-level-1);
   display: flex;
   flex-direction: column;
   gap: var(--space-s);
   padding: var(--layout-padding);
+
   @media screen and (max-width: $breakpoint-mobile) {
     flex-direction: row-reverse;
   }

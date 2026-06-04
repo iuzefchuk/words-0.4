@@ -20,6 +20,7 @@ defineProps<{ html: string }>();
   z-index: var(--z-index-level-3);
   display: grid;
   place-items: center;
+
   :deep(em) {
     font-style: italic;
   }

@@ -32,6 +32,7 @@ const players = computed(() => [
   flex-direction: column;
   gap: var(--space-s);
   width: max-content;
+
   &__row {
     display: flex;
     flex-direction: row;

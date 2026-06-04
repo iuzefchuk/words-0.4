@@ -68,6 +68,7 @@ watch(() => props.modelValue, updateIndicator, { flush: 'post' });
     margin-block-end: var(--space-s);
     margin-left: var(--space-3xs);
   }
+
   &__option-group {
     position: relative;
     display: inline-flex;
@@ -78,6 +79,7 @@ watch(() => props.modelValue, updateIndicator, { flush: 'post' });
     gap: var(--space-3xs);
     height: var(--space-5xl);
   }
+
   &__indicator {
     position: absolute;
     top: var(--space-3xs);
@@ -90,6 +92,7 @@ watch(() => props.modelValue, updateIndicator, { flush: 'post' });
     transition-duration: var(--transition-duration);
     transition-timing-function: var(--transition-timing-function);
   }
+
   &__option {
     cursor: pointer;
     color: var(--radio-group-color);
@@ -103,25 +106,29 @@ watch(() => props.modelValue, updateIndicator, { flush: 'post' });
     display: grid;
     place-items: center;
     position: relative;
-    &:hover:not(.radio-group__option--selected) {
+
+    &:hover {
       color: var(--radio-group-color-hover);
     }
+
     &--selected {
       color: var(--radio-group-color-selected);
       cursor: default;
     }
+
     &:has(:focus-visible) {
       outline: 2px solid var(--radio-group-color-selected);
       outline-offset: -1px;
     }
   }
+
   &__input {
     position: absolute;
     width: 1px;
     height: 1px;
     margin: -1px;
     overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
     white-space: nowrap;
   }
 }

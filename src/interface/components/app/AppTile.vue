@@ -32,7 +32,7 @@ const props = defineProps<{
 <style lang="scss" scoped>
 .tile {
   cursor: pointer;
-  fill: currentColor;
+  fill: currentcolor;
   display: block;
   aspect-ratio: 1 / 1;
   border-radius: inherit;
@@ -46,18 +46,24 @@ const props = defineProps<{
   z-index: var(--z-index-level-1);
   min-height: 100%;
   user-select: none;
+
   $accents: 'primary', 'secondary', 'tertiary';
+
   @each $accent in $accents {
     &--#{$accent} {
+      --tile-pts-color: var(--tile-pts-color-#{$accent});
+
       background: var(--tile-bg-#{$accent});
       color: var(--tile-color-#{$accent});
-      .tile__points {
-        color: var(--tile-pts-color-#{$accent});
-      }
     }
   }
+
   &__letter {
     font-weight: var(--font-weight-big);
+  }
+
+  &__points {
+    color: var(--tile-pts-color);
   }
 }
 </style>

@@ -15,7 +15,9 @@ export default defineConfigWithVueTs([
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ['*.config.js', '*.config.ts'],
+        },
         tsconfigRootDir: path.dirname(fileURLToPath(import.meta.url)),
       },
     },

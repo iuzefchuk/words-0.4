@@ -12,10 +12,12 @@ import LayoutMainLog from '@/interface/components/by-hierarchy/Layout/LayoutMain
 
 <style lang="scss" scoped>
 @use '@style/breakpoints.scss' as *;
+
 .main {
   width: 100%;
   position: relative;
   max-width: $breakpoint-mobile;
+
   &__log {
     position: absolute;
     top: calc(var(--layout-main-log-height) * -1 - var(--layout-padding));

@@ -18,5 +18,4 @@
     "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true
   },
-  "include": ["src", "tests"]
 }
