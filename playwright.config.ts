@@ -5,8 +5,8 @@ import { loadEnv } from 'vite';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ENV = loadEnv('', DIR, '') as Partial<Record<string, string>>;
-const URL = `http://localhost:${ENV.VITE_PORT ?? '5173'}`;
-const ENV_PROCESS_IS_CI = Boolean(process.env.CI);
+const URL = `http://localhost:${ENV['VITE_PORT'] ?? '5173'}`;
+const ENV_PROCESS_IS_CI = Boolean(process.env['CI']);
 
 export default defineConfig({
   expect: {

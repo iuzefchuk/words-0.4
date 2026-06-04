@@ -5,7 +5,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig(({ mode }) => {
   const ENV = loadEnv(mode, __dirname, '');
-  const PORT = Number(ENV.VITE_PORT);
+  const PORT = Number(ENV['VITE_PORT']);
   return {
     build: {
       chunkSizeWarningLimit: 1000,
@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       target: 'esnext',
     },
     define: {
-      APP_VERSION: JSON.stringify(process.env.npm_package_version),
+      APP_VERSION: JSON.stringify(process.env['npm_package_version']),
     },
     optimizeDeps: {
       include: ['vue', 'pinia'],

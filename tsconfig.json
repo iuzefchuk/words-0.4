@@ -2,8 +2,8 @@
   "compilerOptions": {
     "strict": true,
     "target": "esnext",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"],
       "@style/*": ["./src/interface/assets/style/*"],
@@ -13,9 +13,22 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "jsx": "preserve",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
     "useDefineForClassFields": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUncheckedSideEffectImports": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
+  "include": ["*.config.ts", "src", "tests"]
 }

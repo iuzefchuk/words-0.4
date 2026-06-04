@@ -1,12 +1,12 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { includeIgnoreFile } from '@eslint/compat';
 import prettierConfig from '@vue/eslint-config-prettier';
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 import perfectionist from 'eslint-plugin-perfectionist';
 import pluginVue from 'eslint-plugin-vue';
+import { includeIgnoreFile } from 'eslint/config';
 
-export default defineConfigWithVueTs([
+export default defineConfigWithVueTs(
   includeIgnoreFile(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.gitignore')),
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.strictTypeChecked,
@@ -15,9 +15,7 @@ export default defineConfigWithVueTs([
   {
     languageOptions: {
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ['*.config.js', '*.config.ts'],
-        },
+        projectService: true,
         tsconfigRootDir: path.dirname(fileURLToPath(import.meta.url)),
       },
     },
@@ -25,6 +23,7 @@ export default defineConfigWithVueTs([
       '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'as' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+      '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'separate-type-imports' }],
       '@typescript-eslint/explicit-function-return-type': [
         'error',
         { allowExpressions: true, allowTypedFunctionExpressions: true },
@@ -205,4 +204,4 @@ export default defineConfigWithVueTs([
     },
   },
   prettierConfig,
-]);
+);
