@@ -1,5 +1,5 @@
-import { GamePlayer } from '@/domain/enums.ts';
-import { Difficulty, Result, Type } from '@/domain/models/match/enums.ts';
+import type { GamePlayer } from '@/domain/enums.ts';
+import type { Difficulty, Result, Type } from '@/domain/models/match/enums.ts';
 
 export type MatchSettings = {
   difficulty: Difficulty;

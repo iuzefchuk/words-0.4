@@ -1,5 +1,5 @@
 import { GameValidationError } from '@/domain/enums.ts';
-import { GameCell, GamePlacement, GameTile } from '@/domain/types/index.ts';
+import type { GameCell, GamePlacement, GameTile } from '@/domain/types/index.ts';
 
 export default class CellsValidationService {
   static execute(

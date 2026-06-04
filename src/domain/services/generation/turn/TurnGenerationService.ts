@@ -1,12 +1,15 @@
-import { GameAxis, GamePlayer, GameValidationStatus } from '@/domain/enums.ts';
+import { GameAxis, GameValidationStatus } from '@/domain/enums.ts';
 import Board from '@/domain/models/board/Board.ts';
-import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 import Turns from '@/domain/models/turns/Turns.ts';
 import CrossCheckService from '@/domain/services/cross-check/CrossCheckService.ts';
 import CrossCheckTable from '@/domain/services/cross-check/CrossCheckTable.ts';
 import { GenerationCommandType, GenerationDirection, GenerationTask } from '@/domain/services/generation/turn/enums.ts';
-import {
+import ShuffleService from '@/domain/services/ShuffleService.ts';
+import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
+import type { GamePlayer } from '@/domain/enums.ts';
+import type Dictionary from '@/domain/models/dictionary/Dictionary.ts';
+import type {
   ApplyTask,
   CalculateTask,
   Candidate,
@@ -30,9 +33,7 @@ import {
   Traversal,
   ValidateTask,
 } from '@/domain/services/generation/turn/types.ts';
-import ShuffleService from '@/domain/services/ShuffleService.ts';
-import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
-import { GameAnchorCoordinates, GameLink, GameTile } from '@/domain/types/index.ts';
+import type { GameAnchorCoordinates, GameLink, GameTile } from '@/domain/types/index.ts';
 
 class TaskCommandResolver {
   private constructor(private readonly stack: Array<Task>) {}

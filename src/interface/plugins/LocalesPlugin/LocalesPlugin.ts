@@ -1,4 +1,5 @@
-import { App, Ref, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
+import type { App, Ref } from 'vue';
 
 export enum LocaleType {
   En = 'en',

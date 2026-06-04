@@ -1,8 +1,10 @@
-import { GameValidationError, GameValidationStatus } from '@/domain/enums.ts';
+import { GameValidationStatus } from '@/domain/enums.ts';
 import ScoringService from '@/domain/services/scoring/ScoringService.ts';
 import CellsValidationService from '@/domain/services/validation/cells/CellsValidationService.ts';
 import PlacementsValidationService from '@/domain/services/validation/placements/PlacementsValidationService.ts';
-import {
+import WordsValidationService from '@/domain/services/validation/words/WordsValidationService.ts';
+import type { GameValidationError } from '@/domain/enums.ts';
+import type {
   ComputedTilesOutput,
   PendingResult,
   PipelineInput,
@@ -14,8 +16,7 @@ import {
   ValidatorContext,
   WordsOutput,
 } from '@/domain/services/validation/turn/types.ts';
-import WordsValidationService from '@/domain/services/validation/words/WordsValidationService.ts';
-import { GameComputedValue, GameInvalidResult, GameValidationResult } from '@/domain/types/index.ts';
+import type { GameComputedValue, GameInvalidResult, GameValidationResult } from '@/domain/types/index.ts';
 
 class Pipeline<State extends PipelineInput> {
   private constructor(private throughput: PipelineThroughput<State>) {}

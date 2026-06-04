@@ -1,6 +1,6 @@
-import { App } from 'vue';
 import AnimateNumber from './AnimateNumber.ts';
 import ClickOutside from './ClickOutside.ts';
+import type { App } from 'vue';
 
 export default class DirectivesPlugin {
   private static readonly ANIMATE_NUMBER = new AnimateNumber().directive;

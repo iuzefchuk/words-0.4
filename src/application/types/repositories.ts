@@ -1,4 +1,4 @@
-import { GameEvent, GameMatchSettings } from '@/application/types/index.ts';
+import type { GameEvent, GameMatchSettings } from '@/application/types/index.ts';
 
 export type EventRepository = {
   append(events: ReadonlyArray<GameEvent>): Promise<void>;

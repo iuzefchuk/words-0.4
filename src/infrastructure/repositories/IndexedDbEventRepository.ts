@@ -1,6 +1,6 @@
-import { GameEvent } from '@/application/types/index.ts';
-import { EventRepository } from '@/application/types/repositories.ts';
 import IndexedDbGateway from '@/infrastructure/gateways/IndexedDbGateway.ts';
+import type { GameEvent } from '@/application/types/index.ts';
+import type { EventRepository } from '@/application/types/repositories.ts';
 
 export default class IndexedDbEventRepository implements EventRepository {
   private static readonly DB_NAME = 'events';

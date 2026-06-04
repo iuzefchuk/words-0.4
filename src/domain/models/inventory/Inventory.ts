@@ -1,6 +1,7 @@
-import { GameLetter, GamePlayer } from '@/domain/enums.ts';
-import { Tile, TileCollection } from '@/domain/models/inventory/types.ts';
+import { GameLetter } from '@/domain/enums.ts';
 import ShuffleService from '@/domain/services/ShuffleService.ts';
+import type { GamePlayer } from '@/domain/enums.ts';
+import type { Tile, TileCollection } from '@/domain/models/inventory/types.ts';
 
 class TilePool {
   get tileCount(): number {

@@ -1,8 +1,8 @@
-import { LoaderGateway, SchedulerGateway, WorkerGateway } from '@/application/types/gateways.ts';
-import { BootProgressPublisher } from '@/application/types/publishers.ts';
-import { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
-import { IdentifierGateway, RandomizerGateway } from '@/domain/types/gateways.ts';
-import { GameCell } from '@/domain/types/index.ts';
+import type { LoaderGateway, SchedulerGateway, WorkerGateway } from '@/application/types/gateways.ts';
+import type { BootProgressPublisher } from '@/application/types/publishers.ts';
+import type { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
+import type { IdentifierGateway, RandomizerGateway } from '@/domain/types/gateways.ts';
+import type { GameCell } from '@/domain/types/index.ts';
 
 export {
   GameBonus,

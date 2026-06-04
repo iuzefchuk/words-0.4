@@ -1,4 +1,4 @@
-import { GameLetter, GamePlayer } from '@/domain/enums.ts';
+import type { GameLetter, GamePlayer } from '@/domain/enums.ts';
 
 export type InventoryView = {
   areTilesEqual(firstTile: Tile, secondTile: Tile): boolean;

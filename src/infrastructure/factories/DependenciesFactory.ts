@@ -1,4 +1,3 @@
-import { AppDependencies } from '@/application/types/index.ts';
 import BrowserSchedulerGateway from '@/infrastructure/gateways/BrowserSchedulerGateway.ts';
 import CryptoIdentifierGateway from '@/infrastructure/gateways/CryptoIdentifierGateway.ts';
 import HttpLoaderGateway from '@/infrastructure/gateways/HttpLoaderGateway.ts';
@@ -9,6 +8,7 @@ import IndexedDbEventRepository from '@/infrastructure/repositories/IndexedDbEve
 import LocalStorageSettingsRepository from '@/infrastructure/repositories/LocalStorageSettingsRepository.ts';
 import { appVersion } from '@/infrastructure/version.ts';
 import TurnGenerationWorker from '@/infrastructure/workers/turnGeneration.worker.ts?worker';
+import type { AppDependencies } from '@/application/types/index.ts';
 
 export default class DependenciesFactory {
   private static readonly DICTIONARY_URL = '/dictionary.bin';

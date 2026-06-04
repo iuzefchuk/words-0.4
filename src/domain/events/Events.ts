@@ -1,6 +1,6 @@
-import { GamePlayer } from '@/domain/enums.ts';
 import { EventType } from '@/domain/events/enums.ts';
-import { Event } from '@/domain/events/types.ts';
+import type { GamePlayer } from '@/domain/enums.ts';
+import type { Event } from '@/domain/events/types.ts';
 
 export default class Events {
   get logView(): ReadonlyArray<Event> {

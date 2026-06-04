@@ -1,5 +1,5 @@
-import { DirectiveBinding } from 'vue';
 import Directive from './DirectiveClass.ts';
+import type { DirectiveBinding } from 'vue';
 
 type BindingValue = { callback: () => void };
 

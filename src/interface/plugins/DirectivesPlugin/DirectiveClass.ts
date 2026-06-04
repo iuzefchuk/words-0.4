@@ -1,4 +1,4 @@
-import { DirectiveBinding, ObjectDirective } from 'vue';
+import type { DirectiveBinding, ObjectDirective } from 'vue';
 
 export default abstract class Directive<DirectiveHtmlElement extends HTMLElement, BindingValue> {
   get directive(): ObjectDirective<DirectiveHtmlElement, BindingValue> {

@@ -1,5 +1,6 @@
-import { nextTick, Ref, ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { Key } from '@/interface/enums.ts';
+import type { Ref } from 'vue';
 
 export default class UseRovingTabindex {
   readonly focusedIndex = ref(0);

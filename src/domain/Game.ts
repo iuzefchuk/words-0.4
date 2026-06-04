@@ -9,7 +9,6 @@ import {
 import Events from '@/domain/events/Events.ts';
 import PassIsResignSpec from '@/domain/events/specifications/PassIsResignSpec.ts';
 import Board from '@/domain/models/board/Board.ts';
-import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 import Match from '@/domain/models/match/Match.ts';
 import WinnerDerivationPolicy from '@/domain/models/match/policies/WinnerDerivationPolicy.ts';
@@ -18,8 +17,9 @@ import Turns from '@/domain/models/turns/Turns.ts';
 import MatchTerminationPolicy from '@/domain/policies/MatchTerminationPolicy.ts';
 import TurnGenerationService from '@/domain/services/generation/turn/TurnGenerationService.ts';
 import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
-import { IdentifierGateway, RandomizerGateway } from '@/domain/types/gateways.ts';
-import {
+import type Dictionary from '@/domain/models/dictionary/Dictionary.ts';
+import type { IdentifierGateway, RandomizerGateway } from '@/domain/types/gateways.ts';
+import type {
   GameBoardView,
   GameCell,
   GameEvent,

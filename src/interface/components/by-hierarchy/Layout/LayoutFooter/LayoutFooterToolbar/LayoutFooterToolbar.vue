@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import { GameTile } from '@/application/types/index.ts';
 import AppTile from '@/interface/components/app/AppTile.vue';
 import LayoutFooterToolbarStats from '@/interface/components/by-hierarchy/Layout/LayoutFooter/LayoutFooterToolbar/LayoutFooterToolbarStats.vue';
 import { Accent } from '@/interface/enums.ts';
 import { handlePressToolbarCell, handlePressToolbarTile } from '@/interface/handlers/toolbar.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
+import type { GameTile } from '@/application/types/index.ts';
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);

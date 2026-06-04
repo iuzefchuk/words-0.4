@@ -1,8 +1,9 @@
-import { Axis, Bonus, Type } from '@/domain/models/board/enums.ts';
+import { Axis, Bonus } from '@/domain/models/board/enums.ts';
 import BonusService from '@/domain/models/board/services/BonusService.ts';
 import LayoutService from '@/domain/models/board/services/LayoutService.ts';
-import { AnchorCoordinates, BonusDistribution, Cell, Link, Placement } from '@/domain/models/board/types.ts';
-import { GameTile } from '@/domain/types/index.ts';
+import type { Type } from '@/domain/models/board/enums.ts';
+import type { AnchorCoordinates, BonusDistribution, Cell, Link, Placement } from '@/domain/models/board/types.ts';
+import type { GameTile } from '@/domain/types/index.ts';
 
 export default class Board {
   get anchorCells(): ReadonlySet<Cell> {

@@ -1,7 +1,8 @@
 import Application from '@/application/index.ts';
-import { GameMatchDifficulty, GameMatchSettings, GameMatchType } from '@/application/types/index.ts';
-import { BootProgressPublisher } from '@/application/types/publishers.ts';
+import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
 import DependenciesFactory from '@/infrastructure/factories/DependenciesFactory.ts';
+import type { GameMatchSettings } from '@/application/types/index.ts';
+import type { BootProgressPublisher } from '@/application/types/publishers.ts';
 
 const DEFAULT_SETTINGS: GameMatchSettings = {
   difficulty: GameMatchDifficulty.Low,

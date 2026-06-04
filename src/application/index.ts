@@ -1,9 +1,10 @@
 import { BootProgress } from '@/application/enums.ts';
 import CommandsService from '@/application/services/CommandsService.ts';
 import QueriesService from '@/application/services/QueriesService.ts';
-import { SchedulerGateway } from '@/application/types/gateways.ts';
-import { AppConfig, AppDependencies, GameDictionary, GameEvent, GameMatchSettings } from '@/application/types/index.ts';
+import { GameDictionary } from '@/application/types/index.ts';
 import Game from '@/domain/Game.ts';
+import type { SchedulerGateway } from '@/application/types/gateways.ts';
+import type { AppConfig, AppDependencies, GameEvent, GameMatchSettings } from '@/application/types/index.ts';
 
 export default class Application {
   get config(): AppConfig {

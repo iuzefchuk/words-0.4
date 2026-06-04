@@ -1,18 +1,17 @@
-import { SchedulerGateway, WorkerGateway } from '@/application/types/gateways.ts';
-import {
+import { GameEventType, GamePlayer } from '@/application/types/index.ts';
+import ShuffleService from '@/domain/services/ShuffleService.ts';
+import type { SchedulerGateway, WorkerGateway } from '@/application/types/gateways.ts';
+import type {
   AppTurnResponse,
   GameCell,
   GameEvent,
-  GameEventType,
   GameGeneratorResult,
   GameMatchDifficulty,
   GameMatchType,
-  GamePlayer,
   GameTile,
 } from '@/application/types/index.ts';
-import { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
-import Game from '@/domain/Game.ts';
-import ShuffleService from '@/domain/services/ShuffleService.ts';
+import type { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
+import type Game from '@/domain/Game.ts';
 
 export default class CommandsService {
   private static readonly OPPONENT_RESPONSE_MIN_TIME_MS = 2_000;

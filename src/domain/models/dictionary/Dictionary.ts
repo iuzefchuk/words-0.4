@@ -1,5 +1,5 @@
 import { GameLetter } from '@/domain/enums.ts';
-import { DictionaryBuffer, Node } from '@/domain/models/dictionary/types.ts';
+import type { DictionaryBuffer, Node } from '@/domain/models/dictionary/types.ts';
 
 export default class Dictionary {
   private static readonly FIRST_LETTER_CODE = Dictionary.computeFirstLetterCode();

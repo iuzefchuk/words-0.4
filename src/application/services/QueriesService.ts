@@ -1,4 +1,6 @@
-import {
+import { GamePlayer } from '@/application/types/index.ts';
+import Inventory from '@/domain/models/inventory/Inventory.ts';
+import type {
   GameBoardView,
   GameBonus,
   GameCell,
@@ -8,12 +10,10 @@ import {
   GameMatchDifficulty,
   GameMatchResult,
   GameMatchType,
-  GamePlayer,
   GameTile,
   GameTurnsView,
 } from '@/application/types/index.ts';
-import Game from '@/domain/Game.ts';
-import Inventory from '@/domain/models/inventory/Inventory.ts';
+import type Game from '@/domain/Game.ts';
 
 export default class QueriesService {
   private get boardView(): Readonly<GameBoardView> {

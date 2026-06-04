@@ -1,5 +1,5 @@
 import { GamePlayer } from '@/domain/enums.ts';
-import Match from '@/domain/models/match/Match.ts';
+import type Match from '@/domain/models/match/Match.ts';
 
 export default class WinnerDerivationPolicy {
   static byScore(match: Match): GamePlayer | null {

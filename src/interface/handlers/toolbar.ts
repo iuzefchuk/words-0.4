@@ -1,6 +1,6 @@
-import { GameTile } from '@/application/types/index.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
+import type { GameTile } from '@/application/types/index.ts';
 
 export function handlePressToolbarCell(idx: number): void {
   const { isTilePlaced, undoPlaceTile } = MainStore.INSTANCE();

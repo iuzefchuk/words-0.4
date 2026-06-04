@@ -1,4 +1,4 @@
-import Turns from '@/domain/models/turns/Turns.ts';
+import type Turns from '@/domain/models/turns/Turns.ts';
 
 export default class SettingsMutationSpec {
   static isSatisfiedBy(turns: Turns): boolean {

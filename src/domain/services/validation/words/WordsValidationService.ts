@@ -1,5 +1,5 @@
 import { GameValidationError } from '@/domain/enums.ts';
-import { GamePlacement, GameTile } from '@/domain/types/index.ts';
+import type { GamePlacement, GameTile } from '@/domain/types/index.ts';
 
 export default class WordsValidationService {
   static execute(

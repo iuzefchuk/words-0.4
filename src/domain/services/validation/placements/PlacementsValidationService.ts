@@ -1,5 +1,6 @@
-import { GameAxis, GameValidationError } from '@/domain/enums.ts';
-import { GameAnchorCoordinates, GameCell, GamePlacement, GameTile } from '@/domain/types/index.ts';
+import { GameValidationError } from '@/domain/enums.ts';
+import type { GameAxis } from '@/domain/enums.ts';
+import type { GameAnchorCoordinates, GameCell, GamePlacement, GameTile } from '@/domain/types/index.ts';
 
 export default class PlacementsValidationService {
   static execute(

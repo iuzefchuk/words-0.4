@@ -1,11 +1,6 @@
-import {
-  WorkerGateway,
-  WorkerRequest,
-  WorkerRequestType,
-  WorkerResponse,
-  WorkerResponseType,
-} from '@/application/types/gateways.ts';
+import { WorkerRequestType, WorkerResponseType } from '@/application/types/gateways.ts';
 import WorkerPoolGateway from '@/infrastructure/gateways/WorkerPoolGateway.ts';
+import type { WorkerGateway, WorkerRequest, WorkerResponse } from '@/application/types/gateways.ts';
 
 export default class WebWorkerGateway implements WorkerGateway {
   constructor(private readonly workers: Record<string, new () => Worker>) {}

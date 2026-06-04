@@ -1,7 +1,7 @@
 import { Bonus, Type } from '@/domain/models/board/enums.ts';
 import LayoutService from '@/domain/models/board/services/LayoutService.ts';
-import { BonusDistribution, Cell } from '@/domain/models/board/types.ts';
 import ShuffleService from '@/domain/services/ShuffleService.ts';
+import type { BonusDistribution, Cell } from '@/domain/models/board/types.ts';
 
 type OctantLocation = readonly [row: number, col: number];
 

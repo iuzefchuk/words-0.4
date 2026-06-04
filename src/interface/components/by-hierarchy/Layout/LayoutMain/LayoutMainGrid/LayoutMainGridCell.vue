@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import { computed, inject, Ref } from 'vue';
-import { GameCell } from '@/application/types/index.ts';
+import { computed, inject } from 'vue';
 import AppCell from '@/interface/components/app/AppCell.vue';
 import AppTile from '@/interface/components/app/AppTile.vue';
 import { Accent } from '@/interface/enums.ts';
 import { handleDoublePressGridTile, handlePressGridCell, handlePressGridTile } from '@/interface/handlers/grid.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
+import type { GameCell } from '@/application/types/index.ts';
+import type { Ref } from 'vue';
 const props = defineProps<{
   cell: GameCell;
   index: number;

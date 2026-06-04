@@ -1,7 +1,7 @@
 import { computed } from 'vue';
-import { GameCell, GameTile } from '@/application/types/index.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
+import type { GameCell, GameTile } from '@/application/types/index.ts';
 
 type Bounds = { col: number; colSpan: number; row: number; rowSpan: number };
 

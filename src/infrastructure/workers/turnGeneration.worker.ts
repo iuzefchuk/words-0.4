@@ -1,12 +1,11 @@
 import { WorkerRequestType, WorkerResponseType } from '@/application/types/gateways.ts';
-import {
-  GameDictionary,
+import { GameDictionary, GameTurnGenerator } from '@/application/types/index.ts';
+import type {
   GameDictionaryBuffer,
   GameGeneratorContextData,
   GameGeneratorPartition,
   GameGeneratorResult,
   GamePlayer,
-  GameTurnGenerator,
 } from '@/application/types/index.ts';
 
 type StreamInput = {

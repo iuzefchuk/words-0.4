@@ -1,6 +1,7 @@
-import { GameBonus, GameEvent, GameEventType, GameMatchResult, GamePlayer } from '@/application/types/index.ts';
+import { GameBonus, GameEventType, GameMatchResult, GamePlayer } from '@/application/types/index.ts';
 import { Accent } from '@/interface/enums.ts';
 import { Sound } from '@/interface/services/SoundPlayer.ts';
+import type { GameEvent } from '@/application/types/index.ts';
 
 export function getBonusAccent(bonus: GameBonus): Accent {
   return {

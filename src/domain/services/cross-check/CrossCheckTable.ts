@@ -1,5 +1,5 @@
 import { GameAxis, GameLetter } from '@/domain/enums.ts';
-import { GameCell } from '@/domain/types/index.ts';
+import type { GameCell } from '@/domain/types/index.ts';
 
 export default class CrossCheckTable {
   static readonly ALL_LETTERS_MASK = (1 << Object.values(GameLetter).length) - 1;

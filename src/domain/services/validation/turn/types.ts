@@ -1,9 +1,9 @@
-import { GameValidationStatus } from '@/domain/enums.ts';
-import Board from '@/domain/models/board/Board.ts';
-import Dictionary from '@/domain/models/dictionary/Dictionary.ts';
-import Inventory from '@/domain/models/inventory/Inventory.ts';
-import Turns from '@/domain/models/turns/Turns.ts';
-import {
+import type { GameValidationStatus } from '@/domain/enums.ts';
+import type Board from '@/domain/models/board/Board.ts';
+import type Dictionary from '@/domain/models/dictionary/Dictionary.ts';
+import type Inventory from '@/domain/models/inventory/Inventory.ts';
+import type Turns from '@/domain/models/turns/Turns.ts';
+import type {
   GameComputedCells,
   GameComputedPlacements,
   GameComputedScore,

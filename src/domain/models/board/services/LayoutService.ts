@@ -1,5 +1,5 @@
 import { Axis } from '@/domain/models/board/enums.ts';
-import { AnchorCoordinates, Cell } from '@/domain/models/board/types.ts';
+import type { AnchorCoordinates, Cell } from '@/domain/models/board/types.ts';
 
 export default class LayoutService {
   static readonly CELLS_PER_AXIS = 15;

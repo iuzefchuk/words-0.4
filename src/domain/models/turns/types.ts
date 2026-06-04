@@ -1,6 +1,6 @@
-import { GamePlayer } from '@/domain/enums.ts';
-import { ValidationError, ValidationStatus } from '@/domain/models/turns/enums.ts';
-import { GameCell, GamePlacement, GameTile } from '@/domain/types/index.ts';
+import type { GamePlayer } from '@/domain/enums.ts';
+import type { ValidationError, ValidationStatus } from '@/domain/models/turns/enums.ts';
+import type { GameCell, GamePlacement, GameTile } from '@/domain/types/index.ts';
 
 export type AllComputeds = ComputedCells & ComputedPlacements & ComputedScore & ComputedWords;
 

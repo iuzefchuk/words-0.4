@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia';
-import { computed, ComputedRef, markRaw, reactive, ref, shallowRef, ShallowRef, watch } from 'vue';
-import Application from '@/application/index.ts';
-import { GameBonus, GameCell, GameLetter, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
+import { computed, markRaw, reactive, ref, shallowRef, watch } from 'vue';
 import launchWords from '@/index.ts';
 import { getEventSound } from '@/interface/mappings.ts';
-import SoundPlayer, { Sound } from '@/interface/services/SoundPlayer.ts';
+import SoundPlayer from '@/interface/services/SoundPlayer.ts';
+import type Application from '@/application/index.ts';
+import type { GameBonus, GameCell, GameLetter, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
+import type { Sound } from '@/interface/services/SoundPlayer.ts';
+import type { ComputedRef, ShallowRef } from 'vue';
 
 class Actions {
   private lastDrainedEventCount = 0;

@@ -1,6 +1,7 @@
 import { GamePlayer } from '@/domain/enums.ts';
-import { Difficulty, Result, Type } from '@/domain/models/match/enums.ts';
-import { MatchSettings } from '@/domain/models/match/types.ts';
+import { Result } from '@/domain/models/match/enums.ts';
+import type { Difficulty, Type } from '@/domain/models/match/enums.ts';
+import type { MatchSettings } from '@/domain/models/match/types.ts';
 
 export default class Match {
   get difficulty(): Difficulty {

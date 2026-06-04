@@ -1,5 +1,5 @@
-import { Axis, Bonus } from '@/domain/models/board/enums.ts';
-import { GameTile } from '@/domain/types/index.ts';
+import type { Axis, Bonus } from '@/domain/models/board/enums.ts';
+import type { GameTile } from '@/domain/types/index.ts';
 
 export type AnchorCoordinates = { readonly axis: Axis; readonly cell: Cell };
 

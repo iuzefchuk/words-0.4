@@ -1,7 +1,7 @@
-import { GamePlayer } from '@/domain/enums.ts';
-import Inventory from '@/domain/models/inventory/Inventory.ts';
-import Match from '@/domain/models/match/Match.ts';
 import WinnerDerivationPolicy from '@/domain/models/match/policies/WinnerDerivationPolicy.ts';
+import type { GamePlayer } from '@/domain/enums.ts';
+import type Inventory from '@/domain/models/inventory/Inventory.ts';
+import type Match from '@/domain/models/match/Match.ts';
 
 export type TerminationDecision = { terminate: false } | { terminate: true; winner: GamePlayer | null };
 
