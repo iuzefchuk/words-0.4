@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
-import { DIRECTORY } from './workspace/constants.ts';
-import EnvVariableFinder from './workspace/EnvVariableFinder.ts';
+import { DIRECTORY } from './meta/constants.ts';
+import EnvVariableFinder from './meta/EnvVariableFinder.ts';
 
 const ENV_PROCESS_IS_CI = EnvVariableFinder.getFromProcess('CI', {
   fallback: false,

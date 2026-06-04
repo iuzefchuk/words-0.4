@@ -31,5 +31,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["*.config.ts", "src", "tests", "workspace"]
+  "include": ["*.config.ts", "src", "tests", "meta"]
 }

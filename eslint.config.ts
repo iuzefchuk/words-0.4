@@ -3,8 +3,8 @@ import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescri
 import perfectionist from 'eslint-plugin-perfectionist';
 import pluginVue from 'eslint-plugin-vue';
 import { includeIgnoreFile } from 'eslint/config';
-import { DIRECTORY } from './workspace/constants.ts';
-import { FileGlob, ImportGlob } from './workspace/enums.ts';
+import { DIRECTORY } from './meta/constants.ts';
+import { FileGlob, ImportGlob } from './meta/enums.ts';
 
 export default defineConfigWithVueTs(
   includeIgnoreFile(DIRECTORY.gitignore),

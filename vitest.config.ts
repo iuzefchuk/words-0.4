@@ -1,6 +1,6 @@
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vitest/config';
-import { DIRECTORY } from './workspace/constants.ts';
+import { DIRECTORY } from './meta/constants.ts';
 
 export default defineConfig({
   plugins: [vue()],

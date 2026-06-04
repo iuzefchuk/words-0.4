@@ -1,7 +1,7 @@
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vite';
-import { DIRECTORY } from './workspace/constants.ts';
-import EnvVariableFinder from './workspace/EnvVariableFinder.ts';
+import { DIRECTORY } from './meta/constants.ts';
+import EnvVariableFinder from './meta/EnvVariableFinder.ts';
 import type { Plugin, UserConfig } from 'vite';
 
 export default defineConfig(({ mode }) => {
