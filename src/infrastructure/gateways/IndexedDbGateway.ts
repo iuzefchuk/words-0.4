@@ -1,7 +1,7 @@
 export default class IndexedDbGateway {
-  private static readonly APP_VERSION_KEY = 'appVersion';
-
   private static readonly DB_PROMISES = new Map<string, Promise<IDBDatabase>>();
+
+  private static readonly EVENTS_SCHEMA_VERSION_KEY = 'eventsSchemaVersion';
 
   private static readonly META_NAME = 'meta';
 
@@ -9,11 +9,11 @@ export default class IndexedDbGateway {
 
   private static readonly SCHEMA_VERSION = 4;
 
-  static async append(dbName: string, appVersion: string, payload: ReadonlyArray<unknown>): Promise<void> {
+  static async append(dbName: string, eventsSchemaVersion: number, payload: ReadonlyArray<unknown>): Promise<void> {
     if (payload.length === 0) return;
     try {
       const db = await IndexedDbGateway.openDatabase(dbName);
-      await IndexedDbGateway.appendBatch(db, appVersion, payload);
+      await IndexedDbGateway.appendBatch(db, eventsSchemaVersion, payload);
     } catch (error) {
       console.warn('IndexedDbGateway:', error);
     }
@@ -28,12 +28,12 @@ export default class IndexedDbGateway {
     }
   }
 
-  static async load(dbName: string, appVersion: string): Promise<null | ReadonlyArray<unknown>> {
+  static async load(dbName: string, eventsSchemaVersion: number): Promise<null | ReadonlyArray<unknown>> {
     try {
       const db = await IndexedDbGateway.openDatabase(dbName);
-      const storedAppVersion = await IndexedDbGateway.getStoredAppVersion(db);
-      if (storedAppVersion === undefined) return null;
-      if (storedAppVersion !== appVersion) {
+      const storedEventsSchemaVersion = await IndexedDbGateway.getStoredEventsSchemaVersion(db);
+      if (storedEventsSchemaVersion === undefined) return null;
+      if (storedEventsSchemaVersion !== eventsSchemaVersion) {
         await IndexedDbGateway.clearAll(db);
         return null;
       }
@@ -44,7 +44,7 @@ export default class IndexedDbGateway {
     }
   }
 
-  private static appendBatch(db: IDBDatabase, appVersion: string, payload: ReadonlyArray<unknown>): Promise<void> {
+  private static appendBatch(db: IDBDatabase, eventsSchemaVersion: number, payload: ReadonlyArray<unknown>): Promise<void> {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([IndexedDbGateway.PAYLOAD_NAME, IndexedDbGateway.META_NAME], 'readwrite');
       transaction.oncomplete = () => {
@@ -58,7 +58,7 @@ export default class IndexedDbGateway {
       };
       const payloadStore = transaction.objectStore(IndexedDbGateway.PAYLOAD_NAME);
       for (const payloadItem of payload) payloadStore.add(payloadItem);
-      transaction.objectStore(IndexedDbGateway.META_NAME).put(appVersion, IndexedDbGateway.APP_VERSION_KEY);
+      transaction.objectStore(IndexedDbGateway.META_NAME).put(eventsSchemaVersion, IndexedDbGateway.EVENTS_SCHEMA_VERSION_KEY);
     });
   }
 
@@ -92,12 +92,12 @@ export default class IndexedDbGateway {
     });
   }
 
-  private static getStoredAppVersion(db: IDBDatabase): Promise<string | undefined> {
+  private static getStoredEventsSchemaVersion(db: IDBDatabase): Promise<number | undefined> {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(IndexedDbGateway.META_NAME, 'readonly');
-      const request = transaction.objectStore(IndexedDbGateway.META_NAME).get(IndexedDbGateway.APP_VERSION_KEY);
+      const request = transaction.objectStore(IndexedDbGateway.META_NAME).get(IndexedDbGateway.EVENTS_SCHEMA_VERSION_KEY);
       request.onsuccess = () => {
-        resolve(request.result as string | undefined);
+        resolve(request.result as number | undefined);
       };
       request.onerror = () => {
         reject(request.error ?? new Error('IndexedDB request failed'));

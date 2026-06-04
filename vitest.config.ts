@@ -1,7 +1,6 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vitest/config';
+import { DIRECTORY } from './workspace/constants.ts';
 
 export default defineConfig({
   plugins: [vue()],
@@ -9,13 +8,16 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   test: {
+    allowOnly: false,
     clearMocks: true,
+    dir: DIRECTORY.src,
     environment: 'happy-dom',
-    exclude: readFileSync(path.resolve(__dirname, '.gitignore'), 'utf-8').split('\n'),
     globals: false,
-    include: ['src/**/*.test.ts'],
+    mockReset: true,
     passWithNoTests: true,
     restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
     watch: false,
   },
 });

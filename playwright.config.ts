@@ -1,12 +1,11 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
-import { loadEnv } from 'vite';
+import { DIRECTORY } from './workspace/constants.ts';
+import EnvVariableFinder from './workspace/EnvVariableFinder.ts';
 
-const DIR = path.dirname(fileURLToPath(import.meta.url));
-const ENV = loadEnv('', DIR, '') as Partial<Record<string, string>>;
-const URL = `http://localhost:${ENV['VITE_PORT'] ?? '5173'}`;
-const ENV_PROCESS_IS_CI = Boolean(process.env['CI']);
+const ENV_PROCESS_IS_CI = EnvVariableFinder.getFromProcess('CI', {
+  fallback: false,
+  parse: value => Boolean(value),
+});
 
 export default defineConfig({
   expect: {
@@ -17,7 +16,7 @@ export default defineConfig({
     },
   },
   fullyParallel: true,
-  outputDir: path.resolve(DIR, '.playwright'),
+  outputDir: DIRECTORY.playwright,
   projects: [
     {
       name: 'chromium',
@@ -40,13 +39,12 @@ export default defineConfig({
       use: { ...devices['iPhone 14'] },
     },
   ],
-  snapshotDir: path.resolve(DIR, './tests/snapshots'),
+  snapshotDir: DIRECTORY.testsSnapshots,
   snapshotPathTemplate: '{snapshotDir}/{arg}/{projectName}-{platform}{ext}',
-  testDir: path.resolve(DIR, './tests'),
+  testDir: DIRECTORY.tests,
   timeout: 30_000,
   use: {
     actionTimeout: 10_000,
-    baseURL: URL,
     extraHTTPHeaders: {
       'x-test-automation': 'playwright',
     },
@@ -59,11 +57,16 @@ export default defineConfig({
   },
   webServer: {
     command: 'yarn serve',
+    port: EnvVariableFinder.getFromConfig('VITE_PORT', {
+      envDir: DIRECTORY.root,
+      mode: '',
+      parse: value => Number(value),
+      validate: value => !Number.isInteger(value) || value <= 0,
+    }),
     reuseExistingServer: !ENV_PROCESS_IS_CI,
     stderr: 'pipe',
     stdout: 'pipe',
     timeout: 120_000,
-    url: URL,
   },
   ...(ENV_PROCESS_IS_CI
     ? {

@@ -7,13 +7,13 @@ export default class IndexedDbEventRepository implements EventRepository {
 
   private persistedEventsCount = 0;
 
-  constructor(private readonly appVersion: string) {}
+  constructor(private readonly eventsSchemaVersion: number) {}
 
   async append(events: ReadonlyArray<GameEvent>): Promise<void> {
     const start = this.persistedEventsCount;
     // claim the range synchronously so back-to-back fire-and-forget calls don't double-write.
     this.persistedEventsCount = events.length;
-    await IndexedDbGateway.append(IndexedDbEventRepository.DB_NAME, this.appVersion, events.slice(start));
+    await IndexedDbGateway.append(IndexedDbEventRepository.DB_NAME, this.eventsSchemaVersion, events.slice(start));
   }
 
   async delete(): Promise<void> {
@@ -24,7 +24,7 @@ export default class IndexedDbEventRepository implements EventRepository {
   async load(): Promise<null | ReadonlyArray<GameEvent>> {
     const events = (await IndexedDbGateway.load(
       IndexedDbEventRepository.DB_NAME,
-      this.appVersion,
+      this.eventsSchemaVersion,
     )) as null | ReadonlyArray<GameEvent>;
     this.persistedEventsCount = events?.length ?? 0;
     return events;

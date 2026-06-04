@@ -1,13 +1,13 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import prettierConfig from '@vue/eslint-config-prettier';
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 import perfectionist from 'eslint-plugin-perfectionist';
 import pluginVue from 'eslint-plugin-vue';
 import { includeIgnoreFile } from 'eslint/config';
+import { DIRECTORY } from './workspace/constants.ts';
+import { FileGlob, ImportGlob } from './workspace/enums.ts';
 
 export default defineConfigWithVueTs(
-  includeIgnoreFile(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.gitignore')),
+  includeIgnoreFile(DIRECTORY.gitignore),
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.strictTypeChecked,
   vueTsConfigs.stylisticTypeChecked,
@@ -16,7 +16,7 @@ export default defineConfigWithVueTs(
     languageOptions: {
       parserOptions: {
         projectService: true,
-        tsconfigRootDir: path.dirname(fileURLToPath(import.meta.url)),
+        tsconfigRootDir: DIRECTORY.root,
       },
     },
     rules: {
@@ -111,14 +111,14 @@ export default defineConfigWithVueTs(
     },
   },
   {
-    files: ['src/domain/**'],
+    files: [FileGlob.Domain],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
-              group: ['@/application/**', '@/infrastructure/**', '@/interface/**'],
+              group: [ImportGlob.Application, ImportGlob.Infrastructure, ImportGlob.Interface],
               message: 'domain must not import from application, infrastructure, or interface',
             },
           ],
@@ -127,14 +127,14 @@ export default defineConfigWithVueTs(
     },
   },
   {
-    files: ['src/application/**'],
+    files: [FileGlob.Application],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
-              group: ['@/infrastructure/**', '@/interface/**'],
+              group: [ImportGlob.Infrastructure, ImportGlob.Interface],
               message: 'application must not import from infrastructure or interface',
             },
           ],
@@ -143,14 +143,14 @@ export default defineConfigWithVueTs(
     },
   },
   {
-    files: ['src/infrastructure/**'],
+    files: [FileGlob.Infrastructure],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
-              group: ['@/domain/**', '@/interface/**'],
+              group: [ImportGlob.Domain, ImportGlob.Interface],
               message: 'infrastructure must not import from domain or interface; depend on application aliases instead',
             },
           ],
@@ -159,48 +159,19 @@ export default defineConfigWithVueTs(
     },
   },
   {
-    files: ['src/interface/**'],
+    files: [FileGlob.Interface],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
-              group: ['@/domain/**', '@/infrastructure/**'],
+              group: [ImportGlob.Domain, ImportGlob.Infrastructure],
               message: 'interface must not import from domain or infrastructure; depend on application ports instead',
             },
           ],
         },
       ],
-    },
-  },
-  {
-    files: ['src/globals/**'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['@/domain/**', '@/application/**', '@/infrastructure/**', '@/interface/**'],
-              message: 'globals must not import from any feature layer',
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    files: ['scripts/**/*.js'],
-    rules: {
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/prefer-for-of': 'off',
-    },
-  },
-  {
-    files: ['src/**/*.test.ts'],
-    rules: {
-      'no-restricted-imports': 'off',
     },
   },
   prettierConfig,

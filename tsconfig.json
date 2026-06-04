@@ -2,6 +2,7 @@
   "compilerOptions": {
     "strict": true,
     "target": "esnext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "preserve",
     "moduleResolution": "bundler",
     "paths": {
@@ -30,5 +31,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["*.config.ts", "src", "tests"]
+  "include": ["*.config.ts", "src", "tests", "workspace"]
 }
