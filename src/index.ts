@@ -1,26 +1,14 @@
 import Application from '@/application/index.ts';
-import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
 import DependenciesFactory from '@/infrastructure/factories/DependenciesFactory.ts';
-import type { GameMatchSettings } from '@/application/types/index.ts';
 import type { BootProgressPublisher } from '@/application/types/publishers.ts';
 
-const DEFAULT_SETTINGS: GameMatchSettings = {
-  difficulty: GameMatchDifficulty.Low,
-  type: GameMatchType.Classic,
-};
-
-export default function launchWords(): {
+export default function createApplicationRuntime(): {
   app: Promise<Application>;
   bootProgressPublisher: Pick<BootProgressPublisher, 'subscribe'>;
 } {
   const dependencies = DependenciesFactory.create();
-  const persistedSettings = dependencies.repositories.settings.load();
-  const settings: GameMatchSettings = {
-    difficulty: persistedSettings?.difficulty ?? DEFAULT_SETTINGS.difficulty,
-    type: persistedSettings?.type ?? DEFAULT_SETTINGS.type,
-  };
   return {
-    app: Application.create(dependencies, settings),
+    app: Application.create(dependencies),
     bootProgressPublisher: dependencies.publishers.bootProgress,
   };
 }

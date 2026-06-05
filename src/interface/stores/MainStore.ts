@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { computed, markRaw, reactive, ref, shallowRef, watch } from 'vue';
-import launchWords from '@/index.ts';
+import createApplicationRuntime from '@/index.ts';
 import { getEventSound } from '@/interface/mappings.ts';
 import SoundPlayer from '@/interface/services/SoundPlayer.ts';
 import type Application from '@/application/index.ts';
@@ -303,7 +303,7 @@ export default class MainStore {
 
   static async initiate(): Promise<void> {
     const singleton = MainStore.SINGLETON;
-    const { app: appPromise, bootProgressPublisher } = launchWords();
+    const { app: appPromise, bootProgressPublisher } = createApplicationRuntime();
     bootProgressPublisher.subscribe(progress => {
       singleton.bootProgress.value = progress;
     });

@@ -26,9 +26,10 @@ export default class Application {
     readonly queriesService: QueriesService,
   ) {}
 
-  static async create(dependencies: AppDependencies, settings: GameMatchSettings): Promise<Application> {
+  static async create(dependencies: AppDependencies): Promise<Application> {
     const { gateways, repositories, tasks } = dependencies;
     const events = await repositories.events.load();
+    const settings = repositories.settings.load();
     const game = this.createGameInstance(gateways, events, settings);
     const queriesService = new QueriesService(game);
     const commandsService = new CommandsService(
@@ -45,7 +46,7 @@ export default class Application {
   private static createGameInstance(
     gateways: AppDependencies['gateways'],
     events: null | ReadonlyArray<GameEvent>,
-    settings: GameMatchSettings,
+    settings: null | Partial<GameMatchSettings>,
   ): Game {
     return events !== null && events.length > 0
       ? Game.createFromEvents(events, gateways.identifier, gateways.randomizer)

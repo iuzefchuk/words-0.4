@@ -52,7 +52,9 @@ export type AppDependencies = {
   tasks: { turnGeneration: string };
 };
 
-export type AppTurnResponse = Result<{ words: ReadonlyArray<string> }, string>;
+export type AppTurnResponse =
+  | { readonly error: string; readonly ok: false }
+  | { readonly ok: true; readonly value: { words: ReadonlyArray<string> } };
 
 export type DependenciesConfig = {
   dictionaryUrl: string;

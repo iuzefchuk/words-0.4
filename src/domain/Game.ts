@@ -33,6 +33,11 @@ import type {
 } from '@/domain/types/index.ts';
 
 export default class Game {
+  private static readonly DEFAULT_SETTINGS: GameMatchSettings = {
+    difficulty: GameMatchDifficulty.Low,
+    type: GameMatchType.Classic,
+  };
+
   private static readonly TURN_GENERATION_ATTEMPTS: Record<GameMatchDifficulty, number> = {
     [GameMatchDifficulty.High]: Infinity,
     [GameMatchDifficulty.Low]: 1,
@@ -91,12 +96,13 @@ export default class Game {
     private readonly randomizer: RandomizerGateway,
   ) {}
 
-  static create(identifier: IdentifierGateway, randomizer: RandomizerGateway, settings: GameMatchSettings): Game {
+  static create(identifier: IdentifierGateway, randomizer: RandomizerGateway, settings: null | Partial<GameMatchSettings>): Game {
+    const resolvedSettings = Game.resolveSettings(settings);
     const seed = randomizer.createNewSeed();
-    const event: GameEvent = { seed, settings, type: GameEventType.MatchStarted };
+    const event: GameEvent = { seed, settings: resolvedSettings, type: GameEventType.MatchStarted };
     const events = Events.create([event]);
     const game = new Game(events, identifier, randomizer);
-    game.initialize(Game.createInitParams(seed, settings, randomizer, identifier));
+    game.initialize(Game.createInitParams(seed, resolvedSettings, randomizer, identifier));
     return game;
   }
 
@@ -140,6 +146,13 @@ export default class Game {
       [GameMatchType.Classic]: GameBoardType.Preset,
       [GameMatchType.Random]: GameBoardType.Random,
     }[matchType];
+  }
+
+  private static resolveSettings(settings: null | Partial<GameMatchSettings>): GameMatchSettings {
+    return {
+      difficulty: settings?.difficulty ?? Game.DEFAULT_SETTINGS.difficulty,
+      type: settings?.type ?? Game.DEFAULT_SETTINGS.type,
+    };
   }
 
   applyGeneratedTurn(result: GameGeneratorResult): { score: number; words: ReadonlyArray<string> } {
