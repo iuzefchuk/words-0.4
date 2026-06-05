@@ -23,12 +23,6 @@ import type {
   GeneratorResult,
 } from '@/domain/services/generation/turn/types.ts';
 
-export type GameConfig = {
-  boardCells: ReadonlyArray<Cell>;
-  boardCellsPerAxis: number;
-  tilesPerPlayer: number;
-};
-
 export { GameDictionary, GameTurnGenerator };
 
 export type {

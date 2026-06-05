@@ -1,5 +1,4 @@
 import WorkerPoolGateway from '@/infrastructure/gateways/WorkerPoolGateway.ts';
-import type { WorkerGateway } from '@/app/types/gateways.ts';
 
 export enum WorkerRequestType {
   Init = 'Init',
@@ -21,7 +20,7 @@ type WorkerResponse =
   | { type: WorkerResponseType.Ready }
   | { type: WorkerResponseType.Result; value: unknown };
 
-export default class WebWorkerGateway implements WorkerGateway {
+export default class WebWorkerGateway {
   constructor(private readonly workers: Record<string, new () => Worker>) {}
 
   getPoolSize(taskId: string): number {

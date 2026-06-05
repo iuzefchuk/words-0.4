@@ -16,7 +16,79 @@ import type {
 } from '@/app/types/index.ts';
 import type Game from '@/domain/Game.ts';
 
-export default class QueriesService {
+export default class AppQueries {
+  get boardCells(): ReadonlyArray<GameCell> {
+    return this.game.boardView.cells;
+  }
+
+  get boardCellsPerAxis(): number {
+    return this.game.boardView.cellsPerAxis;
+  }
+
+  get currentPlayerIsUser(): boolean {
+    return this.turnsView.currentPlayer === GamePlayer.User;
+  }
+
+  get currentTurnIsValid(): boolean {
+    return this.turnsView.currentTurnIsValid;
+  }
+
+  get currentTurnScore(): number | undefined {
+    return this.turnsView.currentTurnScore;
+  }
+
+  get eventsLog(): ReadonlyArray<GameEvent> {
+    return this.game.eventsLogView;
+  }
+
+  get matchDifficulty(): GameMatchDifficulty {
+    return this.matchView.difficulty;
+  }
+
+  get matchIsFinished(): boolean {
+    return this.matchView.isFinished;
+  }
+
+  get matchResult(): GameMatchResult {
+    return this.matchView.getResultFor(GamePlayer.User);
+  }
+
+  get matchType(): GameMatchType {
+    return this.matchView.type;
+  }
+
+  get opponentScore(): number {
+    return this.matchView.getScoreFor(GamePlayer.Opponent);
+  }
+
+  get settingsChangeIsAllowed(): boolean {
+    return this.game.settingsChangeIsAllowed;
+  }
+
+  get tilesPerPlayer(): number {
+    return this.game.inventoryView.tilesPerPlayer;
+  }
+
+  get tilesRemaining(): number {
+    return this.inventoryView.unusedTilesCount;
+  }
+
+  get turnHistoryHasPriorTurns(): boolean {
+    return this.turnsView.historyHasPriorTurns;
+  }
+
+  get userPassWillBeResign(): boolean {
+    return this.game.willPassBeResignFor(GamePlayer.User);
+  }
+
+  get userScore(): number {
+    return this.matchView.getScoreFor(GamePlayer.User);
+  }
+
+  get userTiles(): ReadonlyArray<GameTile> {
+    return this.inventoryView.getTilesFor(GamePlayer.User);
+  }
+
   private get boardView(): Readonly<GameBoardView> {
     return this.game.boardView;
   }
@@ -63,87 +135,23 @@ export default class QueriesService {
     return this.boardView.getCellPositionInRow(cell);
   }
 
-  getCurrentTurnScore(): number | undefined {
-    return this.turnsView.currentTurnScore;
-  }
-
-  getEventsLog(): ReadonlyArray<GameEvent> {
-    return this.game.eventsLogView;
-  }
-
   getLetterPoints(letter: GameLetter): number {
     return Inventory.getLetterPoints(letter);
-  }
-
-  getMatchDifficulty(): GameMatchDifficulty {
-    return this.matchView.difficulty;
-  }
-
-  getMatchResult(): GameMatchResult {
-    return this.matchView.getResultFor(GamePlayer.User);
-  }
-
-  getMatchType(): GameMatchType {
-    return this.matchView.type;
-  }
-
-  getOpponentScore(): number {
-    return this.matchView.getScoreFor(GamePlayer.Opponent);
   }
 
   getTileLetter(tile: GameTile): GameLetter {
     return this.inventoryView.getTileLetter(tile);
   }
 
-  getTilesRemaining(): number {
-    return this.inventoryView.unusedTilesCount;
-  }
-
-  getUserScore(): number {
-    return this.matchView.getScoreFor(GamePlayer.User);
-  }
-
-  getUserTiles(): ReadonlyArray<GameTile> {
-    return this.inventoryView.getTilesFor(GamePlayer.User);
-  }
-
-  hasPriorTurns(): boolean {
-    return this.turnsView.historyHasPriorTurns;
-  }
-
   isCellCenter(cell: GameCell): boolean {
     return this.boardView.isCellCenter(cell);
-  }
-
-  isCurrentPlayerUser(): boolean {
-    return this.turnsView.currentPlayer === GamePlayer.User;
-  }
-
-  isCurrentTurnValid(): boolean {
-    return this.turnsView.currentTurnIsValid;
-  }
-
-  isDictionaryReady(): boolean {
-    return this.game.dictionaryIsDefined;
-  }
-
-  isMatchFinished(): boolean {
-    return this.matchView.isFinished;
   }
 
   isTilePlaced(tile: GameTile): boolean {
     return this.boardView.isTilePlaced(tile);
   }
 
-  settingsChangeIsAllowed(): boolean {
-    return this.game.settingsChangeIsAllowed;
-  }
-
   wasTileUsedInPreviousTurn(tile: GameTile): boolean {
     return this.game.wasTileUsedInPreviousTurn(tile);
-  }
-
-  willUserPassBeResign(): boolean {
-    return this.game.willPassBeResignFor(GamePlayer.User);
   }
 }

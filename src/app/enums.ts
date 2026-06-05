@@ -1,4 +1,4 @@
-export enum BootProgress {
+export enum AppBootProgress {
   Started = 25,
   DictionaryFetched = 50,
   DictionaryParsed = 75,

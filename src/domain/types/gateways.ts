@@ -1,13 +1,13 @@
 export type GameGateways = {
-  identifier: IdentifierGateway;
-  randomizer: RandomizerGateway;
+  identifier: GameIdentifierGateway;
+  randomizer: GameRandomizerGateway;
 };
 
-export type IdentifierGateway = {
+export type GameIdentifierGateway = {
   create(): string;
 };
 
-export type RandomizerGateway = {
+export type GameRandomizerGateway = {
   createFunctionFromSeed(seed: number): () => number;
   createNewSeed(): number;
 };

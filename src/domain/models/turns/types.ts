@@ -19,6 +19,7 @@ export type InvalidResult = { error: ValidationError; status: ValidationStatus.I
 export type TurnsView = {
   readonly currentPlayer: GamePlayer;
   readonly currentTurnCells: ReadonlyArray<GameCell> | undefined;
+  readonly currentTurnError: undefined | ValidationError;
   readonly currentTurnIsValid: boolean;
   readonly currentTurnScore: number | undefined;
   readonly currentTurnTiles: ReadonlyArray<GameTile>;

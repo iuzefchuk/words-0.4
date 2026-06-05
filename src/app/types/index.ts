@@ -9,10 +9,9 @@ export type AppConfig = {
 
 export type AppDependencies = {
   config: AppConfig;
-  gateways: AppGateways & GameGateways;
+  gateways: { app: AppGateways; game: GameGateways };
   publishers: AppPublishers;
   repositories: AppRepositories;
-  tasks: { turnGeneration: string };
 };
 
 export type AppTurnResponse =
@@ -29,14 +28,14 @@ export {
   GamePlayer,
 } from '@/domain/enums.ts';
 
-export type { GameGateways } from '@/domain/types/gateways.ts';
+export type { GameGateways, GameIdentifierGateway, GameRandomizerGateway } from '@/domain/types/gateways.ts';
 
 export type {
   GameBoardView,
   GameCell,
-  GameConfig,
   GameDictionaryBuffer,
   GameEvent,
+  GameGeneratorContext,
   GameGeneratorContextData,
   GameGeneratorPartition,
   GameGeneratorResult,

@@ -1,12 +1,12 @@
-import type { SchedulerGateway } from '@/app/types/gateways.ts';
+import type { AppSchedulerGateway } from '@/app/types/gateways.ts';
 
 export default class BrowserSchedulerGateway {
   static async padTo<T>(minimumMs: number, callback: () => Promise<T> | T): Promise<T> {
-    const startTime = BrowserSchedulerGateway.getCurrentTime();
+    const startTime = this.getCurrentTime();
     const result = await callback();
-    const elapsed = BrowserSchedulerGateway.getCurrentTime() - startTime;
+    const elapsed = this.getCurrentTime() - startTime;
     const delay = minimumMs - elapsed;
-    if (delay > 0) await BrowserSchedulerGateway.wait(delay);
+    if (delay > 0) await this.wait(delay);
     return result;
   }
 
@@ -25,4 +25,4 @@ export default class BrowserSchedulerGateway {
   }
 }
 
-BrowserSchedulerGateway satisfies SchedulerGateway;
+BrowserSchedulerGateway satisfies AppSchedulerGateway;

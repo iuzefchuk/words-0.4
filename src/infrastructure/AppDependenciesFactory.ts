@@ -4,32 +4,37 @@ import CryptoIdentifierGateway from '@/infrastructure/gateways/CryptoIdentifierG
 import HttpLoaderGateway from '@/infrastructure/gateways/HttpLoaderGateway.ts';
 import Mulberry32RandomizerGateway from '@/infrastructure/gateways/Mulberry32RandomizerGateway.ts';
 import WebWorkerGateway from '@/infrastructure/gateways/WebWorkerGateway.ts';
+import WebWorkerTurnGenerationGateway from '@/infrastructure/gateways/WebWorkerTurnGenerationGateway.ts';
 import CallbackBootProgressPublisher from '@/infrastructure/publishers/CallbackBootProgressPublisher.ts';
 import IndexedDbEventRepository from '@/infrastructure/repositories/IndexedDbEventRepository.ts';
 import LocalStorageSettingsRepository from '@/infrastructure/repositories/LocalStorageSettingsRepository.ts';
-import TurnGenerationWorker from '@/infrastructure/workers/turnGeneration.worker.ts?worker';
+import TurnGenerationWorker from '@/infrastructure/workers/turnGenerator.worker.ts?worker';
 import type { AppDependencies } from '@/app/types/index.ts';
 
-export default class DependenciesFactory {
-  private static readonly DICTIONARY_URL = '/dictionary.bin';
+export default class AppDependenciesFactory {
+  private static readonly CONFIG = { dictionaryUrl: '/dictionary.bin' };
 
   static create(): AppDependencies {
     const turnGenerationTaskId = CryptoIdentifierGateway.create();
+    const worker = new WebWorkerGateway({ [turnGenerationTaskId]: TurnGenerationWorker });
     return {
-      config: { dictionaryUrl: DependenciesFactory.DICTIONARY_URL },
+      config: this.CONFIG,
       gateways: {
-        identifier: CryptoIdentifierGateway,
-        loader: HttpLoaderGateway,
-        randomizer: Mulberry32RandomizerGateway,
-        scheduler: BrowserSchedulerGateway,
-        worker: new WebWorkerGateway({ [turnGenerationTaskId]: TurnGenerationWorker }),
+        app: {
+          loader: HttpLoaderGateway,
+          scheduler: BrowserSchedulerGateway,
+          turnGenerator: new WebWorkerTurnGenerationGateway(worker, turnGenerationTaskId),
+        },
+        game: {
+          identifier: CryptoIdentifierGateway,
+          randomizer: Mulberry32RandomizerGateway,
+        },
       },
       publishers: { bootProgress: new CallbackBootProgressPublisher() },
       repositories: {
         events: new IndexedDbEventRepository(eventsSchemaVersion),
         settings: new LocalStorageSettingsRepository(),
       },
-      tasks: { turnGeneration: turnGenerationTaskId },
     };
   }
 }

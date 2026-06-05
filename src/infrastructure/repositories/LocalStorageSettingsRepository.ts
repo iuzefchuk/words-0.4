@@ -1,8 +1,8 @@
 import LocalStorageGateway from '@/infrastructure/gateways/LocalStorageGateway.ts';
 import type { GameMatchSettings } from '@/app/types/index.ts';
-import type { SettingsRepository } from '@/app/types/repositories.ts';
+import type { AppSettingsRepository } from '@/app/types/repositories.ts';
 
-export default class LocalStorageSettingsRepository implements SettingsRepository {
+export default class LocalStorageSettingsRepository implements AppSettingsRepository {
   private static readonly KEY = 'settings';
 
   load(): null | Partial<GameMatchSettings> {

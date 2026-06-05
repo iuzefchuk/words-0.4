@@ -3,7 +3,7 @@ import { computed, markRaw, reactive, ref, shallowRef, watch } from 'vue';
 import createAppRuntime from '@/index.ts';
 import { getEventSound } from '@/interface/mappings.ts';
 import SoundPlayer from '@/interface/services/SoundPlayer.ts';
-import type App from '@/app/index.ts';
+import type App from '@/app/App';
 import type { GameBonus, GameCell, GameLetter, GameMatchDifficulty, GameMatchType, GameTile } from '@/app/types/index.ts';
 import type { Sound } from '@/interface/services/SoundPlayer.ts';
 import type { ComputedRef, ShallowRef } from 'vue';
@@ -20,24 +20,24 @@ class Actions {
 
   changeMatchDifficulty = (matchDifficulty: GameMatchDifficulty): void => {
     this.state.write(() => {
-      this.requireApp().commandsService.changeMatchDifficulty(matchDifficulty);
+      this.requireApp().commands.changeMatchDifficulty(matchDifficulty);
     });
   };
 
   changeMatchType = (matchType: GameMatchType): void => {
     this.state.write(() => {
-      this.requireApp().commandsService.changeMatchType(matchType);
+      this.requireApp().commands.changeMatchType(matchType);
     });
   };
 
   clearTiles = (): void => {
     this.state.writeBoard(() => {
-      this.requireApp().commandsService.clearTiles();
+      this.requireApp().commands.clearTiles();
     });
   };
 
   pass = (): void => {
-    const { opponentTurn } = this.writeAndPlaySound(() => this.requireApp().commandsService.handlePassTurn());
+    const { opponentTurn } = this.writeAndPlaySound(() => this.requireApp().commands.passTurn());
     void opponentTurn?.then(() => {
       this.syncAndPlaySound();
     });
@@ -45,45 +45,45 @@ class Actions {
 
   placeTile = (args: { cell: GameCell; tile: GameTile }): void => {
     this.writeBoardAndPlaySound(() => {
-      this.requireApp().commandsService.placeTile(args);
+      this.requireApp().commands.placeTile(args);
     }, [args.cell]);
     this.scheduleDeferredValidation();
   };
 
   resign = (): void => {
     this.writeAndPlaySound(() => {
-      this.requireApp().commandsService.handleResignMatch();
+      this.requireApp().commands.resignMatch();
     });
   };
 
   restartGame = (): void => {
     this.state.write(() => {
-      this.requireApp().commandsService.restartGame();
+      this.requireApp().commands.restartGame();
     });
   };
 
   save = (): void => {
-    const { opponentTurn } = this.writeAndPlaySound(() => this.requireApp().commandsService.handleSaveTurn());
+    const { opponentTurn } = this.writeAndPlaySound(() => this.requireApp().commands.saveTurn());
     void opponentTurn?.then(() => {
       this.syncAndPlaySound();
     });
   };
 
   shuffleUserTiles = (tiles: Array<GameTile>): void => {
-    this.requireApp().commandsService.shuffleUserTiles(tiles);
+    this.requireApp().commands.shuffleUserTiles(tiles);
   };
 
   undoPlaceTile = (tile: GameTile): void => {
-    const previousCell = this.requireApp().queriesService.findCellWithTile(tile);
+    const previousCell = this.requireApp().queries.findCellWithTile(tile);
     const affectedCells = previousCell === undefined ? undefined : [previousCell];
     this.writeBoardAndPlaySound(() => {
-      this.requireApp().commandsService.undoPlaceTile(tile);
+      this.requireApp().commands.undoPlaceTile(tile);
     }, affectedCells);
     this.scheduleDeferredValidation();
   };
 
   private playPendingSounds(): void {
-    const log = this.requireApp().queriesService.getEventsLog();
+    const log = this.requireApp().queries.eventsLog;
     if (this.lastDrainedEventCount > log.length) this.lastDrainedEventCount = 0;
     let lastSound: null | Sound = null;
     for (const event of log.slice(this.lastDrainedEventCount)) {
@@ -101,7 +101,7 @@ class Actions {
       .then(() => {
         if (validationId !== this.pendingValidationId) return;
         this.writeBoardAndPlaySound(() => {
-          this.requireApp().commandsService.validateAndSync();
+          this.requireApp().commands.validateTurn();
         }, []);
       });
   };
@@ -125,39 +125,44 @@ class Actions {
 }
 
 class Getters {
-  readonly currentPlayerIsUser = this.read(queries => queries.isCurrentPlayerUser());
 
-  readonly dictionaryIsReady = this.read(queries => queries.isDictionaryReady());
+  readonly  boardCells = this.read(queries => queries.boardCells);
 
-  readonly allActionsAreDisabled = computed(() => !this.currentPlayerIsUser.value || !this.dictionaryIsReady.value);
+   readonly  boardCellsPerAxis = this.read(queries => queries.boardCellsPerAxis);
 
-  readonly currentTurnIsValid = this.readBoard(queries => queries.isCurrentTurnValid());
+    readonly  tilesPerPlayer = this.read(queries => queries.tilesPerPlayer);
 
-  readonly currentTurnScore = this.readBoard(queries => queries.getCurrentTurnScore());
+  readonly currentPlayerIsUser = this.read(queries => queries.currentPlayerIsUser);
 
-  readonly eventsLog = this.read(queries => [...queries.getEventsLog()]);
+  readonly allActionsAreDisabled = computed(() => !this.currentPlayerIsUser.value);
 
-  readonly hasPriorTurns = this.read(queries => queries.hasPriorTurns());
+  readonly currentTurnIsValid = this.readBoard(queries => queries.currentTurnIsValid);
 
-  readonly matchDifficulty = this.read(queries => queries.getMatchDifficulty());
+  readonly currentTurnScore = this.readBoard(queries => queries.currentTurnScore);
 
-  readonly matchIsFinished = this.read(queries => queries.isMatchFinished());
+  readonly eventsLog = this.read(queries => [...queries.eventsLog]);
 
-  readonly matchResult = this.read(queries => queries.getMatchResult());
+  readonly hasPriorTurns = this.read(queries => queries.turnHistoryHasPriorTurns);
 
-  readonly matchType = this.readBoard(queries => queries.getMatchType());
+  readonly matchDifficulty = this.read(queries => queries.matchDifficulty);
 
-  readonly opponentScore = this.read(queries => queries.getOpponentScore());
+  readonly matchIsFinished = this.read(queries => queries.matchIsFinished);
 
-  readonly settingsChangeIsAllowed = this.read(queries => queries.settingsChangeIsAllowed());
+  readonly matchResult = this.read(queries => queries.matchResult);
 
-  readonly tilesRemaining = this.read(queries => queries.getTilesRemaining());
+  readonly matchType = this.readBoard(queries => queries.matchType);
 
-  readonly userPassWillBeResign = this.read(queries => queries.willUserPassBeResign());
+  readonly opponentScore = this.read(queries => queries.opponentScore);
 
-  readonly userScore = this.read(queries => queries.getUserScore());
+  readonly settingsChangeIsAllowed = this.read(queries => queries.settingsChangeIsAllowed);
 
-  readonly userTiles = this.read(queries => queries.getUserTiles());
+  readonly tilesRemaining = this.read(queries => queries.tilesRemaining);
+
+  readonly userPassWillBeResign = this.read(queries => queries.userPassWillBeResign);
+
+  readonly userScore = this.read(queries => queries.userScore);
+
+  readonly userTiles = this.read(queries => queries.userTiles);
 
   constructor(
     private readonly state: State,
@@ -165,39 +170,38 @@ class Getters {
   ) {}
 
   areTilesSame = (firstTile: GameTile, secondTile: GameTile): boolean =>
-    this.requireApp().queriesService.areTilesSame(firstTile, secondTile);
+    this.requireApp().queries.areTilesSame(firstTile, secondTile);
 
   findCellWithTile = (tile: GameTile): GameCell | undefined =>
-    this.state.readBoard(() => this.requireApp().queriesService.findCellWithTile(tile));
+    this.state.readBoard(() => this.requireApp().queries.findCellWithTile(tile));
 
   findTileOnCell = (cell: GameCell): GameTile | undefined => this.state.tileByCellCache.get(cell);
 
-  getAdjacentCells = (cell: GameCell): ReadonlyArray<GameCell> => this.requireApp().queriesService.getAdjacentCells(cell);
+  getAdjacentCells = (cell: GameCell): ReadonlyArray<GameCell> => this.requireApp().queries.getAdjacentCells(cell);
 
-  getCellBonus = (cell: GameCell): GameBonus | null =>
-    this.state.readBoard(() => this.requireApp().queriesService.getCellBonus(cell));
+  getCellBonus = (cell: GameCell): GameBonus | null => this.state.readBoard(() => this.requireApp().queries.getCellBonus(cell));
 
-  getCellColumnIndex = (cell: GameCell): number => this.requireApp().queriesService.getCellColumnIndex(cell);
+  getCellColumnIndex = (cell: GameCell): number => this.requireApp().queries.getCellColumnIndex(cell);
 
-  getCellRowIndex = (cell: GameCell): number => this.requireApp().queriesService.getCellRowIndex(cell);
+  getCellRowIndex = (cell: GameCell): number => this.requireApp().queries.getCellRowIndex(cell);
 
-  getLetterPoints = (letter: GameLetter): number => this.requireApp().queriesService.getLetterPoints(letter);
+  getLetterPoints = (letter: GameLetter): number => this.requireApp().queries.getLetterPoints(letter);
 
-  getTileLetter = (tile: GameTile): GameLetter => this.requireApp().queriesService.getTileLetter(tile);
+  getTileLetter = (tile: GameTile): GameLetter => this.requireApp().queries.getTileLetter(tile);
 
-  isCellCenter = (cell: GameCell): boolean => this.requireApp().queriesService.isCellCenter(cell);
+  isCellCenter = (cell: GameCell): boolean => this.requireApp().queries.isCellCenter(cell);
 
-  isTilePlaced = (tile: GameTile): boolean => this.state.readBoard(() => this.requireApp().queriesService.isTilePlaced(tile));
+  isTilePlaced = (tile: GameTile): boolean => this.state.readBoard(() => this.requireApp().queries.isTilePlaced(tile));
 
   wasTileUsedInPreviousTurn = (tile: GameTile): boolean =>
-    this.state.readBoard(() => this.requireApp().queriesService.wasTileUsedInPreviousTurn(tile));
+    this.state.readBoard(() => this.requireApp().queries.wasTileUsedInPreviousTurn(tile));
 
-  private read<T>(fn: (queries: App['queriesService']) => T): ComputedRef<T> {
-    return computed(() => this.state.read(() => fn(this.requireApp().queriesService)));
+  private read<T>(fn: (queries: App['queries']) => T): ComputedRef<T> {
+    return computed(() => this.state.read(() => fn(this.requireApp().queries)));
   }
 
-  private readBoard<T>(fn: (queries: App['queriesService']) => T): ComputedRef<T> {
-    return computed(() => this.state.readBoard(() => fn(this.requireApp().queriesService)));
+  private readBoard<T>(fn: (queries: App['queries']) => T): ComputedRef<T> {
+    return computed(() => this.state.readBoard(() => fn(this.requireApp().queries)));
   }
 }
 
@@ -260,9 +264,9 @@ class State {
   private syncTileByCellCache(affectedCells?: ReadonlyArray<GameCell>): void {
     const app = this.appRef.value;
     if (app === null) return;
-    const cells = affectedCells ?? app.config.boardCells;
+    const cells = affectedCells ?? app.queries.boardCells;
     for (const cell of cells) {
-      const tile = app.queriesService.findTileOnCell(cell);
+      const tile = app.queries.findTileOnCell(cell);
       if (tile !== undefined) {
         if (this.tileByCellCache.get(cell) !== tile) this.tileByCellCache.set(cell, tile);
       } else if (this.tileByCellCache.has(cell)) {
@@ -285,11 +289,8 @@ export default class MainStore {
     const getters = new Getters(state, requireApp);
     const actions = new Actions(state, requireApp);
     return {
-      boardCells: computed(() => appRef.value?.config.boardCells ?? []),
-      boardCellsPerAxis: computed(() => appRef.value?.config.boardCellsPerAxis ?? 0),
       bootError,
       bootProgress,
-      tilesPerPlayer: computed(() => appRef.value?.config.tilesPerPlayer ?? 0),
       ...(getters as { [K in keyof Getters]: Getters[K] }),
       ...(actions as { [K in keyof Actions]: Actions[K] }),
     };
@@ -303,14 +304,14 @@ export default class MainStore {
 
   static async initiate(): Promise<void> {
     const singleton = MainStore.SINGLETON;
-    const { appPromise, bootProgressPublisher } = createAppRuntime();
+    const { promise, bootProgressPublisher } = createAppRuntime();
     bootProgressPublisher.subscribe(progress => {
       singleton.bootProgress.value = progress;
     });
-    const app = await appPromise;
+    const app = await promise;
     singleton.appRef.value = markRaw(app);
     try {
-      await app.bootDictionary();
+      await app.boot();
     } catch (error: unknown) {
       singleton.bootError.value = error instanceof Error ? error.message : String(error);
     }

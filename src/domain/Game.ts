@@ -44,16 +44,8 @@ export default class Game {
     [GameMatchDifficulty.Medium]: 20,
   };
 
-  get anchorCellsCount(): number {
-    return this.board.anchorCells.size;
-  }
-
   get boardView(): Readonly<GameBoardView> {
     return this.board;
-  }
-
-  get dictionaryIsDefined(): boolean {
-    return this.dictionary !== undefined;
   }
 
   get eventsLogView(): ReadonlyArray<GameEvent> {
@@ -203,6 +195,7 @@ export default class Game {
   }
 
   changeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
+        // TODO dont reset inventory
     this.ensureMutability();
     this.ensureSettingsMutability();
     this.applyEvent({ difficulty: matchDifficulty, type: GameEventType.MatchDifficultyChanged });
