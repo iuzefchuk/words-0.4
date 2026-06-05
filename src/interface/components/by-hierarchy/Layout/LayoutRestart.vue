@@ -27,29 +27,23 @@ function restart(): void {
 
 <style lang="scss" scoped>
 .restart {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  left: 0;
+  top: 0;
   &__button {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: var(--z-index-level-3);
     display: grid;
     place-items: center;
     align-content: center;
     user-select: none;
     touch-action: manipulation;
-  }
-
-  &__hint {
-    $ms: calc(var(--transition-duration) * 10);
-
-    animation: double-tap $ms var(--transition-timing-function) infinite;
-    animation-delay: $ms;
-    transform-origin: center;
-    position: absolute;
-    bottom: 45%;
-    width: max-content;
+    padding: var(--space-6xl);
+    cursor: pointer;
   }
 }
 </style>
