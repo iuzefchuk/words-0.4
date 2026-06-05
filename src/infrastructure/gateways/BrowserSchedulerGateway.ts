@@ -1,4 +1,4 @@
-import type { SchedulerGateway } from '@/application/types/gateways.ts';
+import type { SchedulerGateway } from '@/app/types/gateways.ts';
 
 export default class BrowserSchedulerGateway {
   static async padTo<T>(minimumMs: number, callback: () => Promise<T> | T): Promise<T> {

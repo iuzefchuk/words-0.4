@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia';
 import { computed, markRaw, reactive, ref, shallowRef, watch } from 'vue';
-import createApplicationRuntime from '@/index.ts';
+import createAppRuntime from '@/index.ts';
 import { getEventSound } from '@/interface/mappings.ts';
 import SoundPlayer from '@/interface/services/SoundPlayer.ts';
-import type Application from '@/application/index.ts';
-import type { GameBonus, GameCell, GameLetter, GameMatchDifficulty, GameMatchType, GameTile } from '@/application/types/index.ts';
+import type App from '@/app/index.ts';
+import type { GameBonus, GameCell, GameLetter, GameMatchDifficulty, GameMatchType, GameTile } from '@/app/types/index.ts';
 import type { Sound } from '@/interface/services/SoundPlayer.ts';
 import type { ComputedRef, ShallowRef } from 'vue';
 
@@ -15,7 +15,7 @@ class Actions {
 
   constructor(
     private readonly state: State,
-    private readonly requireApp: () => Application,
+    private readonly requireApp: () => App,
   ) {}
 
   changeMatchDifficulty = (matchDifficulty: GameMatchDifficulty): void => {
@@ -161,7 +161,7 @@ class Getters {
 
   constructor(
     private readonly state: State,
-    private readonly requireApp: () => Application,
+    private readonly requireApp: () => App,
   ) {}
 
   areTilesSame = (firstTile: GameTile, secondTile: GameTile): boolean =>
@@ -192,11 +192,11 @@ class Getters {
   wasTileUsedInPreviousTurn = (tile: GameTile): boolean =>
     this.state.readBoard(() => this.requireApp().queriesService.wasTileUsedInPreviousTurn(tile));
 
-  private read<T>(fn: (queries: Application['queriesService']) => T): ComputedRef<T> {
+  private read<T>(fn: (queries: App['queriesService']) => T): ComputedRef<T> {
     return computed(() => this.state.read(() => fn(this.requireApp().queriesService)));
   }
 
-  private readBoard<T>(fn: (queries: Application['queriesService']) => T): ComputedRef<T> {
+  private readBoard<T>(fn: (queries: App['queriesService']) => T): ComputedRef<T> {
     return computed(() => this.state.readBoard(() => fn(this.requireApp().queriesService)));
   }
 }
@@ -208,7 +208,7 @@ class State {
 
   private readonly stateVersion = ref(0);
 
-  constructor(private readonly appRef: ShallowRef<Application | null>) {
+  constructor(private readonly appRef: ShallowRef<App | null>) {
     watch(
       this.appRef,
       () => {
@@ -277,7 +277,7 @@ export default class MainStore {
 
   static readonly INSTANCE = defineStore('main', () => {
     const { appRef, bootError, bootProgress } = MainStore.SINGLETON;
-    const requireApp = (): Application => {
+    const requireApp = (): App => {
       if (appRef.value === null) throw new Error('MainStore: app is not ready');
       return appRef.value;
     };
@@ -295,7 +295,7 @@ export default class MainStore {
     };
   });
 
-  private readonly appRef = shallowRef<Application | null>(null);
+  private readonly appRef = shallowRef<App | null>(null);
 
   private readonly bootError = ref<null | string>(null);
 
@@ -303,7 +303,7 @@ export default class MainStore {
 
   static async initiate(): Promise<void> {
     const singleton = MainStore.SINGLETON;
-    const { app: appPromise, bootProgressPublisher } = createApplicationRuntime();
+    const { appPromise, bootProgressPublisher } = createAppRuntime();
     bootProgressPublisher.subscribe(progress => {
       singleton.bootProgress.value = progress;
     });

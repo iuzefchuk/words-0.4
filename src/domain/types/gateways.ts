@@ -1,3 +1,8 @@
+export type GameGateways = {
+  identifier: IdentifierGateway;
+  randomizer: RandomizerGateway;
+};
+
 export type IdentifierGateway = {
   create(): string;
 };

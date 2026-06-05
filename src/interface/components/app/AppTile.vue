@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Accent } from '@/interface/enums.ts';
-import type { GameLetter } from '@/application/types/index.ts';
+import type { GameLetter } from '@/app/types/index.ts';
 const props = defineProps<{
   accent: Accent;
   letter: GameLetter;

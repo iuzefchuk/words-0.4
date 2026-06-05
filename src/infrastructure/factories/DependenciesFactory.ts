@@ -8,7 +8,7 @@ import CallbackBootProgressPublisher from '@/infrastructure/publishers/CallbackB
 import IndexedDbEventRepository from '@/infrastructure/repositories/IndexedDbEventRepository.ts';
 import LocalStorageSettingsRepository from '@/infrastructure/repositories/LocalStorageSettingsRepository.ts';
 import TurnGenerationWorker from '@/infrastructure/workers/turnGeneration.worker.ts?worker';
-import type { AppDependencies } from '@/application/types/index.ts';
+import type { AppDependencies } from '@/app/types/index.ts';
 
 export default class DependenciesFactory {
   private static readonly DICTIONARY_URL = '/dictionary.bin';

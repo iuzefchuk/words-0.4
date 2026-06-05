@@ -1,12 +1,12 @@
 export enum FileGlob {
-  Application = 'src/application/**',
+  App = 'src/app/**',
   Domain = 'src/domain/**',
   Infrastructure = 'src/infrastructure/**',
   Interface = 'src/interface/**',
 }
 
 export enum ImportGlob {
-  Application = '@/application/**',
+  App = '@/app/**',
   Domain = '@/domain/**',
   Infrastructure = '@/infrastructure/**',
   Interface = '@/interface/**',

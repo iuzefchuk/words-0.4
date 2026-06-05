@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
+import { GameMatchDifficulty, GameMatchType } from '@/app/types/index.ts';
 import AppRadioGroup from '@/interface/components/app/AppRadioGroup.vue';
 import { handleChangeMatchDifficulty, handleChangeMatchType } from '@/interface/handlers/setup.ts';
 import MainStore from '@/interface/stores/MainStore.ts';

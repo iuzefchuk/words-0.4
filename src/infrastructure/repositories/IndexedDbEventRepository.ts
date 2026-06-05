@@ -1,6 +1,6 @@
 import IndexedDbGateway from '@/infrastructure/gateways/IndexedDbGateway.ts';
-import type { GameEvent } from '@/application/types/index.ts';
-import type { EventRepository } from '@/application/types/repositories.ts';
+import type { GameEvent } from '@/app/types/index.ts';
+import type { EventRepository } from '@/app/types/repositories.ts';
 
 export default class IndexedDbEventRepository implements EventRepository {
   private static readonly DB_NAME = 'events';
@@ -8,13 +8,6 @@ export default class IndexedDbEventRepository implements EventRepository {
   private persistedEventsCount = 0;
 
   constructor(private readonly eventsSchemaVersion: number) {}
-
-  async append(events: ReadonlyArray<GameEvent>): Promise<void> {
-    const start = this.persistedEventsCount;
-    // claim the range synchronously so back-to-back fire-and-forget calls don't double-write.
-    this.persistedEventsCount = events.length;
-    await IndexedDbGateway.append(IndexedDbEventRepository.DB_NAME, this.eventsSchemaVersion, events.slice(start));
-  }
 
   async delete(): Promise<void> {
     this.persistedEventsCount = 0;
@@ -28,5 +21,12 @@ export default class IndexedDbEventRepository implements EventRepository {
     )) as null | ReadonlyArray<GameEvent>;
     this.persistedEventsCount = events?.length ?? 0;
     return events;
+  }
+
+  async save(events: ReadonlyArray<GameEvent>): Promise<void> {
+    const start = this.persistedEventsCount;
+    // claim the range synchronously so back-to-back fire-and-forget calls don't double-write.
+    this.persistedEventsCount = events.length;
+    await IndexedDbGateway.append(IndexedDbEventRepository.DB_NAME, this.eventsSchemaVersion, events.slice(start));
   }
 }

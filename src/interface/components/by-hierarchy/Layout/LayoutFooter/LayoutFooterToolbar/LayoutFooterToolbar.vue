@@ -7,7 +7,7 @@ import { Accent } from '@/interface/enums.ts';
 import { handlePressToolbarCell, handlePressToolbarTile } from '@/interface/handlers/toolbar.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-import type { GameTile } from '@/application/types/index.ts';
+import type { GameTile } from '@/app/types/index.ts';
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);

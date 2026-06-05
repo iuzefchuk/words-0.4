@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { Accent } from '@/interface/enums.ts';
 import { getBonusAccent, getBonusName } from '@/interface/mappings.ts';
-import type { GameBonus } from '@/application/types/index.ts';
+import type { GameBonus } from '@/app/types/index.ts';
 const props = defineProps<{
   bonus: GameBonus | null;
   colIndex: number;

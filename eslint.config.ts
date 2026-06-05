@@ -118,8 +118,8 @@ export default defineConfigWithVueTs(
         {
           patterns: [
             {
-              group: [ImportGlob.Application, ImportGlob.Infrastructure, ImportGlob.Interface],
-              message: 'domain must not import from application, infrastructure, or interface',
+              group: [ImportGlob.App, ImportGlob.Infrastructure, ImportGlob.Interface],
+              message: 'domain must not import from app, infrastructure, or interface',
             },
           ],
         },
@@ -127,7 +127,7 @@ export default defineConfigWithVueTs(
     },
   },
   {
-    files: [FileGlob.Application],
+    files: [FileGlob.App],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -135,7 +135,7 @@ export default defineConfigWithVueTs(
           patterns: [
             {
               group: [ImportGlob.Infrastructure, ImportGlob.Interface],
-              message: 'application must not import from infrastructure or interface',
+              message: 'app must not import from infrastructure or interface',
             },
           ],
         },
@@ -151,7 +151,7 @@ export default defineConfigWithVueTs(
           patterns: [
             {
               group: [ImportGlob.Domain, ImportGlob.Interface],
-              message: 'infrastructure must not import from domain or interface; depend on application aliases instead',
+              message: 'infrastructure must not import from domain or interface; depend on app aliases instead',
             },
           ],
         },
@@ -167,7 +167,7 @@ export default defineConfigWithVueTs(
           patterns: [
             {
               group: [ImportGlob.Domain, ImportGlob.Infrastructure],
-              message: 'interface must not import from domain or infrastructure; depend on application ports instead',
+              message: 'interface must not import from domain or infrastructure; depend on app ports instead',
             },
           ],
         },

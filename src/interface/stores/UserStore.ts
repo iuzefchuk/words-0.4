@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref, shallowRef, triggerRef } from 'vue';
 import MainStore from '@/interface/stores/MainStore.ts';
-import type { GameTile } from '@/application/types/index.ts';
+import type { GameTile } from '@/app/types/index.ts';
 
 export default class UserStore {
   static readonly INSTANCE = defineStore('user', () => {

@@ -1,9 +1,14 @@
-import type { GameEvent, GameMatchSettings } from '@/application/types/index.ts';
+import type { GameEvent, GameMatchSettings } from '@/app/types/index.ts';
+
+export type AppRepositories = {
+  events: EventRepository;
+  settings: SettingsRepository;
+};
 
 export type EventRepository = {
-  append(events: ReadonlyArray<GameEvent>): Promise<void>;
   delete(): Promise<void>;
   load(): Promise<null | ReadonlyArray<GameEvent>>;
+  save(events: ReadonlyArray<GameEvent>): Promise<void>;
 };
 
 export type SettingsRepository = {

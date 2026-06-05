@@ -18,7 +18,7 @@ import MatchTerminationPolicy from '@/domain/policies/MatchTerminationPolicy.ts'
 import TurnGenerationService from '@/domain/services/generation/turn/TurnGenerationService.ts';
 import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
 import type Dictionary from '@/domain/models/dictionary/Dictionary.ts';
-import type { IdentifierGateway, RandomizerGateway } from '@/domain/types/gateways.ts';
+import type { GameGateways } from '@/domain/types/gateways.ts';
 import type {
   GameBoardView,
   GameCell,
@@ -92,31 +92,26 @@ export default class Game {
 
   private constructor(
     private readonly events: Events,
-    private readonly identifier: IdentifierGateway,
-    private readonly randomizer: RandomizerGateway,
+    private readonly gateways: GameGateways,
   ) {}
 
-  static create(identifier: IdentifierGateway, randomizer: RandomizerGateway, settings: null | Partial<GameMatchSettings>): Game {
+  static create(gateways: GameGateways, settings: null | Partial<GameMatchSettings>): Game {
     const resolvedSettings = Game.resolveSettings(settings);
-    const seed = randomizer.createNewSeed();
+    const seed = gateways.randomizer.createNewSeed();
     const event: GameEvent = { seed, settings: resolvedSettings, type: GameEventType.MatchStarted };
     const events = Events.create([event]);
-    const game = new Game(events, identifier, randomizer);
-    game.initialize(Game.createInitParams(seed, resolvedSettings, randomizer, identifier));
+    const game = new Game(events, gateways);
+    game.initialize(Game.createInitParams(seed, resolvedSettings, gateways));
     return game;
   }
 
-  static createFromEvents(
-    initialEvents: ReadonlyArray<GameEvent>,
-    identifier: IdentifierGateway,
-    randomizer: RandomizerGateway,
-  ): Game {
+  static createFromEvents(initialEvents: ReadonlyArray<GameEvent>, gateways: GameGateways): Game {
     if (initialEvents[0] === undefined) throw new Error('cannot create game from empty events');
     const first = initialEvents[0];
     if (first.type !== GameEventType.MatchStarted) throw new Error(`expected first event to be MatchStarted, got ${first.type}`);
     const events = Events.create([...initialEvents]);
-    const game = new Game(events, identifier, randomizer);
-    game.initialize(Game.createInitParams(first.seed, first.settings, randomizer, identifier));
+    const game = new Game(events, gateways);
+    game.initialize(Game.createInitParams(first.seed, first.settings, gateways));
     for (let idx = 1; idx < initialEvents.length; idx++) {
       const event = initialEvents[idx];
       if (event === undefined) throw new ReferenceError(`expected event at index ${String(idx)}, got undefined`);
@@ -128,16 +123,15 @@ export default class Game {
   private static createInitParams(
     seed: number,
     settings: GameMatchSettings,
-    randomizer: RandomizerGateway,
-    identifier: IdentifierGateway,
+    gateways: GameGateways,
   ): { board: Board; inventory: Inventory; match: Match; turns: Turns } {
     const players = Object.values(GamePlayer);
-    const randomizerFunction = randomizer.createFunctionFromSeed(seed);
+    const randomizerFunction = gateways.randomizer.createFunctionFromSeed(seed);
     return {
       board: Board.create(this.mapTypeFromSettingsToBoard(settings.type), randomizerFunction),
       inventory: Inventory.create(players, randomizerFunction),
       match: Match.create(players, settings),
-      turns: Turns.create(identifier),
+      turns: Turns.create(gateways.identifier),
     };
   }
 
@@ -186,12 +180,7 @@ export default class Game {
         break;
       case GameEventType.MatchTypeChanged:
         this.initialize(
-          Game.createInitParams(
-            event.seed,
-            { difficulty: this.match.difficulty, type: event.matchType },
-            this.randomizer,
-            this.identifier,
-          ),
+          Game.createInitParams(event.seed, { difficulty: this.match.difficulty, type: event.matchType }, this.gateways),
         );
         break;
       case GameEventType.TileUndoPlaced:
@@ -222,7 +211,7 @@ export default class Game {
   changeMatchType(matchType: GameMatchType): void {
     this.ensureMutability();
     this.ensureSettingsMutability();
-    const seed = this.randomizer.createNewSeed();
+    const seed = this.gateways.randomizer.createNewSeed();
     this.applyEvent({ matchType, seed, type: GameEventType.MatchTypeChanged });
   }
 
@@ -275,11 +264,11 @@ export default class Game {
   }
 
   restart(): void {
-    const seed = this.randomizer.createNewSeed();
+    const seed = this.gateways.randomizer.createNewSeed();
     const settings: GameMatchSettings = { difficulty: this.match.difficulty, type: this.match.type };
     const event: GameEvent = { seed, settings, type: GameEventType.MatchStarted };
     this.events.reset(event);
-    this.initialize(Game.createInitParams(seed, settings, this.randomizer, this.identifier));
+    this.initialize(Game.createInitParams(seed, settings, this.gateways));
   }
 
   saveTurnForCurrentPlayer(): { words: ReadonlyArray<string> } {

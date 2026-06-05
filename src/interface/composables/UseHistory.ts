@@ -1,7 +1,7 @@
 import { computed } from 'vue';
-import { GameEventType, GamePlayer } from '@/application/types/index.ts';
+import { GameEventType, GamePlayer } from '@/app/types/index.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-import type { GameEvent } from '@/application/types/index.ts';
+import type { GameEvent } from '@/app/types/index.ts';
 
 export default class UseHistory {
   private static readonly MAX_DISPLAYED_EVENTS = 3;

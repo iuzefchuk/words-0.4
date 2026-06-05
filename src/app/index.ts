@@ -1,13 +1,13 @@
-import { BootProgress } from '@/application/enums.ts';
-import CommandsService from '@/application/services/CommandsService.ts';
-import QueriesService from '@/application/services/QueriesService.ts';
-import { GameDictionary } from '@/application/types/index.ts';
+import { BootProgress } from '@/app/enums.ts';
+import CommandsService from '@/app/services/CommandsService.ts';
+import QueriesService from '@/app/services/QueriesService.ts';
+import { GameDictionary } from '@/app/types/index.ts';
 import Game from '@/domain/Game.ts';
-import type { SchedulerGateway } from '@/application/types/gateways.ts';
-import type { AppConfig, AppDependencies, GameEvent, GameMatchSettings } from '@/application/types/index.ts';
+import type { SchedulerGateway } from '@/app/types/gateways.ts';
+import type { AppDependencies, GameConfig, GameEvent, GameGateways, GameMatchSettings } from '@/app/types/index.ts';
 
-export default class Application {
-  get config(): AppConfig {
+export default class App {
+  get config(): GameConfig {
     return {
       boardCells: this.game.boardView.cells,
       boardCellsPerAxis: this.game.boardView.cellsPerAxis,
@@ -26,11 +26,11 @@ export default class Application {
     readonly queriesService: QueriesService,
   ) {}
 
-  static async create(dependencies: AppDependencies): Promise<Application> {
+  static async create(dependencies: AppDependencies): Promise<App> {
     const { gateways, repositories, tasks } = dependencies;
     const events = await repositories.events.load();
     const settings = repositories.settings.load();
-    const game = this.createGameInstance(gateways, events, settings);
+    const game = this.createGame(gateways, events, settings);
     const queriesService = new QueriesService(game);
     const commandsService = new CommandsService(
       game,
@@ -40,17 +40,15 @@ export default class Application {
       repositories.events,
       repositories.settings,
     );
-    return new Application(game, dependencies, commandsService, queriesService);
+    return new App(game, dependencies, commandsService, queriesService);
   }
 
-  private static createGameInstance(
-    gateways: AppDependencies['gateways'],
+  private static createGame(
+    gateways: GameGateways,
     events: null | ReadonlyArray<GameEvent>,
     settings: null | Partial<GameMatchSettings>,
   ): Game {
-    return events !== null && events.length > 0
-      ? Game.createFromEvents(events, gateways.identifier, gateways.randomizer)
-      : Game.create(gateways.identifier, gateways.randomizer, settings);
+    return events !== null && events.length > 0 ? Game.createFromEvents(events, gateways) : Game.create(gateways, settings);
   }
 
   async bootDictionary(): Promise<void> {

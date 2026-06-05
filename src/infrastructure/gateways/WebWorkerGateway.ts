@@ -1,6 +1,25 @@
-import { WorkerRequestType, WorkerResponseType } from '@/application/types/gateways.ts';
 import WorkerPoolGateway from '@/infrastructure/gateways/WorkerPoolGateway.ts';
-import type { WorkerGateway, WorkerRequest, WorkerResponse } from '@/application/types/gateways.ts';
+import type { WorkerGateway } from '@/app/types/gateways.ts';
+
+export enum WorkerRequestType {
+  Init = 'Init',
+  Stream = 'Stream',
+}
+
+export enum WorkerResponseType {
+  Done = 'Done',
+  Error = 'Error',
+  Ready = 'Ready',
+  Result = 'Result',
+}
+
+type WorkerRequest = { input: unknown; type: WorkerRequestType };
+
+type WorkerResponse =
+  | { error: string; type: WorkerResponseType.Error }
+  | { type: WorkerResponseType.Done }
+  | { type: WorkerResponseType.Ready }
+  | { type: WorkerResponseType.Result; value: unknown };
 
 export default class WebWorkerGateway implements WorkerGateway {
   constructor(private readonly workers: Record<string, new () => Worker>) {}

@@ -1,6 +1,6 @@
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-import type { GameCell, GameTile } from '@/application/types/index.ts';
+import type { GameCell, GameTile } from '@/app/types/index.ts';
 
 export function handleDoublePressGridTile(tile: GameTile): void {
   const { undoPlaceTile } = MainStore.INSTANCE();

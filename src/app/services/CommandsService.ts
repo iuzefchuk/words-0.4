@@ -1,6 +1,6 @@
-import { GameEventType, GamePlayer } from '@/application/types/index.ts';
+import { GameEventType, GamePlayer } from '@/app/types/index.ts';
 import ShuffleService from '@/domain/services/ShuffleService.ts';
-import type { SchedulerGateway, WorkerGateway } from '@/application/types/gateways.ts';
+import type { SchedulerGateway, WorkerGateway } from '@/app/types/gateways.ts';
 import type {
   AppTurnResponse,
   GameCell,
@@ -9,8 +9,8 @@ import type {
   GameMatchDifficulty,
   GameMatchType,
   GameTile,
-} from '@/application/types/index.ts';
-import type { EventRepository, SettingsRepository } from '@/application/types/repositories.ts';
+} from '@/app/types/index.ts';
+import type { EventRepository, SettingsRepository } from '@/app/types/repositories.ts';
 import type Game from '@/domain/Game.ts';
 
 export default class CommandsService {
@@ -101,18 +101,6 @@ export default class CommandsService {
     this.syncPersistence();
   }
 
-  private buildPartitionedInputs(workerInput: Record<string, unknown>, anchorCount: number): Array<unknown> {
-    const workerCount = Math.min(this.worker.getPoolSize(this.turnGenerationTaskId), anchorCount);
-    if (workerCount <= 1) return [workerInput];
-    const inputs: Array<unknown> = [];
-    for (let idx = 0; idx < workerCount; idx++) {
-      const offset = Math.round((anchorCount * idx) / workerCount);
-      const end = Math.round((anchorCount * (idx + 1)) / workerCount);
-      inputs.push({ ...workerInput, partition: { length: end - offset, offset } });
-    }
-    return inputs;
-  }
-
   private clearPersistence(): void {
     void this.eventRepository.delete();
   }
@@ -129,7 +117,7 @@ export default class CommandsService {
       ...data,
       player,
     };
-    const inputs = attemptsLimit === Infinity ? this.buildPartitionedInputs(workerInput, anchorCount) : [workerInput];
+    const inputs = attemptsLimit === Infinity ? this.partitionWorkerInput(workerInput, anchorCount) : [workerInput];
     const results = this.worker.stream<GameGeneratorResult>(this.turnGenerationTaskId, inputs);
     let bestResult: GameGeneratorResult | null = null;
     let bestScore = -1;
@@ -178,6 +166,18 @@ export default class CommandsService {
     }
   }
 
+  private partitionWorkerInput(workerInput: Record<string, unknown>, anchorCount: number): Array<unknown> {
+    const workerCount = Math.min(this.worker.getPoolSize(this.turnGenerationTaskId), anchorCount);
+    if (workerCount <= 1) return [workerInput];
+    const inputs: Array<unknown> = [];
+    for (let idx = 0; idx < workerCount; idx++) {
+      const offset = Math.round((anchorCount * idx) / workerCount);
+      const end = Math.round((anchorCount * (idx + 1)) / workerCount);
+      inputs.push({ ...workerInput, partition: { length: end - offset, offset } });
+    }
+    return inputs;
+  }
+
   private saveTurnForCurrentPlayer(): AppTurnResponse {
     if (!this.game.turnsView.currentTurnIsValid) return { error: 'Turn is not valid', ok: false };
     const { words } = this.game.saveTurnForCurrentPlayer();
@@ -185,6 +185,6 @@ export default class CommandsService {
   }
 
   private syncPersistence(): void {
-    void this.eventRepository.append(this.game.eventsLogView);
+    void this.eventRepository.save(this.game.eventsLogView);
   }
 }

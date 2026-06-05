@@ -1,4 +1,4 @@
-import { GamePlayer } from '@/application/types/index.ts';
+import { GamePlayer } from '@/app/types/index.ts';
 import Inventory from '@/domain/models/inventory/Inventory.ts';
 import type {
   GameBoardView,
@@ -10,9 +10,10 @@ import type {
   GameMatchDifficulty,
   GameMatchResult,
   GameMatchType,
+  GameMatchView,
   GameTile,
   GameTurnsView,
-} from '@/application/types/index.ts';
+} from '@/app/types/index.ts';
 import type Game from '@/domain/Game.ts';
 
 export default class QueriesService {
@@ -22,6 +23,10 @@ export default class QueriesService {
 
   private get inventoryView(): Readonly<GameInventoryView> {
     return this.game.inventoryView;
+  }
+
+  private get matchView(): Readonly<GameMatchView> {
+    return this.game.matchView;
   }
 
   private get turnsView(): Readonly<GameTurnsView> {
@@ -71,19 +76,19 @@ export default class QueriesService {
   }
 
   getMatchDifficulty(): GameMatchDifficulty {
-    return this.game.matchView.difficulty;
+    return this.matchView.difficulty;
   }
 
   getMatchResult(): GameMatchResult {
-    return this.game.matchView.getResultFor(GamePlayer.User);
+    return this.matchView.getResultFor(GamePlayer.User);
   }
 
   getMatchType(): GameMatchType {
-    return this.game.matchView.type;
+    return this.matchView.type;
   }
 
   getOpponentScore(): number {
-    return this.game.matchView.getScoreFor(GamePlayer.Opponent);
+    return this.matchView.getScoreFor(GamePlayer.Opponent);
   }
 
   getTileLetter(tile: GameTile): GameLetter {
@@ -95,7 +100,7 @@ export default class QueriesService {
   }
 
   getUserScore(): number {
-    return this.game.matchView.getScoreFor(GamePlayer.User);
+    return this.matchView.getScoreFor(GamePlayer.User);
   }
 
   getUserTiles(): ReadonlyArray<GameTile> {
@@ -123,7 +128,7 @@ export default class QueriesService {
   }
 
   isMatchFinished(): boolean {
-    return this.game.matchView.isFinished;
+    return this.matchView.isFinished;
   }
 
   isTilePlaced(tile: GameTile): boolean {

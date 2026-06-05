@@ -1,12 +1,12 @@
-import { WorkerRequestType, WorkerResponseType } from '@/application/types/gateways.ts';
-import { GameDictionary, GameTurnGenerator } from '@/application/types/index.ts';
+import { GameDictionary, GameTurnGenerator } from '@/app/types/index.ts';
+import { WorkerRequestType, WorkerResponseType } from '@/infrastructure/gateways/WebWorkerGateway.ts';
 import type {
   GameDictionaryBuffer,
   GameGeneratorContextData,
   GameGeneratorPartition,
   GameGeneratorResult,
   GamePlayer,
-} from '@/application/types/index.ts';
+} from '@/app/types/index.ts';
 
 type StreamInput = {
   attemptsLimit: number;
