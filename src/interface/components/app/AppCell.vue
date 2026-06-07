@@ -2,9 +2,9 @@
 import { computed } from 'vue';
 import { Accent } from '@/interface/enums.ts';
 import { getBonusAccent, getBonusName } from '@/interface/mappings.ts';
-import type { GameBonus } from '@/app/types/index.ts';
+import type { DomainBoardBonus } from '@/app/enums/index.ts';
 const props = defineProps<{
-  bonus: GameBonus | null;
+  bonus: DomainBoardBonus | null;
   colIndex: number;
   isFocused: boolean;
   isHighlighted: boolean;

@@ -83,7 +83,7 @@ watch(html, async newValue => {
 </template>
 
 <style lang="scss" scoped>
-@use '@style/themes' as *;
+@use '../../assets/style/themes' as *;
 
 .dialog {
   @include dark-theme;

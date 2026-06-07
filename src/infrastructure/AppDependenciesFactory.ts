@@ -21,7 +21,7 @@ export default class AppDependenciesFactory {
           scheduler: BrowserSchedulerGateway,
           turnGenerator: WebWorkerTurnGeneratorGateway,
         },
-        game: {
+        domain: {
           identifier: CryptoIdentifierGateway,
           randomizer: Mulberry32RandomizerGateway,
         },

@@ -1,6 +1,6 @@
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-import type { GameTile } from '@/app/types/index.ts';
+import type { DomainInventoryTile } from '@/app/types/index.ts';
 
 export function handlePressToolbarCell(idx: number): void {
   const { isTilePlaced, undoPlaceTile } = MainStore.INSTANCE();
@@ -16,7 +16,7 @@ export function handlePressToolbarCell(idx: number): void {
   deselectTile();
 }
 
-export function handlePressToolbarTile(tile: GameTile): void {
+export function handlePressToolbarTile(tile: DomainInventoryTile): void {
   const { findCellWithTile, placeTile, undoPlaceTile } = MainStore.INSTANCE();
   const { deselectTile, isTileSelected, selectedTile, selectTile, switchTiles } = UserStore.INSTANCE();
   if (selectedTile === null) {

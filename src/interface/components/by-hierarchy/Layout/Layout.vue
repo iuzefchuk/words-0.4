@@ -50,7 +50,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
 </template>
 
 <style lang="scss" scoped>
-@use '@style/breakpoints.scss' as *;
+@use '../../../assets/style/breakpoints.scss' as *;
 
 .layout {
   transition-property: filter, opacity;

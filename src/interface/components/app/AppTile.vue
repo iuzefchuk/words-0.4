@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { Accent } from '@/interface/enums.ts';
-import type { GameLetter } from '@/app/types/index.ts';
+import type { DomainInventoryLetter } from '@/app/enums/index.ts';
 const props = defineProps<{
   accent: Accent;
-  letter: GameLetter;
+  letter: DomainInventoryLetter;
   points: number;
 }>();
 </script>

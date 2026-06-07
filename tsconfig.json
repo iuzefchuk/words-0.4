@@ -6,9 +6,9 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["./src/*"],
-      "@style/*": ["./src/interface/assets/style/*"],
-      "$/*": ["./tests/*"]
+      "@/*.ts": ["./src/*.ts"],
+      "@/*.vue": ["./src/*.vue"],
+      "$/*.ts": ["./tests/*.ts"]
     },
     "types": ["node", "vite/client", "vitest/globals", "vue"],
     "noEmit": true,
@@ -31,5 +31,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["*.config.ts", "src", "tests", "meta"]
+  "include": ["*.config.ts", "src", "tests", "meta", "eslint.config.js"]
 }

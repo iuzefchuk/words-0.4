@@ -1,5 +1,5 @@
 import IndexedDbGateway from '@/infrastructure/gateways/IndexedDbGateway.ts';
-import type { GameEvent } from '@/app/types/index.ts';
+import type { DomainTimelineEvent } from '@/app/types/index.ts';
 import type { AppEventsRepository } from '@/app/types/repositories.ts';
 
 export default class IndexedDbEventRepository implements AppEventsRepository {
@@ -14,16 +14,16 @@ export default class IndexedDbEventRepository implements AppEventsRepository {
     await IndexedDbGateway.delete(IndexedDbEventRepository.DB_NAME);
   }
 
-  async load(): Promise<null | ReadonlyArray<GameEvent>> {
+  async load(): Promise<null | ReadonlyArray<DomainTimelineEvent>> {
     const events = (await IndexedDbGateway.load(
       IndexedDbEventRepository.DB_NAME,
       this.eventsSchemaVersion,
-    )) as null | ReadonlyArray<GameEvent>;
+    )) as null | ReadonlyArray<DomainTimelineEvent>;
     this.persistedEventsCount = events?.length ?? 0;
     return events;
   }
 
-  async save(events: ReadonlyArray<GameEvent>): Promise<void> {
+  async save(events: ReadonlyArray<DomainTimelineEvent>): Promise<void> {
     const start = this.persistedEventsCount;
     // claim the range synchronously so back-to-back fire-and-forget calls don't double-write.
     this.persistedEventsCount = events.length;

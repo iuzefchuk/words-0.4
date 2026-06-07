@@ -1,17 +1,16 @@
-import { GameEventType, GamePlayer } from '@/app/types/index.ts';
-import ShuffleService from '@/domain/services/ShuffleService.ts';
-import type { AppSchedulerGateway, AppTurnGeneratorGateway } from '@/app/types/gateways.ts';
+import { DomainMatchPlayer } from '@/app/enums/index.ts';
+import type { AppGateways } from '@/app/types/gateways.ts';
+import type { DomainMatchDifficulty, DomainMatchType } from '@/app/enums/index.ts';
 import type {
   AppTurnResponse,
-  GameCell,
-  GameEvent,
-  GameMatchDifficulty,
-  GameMatchSettings,
-  GameMatchType,
-  GameTile,
+  DomainBoardCell,
+  DomainDictionary,
+  DomainInventoryTile,
+  DomainMatchSettings,
+  DomainTurnGenerationContext,
 } from '@/app/types/index.ts';
 import type { AppEventsRepository, AppRepositories, AppSettingsRepository } from '@/app/types/repositories.ts';
-import type Game from '@/domain/Game.ts';
+import type { default as DomainGame } from '@/domain/aggregates/Game.ts';
 
 export default class AppCommands {
   private static readonly OPPONENT_RESPONSE_MIN_TIME_MS = 2_000;
@@ -25,29 +24,29 @@ export default class AppCommands {
   }
 
   constructor(
-    private readonly game: Game,
-    private readonly scheduler: AppSchedulerGateway,
-    private readonly turnGenerator: AppTurnGeneratorGateway,
+    private readonly game: DomainGame,
+    private readonly dictionary: DomainDictionary,
+    private readonly gateways: AppGateways,
     private readonly repositories: AppRepositories,
   ) {}
 
-  changeMatchDifficulty(matchDifficulty: GameMatchDifficulty): void {
-    this.game.changeMatchDifficulty(matchDifficulty);
+  changeMatchDifficulty(matchDifficulty: DomainMatchDifficulty): void {
+    this.game.setMatchDifficulty(matchDifficulty);
     this.persistSettings({ difficulty: matchDifficulty });
   }
 
-  changeMatchType(matchType: GameMatchType): void {
-    this.game.changeMatchType(matchType);
+  changeMatchType(matchType: DomainMatchType): void {
+    this.game.setMatchType(matchType);
     this.persistSettings({ type: matchType });
   }
 
-  clearTiles(): void {
-    this.game.clearTiles();
+  clearUserTiles(): void {
+    this.game.clearUserTiles();
     this.persistEvents();
   }
 
   passTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined } {
-    this.clearTiles();
+    this.clearUserTiles();
     this.game.passTurnForCurrentPlayer();
     if (this.game.matchView.isFinished) {
       this.clearEventsPersistence();
@@ -55,17 +54,17 @@ export default class AppCommands {
     }
     this.persistEvents();
     return {
-      opponentTurn: this.game.turnsView.currentPlayer === GamePlayer.Opponent ? this.createOpponentTurn() : undefined,
+      opponentTurn: this.game.matchView.currentPlayer === DomainMatchPlayer.Opponent ? this.createOpponentTurn() : undefined,
     };
   }
 
-  placeTile({ cell, tile }: { cell: GameCell; tile: GameTile }): void {
+  placeTile({ cell, tile }: { cell: DomainBoardCell; tile: DomainInventoryTile }): void {
     this.game.placeTile({ cell, tile });
     this.game.invalidateTurnForCurrentPlayer();
   }
 
   resignMatch(): void {
-    this.clearTiles();
+    this.clearUserTiles();
     this.game.resignMatchForCurrentPlayer();
     this.clearEventsPersistence();
   }
@@ -86,22 +85,22 @@ export default class AppCommands {
     }
     this.persistEvents();
     return {
-      opponentTurn: this.game.turnsView.currentPlayer === GamePlayer.Opponent ? this.createOpponentTurn() : undefined,
+      opponentTurn: this.game.matchView.currentPlayer === DomainMatchPlayer.Opponent ? this.createOpponentTurn() : undefined,
       userResponse,
     };
   }
 
-  shuffleUserTiles(tiles: Array<GameTile>): void {
-    ShuffleService.shuffle({ array: tiles });
+  shuffleUserTiles(tiles: Array<DomainInventoryTile>): void {
+    this.game.shuffleTiles(tiles);
   }
 
-  undoPlaceTile(tile: GameTile): void {
+  undoPlaceTile(tile: DomainInventoryTile): void {
     this.game.undoPlaceTile({ tile });
     this.game.invalidateTurnForCurrentPlayer();
   }
 
   validateTurn(): void {
-    this.game.validateTurn();
+    this.game.validateTurn(this.dictionary);
     this.persistEvents();
   }
 
@@ -109,26 +108,10 @@ export default class AppCommands {
     void this.eventsRepo.delete();
   }
 
-  private async createOpponentEvent(): Promise<GameEvent> {
-    const bestResult = await this.turnGenerator.generateBestResult({
-      attemptsLimit: this.game.turnGenerationAttempts,
-      context: this.game.createTurnGenerationContext(),
-      player: GamePlayer.Opponent,
-    });
-    if (bestResult === null) {
-      this.game.passTurnForCurrentPlayer();
-      if (this.game.matchView.isFinished) {
-        return { type: GameEventType.MatchFinished, winner: GamePlayer.User };
-      }
-      return { player: GamePlayer.Opponent, type: GameEventType.TurnPassed };
-    }
-    const { score, words } = this.game.applyGeneratedTurn(bestResult);
-    return { player: GamePlayer.Opponent, score, type: GameEventType.TurnSaved, words };
-  }
-
   private async createOpponentTurn(): Promise<AppTurnResponse> {
-    const event = await this.scheduler.padTo(AppCommands.OPPONENT_RESPONSE_MIN_TIME_MS, () => this.createOpponentEvent());
-    const response = this.getOpponentResponseFor(event);
+    const response = await this.gateways.scheduler.padTo(AppCommands.OPPONENT_RESPONSE_MIN_TIME_MS, () =>
+      this.executeOpponentTurn(),
+    );
     if (this.game.matchView.isFinished) {
       this.clearEventsPersistence();
     } else {
@@ -137,33 +120,34 @@ export default class AppCommands {
     return response;
   }
 
-  private getOpponentResponseFor(event: GameEvent): AppTurnResponse {
-    switch (event.type) {
-      case GameEventType.MatchFinished:
-      case GameEventType.TurnPassed:
-        return { ok: true, value: { words: [] } };
-      case GameEventType.TurnSaved:
-        return { ok: true, value: { words: event.words } };
-      case GameEventType.MatchDifficultyChanged:
-      case GameEventType.MatchStarted:
-      case GameEventType.MatchTypeChanged:
-      case GameEventType.TilePlaced:
-      case GameEventType.TileUndoPlaced:
-      case GameEventType.TurnValidationSet:
-        throw new ReferenceError(`unexpected opponent event type "${event.type}"`);
+  private createTurnGenerationContext(): DomainTurnGenerationContext {
+    return this.game.createTurnGenerationContext(this.dictionary);
+  }
+
+  private async executeOpponentTurn(): Promise<AppTurnResponse> {
+    const bestResult = await this.gateways.turnGenerator.generateBestResult({
+      attemptsLimit: this.game.generationAttemptsLimit,
+      context: this.createTurnGenerationContext(),
+      player: DomainMatchPlayer.Opponent,
+    });
+    if (bestResult === null) {
+      this.game.passTurnForCurrentPlayer();
+      return { ok: true, value: { words: [] } };
     }
+    const { words } = this.game.applyGeneratedTurn(bestResult);
+    return { ok: true, value: { words } };
   }
 
   private persistEvents(): void {
-    void this.eventsRepo.save(this.game.eventsLogView);
+    void this.eventsRepo.save(this.game.eventsView);
   }
 
-  private persistSettings(settings: Partial<GameMatchSettings>): void {
+  private persistSettings(settings: Partial<DomainMatchSettings>): void {
     this.settingsRepo.save(settings);
   }
 
   private saveTurnForCurrentPlayer(): AppTurnResponse {
-    const { currentTurnError } = this.game.turnsView;
+    const { currentTurnError } = this.game.matchView;
     if (currentTurnError !== undefined) return { error: currentTurnError, ok: false };
     const { words } = this.game.saveTurnForCurrentPlayer();
     return { ok: true, value: { words } };

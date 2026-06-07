@@ -1,8 +1,8 @@
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-import type { GameCell, GameTile } from '@/app/types/index.ts';
+import type { DomainBoardCell, DomainInventoryTile } from '@/app/types/index.ts';
 
-export function handleDoublePressGridTile(tile: GameTile): void {
+export function handleDoublePressGridTile(tile: DomainInventoryTile): void {
   const { undoPlaceTile } = MainStore.INSTANCE();
   const { deselectTile, isTileInToolbar } = UserStore.INSTANCE();
   if (!isTileInToolbar(tile)) return;
@@ -10,7 +10,7 @@ export function handleDoublePressGridTile(tile: GameTile): void {
   undoPlaceTile(tile);
 }
 
-export function handlePressGridCell(cell: GameCell): void {
+export function handlePressGridCell(cell: DomainBoardCell): void {
   const { findTileOnCell, placeTile, undoPlaceTile } = MainStore.INSTANCE();
   const { deselectTile, selectedTile, selectedTileIsPlaced } = UserStore.INSTANCE();
   if (selectedTile === null) return;
@@ -20,7 +20,7 @@ export function handlePressGridCell(cell: GameCell): void {
   deselectTile();
 }
 
-export function handlePressGridTile(tile: GameTile): void {
+export function handlePressGridTile(tile: DomainInventoryTile): void {
   const { findCellWithTile, placeTile, undoPlaceTile } = MainStore.INSTANCE();
   const { deselectTile, isTileInToolbar, isTileSelected, selectedTile, selectTile, switchTiles } = UserStore.INSTANCE();
   if (!isTileInToolbar(tile)) return;

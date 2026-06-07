@@ -3,26 +3,31 @@ import {
   TurnGenerationWorkerResponseType,
 } from '@/infrastructure/workers/turnGenerator.protocol.ts';
 import TurnGenerationWorker from '@/infrastructure/workers/turnGenerator.worker.ts?worker';
+import type { DomainMatchPlayer } from '@/app/enums/index.ts';
 import type { AppTurnGeneratorGateway } from '@/app/types/gateways.ts';
-import type { GameDictionaryBuffer, GameGeneratorContext, GameGeneratorResult, GamePlayer } from '@/app/types/index.ts';
+import type { DomainTurnGenerationContext, DomainTurnGenerationResult } from '@/app/types/index.ts';
 import type {
   TurnGenerationWorkerInput,
   TurnGenerationWorkerRequest,
   TurnGenerationWorkerResponse,
-} from '@/infrastructure/workers/turnGenerator.protocol';
+} from '@/infrastructure/workers/turnGenerator.protocol.ts';
+
+type DictionaryBuffer = ArrayBufferLike;
 
 type TurnGenerationWorkerConstructor = new () => Worker;
 
 export default class WebWorkerTurnGeneratorGateway {
+  private static dictionaryBuffer: DictionaryBuffer | null = null;
+
   private static pool: Array<Worker> = [];
 
   private static readonly WORKER_CONSTRUCTOR: TurnGenerationWorkerConstructor = TurnGenerationWorker;
 
   static async generateBestResult(input: {
     attemptsLimit: number;
-    context: GameGeneratorContext;
-    player: GamePlayer;
-  }): Promise<GameGeneratorResult | null> {
+    context: DomainTurnGenerationContext;
+    player: DomainMatchPlayer;
+  }): Promise<DomainTurnGenerationResult | null> {
     const workerInput = this.createWorkerInput(input);
     const inputs =
       input.attemptsLimit === Infinity
@@ -31,11 +36,13 @@ export default class WebWorkerTurnGeneratorGateway {
     return this.findBestResult(await this.generateResults(inputs));
   }
 
-  static async init(buffer: GameDictionaryBuffer): Promise<void> {
+  static async init(buffer: DictionaryBuffer): Promise<void> {
     this.disposePool();
+    this.dictionaryBuffer = null;
     const workers = Array.from({ length: this.computePoolSize() }, () => this.createWorker());
     try {
       await Promise.all(workers.map(worker => this.initWorker(worker, buffer)));
+      this.dictionaryBuffer = buffer;
       this.pool.push(...workers);
     } catch (error) {
       for (const worker of workers) worker.terminate();
@@ -59,15 +66,17 @@ export default class WebWorkerTurnGeneratorGateway {
     player,
   }: {
     attemptsLimit: number;
-    context: GameGeneratorContext;
-    player: GamePlayer;
+    context: DomainTurnGenerationContext;
+    player: DomainMatchPlayer;
   }): TurnGenerationWorkerInput {
-    const { crossCheckTable, dictionary, ...data } = context;
+    const { board, crossCheckTable, inventory, match } = context;
     return {
       attemptsLimit,
-      buffer: dictionary.buffer,
+      board,
+      buffer: this.getDictionaryBuffer(),
       crossCheckBuffer: crossCheckTable.buffer,
-      ...data,
+      inventory,
+      match,
       player,
     };
   }
@@ -77,8 +86,8 @@ export default class WebWorkerTurnGeneratorGateway {
     this.pool = [];
   }
 
-  private static findBestResult(results: ReadonlyArray<GameGeneratorResult>): GameGeneratorResult | null {
-    let bestResult: GameGeneratorResult | null = null;
+  private static findBestResult(results: ReadonlyArray<DomainTurnGenerationResult>): DomainTurnGenerationResult | null {
+    let bestResult: DomainTurnGenerationResult | null = null;
     let bestScore = -1;
     for (const result of results) {
       if (result.validationResult.score > bestScore) {
@@ -89,9 +98,9 @@ export default class WebWorkerTurnGeneratorGateway {
     return bestResult;
   }
 
-  private static generateResult(worker: Worker, input: TurnGenerationWorkerInput): Promise<GameGeneratorResult | null> {
+  private static generateResult(worker: Worker, input: TurnGenerationWorkerInput): Promise<DomainTurnGenerationResult | null> {
     return new Promise((resolve, reject) => {
-      let result: GameGeneratorResult | null = null;
+      let result: DomainTurnGenerationResult | null = null;
       worker.onmessage = (event: MessageEvent<TurnGenerationWorkerResponse>) => {
         if (event.data.type === TurnGenerationWorkerResponseType.Done) resolve(result);
         else if (event.data.type === TurnGenerationWorkerResponseType.Error) reject(new Error(event.data.error));
@@ -108,19 +117,26 @@ export default class WebWorkerTurnGeneratorGateway {
     });
   }
 
-  private static async generateResults(inputs: ReadonlyArray<TurnGenerationWorkerInput>): Promise<Array<GameGeneratorResult>> {
+  private static async generateResults(
+    inputs: ReadonlyArray<TurnGenerationWorkerInput>,
+  ): Promise<Array<DomainTurnGenerationResult>> {
     const jobs = inputs.map(input => ({ input, worker: this.takeFromPool() ?? this.createWorker() }));
     try {
       const results = await Promise.all(jobs.map(({ input, worker }) => this.generateResult(worker, input)));
       this.pool.push(...jobs.map(({ worker }) => worker));
-      return results.filter((result): result is GameGeneratorResult => result !== null);
+      return results.filter((result): result is DomainTurnGenerationResult => result !== null);
     } catch (error) {
       for (const { worker } of jobs) worker.terminate();
       throw error;
     }
   }
 
-  private static initWorker(worker: Worker, buffer: GameDictionaryBuffer): Promise<void> {
+  private static getDictionaryBuffer(): DictionaryBuffer {
+    if (this.dictionaryBuffer === null) throw new Error('turn generator dictionary is not initialized');
+    return this.dictionaryBuffer;
+  }
+
+  private static initWorker(worker: Worker, buffer: DictionaryBuffer): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       worker.onmessage = (event: MessageEvent<TurnGenerationWorkerResponse>) => {
         if (event.data.type === TurnGenerationWorkerResponseType.Ready) resolve();

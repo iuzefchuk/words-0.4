@@ -1,12 +1,11 @@
-import WinnerDerivationPolicy from '@/domain/models/match/policies/WinnerDerivationPolicy.ts';
-import type { GamePlayer } from '@/domain/enums.ts';
-import type Inventory from '@/domain/models/inventory/Inventory.ts';
-import type Match from '@/domain/models/match/Match.ts';
-
-export type TerminationDecision = { terminate: false } | { terminate: true; winner: GamePlayer | null };
+import WinnerDerivationPolicy from '@/domain/policies/WinnerDerivationPolicy.ts';
+import type Inventory from '@/domain/entities/Inventory.ts';
+import type Match from '@/domain/entities/Match.ts';
+import type { MatchPlayer } from '@/domain/value-objects/enums.ts';
+import type { MatchTerminationDecision } from '@/domain/value-objects/types.ts';
 
 export default class MatchTerminationPolicy {
-  static afterTurnSaved(input: { currentPlayer: GamePlayer; inventory: Inventory; match: Match }): TerminationDecision {
+  static afterTurnSaved(input: { currentPlayer: MatchPlayer; inventory: Inventory; match: Match }): MatchTerminationDecision {
     if (input.match.isFinished) return { terminate: false };
     if (input.inventory.hasTilesFor(input.currentPlayer)) return { terminate: false };
     return { terminate: true, winner: WinnerDerivationPolicy.byScore(input.match) };

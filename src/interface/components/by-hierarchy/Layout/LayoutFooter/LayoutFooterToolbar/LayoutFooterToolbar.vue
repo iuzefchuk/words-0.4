@@ -7,17 +7,17 @@ import { Accent } from '@/interface/enums.ts';
 import { handlePressToolbarCell, handlePressToolbarTile } from '@/interface/handlers/toolbar.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-import type { GameTile } from '@/app/types/index.ts';
+import type { DomainInventoryTile } from '@/app/types/index.ts';
 const mainStore = MainStore.INSTANCE();
 const userStore = UserStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
 const { tiles } = storeToRefs(userStore);
 
-const paddedTiles = computed<Array<GameTile | null>>(() =>
+const paddedTiles = computed<Array<DomainInventoryTile | null>>(() =>
   Array.from({ length: mainStore.tilesPerPlayer }, (_, idx) => tiles.value[idx] ?? null),
 );
 
-function activate(idx: number, tile: GameTile | null): void {
+function activate(idx: number, tile: DomainInventoryTile | null): void {
   if (tile === null) return;
   if (mainStore.isTilePlaced(tile)) {
     handlePressToolbarCell(idx);
@@ -53,7 +53,7 @@ function activate(idx: number, tile: GameTile | null): void {
 </template>
 
 <style lang="scss" scoped>
-@use '@style/breakpoints.scss' as *;
+@use '../../../../../assets/style/breakpoints.scss' as *;
 
 .toolbar {
   display: flex;

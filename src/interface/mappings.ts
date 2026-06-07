@@ -1,61 +1,61 @@
-import { GameBonus, GameEventType, GameMatchResult, GamePlayer } from '@/app/types/index.ts';
+import { DomainBoardBonus, DomainMatchPlayer, DomainMatchResult, DomainTimelineEventType } from '@/app/enums/index.ts';
 import { Accent } from '@/interface/enums.ts';
 import { Sound } from '@/interface/services/SoundPlayer.ts';
-import type { GameEvent } from '@/app/types/index.ts';
+import type { DomainTimelineEvent } from '@/app/types/index.ts';
 
-export function getBonusAccent(bonus: GameBonus): Accent {
+export function getBonusAccent(bonus: DomainBoardBonus): Accent {
   return {
-    [GameBonus.DoubleLetter]: Accent.Quaternary,
-    [GameBonus.DoubleWord]: Accent.Secondary,
-    [GameBonus.TripleLetter]: Accent.Tertiary,
-    [GameBonus.TripleWord]: Accent.Primary,
+    [DomainBoardBonus.DoubleLetter]: Accent.Quaternary,
+    [DomainBoardBonus.DoubleWord]: Accent.Secondary,
+    [DomainBoardBonus.TripleLetter]: Accent.Tertiary,
+    [DomainBoardBonus.TripleWord]: Accent.Primary,
   }[bonus];
 }
 
-export function getBonusName(bonus: GameBonus): string {
+export function getBonusName(bonus: DomainBoardBonus): string {
   return window.text(
     {
-      [GameBonus.DoubleLetter]: 'general.bonus_dl',
-      [GameBonus.DoubleWord]: 'general.bonus_dw',
-      [GameBonus.TripleLetter]: 'general.bonus_tl',
-      [GameBonus.TripleWord]: 'general.bonus_tw',
+      [DomainBoardBonus.DoubleLetter]: 'general.bonus_dl',
+      [DomainBoardBonus.DoubleWord]: 'general.bonus_dw',
+      [DomainBoardBonus.TripleLetter]: 'general.bonus_tl',
+      [DomainBoardBonus.TripleWord]: 'general.bonus_tw',
     }[bonus],
   );
 }
 
-export function getEventSound(event: GameEvent): null | Sound {
+export function getEventSound(event: DomainTimelineEvent): null | Sound {
   switch (event.type) {
-    case GameEventType.MatchDifficultyChanged:
-    case GameEventType.MatchStarted:
-    case GameEventType.MatchTypeChanged:
-    case GameEventType.TurnValidationSet:
+    case DomainTimelineEventType.MatchDifficultyChanged:
+    case DomainTimelineEventType.MatchStarted:
+    case DomainTimelineEventType.MatchTypeChanged:
+    case DomainTimelineEventType.TurnValidationSet:
       return null;
-    case GameEventType.MatchFinished:
+    case DomainTimelineEventType.MatchFinished:
       return event.winner === null
         ? Sound.GameLongNeutral
-        : event.winner === GamePlayer.User
+        : event.winner === DomainMatchPlayer.User
           ? Sound.GameLongGood
           : Sound.GameLongBad;
-    case GameEventType.TilePlaced:
+    case DomainTimelineEventType.TilePlaced:
       return Sound.GameShortNeutral;
-    case GameEventType.TileUndoPlaced:
+    case DomainTimelineEventType.TileUndoPlaced:
       return Sound.GameShortNeutralReverse;
-    case GameEventType.TurnPassed:
-      return event.player === GamePlayer.User ? Sound.GameShortBad : Sound.GameShortAltBad;
-    case GameEventType.TurnSaved:
-      return event.player === GamePlayer.User ? Sound.GameShortGood : Sound.GameShortAltGood;
+    case DomainTimelineEventType.TurnPassed:
+      return event.player === DomainMatchPlayer.User ? Sound.GameShortBad : Sound.GameShortAltBad;
+    case DomainTimelineEventType.TurnSaved:
+      return event.player === DomainMatchPlayer.User ? Sound.GameShortGood : Sound.GameShortAltGood;
   }
 }
 
-export function getMatchResultText(result: GameMatchResult, scoreDiff: number): string {
-  if (result === GameMatchResult.Undecided) {
-    throw new Error(`cannot render match result text: result is ${GameMatchResult.Undecided}`);
+export function getMatchResultText(result: DomainMatchResult, scoreDiff: number): string {
+  if (result === DomainMatchResult.Undecided) {
+    throw new Error(`cannot render match result text: result is ${String(DomainMatchResult.Undecided)}`);
   }
   return window.text(
     {
-      [GameMatchResult.Lose]: scoreDiff < 0 ? 'general.end_lose_by' : 'general.end_lose',
-      [GameMatchResult.Tie]: 'general.end_tie',
-      [GameMatchResult.Win]: scoreDiff > 0 ? 'general.end_win_by' : 'general.end_win',
+      [DomainMatchResult.Lose]: scoreDiff < 0 ? 'general.end_lose_by' : 'general.end_lose',
+      [DomainMatchResult.Tie]: 'general.end_tie',
+      [DomainMatchResult.Win]: scoreDiff > 0 ? 'general.end_win_by' : 'general.end_win',
     }[result],
     { points: Math.abs(scoreDiff) },
   );

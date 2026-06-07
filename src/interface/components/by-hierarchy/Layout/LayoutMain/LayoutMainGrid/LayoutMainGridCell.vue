@@ -6,10 +6,10 @@ import { Accent } from '@/interface/enums.ts';
 import { handleDoublePressGridTile, handlePressGridCell, handlePressGridTile } from '@/interface/handlers/grid.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-import type { GameCell } from '@/app/types/index.ts';
+import type { DomainBoardCell } from '@/app/types/index.ts';
 import type { Ref } from 'vue';
 const props = defineProps<{
-  cell: GameCell;
+  cell: DomainBoardCell;
   index: number;
 }>();
 const mainStore = MainStore.INSTANCE();

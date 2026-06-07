@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { GameMatchDifficulty, GameMatchType } from '@/app/types/index.ts';
+import { DomainMatchDifficulty, DomainMatchType } from '@/app/enums/index.ts';
 import AppRadioGroup from '@/interface/components/app/AppRadioGroup.vue';
 import { handleChangeMatchDifficulty, handleChangeMatchType } from '@/interface/handlers/setup.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-type OptionValue = GameMatchDifficulty | GameMatchType;
+type OptionValue = DomainMatchDifficulty | DomainMatchType;
 const mainStore = MainStore.INSTANCE();
 </script>
 
@@ -13,25 +13,25 @@ const mainStore = MainStore.INSTANCE();
       v-for="{ items, legend, modelValue, onChange } in [
         {
           items: [
-            { text: text('general.difficulty_low'), value: GameMatchDifficulty.Low },
-            { text: text('general.difficulty_medium'), value: GameMatchDifficulty.Medium },
-            { text: text('general.difficulty_high'), value: GameMatchDifficulty.High },
+            { text: text('general.difficulty_low'), value: DomainMatchDifficulty.Low },
+            { text: text('general.difficulty_medium'), value: DomainMatchDifficulty.Medium },
+            { text: text('general.difficulty_high'), value: DomainMatchDifficulty.High },
           ],
           legend: text('general.settings_difficulty'),
           modelValue: () => mainStore.matchDifficulty,
           onChange: (value: OptionValue) => {
-            handleChangeMatchDifficulty(value as GameMatchDifficulty);
+            handleChangeMatchDifficulty(value as DomainMatchDifficulty);
           },
         },
         {
           items: [
-            { text: text('general.bonus_distribution_classic'), value: GameMatchType.Classic },
-            { text: text('general.bonus_distribution_random'), value: GameMatchType.Random },
+            { text: text('general.bonus_distribution_classic'), value: DomainMatchType.Classic },
+            { text: text('general.bonus_distribution_random'), value: DomainMatchType.Random },
           ],
           legend: text('general.settings_bonuses'),
           modelValue: () => mainStore.matchType,
           onChange: (value: OptionValue) => {
-            handleChangeMatchType(value as GameMatchType);
+            handleChangeMatchType(value as DomainMatchType);
           },
         },
       ]"

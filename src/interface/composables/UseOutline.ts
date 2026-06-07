@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-import type { GameCell, GameTile } from '@/app/types/index.ts';
+import type { DomainBoardCell, DomainInventoryTile } from '@/app/types/index.ts';
 
 type Bounds = { col: number; colSpan: number; row: number; rowSpan: number };
 
@@ -16,10 +16,10 @@ export default class UseOutline {
     return UserStore.INSTANCE();
   }
 
-  private static computeBounds(tiles: ReadonlyArray<GameTile>): ReadonlyArray<Bounds> {
+  private static computeBounds(tiles: ReadonlyArray<DomainInventoryTile>): ReadonlyArray<Bounds> {
     const cells = UseOutline.findCellsFor(tiles);
     if (cells.size === 0) return [];
-    const visited = new Set<GameCell>();
+    const visited = new Set<DomainBoardCell>();
     const bounds: Array<Bounds> = [];
     for (const cell of cells) {
       if (visited.has(cell)) continue;
@@ -28,9 +28,9 @@ export default class UseOutline {
     return bounds;
   }
 
-  private static findCellsFor(tiles: ReadonlyArray<GameTile>): Set<GameCell> {
+  private static findCellsFor(tiles: ReadonlyArray<DomainInventoryTile>): Set<DomainBoardCell> {
     const mainStore = MainStore.INSTANCE();
-    const cells = new Set<GameCell>();
+    const cells = new Set<DomainBoardCell>();
     for (const tile of tiles) {
       const cell = mainStore.findCellWithTile(tile);
       if (cell !== undefined) cells.add(cell);
@@ -38,9 +38,13 @@ export default class UseOutline {
     return cells;
   }
 
-  private static floodFillBounds(start: GameCell, cells: ReadonlySet<GameCell>, visited: Set<GameCell>): Bounds {
+  private static floodFillBounds(
+    start: DomainBoardCell,
+    cells: ReadonlySet<DomainBoardCell>,
+    visited: Set<DomainBoardCell>,
+  ): Bounds {
     const mainStore = MainStore.INSTANCE();
-    const stack: Array<GameCell> = [start];
+    const stack: Array<DomainBoardCell> = [start];
     visited.add(start);
     let minRow = Infinity;
     let maxRow = -Infinity;

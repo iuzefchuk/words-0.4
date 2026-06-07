@@ -1,5 +1,5 @@
-import type { GamePlayer } from '@/domain/enums.ts';
-import type { GameDictionaryBuffer, GameGeneratorContext, GameGeneratorResult } from '@/domain/types/index.ts';
+import type { DomainMatchPlayer } from '@/domain/published/enums.ts';
+import type { DomainTurnGenerationContext, DomainTurnGenerationResult } from '@/domain/published/types.ts';
 
 export type AppGateways = {
   loader: AppLoaderGateway;
@@ -19,8 +19,8 @@ export type AppSchedulerGateway = {
 export type AppTurnGeneratorGateway = {
   generateBestResult(input: {
     attemptsLimit: number;
-    context: GameGeneratorContext;
-    player: GamePlayer;
-  }): Promise<GameGeneratorResult | null>;
-  init(buffer: GameDictionaryBuffer): Promise<void>;
+    context: DomainTurnGenerationContext;
+    player: DomainMatchPlayer;
+  }): Promise<DomainTurnGenerationResult | null>;
+  init(buffer: ArrayBufferLike): Promise<void>;
 };

@@ -1,7 +1,7 @@
 import { computed } from 'vue';
-import { GameEventType, GamePlayer } from '@/app/types/index.ts';
+import { DomainMatchPlayer, DomainTimelineEventType } from '@/app/enums/index.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-import type { GameEvent } from '@/app/types/index.ts';
+import type { DomainTimelineEvent } from '@/app/types/index.ts';
 
 export default class UseHistory {
   private static readonly MAX_DISPLAYED_EVENTS = 3;
@@ -13,11 +13,11 @@ export default class UseHistory {
     }));
   });
 
-  private get allDisplayedEvents(): ReadonlyArray<GameEvent> {
-    return this.mainStore.eventsLog.filter(event => this.isEventDisplayed(event));
+  private get allDisplayedEvents(): ReadonlyArray<DomainTimelineEvent> {
+    return this.mainStore.events.filter(event => this.isEventDisplayed(event));
   }
 
-  private get displayedEvents(): ReadonlyArray<GameEvent> {
+  private get displayedEvents(): ReadonlyArray<DomainTimelineEvent> {
     const events = this.allDisplayedEvents;
     const start = Math.max(0, events.length - UseHistory.MAX_DISPLAYED_EVENTS);
     return events.slice(start);
@@ -27,30 +27,32 @@ export default class UseHistory {
     return MainStore.INSTANCE();
   }
 
-  private static getPassText(player: GamePlayer): string {
-    return player === GamePlayer.User ? window.text('general.event_pass_user') : window.text('general.event_pass_opponent');
+  private static getPassText(player: DomainMatchPlayer): string {
+    return player === DomainMatchPlayer.User
+      ? window.text('general.event_pass_user')
+      : window.text('general.event_pass_opponent');
   }
 
-  private static getSaveText(player: GamePlayer, score: number, words: ReadonlyArray<string>): string {
+  private static getSaveText(player: DomainMatchPlayer, score: number, words: ReadonlyArray<string>): string {
     const joinedWords = words.join(', ');
-    return player === GamePlayer.User
+    return player === DomainMatchPlayer.User
       ? window.text('general.event_save_user', { score, words: joinedWords })
       : window.text('general.event_save_opponent', { score, words: joinedWords });
   }
 
-  private createEventHtml(event: GameEvent): string {
+  private createEventHtml(event: DomainTimelineEvent): string {
     switch (event.type) {
-      case GameEventType.MatchDifficultyChanged:
-      case GameEventType.MatchFinished:
-      case GameEventType.MatchStarted:
-      case GameEventType.MatchTypeChanged:
-      case GameEventType.TilePlaced:
-      case GameEventType.TileUndoPlaced:
-      case GameEventType.TurnValidationSet:
+      case DomainTimelineEventType.MatchDifficultyChanged:
+      case DomainTimelineEventType.MatchFinished:
+      case DomainTimelineEventType.MatchStarted:
+      case DomainTimelineEventType.MatchTypeChanged:
+      case DomainTimelineEventType.TilePlaced:
+      case DomainTimelineEventType.TileUndoPlaced:
+      case DomainTimelineEventType.TurnValidationSet:
         return '';
-      case GameEventType.TurnPassed:
+      case DomainTimelineEventType.TurnPassed:
         return UseHistory.getPassText(event.player);
-      case GameEventType.TurnSaved:
+      case DomainTimelineEventType.TurnSaved:
         return UseHistory.getSaveText(event.player, event.score, event.words);
     }
   }
@@ -61,7 +63,7 @@ export default class UseHistory {
     return start + index;
   }
 
-  private isEventDisplayed(event: GameEvent): boolean {
-    return event.type === GameEventType.TurnPassed || event.type === GameEventType.TurnSaved;
+  private isEventDisplayed(event: DomainTimelineEvent): boolean {
+    return event.type === DomainTimelineEventType.TurnPassed || event.type === DomainTimelineEventType.TurnSaved;
   }
 }

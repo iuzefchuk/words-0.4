@@ -1,9 +1,8 @@
+import type { DomainMatchPlayer } from '@/app/enums/index.ts';
 import type {
-  GameDictionaryBuffer,
-  GameGeneratorContextData,
-  GameGeneratorPartition,
-  GameGeneratorResult,
-  GamePlayer,
+  DomainTurnGenerationContextData,
+  DomainTurnGenerationPartition,
+  DomainTurnGenerationResult,
 } from '@/app/types/index.ts';
 
 export enum TurnGenerationWorkerRequestType {
@@ -20,18 +19,20 @@ export enum TurnGenerationWorkerResponseType {
 
 export type TurnGenerationWorkerInput = {
   attemptsLimit: number;
-  buffer: GameDictionaryBuffer;
+  buffer: DictionaryBuffer;
   crossCheckBuffer: ArrayBuffer | SharedArrayBuffer;
-  partition?: GameGeneratorPartition;
-  player: GamePlayer;
-} & GameGeneratorContextData;
+  partition?: DomainTurnGenerationPartition;
+  player: DomainMatchPlayer;
+} & DomainTurnGenerationContextData;
 
 export type TurnGenerationWorkerRequest =
-  | { input: GameDictionaryBuffer; type: TurnGenerationWorkerRequestType.Init }
+  | { input: DictionaryBuffer; type: TurnGenerationWorkerRequestType.Init }
   | { input: TurnGenerationWorkerInput; type: TurnGenerationWorkerRequestType.Generate };
 
 export type TurnGenerationWorkerResponse =
   | { error: string; type: TurnGenerationWorkerResponseType.Error }
   | { type: TurnGenerationWorkerResponseType.Done }
   | { type: TurnGenerationWorkerResponseType.Ready }
-  | { type: TurnGenerationWorkerResponseType.Result; value: GameGeneratorResult };
+  | { type: TurnGenerationWorkerResponseType.Result; value: DomainTurnGenerationResult };
+
+type DictionaryBuffer = ArrayBufferLike;

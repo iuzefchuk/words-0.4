@@ -1,9 +1,9 @@
-import type { GameEvent, GameMatchSettings } from '@/app/types/index.ts';
+import type { DomainMatchSettings, DomainTimelineEvent } from '@/app/types/index.ts';
 
 export type AppEventsRepository = {
   delete(): Promise<void>;
-  load(): Promise<null | ReadonlyArray<GameEvent>>;
-  save(events: ReadonlyArray<GameEvent>): Promise<void>;
+  load(): Promise<null | ReadonlyArray<DomainTimelineEvent>>;
+  save(events: ReadonlyArray<DomainTimelineEvent>): Promise<void>;
 };
 
 export type AppRepositories = {
@@ -12,6 +12,6 @@ export type AppRepositories = {
 };
 
 export type AppSettingsRepository = {
-  load(): null | Partial<GameMatchSettings>;
-  save(settings: Partial<GameMatchSettings>): void;
+  load(): null | Partial<DomainMatchSettings>;
+  save(settings: Partial<DomainMatchSettings>): void;
 };

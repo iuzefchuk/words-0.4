@@ -36,6 +36,7 @@ function restart(): void {
   position: fixed;
   left: 0;
   top: 0;
+
   &__button {
     display: grid;
     place-items: center;

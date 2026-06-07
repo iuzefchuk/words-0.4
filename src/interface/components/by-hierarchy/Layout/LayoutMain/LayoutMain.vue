@@ -11,7 +11,7 @@ import LayoutMainLog from '@/interface/components/by-hierarchy/Layout/LayoutMain
 </template>
 
 <style lang="scss" scoped>
-@use '@style/breakpoints.scss' as *;
+@use '../../../../assets/style/breakpoints.scss' as *;
 
 .main {
   width: 100%;

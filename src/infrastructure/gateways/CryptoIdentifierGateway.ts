@@ -1,4 +1,4 @@
-import type { GameIdentifierGateway } from '@/app/types/index.ts';
+import type { DomainIdentifierGateway } from '@/app/types/index.ts';
 
 export default class CryptoIdentifierGateway {
   static create(): string {
@@ -11,4 +11,4 @@ export default class CryptoIdentifierGateway {
   }
 }
 
-CryptoIdentifierGateway satisfies GameIdentifierGateway;
+CryptoIdentifierGateway satisfies DomainIdentifierGateway;

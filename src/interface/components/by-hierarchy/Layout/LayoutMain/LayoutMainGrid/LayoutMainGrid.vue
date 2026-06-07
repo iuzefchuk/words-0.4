@@ -39,7 +39,7 @@ provide('focusedItemIndex', rovingTabindex.focusedIndex);
 </template>
 
 <style lang="scss" scoped>
-@use '@style/breakpoints.scss' as *;
+@use '../../../../../assets/style/breakpoints.scss' as *;
 
 .grid {
   width: 100%;

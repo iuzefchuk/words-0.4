@@ -1,13 +1,14 @@
-import { GameDictionary, GameTurnGenerator } from '@/app/types/index.ts';
+import { DomainTurnGenerator } from '@/app/types/index.ts';
+import { DomainDictionary } from '@/app/types/index.ts';
 import {
   TurnGenerationWorkerRequestType,
   TurnGenerationWorkerResponseType,
-} from '@/infrastructure/workers/turnGenerator.protocol';
-import type { GameDictionaryBuffer, GameGeneratorResult } from '@/app/types/index.ts';
-import type { TurnGenerationWorkerInput, TurnGenerationWorkerRequest } from '@/infrastructure/workers/turnGenerator.protocol';
+} from '@/infrastructure/workers/turnGenerator.protocol.ts';
+import type { DomainTurnGenerationResult } from '@/app/types/index.ts';
+import type { TurnGenerationWorkerInput, TurnGenerationWorkerRequest } from '@/infrastructure/workers/turnGenerator.protocol.ts';
 
 class TurnGeneratorWorker {
-  private dictionary: GameDictionary | null = null;
+  private dictionary: DomainDictionary | null = null;
 
   handleMessage(event: MessageEvent<TurnGenerationWorkerRequest>): void {
     if (event.data.type === TurnGenerationWorkerRequestType.Init) {
@@ -17,13 +18,13 @@ class TurnGeneratorWorker {
     }
   }
 
-  private findBestResult(input: TurnGenerationWorkerInput): GameGeneratorResult | null {
-    const dictionary = this.dictionary ?? GameDictionary.createFromBuffer(input.buffer);
-    const context = GameTurnGenerator.hydrateContext(input, dictionary, input.crossCheckBuffer);
-    let bestResult: GameGeneratorResult | null = null;
+  private findBestResult(input: TurnGenerationWorkerInput): DomainTurnGenerationResult | null {
+    const dictionary = this.dictionary ?? DomainDictionary.create(new Int32Array(input.buffer));
+    const context = DomainTurnGenerator.hydrateContext(input, dictionary, input.crossCheckBuffer);
+    let bestResult: DomainTurnGenerationResult | null = null;
     let bestScore = -1;
     let count = 0;
-    for (const result of GameTurnGenerator.execute(context, input.player, input.partition)) {
+    for (const result of DomainTurnGenerator.execute(context, input.player, input.partition)) {
       if (result.validationResult.score > bestScore) {
         bestResult = result;
         bestScore = result.validationResult.score;
@@ -33,8 +34,8 @@ class TurnGeneratorWorker {
     return bestResult;
   }
 
-  private init(buffer: GameDictionaryBuffer): void {
-    this.dictionary = GameDictionary.createFromBuffer(buffer);
+  private init(buffer: ArrayBufferLike): void {
+    this.dictionary = DomainDictionary.create(new Int32Array(buffer));
     self.postMessage({ type: TurnGenerationWorkerResponseType.Ready });
   }
 

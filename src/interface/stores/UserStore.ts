@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref, shallowRef, triggerRef } from 'vue';
 import MainStore from '@/interface/stores/MainStore.ts';
-import type { GameTile } from '@/app/types/index.ts';
+import type { DomainInventoryTile } from '@/app/types/index.ts';
 
 export default class UserStore {
   static readonly INSTANCE = defineStore('user', () => {
@@ -21,7 +21,7 @@ export default class UserStore {
       shuffleTiles: () => {
         store.shuffleTiles();
       },
-      switchTiles: (firstTile: GameTile, secondTile: GameTile) => {
+      switchTiles: (firstTile: DomainInventoryTile, secondTile: DomainInventoryTile) => {
         store.switchTiles(firstTile, secondTile);
       },
       tiles: store.tilesRef,
@@ -32,7 +32,7 @@ export default class UserStore {
     return MainStore.INSTANCE();
   }
 
-  private get selectedTile(): GameTile | null {
+  private get selectedTile(): DomainInventoryTile | null {
     return this.selectedTileRef.value;
   }
 
@@ -40,42 +40,42 @@ export default class UserStore {
     return this.selectedTile !== null && this.mainStore.isTilePlaced(this.selectedTile);
   }
 
-  private get tiles(): Array<GameTile> {
+  private get tiles(): Array<DomainInventoryTile> {
     return this.tilesRef.value;
   }
 
-  private set tiles(newValue: Array<GameTile>) {
+  private set tiles(newValue: Array<DomainInventoryTile>) {
     this.tilesRef.value = newValue;
   }
 
   private constructor(
-    private readonly tilesRef = shallowRef<Array<GameTile>>([]),
-    private readonly selectedTileRef = ref<GameTile | null>(null),
+    private readonly tilesRef = shallowRef<Array<DomainInventoryTile>>([]),
+    private readonly selectedTileRef = ref<DomainInventoryTile | null>(null),
   ) {}
 
   private deselectTile(): void {
     this.selectedTileRef.value = null;
   }
 
-  private getTileIdx(tile: GameTile): number {
+  private getTileIdx(tile: DomainInventoryTile): number {
     return this.tiles.indexOf(tile);
   }
 
-  private initialize(userTiles: ReadonlyArray<GameTile>): void {
+  private initialize(userTiles: ReadonlyArray<DomainInventoryTile>): void {
     this.tiles.splice(0, this.tiles.length, ...userTiles);
     triggerRef(this.tilesRef);
     this.selectedTileRef.value = null;
   }
 
-  private isTileInToolbar(tile: GameTile): boolean {
+  private isTileInToolbar(tile: DomainInventoryTile): boolean {
     return this.getTileIdx(tile) !== -1;
   }
 
-  private isTileSelected(tile: GameTile): boolean {
+  private isTileSelected(tile: DomainInventoryTile): boolean {
     return this.selectedTile !== null && this.mainStore.areTilesSame(this.selectedTile, tile);
   }
 
-  private selectTile(tile: GameTile): void {
+  private selectTile(tile: DomainInventoryTile): void {
     if (!this.isTileInToolbar(tile)) return;
     this.selectedTileRef.value = tile;
   }
@@ -85,7 +85,7 @@ export default class UserStore {
     triggerRef(this.tilesRef);
   }
 
-  private switchTiles(firstTile: GameTile, secondTile: GameTile): void {
+  private switchTiles(firstTile: DomainInventoryTile, secondTile: DomainInventoryTile): void {
     const firstIdx = this.getTileIdx(firstTile);
     const secondIdx = this.getTileIdx(secondTile);
     if (firstIdx < 0 || secondIdx < 0) throw new Error(`cannot switch tiles: ${firstTile} or ${secondTile} is not in inventory`);

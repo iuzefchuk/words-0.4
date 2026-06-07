@@ -15,7 +15,7 @@ import LayoutFooterToolbar from '@/interface/components/by-hierarchy/Layout/Layo
 </template>
 
 <style lang="scss" scoped>
-@use '@style/breakpoints.scss' as *;
+@use '../../../../assets/style/breakpoints.scss' as *;
 
 .footer {
   width: 100%;

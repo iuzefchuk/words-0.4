@@ -64,7 +64,7 @@ if (props.keys.length > 0) useKeys();
 </template>
 
 <style lang="scss" scoped>
-@use '@style/breakpoints.scss' as *;
+@use '../../assets/style/breakpoints.scss' as *;
 
 .btn {
   cursor: pointer;

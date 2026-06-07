@@ -1,47 +1,41 @@
-import { GamePlayer } from '@/app/types/index.ts';
-import Inventory from '@/domain/models/inventory/Inventory.ts';
+import { DomainMatchPlayer } from '@/app/enums/index.ts';
+import type { DomainBoardBonus, DomainInventoryLetter, DomainMatchDifficulty, DomainMatchResult, DomainMatchType } from '@/app/enums/index.ts';
 import type {
-  GameBoardView,
-  GameBonus,
-  GameCell,
-  GameEvent,
-  GameInventoryView,
-  GameLetter,
-  GameMatchDifficulty,
-  GameMatchResult,
-  GameMatchType,
-  GameMatchView,
-  GameTile,
-  GameTurnsView,
+  DomainBoardCell,
+  DomainBoardProjection,
+  DomainInventoryProjection,
+  DomainInventoryTile,
+  DomainMatchProjection,
+  DomainTimelineEvent,
 } from '@/app/types/index.ts';
-import type Game from '@/domain/Game.ts';
+import type { default as DomainGame } from '@/domain/aggregates/Game.ts';
 
 export default class AppQueries {
-  get boardCells(): ReadonlyArray<GameCell> {
-    return this.game.boardView.cells;
+  get boardCells(): ReadonlyArray<DomainBoardCell> {
+    return this.boardView.cells;
   }
 
   get boardCellsPerAxis(): number {
-    return this.game.boardView.cellsPerAxis;
+    return this.boardView.cellsPerAxis;
   }
 
   get currentPlayerIsUser(): boolean {
-    return this.turnsView.currentPlayer === GamePlayer.User;
+    return this.matchView.currentPlayer === DomainMatchPlayer.User;
   }
 
   get currentTurnIsValid(): boolean {
-    return this.turnsView.currentTurnIsValid;
+    return this.matchView.currentTurnIsValid;
   }
 
   get currentTurnScore(): number | undefined {
-    return this.turnsView.currentTurnScore;
+    return this.matchView.currentTurnScore;
   }
 
-  get eventsLog(): ReadonlyArray<GameEvent> {
-    return this.game.eventsLogView;
+  get eventsView(): ReadonlyArray<DomainTimelineEvent> {
+    return this.game.eventsView;
   }
 
-  get matchDifficulty(): GameMatchDifficulty {
+  get matchDifficulty(): DomainMatchDifficulty {
     return this.matchView.difficulty;
   }
 
@@ -49,24 +43,24 @@ export default class AppQueries {
     return this.matchView.isFinished;
   }
 
-  get matchResult(): GameMatchResult {
-    return this.matchView.getResultFor(GamePlayer.User);
+  get matchResult(): DomainMatchResult {
+    return this.matchView.getResultFor(DomainMatchPlayer.User);
   }
 
-  get matchType(): GameMatchType {
+  get matchType(): DomainMatchType {
     return this.matchView.type;
   }
 
   get opponentScore(): number {
-    return this.matchView.getScoreFor(GamePlayer.Opponent);
+    return this.matchView.getScoreFor(DomainMatchPlayer.Opponent);
   }
 
   get settingsChangeIsAllowed(): boolean {
-    return this.game.settingsChangeIsAllowed;
+    return !this.matchView.historyHasPriorTurns;
   }
 
   get tilesPerPlayer(): number {
-    return this.game.inventoryView.tilesPerPlayer;
+    return this.inventoryView.tilesPerPlayer;
   }
 
   get tilesRemaining(): number {
@@ -74,84 +68,80 @@ export default class AppQueries {
   }
 
   get turnHistoryHasPriorTurns(): boolean {
-    return this.turnsView.historyHasPriorTurns;
+    return this.matchView.historyHasPriorTurns;
   }
 
   get userPassWillBeResign(): boolean {
-    return this.game.willPassBeResignFor(GamePlayer.User);
+    return this.matchView.willPlayerPassBeResign(DomainMatchPlayer.User);
   }
 
   get userScore(): number {
-    return this.matchView.getScoreFor(GamePlayer.User);
+    return this.matchView.getScoreFor(DomainMatchPlayer.User);
   }
 
-  get userTiles(): ReadonlyArray<GameTile> {
-    return this.inventoryView.getTilesFor(GamePlayer.User);
+  get userTiles(): ReadonlyArray<DomainInventoryTile> {
+    return this.inventoryView.getTilesFor(DomainMatchPlayer.User);
   }
 
-  private get boardView(): Readonly<GameBoardView> {
+  private get boardView(): Readonly<DomainBoardProjection> {
     return this.game.boardView;
   }
 
-  private get inventoryView(): Readonly<GameInventoryView> {
+  private get inventoryView(): Readonly<DomainInventoryProjection> {
     return this.game.inventoryView;
   }
 
-  private get matchView(): Readonly<GameMatchView> {
+  private get matchView(): Readonly<DomainMatchProjection> {
     return this.game.matchView;
   }
 
-  private get turnsView(): Readonly<GameTurnsView> {
-    return this.game.turnsView;
-  }
+  constructor(private readonly game: DomainGame) {}
 
-  constructor(private readonly game: Game) {}
-
-  areTilesSame(first: GameTile, second: GameTile): boolean {
+  areTilesSame(first: DomainInventoryTile, second: DomainInventoryTile): boolean {
     return this.inventoryView.areTilesEqual(first, second);
   }
 
-  findCellWithTile(tile: GameTile): GameCell | undefined {
+  findCellWithTile(tile: DomainInventoryTile): DomainBoardCell | undefined {
     return this.boardView.findCellByTile(tile);
   }
 
-  findTileOnCell(cell: GameCell): GameTile | undefined {
+  findTileOnCell(cell: DomainBoardCell): DomainInventoryTile | undefined {
     return this.boardView.findTileByCell(cell);
   }
 
-  getAdjacentCells(cell: GameCell): ReadonlyArray<GameCell> {
+  getAdjacentCells(cell: DomainBoardCell): ReadonlyArray<DomainBoardCell> {
     return this.boardView.getAdjacentCells(cell);
   }
 
-  getCellBonus(cell: GameCell): GameBonus | null {
+  getCellBonus(cell: DomainBoardCell): DomainBoardBonus | null {
     return this.boardView.getBonus(cell);
   }
 
-  getCellColumnIndex(cell: GameCell): number {
+  getCellColumnIndex(cell: DomainBoardCell): number {
     return this.boardView.getCellPositionInColumn(cell);
   }
 
-  getCellRowIndex(cell: GameCell): number {
+  getCellRowIndex(cell: DomainBoardCell): number {
     return this.boardView.getCellPositionInRow(cell);
   }
 
-  getLetterPoints(letter: GameLetter): number {
-    return Inventory.getLetterPoints(letter);
+  getLetterPoints(letter: DomainInventoryLetter): number {
+    return this.inventoryView.getLetterPoints(letter);
   }
 
-  getTileLetter(tile: GameTile): GameLetter {
+  getTileLetter(tile: DomainInventoryTile): DomainInventoryLetter {
     return this.inventoryView.getTileLetter(tile);
   }
 
-  isCellCenter(cell: GameCell): boolean {
+  isCellCenter(cell: DomainBoardCell): boolean {
     return this.boardView.isCellCenter(cell);
   }
 
-  isTilePlaced(tile: GameTile): boolean {
+  isTilePlaced(tile: DomainInventoryTile): boolean {
     return this.boardView.isTilePlaced(tile);
   }
 
-  wasTileUsedInPreviousTurn(tile: GameTile): boolean {
-    return this.game.wasTileUsedInPreviousTurn(tile);
+  wasTileUsedInPreviousTurn(tile: DomainInventoryTile): boolean {
+    return this.matchView.previousTurnTiles?.includes(tile) ?? false;
   }
 }

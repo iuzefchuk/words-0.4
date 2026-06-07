@@ -54,7 +54,7 @@ const buttons = reactive([
 </template>
 
 <style lang="scss" scoped>
-@use '@style/breakpoints.scss' as *;
+@use '../../../../assets/style/breakpoints.scss' as *;
 
 .menubar {
   z-index: var(--z-index-level-1);
