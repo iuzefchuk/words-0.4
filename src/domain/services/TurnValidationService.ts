@@ -1,6 +1,6 @@
 import CellsValidationService from '@/domain/services/CellsValidationService.ts';
 import PlacementsValidationService from '@/domain/services/PlacementsValidationService.ts';
-import ScoringService from '@/domain/services/ScoringService.ts';
+import TurnScoringService from '@/domain/services/TurnScoringService.ts';
 import WordsValidationService from '@/domain/services/WordsValidationService.ts';
 import { TurnValidationStatus } from '@/domain/value-objects/enums.ts';
 import type Inventory from '@/domain/entities/Inventory.ts';
@@ -88,7 +88,7 @@ export default class TurnValidationService {
   private static computeScore(state: PipelineState<WordsOutput>): PipelineThroughput<PipelineState<ScoreOutput>> {
     const { inventory, playfield } = state.context;
     const newCells = new Set(state.cells);
-    const score = ScoringService.execute(
+    const score = TurnScoringService.execute(
       state.placements,
       newCells,
       tile => inventory.getTilePoints(tile),

@@ -90,8 +90,8 @@ export default class AppCommands {
     };
   }
 
-  shuffleUserTiles(tiles: Array<DomainInventoryTile>): void {
-    this.game.shuffleTiles(tiles);
+  shuffleUserTiles(): void {
+    this.game.shuffleTilesFor(DomainMatchPlayer.User);
   }
 
   undoPlaceTile(tile: DomainInventoryTile): void {

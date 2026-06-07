@@ -41,6 +41,10 @@ class TilePool {
     return removedTile;
   }
 
+  shuffle(): void {
+    ShuffleService.shuffle({ array: this.tiles });
+  }
+
   private validateCapacity(newTileCount: number): void {
     if (newTileCount > this.capacity) {
       throw new Error(`cannot add tile: pool capacity ${String(this.capacity)} exceeded`);
@@ -174,6 +178,10 @@ export default class Inventory {
   replenishTilesFor(player: MatchPlayer): void {
     const pool = this.getTilePoolFor(player);
     this.replenishPlayerPool(pool);
+  }
+
+  shuffleTilesFor(player: MatchPlayer): void {
+    this.getTilePoolFor(player).shuffle();
   }
 
   private getTilePoolFor(player: MatchPlayer): TilePool {

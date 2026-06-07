@@ -5,7 +5,6 @@ import Timeline from '@/domain/events/Timeline.ts';
 import GenerationDifficultyPolicy from '@/domain/policies/GenerationDifficultyPolicy.ts';
 import MatchTerminationPolicy from '@/domain/policies/MatchTerminationPolicy.ts';
 import WinnerDerivationPolicy from '@/domain/policies/WinnerDerivationPolicy.ts';
-import ShuffleService from '@/domain/services/ShuffleService.ts';
 import TurnGenerationService from '@/domain/services/TurnGenerationService.ts';
 import TurnValidationService from '@/domain/services/TurnValidationService.ts';
 import {
@@ -235,8 +234,9 @@ export default class Game {
     this.recordEvent({ matchType, seed, type: TimelineEventType.MatchTypeChanged });
   }
 
-  shuffleTiles(tiles: Array<InventoryTile>): void {
-    ShuffleService.shuffle({ array: tiles });
+  shuffleTilesFor(player: MatchPlayer): void {
+    this.ensureMatchMutability();
+    this.inventory.shuffleTilesFor(player);
   }
 
   undoPlaceTile(input: { tile: InventoryTile }): void {

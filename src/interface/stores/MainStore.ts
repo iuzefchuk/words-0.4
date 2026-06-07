@@ -70,8 +70,8 @@ class Actions {
     });
   };
 
-  shuffleUserTiles = (tiles: Array<DomainInventoryTile>): void => {
-    this.requireApp().commands.shuffleUserTiles(tiles);
+  shuffleUserTiles = (): void => {
+    this.requireApp().commands.shuffleUserTiles();
   };
 
   undoPlaceTile = (tile: DomainInventoryTile): void => {

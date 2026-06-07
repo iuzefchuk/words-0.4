@@ -81,7 +81,8 @@ export default class UserStore {
   }
 
   private shuffleTiles(): void {
-    this.mainStore.shuffleUserTiles(this.tiles);
+    this.mainStore.shuffleUserTiles();
+    this.tiles.splice(0, this.tiles.length, ...this.mainStore.userTiles);
     triggerRef(this.tilesRef);
   }
 

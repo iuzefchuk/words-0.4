@@ -1,6 +1,6 @@
 import type { InventoryTile, PlayfieldCell, PlayfieldPlacement } from '@/domain/value-objects/types.ts';
 
-export default class ScoringService {
+export default class TurnScoringService {
   static execute(
     placements: ReadonlyArray<PlayfieldPlacement>,
     newCells: ReadonlySet<PlayfieldCell>,
