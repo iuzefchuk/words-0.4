@@ -1,12 +1,12 @@
-import type { BoardCell, BoardPlacement, InventoryTile } from '@/domain/value-objects/types.ts';
+import type { InventoryTile, PlayfieldCell, PlayfieldPlacement } from '@/domain/value-objects/types.ts';
 
 export default class ScoringService {
   static execute(
-    placements: ReadonlyArray<BoardPlacement>,
-    newCells: ReadonlySet<BoardCell>,
+    placements: ReadonlyArray<PlayfieldPlacement>,
+    newCells: ReadonlySet<PlayfieldCell>,
     getTilePoints: (tile: InventoryTile) => number,
-    getMultiplierForLetter: (cell: BoardCell) => number,
-    getMultiplierForWord: (cell: BoardCell) => number,
+    getMultiplierForLetter: (cell: PlayfieldCell) => number,
+    getMultiplierForWord: (cell: PlayfieldCell) => number,
   ): number {
     let totalScore = 0;
     for (const placement of placements) {

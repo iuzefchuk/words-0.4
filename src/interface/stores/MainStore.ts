@@ -4,8 +4,8 @@ import createAppRuntime from '@/index.ts';
 import { getEventSound } from '@/interface/mappings.ts';
 import SoundPlayer from '@/interface/services/SoundPlayer.ts';
 import type App from '@/app/App.ts';
-import type { DomainBoardBonus, DomainInventoryLetter, DomainMatchDifficulty, DomainMatchType } from '@/app/enums/index.ts';
-import type { DomainBoardCell, DomainInventoryTile } from '@/app/types/index.ts';
+import type { DomainInventoryLetter, DomainMatchDifficulty, DomainMatchType, DomainPlayfieldBonus } from '@/app/enums/index.ts';
+import type { DomainInventoryTile, DomainPlayfieldCell } from '@/app/types/index.ts';
 import type { Sound } from '@/interface/services/SoundPlayer.ts';
 import type { ComputedRef, ShallowRef } from 'vue';
 
@@ -32,7 +32,7 @@ class Actions {
   };
 
   clearUserTiles = (): void => {
-    this.state.writeBoard(() => {
+    this.state.writePlayfield(() => {
       this.requireApp().commands.clearUserTiles();
     });
   };
@@ -44,8 +44,8 @@ class Actions {
     });
   };
 
-  placeTile = (args: { cell: DomainBoardCell; tile: DomainInventoryTile }): void => {
-    this.writeBoardAndPlaySound(() => {
+  placeTile = (args: { cell: DomainPlayfieldCell; tile: DomainInventoryTile }): void => {
+    this.writePlayfieldAndPlaySound(() => {
       this.requireApp().commands.placeTile(args);
     }, [args.cell]);
     this.scheduleDeferredValidation();
@@ -77,7 +77,7 @@ class Actions {
   undoPlaceTile = (tile: DomainInventoryTile): void => {
     const previousCell = this.requireApp().queries.findCellWithTile(tile);
     const affectedCells = previousCell === undefined ? undefined : [previousCell];
-    this.writeBoardAndPlaySound(() => {
+    this.writePlayfieldAndPlaySound(() => {
       this.requireApp().commands.undoPlaceTile(tile);
     }, affectedCells);
     this.scheduleDeferredValidation();
@@ -101,7 +101,7 @@ class Actions {
       .yield()
       .then(() => {
         if (validationId !== this.pendingValidationId) return;
-        this.writeBoardAndPlaySound(() => {
+        this.writePlayfieldAndPlaySound(() => {
           this.requireApp().commands.validateTurn();
         }, []);
       });
@@ -118,8 +118,8 @@ class Actions {
     return response;
   }
 
-  private writeBoardAndPlaySound<R>(callback: () => R, affectedCells?: ReadonlyArray<DomainBoardCell>): R {
-    const response = this.state.writeBoard(callback, affectedCells);
+  private writePlayfieldAndPlaySound<R>(callback: () => R, affectedCells?: ReadonlyArray<DomainPlayfieldCell>): R {
+    const response = this.state.writePlayfield(callback, affectedCells);
     this.playPendingSounds();
     return response;
   }
@@ -130,13 +130,9 @@ class Getters {
 
   readonly allActionsAreDisabled = computed(() => !this.currentPlayerIsUser.value);
 
-  readonly boardCells = this.read(queries => queries.boardCells);
+  readonly currentTurnIsValid = this.readPlayfield(queries => queries.currentTurnIsValid);
 
-  readonly boardCellsPerAxis = this.read(queries => queries.boardCellsPerAxis);
-
-  readonly currentTurnIsValid = this.readBoard(queries => queries.currentTurnIsValid);
-
-  readonly currentTurnScore = this.readBoard(queries => queries.currentTurnScore);
+  readonly currentTurnScore = this.readPlayfield(queries => queries.currentTurnScore);
 
   readonly events = this.read(queries => [...queries.eventsView]);
 
@@ -148,9 +144,13 @@ class Getters {
 
   readonly matchResult = this.read(queries => queries.matchResult);
 
-  readonly matchType = this.readBoard(queries => queries.matchType);
+  readonly matchType = this.readPlayfield(queries => queries.matchType);
 
   readonly opponentScore = this.read(queries => queries.opponentScore);
+
+  readonly playfieldCells = this.read(queries => queries.playfieldCells);
+
+  readonly playfieldCellsPerAxis = this.read(queries => queries.playfieldCellsPerAxis);
 
   readonly settingsChangeIsAllowed = this.read(queries => queries.settingsChangeIsAllowed);
 
@@ -172,44 +172,46 @@ class Getters {
   areTilesSame = (firstTile: DomainInventoryTile, secondTile: DomainInventoryTile): boolean =>
     this.requireApp().queries.areTilesSame(firstTile, secondTile);
 
-  findCellWithTile = (tile: DomainInventoryTile): DomainBoardCell | undefined =>
-    this.state.readBoard(() => this.requireApp().queries.findCellWithTile(tile));
+  findCellWithTile = (tile: DomainInventoryTile): DomainPlayfieldCell | undefined =>
+    this.state.readPlayfield(() => this.requireApp().queries.findCellWithTile(tile));
 
-  findTileOnCell = (cell: DomainBoardCell): DomainInventoryTile | undefined => this.state.tileByCellCache.get(cell);
+  findTileOnCell = (cell: DomainPlayfieldCell): DomainInventoryTile | undefined => this.state.tileByCellCache.get(cell);
 
-  getAdjacentCells = (cell: DomainBoardCell): ReadonlyArray<DomainBoardCell> => this.requireApp().queries.getAdjacentCells(cell);
+  getAdjacentCells = (cell: DomainPlayfieldCell): ReadonlyArray<DomainPlayfieldCell> =>
+    this.requireApp().queries.getAdjacentCells(cell);
 
-  getCellBonus = (cell: DomainBoardCell): DomainBoardBonus | null =>
-    this.state.readBoard(() => this.requireApp().queries.getCellBonus(cell));
+  getCellBonus = (cell: DomainPlayfieldCell): DomainPlayfieldBonus | null =>
+    this.state.readPlayfield(() => this.requireApp().queries.getCellBonus(cell));
 
-  getCellColumnIndex = (cell: DomainBoardCell): number => this.requireApp().queries.getCellColumnIndex(cell);
+  getCellColumnIndex = (cell: DomainPlayfieldCell): number => this.requireApp().queries.getCellColumnIndex(cell);
 
-  getCellRowIndex = (cell: DomainBoardCell): number => this.requireApp().queries.getCellRowIndex(cell);
+  getCellRowIndex = (cell: DomainPlayfieldCell): number => this.requireApp().queries.getCellRowIndex(cell);
 
   getLetterPoints = (letter: DomainInventoryLetter): number => this.requireApp().queries.getLetterPoints(letter);
 
   getTileLetter = (tile: DomainInventoryTile): DomainInventoryLetter => this.requireApp().queries.getTileLetter(tile);
 
-  isCellCenter = (cell: DomainBoardCell): boolean => this.requireApp().queries.isCellCenter(cell);
+  isCellCenter = (cell: DomainPlayfieldCell): boolean => this.requireApp().queries.isCellCenter(cell);
 
-  isTilePlaced = (tile: DomainInventoryTile): boolean => this.state.readBoard(() => this.requireApp().queries.isTilePlaced(tile));
+  isTilePlaced = (tile: DomainInventoryTile): boolean =>
+    this.state.readPlayfield(() => this.requireApp().queries.isTilePlaced(tile));
 
   wasTileUsedInPreviousTurn = (tile: DomainInventoryTile): boolean =>
-    this.state.readBoard(() => this.requireApp().queries.wasTileUsedInPreviousTurn(tile));
+    this.state.readPlayfield(() => this.requireApp().queries.wasTileUsedInPreviousTurn(tile));
 
   private read<T>(fn: (queries: App['queries']) => T): ComputedRef<T> {
     return computed(() => this.state.read(() => fn(this.requireApp().queries)));
   }
 
-  private readBoard<T>(fn: (queries: App['queries']) => T): ComputedRef<T> {
-    return computed(() => this.state.readBoard(() => fn(this.requireApp().queries)));
+  private readPlayfield<T>(fn: (queries: App['queries']) => T): ComputedRef<T> {
+    return computed(() => this.state.readPlayfield(() => fn(this.requireApp().queries)));
   }
 }
 
 class State {
-  readonly tileByCellCache: Map<DomainBoardCell, DomainInventoryTile> = reactive(new Map());
+  readonly tileByCellCache: Map<DomainPlayfieldCell, DomainInventoryTile> = reactive(new Map());
 
-  private readonly boardVersion = ref(0);
+  private readonly playfieldVersion = ref(0);
 
   private readonly stateVersion = ref(0);
 
@@ -224,7 +226,7 @@ class State {
   }
 
   incrementVersions(): void {
-    this.boardVersion.value++;
+    this.playfieldVersion.value++;
     this.stateVersion.value++;
     this.syncTileByCellCache();
   }
@@ -234,8 +236,8 @@ class State {
     return fn();
   }
 
-  readBoard<T>(fn: () => T): T {
-    void this.boardVersion.value;
+  readPlayfield<T>(fn: () => T): T {
+    void this.playfieldVersion.value;
     return fn();
   }
 
@@ -255,17 +257,17 @@ class State {
     return result;
   }
 
-  writeBoard<T>(fn: () => T, affectedCells?: ReadonlyArray<DomainBoardCell>): T {
+  writePlayfield<T>(fn: () => T, affectedCells?: ReadonlyArray<DomainPlayfieldCell>): T {
     const result = fn();
-    this.boardVersion.value++;
+    this.playfieldVersion.value++;
     this.syncTileByCellCache(affectedCells);
     return result;
   }
 
-  private syncTileByCellCache(affectedCells?: ReadonlyArray<DomainBoardCell>): void {
+  private syncTileByCellCache(affectedCells?: ReadonlyArray<DomainPlayfieldCell>): void {
     const app = this.appRef.value;
     if (app === null) return;
-    const cells = affectedCells ?? app.queries.boardCells;
+    const cells = affectedCells ?? app.queries.playfieldCells;
     for (const cell of cells) {
       const tile = app.queries.findTileOnCell(cell);
       if (tile !== undefined) {

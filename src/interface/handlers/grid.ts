@@ -1,6 +1,6 @@
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-import type { DomainBoardCell, DomainInventoryTile } from '@/app/types/index.ts';
+import type { DomainInventoryTile, DomainPlayfieldCell } from '@/app/types/index.ts';
 
 export function handleDoublePressGridTile(tile: DomainInventoryTile): void {
   const { undoPlaceTile } = MainStore.INSTANCE();
@@ -10,7 +10,7 @@ export function handleDoublePressGridTile(tile: DomainInventoryTile): void {
   undoPlaceTile(tile);
 }
 
-export function handlePressGridCell(cell: DomainBoardCell): void {
+export function handlePressGridCell(cell: DomainPlayfieldCell): void {
   const { findTileOnCell, placeTile, undoPlaceTile } = MainStore.INSTANCE();
   const { deselectTile, selectedTile, selectedTileIsPlaced } = UserStore.INSTANCE();
   if (selectedTile === null) return;

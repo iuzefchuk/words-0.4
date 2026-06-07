@@ -1,9 +1,9 @@
 import { TurnOutcome, TurnValidationStatus } from '@/domain/value-objects/enums.ts';
 import type { MatchPlayer, TurnValidationError } from '@/domain/value-objects/enums.ts';
-import type { BoardCell, IdentifierGateway, InventoryTile, TurnValidationResult } from '@/domain/value-objects/types.ts';
+import type { IdentifierGateway, InventoryTile, PlayfieldCell, TurnValidationResult } from '@/domain/value-objects/types.ts';
 
 export default class Turn {
-  get cells(): ReadonlyArray<BoardCell> | undefined {
+  get cells(): ReadonlyArray<PlayfieldCell> | undefined {
     return this.validationResult.status === TurnValidationStatus.Valid ? this.validationResult.cells : undefined;
   }
 

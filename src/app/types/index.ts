@@ -19,8 +19,8 @@ export type AppTurnResponse =
   | { readonly ok: true; readonly value: { words: ReadonlyArray<string> } };
 
 export type {
-  DomainBoardCell,
-  DomainBoardProjection,
+  DomainPlayfieldCell,
+  DomainPlayfieldProjection,
   DomainDictionaryGraph,
   DomainGateways,
   DomainIdentifierGateway,

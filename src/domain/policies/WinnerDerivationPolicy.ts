@@ -9,7 +9,7 @@ export default class WinnerDerivationPolicy {
     return userScore > opponentScore ? MatchPlayer.User : MatchPlayer.Opponent;
   }
 
-  static onResignation(resigner: MatchPlayer): MatchPlayer {
-    return resigner === MatchPlayer.User ? MatchPlayer.Opponent : MatchPlayer.User;
+  static getOppositePlayer(player: MatchPlayer): MatchPlayer {
+    return player === MatchPlayer.User ? MatchPlayer.Opponent : MatchPlayer.User;
   }
 }

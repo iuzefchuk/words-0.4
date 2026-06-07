@@ -9,13 +9,13 @@ const mainStore = MainStore.INSTANCE();
 const rovingTabindex = new UseRovingTabindex(
   useTemplateRef<HTMLElement>(REF_KEY),
   `[role="gridcell"]`,
-  mainStore.boardCellsPerAxis,
+  mainStore.playfieldCellsPerAxis,
 );
 
 const rows = computed(() => {
-  const size = mainStore.boardCellsPerAxis;
+  const size = mainStore.playfieldCellsPerAxis;
   return Array.from({ length: size }, (_, row) =>
-    mainStore.boardCells.slice(row * size, (row + 1) * size).map((cell, col) => ({ cell, index: row * size + col })),
+    mainStore.playfieldCells.slice(row * size, (row + 1) * size).map((cell, col) => ({ cell, index: row * size + col })),
   );
 });
 
@@ -27,8 +27,8 @@ provide('focusedItemIndex', rovingTabindex.focusedIndex);
     :ref="REF_KEY"
     class="grid app__create-grid--for-main-grid"
     role="grid"
-    :aria-rowcount="mainStore.boardCellsPerAxis"
-    :aria-colcount="mainStore.boardCellsPerAxis"
+    :aria-rowcount="mainStore.playfieldCellsPerAxis"
+    :aria-colcount="mainStore.playfieldCellsPerAxis"
     @keydown="rovingTabindex.onKeydown"
   >
     <div v-for="(row, rowIdx) in rows" :key="rowIdx" role="row" :aria-rowindex="rowIdx + 1" class="grid__row">

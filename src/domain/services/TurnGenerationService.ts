@@ -1,12 +1,12 @@
-import Board from '@/domain/entities/Board.ts';
 import Inventory from '@/domain/entities/Inventory.ts';
 import Match from '@/domain/entities/Match.ts';
+import Playfield from '@/domain/entities/Playfield.ts';
 import CrossCheckService from '@/domain/services/CrossCheckService.ts';
 import ShuffleService from '@/domain/services/ShuffleService.ts';
 import TurnValidationService from '@/domain/services/TurnValidationService.ts';
 import CrossCheckTable from '@/domain/value-objects/classes/CrossCheckTable.ts';
 import {
-  BoardAxis,
+  PlayfieldAxis,
   TurnGenerationCommandType,
   TurnGenerationDirection,
   TurnGenerationTask,
@@ -14,13 +14,13 @@ import {
 } from '@/domain/value-objects/enums.ts';
 import type { InventoryLetter, MatchPlayer } from '@/domain/value-objects/enums.ts';
 import type {
-  BoardAnchorCoordinates,
-  BoardCell,
-  BoardLink,
   DictionaryGraph,
   DictionaryNode,
   InventoryTile,
   InventoryTileCollection,
+  PlayfieldAnchorCoordinates,
+  PlayfieldCell,
+  PlayfieldLink,
   TurnGenerationContext,
   TurnGenerationPartition,
   TurnGenerationResult,
@@ -36,19 +36,19 @@ type ApplyTask = {
 
 type CalculateTask = { traversal: Traversal; type: TurnGenerationTask.CalculateCandidate };
 
-type Candidate = { cell: BoardCell; position: number; resolution: Resolution | undefined };
+type Candidate = { cell: PlayfieldCell; position: number; resolution: Resolution | undefined };
 
 type ContinueTaskCommand = { newTasks: Array<Task>; type: TurnGenerationCommandType.ContinueExecute };
 
-type DispatcherComputeds = { axisCells: ReadonlyArray<BoardCell>; oppositeAxis: BoardAxis };
+type DispatcherComputeds = { axisCells: ReadonlyArray<PlayfieldCell>; oppositeAxis: PlayfieldAxis };
 
-type DispatcherState = { placement: Array<BoardLink>; tiles: MutableTileCollection };
+type DispatcherState = { placement: Array<PlayfieldLink>; tiles: MutableTileCollection };
 
 type EvaluateTask = { traversal: Traversal; type: TurnGenerationTask.EvaluateTraversal };
 
 type GeneratorArguments = {
   context: TurnGenerationContext;
-  coords: BoardAnchorCoordinates;
+  coords: PlayfieldAnchorCoordinates;
   playerTileCollection: InventoryTileCollection;
 };
 
@@ -124,10 +124,6 @@ class TaskCommandResolver {
 }
 
 class TaskDispatcher {
-  private get board(): Board {
-    return this.context.board;
-  }
-
   private get dictionary(): DictionaryGraph {
     return this.context.dictionary;
   }
@@ -136,8 +132,12 @@ class TaskDispatcher {
     return this.context.inventory;
   }
 
-  private get placement(): Array<BoardLink> {
+  private get placement(): Array<PlayfieldLink> {
     return this.state.placement;
+  }
+
+  private get playfield(): Playfield {
+    return this.context.playfield;
   }
 
   private get tiles(): MutableTileCollection {
@@ -155,8 +155,8 @@ class TaskDispatcher {
     for (const [letter, tileIds] of playerTileCollection) tiles.set(letter, [...tileIds]);
     const state: DispatcherState = { placement: [], tiles };
     const computeds: DispatcherComputeds = {
-      axisCells: context.board.getAxisCells(coords),
-      oppositeAxis: context.board.getOppositeAxis(coords.axis),
+      axisCells: context.playfield.getAxisCells(coords),
+      oppositeAxis: context.playfield.getOppositeAxis(coords.axis),
     };
     return new TaskDispatcher(context, state, computeds);
   }
@@ -184,7 +184,7 @@ class TaskDispatcher {
     const { letterTiles } = task.resolutionComputeds;
     letterTiles.pop();
     this.placement.push({ cell, tile });
-    this.board.placeTile(cell, tile);
+    this.playfield.placeTile(cell, tile);
     return this.emitContinue();
   }
 
@@ -229,7 +229,7 @@ class TaskDispatcher {
     const position = traversal.position + traversal.direction;
     const cell = this.computeds.axisCells[position];
     if (cell === undefined) throw new ReferenceError(`expected cell at position ${String(position)}, got undefined`);
-    const tile = this.board.findTileByCell(cell);
+    const tile = this.playfield.findTileByCell(cell);
     const resolution: Resolution | undefined = tile !== undefined ? { tile } : undefined;
     const candidate: Candidate = { cell, position, resolution };
     return this.emitContinue([{ ...task, candidate, type: TurnGenerationTask.ResolveCandidate }]);
@@ -296,7 +296,7 @@ class TaskDispatcher {
     const { letterTiles } = task.resolutionComputeds;
     letterTiles.push(tile);
     this.placement.pop();
-    this.board.undoPlaceTile(tile);
+    this.playfield.undoPlaceTile(tile);
     return this.emitContinue();
   }
 
@@ -304,22 +304,27 @@ class TaskDispatcher {
     const { traversal } = task;
     const isEdge =
       traversal.direction === TurnGenerationDirection.Left
-        ? this.board.isCellPositionAtAxisStart(traversal.position)
-        : this.board.isCellPositionAtAxisEnd(traversal.position);
+        ? this.playfield.isCellPositionAtAxisStart(traversal.position)
+        : this.playfield.isCellPositionAtAxisEnd(traversal.position);
     if (isEdge) return this.emitStop();
     return this.emitContinue([{ ...task, type: TurnGenerationTask.CalculateCandidate }]);
   }
 }
 
 export default class TurnGenerationService {
-  static createContext(board: Board, dictionary: DictionaryGraph, inventory: Inventory, match: Match): TurnGenerationContext {
-    const clonedBoard = Board.clone(board);
+  static createContext(
+    playfield: Playfield,
+    dictionary: DictionaryGraph,
+    inventory: Inventory,
+    match: Match,
+  ): TurnGenerationContext {
+    const clonedPlayfield = Playfield.clone(playfield);
     return {
-      board: clonedBoard,
-      crossCheckTable: CrossCheckService.precompute(clonedBoard, dictionary, inventory),
+      crossCheckTable: CrossCheckService.precompute(clonedPlayfield, dictionary, inventory),
       dictionary,
       inventory,
       match: Match.clone(match),
+      playfield: clonedPlayfield,
     };
   }
 
@@ -328,18 +333,18 @@ export default class TurnGenerationService {
     player: MatchPlayer,
     partition?: TurnGenerationPartition,
   ): Generator<TurnGenerationResult> {
-    const { board, inventory } = context;
+    const { inventory, playfield } = context;
     const playerTileCollection = inventory.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;
-    const { anchorCells } = board;
+    const { anchorCells } = playfield;
     if (anchorCells.size === 0) return;
     const allAnchors = Array.from(anchorCells);
     const anchors =
       partition !== undefined ? allAnchors.slice(partition.offset, partition.offset + partition.length) : allAnchors;
     if (anchors.length === 0) return;
     for (const cell of anchors) {
-      for (const axis of Object.values(BoardAxis)) {
-        const coords: BoardAnchorCoordinates = { axis, cell };
+      for (const axis of Object.values(PlayfieldAxis)) {
+        const coords: PlayfieldAnchorCoordinates = { axis, cell };
         yield* this.generate({ context, coords, playerTileCollection });
       }
     }
@@ -350,14 +355,14 @@ export default class TurnGenerationService {
     dictionary: DictionaryGraph,
     crossCheckBuffer: ArrayBuffer | SharedArrayBuffer,
   ): TurnGenerationContext {
-    const source = data as { board: Board; inventory: Inventory; match: Match };
-    const board = Board.clone(source.board);
+    const source = data as { inventory: Inventory; match: Match; playfield: Playfield };
+    const playfield = Playfield.clone(source.playfield);
     return {
-      board,
-      crossCheckTable: CrossCheckTable.createFromBuffer(crossCheckBuffer, board.cells.length),
+      crossCheckTable: CrossCheckTable.createFromBuffer(crossCheckBuffer, playfield.cells.length),
       dictionary,
       inventory: Inventory.clone(source.inventory),
       match: Match.clone(source.match),
+      playfield,
     };
   }
 

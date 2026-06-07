@@ -6,7 +6,7 @@ export enum AppBootProgress {
 }
 
 export {
-  DomainBoardBonus,
+  DomainPlayfieldBonus,
   DomainInventoryLetter,
   DomainMatchDifficulty,
   DomainMatchPlayer,

@@ -2,8 +2,6 @@ import { default as DomainTurnGenerator } from '@/domain/services/TurnGeneration
 import { default as DomainDictionary } from '@/domain/value-objects/classes/Dictionary.ts';
 
 export type {
-  BoardCell as DomainBoardCell,
-  BoardProjection as DomainBoardProjection,
   DictionaryGraph as DomainDictionaryGraph,
   Gateways as DomainGateways,
   IdentifierGateway as DomainIdentifierGateway,
@@ -11,6 +9,8 @@ export type {
   InventoryTile as DomainInventoryTile,
   MatchProjection as DomainMatchProjection,
   MatchSettings as DomainMatchSettings,
+  PlayfieldCell as DomainPlayfieldCell,
+  PlayfieldProjection as DomainPlayfieldProjection,
   RandomizerGateway as DomainRandomizerGateway,
   TimelineEvent as DomainTimelineEvent,
   TurnGenerationContext as DomainTurnGenerationContext,

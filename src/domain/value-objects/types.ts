@@ -1,42 +1,19 @@
-import type Board from '@/domain/entities/Board.ts';
 import type Inventory from '@/domain/entities/Inventory.ts';
 import type Match from '@/domain/entities/Match.ts';
+import type Playfield from '@/domain/entities/Playfield.ts';
 import type CrossCheckTable from '@/domain/value-objects/classes/CrossCheckTable.ts';
 import type {
-  BoardAxis,
-  BoardBonus,
   InventoryLetter,
   MatchDifficulty,
   MatchPlayer,
   MatchResult,
   MatchType,
+  PlayfieldAxis,
+  PlayfieldBonus,
   TimelineEventType,
   TurnValidationError,
   TurnValidationStatus,
 } from '@/domain/value-objects/enums.ts';
-
-export type BoardAnchorCoordinates = { readonly axis: BoardAxis; readonly cell: BoardCell };
-
-export type BoardBonusDistribution = ReadonlyMap<BoardCell, BoardBonus>;
-
-export type BoardCell = Brand<number, 'Cell'>;
-
-export type BoardLink = { readonly cell: BoardCell; readonly tile: InventoryTile };
-
-export type BoardPlacement = ReadonlyArray<BoardLink>;
-
-export type BoardProjection = {
-  readonly cells: ReadonlyArray<BoardCell>;
-  readonly cellsPerAxis: number;
-  findCellByTile(tile: InventoryTile): BoardCell | undefined;
-  findTileByCell(cell: BoardCell): InventoryTile | undefined;
-  getAdjacentCells(cell: BoardCell): ReadonlyArray<BoardCell>;
-  getBonus(cell: BoardCell): BoardBonus | null;
-  getCellPositionInColumn(cell: BoardCell): number;
-  getCellPositionInRow(cell: BoardCell): number;
-  isCellCenter(cell: BoardCell): boolean;
-  isTilePlaced(tile: InventoryTile): boolean;
-};
 
 export type Dictionary = {
   containsAllWords(words: ReadonlyArray<string>): boolean;
@@ -79,7 +56,7 @@ export type InventoryTileCollection = ReadonlyMap<InventoryLetter, ReadonlyArray
 
 export type MatchProjection = {
   readonly currentPlayer: MatchPlayer;
-  readonly currentTurnCells: ReadonlyArray<BoardCell> | undefined;
+  readonly currentTurnCells: ReadonlyArray<PlayfieldCell> | undefined;
   readonly currentTurnError: TurnValidationError | undefined;
   readonly currentTurnIsValid: boolean;
   readonly currentTurnScore: number | undefined;
@@ -104,14 +81,37 @@ export type MatchSettings = {
 
 export type MatchTerminationDecision = { terminate: false } | { terminate: true; winner: MatchPlayer | null };
 
+export type PlayfieldAnchorCoordinates = { readonly axis: PlayfieldAxis; readonly cell: PlayfieldCell };
+
+export type PlayfieldBonusDistribution = ReadonlyMap<PlayfieldCell, PlayfieldBonus>;
+
+export type PlayfieldCell = Brand<number, 'Cell'>;
+
+export type PlayfieldLink = { readonly cell: PlayfieldCell; readonly tile: InventoryTile };
+
+export type PlayfieldPlacement = ReadonlyArray<PlayfieldLink>;
+
+export type PlayfieldProjection = {
+  readonly cells: ReadonlyArray<PlayfieldCell>;
+  readonly cellsPerAxis: number;
+  findCellByTile(tile: InventoryTile): PlayfieldCell | undefined;
+  findTileByCell(cell: PlayfieldCell): InventoryTile | undefined;
+  getAdjacentCells(cell: PlayfieldCell): ReadonlyArray<PlayfieldCell>;
+  getBonus(cell: PlayfieldCell): null | PlayfieldBonus;
+  getCellPositionInColumn(cell: PlayfieldCell): number;
+  getCellPositionInRow(cell: PlayfieldCell): number;
+  isCellCenter(cell: PlayfieldCell): boolean;
+  isTilePlaced(tile: InventoryTile): boolean;
+};
+
 export type RandomizerGateway = {
   createFunctionFromSeed(seed: number): () => number;
   createNewSeed(): number;
 };
 
 export type TimelineEvent =
-  | { cell: BoardCell; tile: InventoryTile; type: TimelineEventType.TilePlaced }
-  | { cell: BoardCell; tile: InventoryTile; type: TimelineEventType.TileUndoPlaced }
+  | { cell: PlayfieldCell; tile: InventoryTile; type: TimelineEventType.TilePlaced }
+  | { cell: PlayfieldCell; tile: InventoryTile; type: TimelineEventType.TileUndoPlaced }
   | { difficulty: MatchDifficulty; type: TimelineEventType.MatchDifficultyChanged }
   | { matchType: MatchType; seed: number; type: TimelineEventType.MatchTypeChanged }
   | { player: MatchPlayer; score: number; type: TimelineEventType.TurnSaved; words: ReadonlyArray<string> }
@@ -120,9 +120,9 @@ export type TimelineEvent =
   | { seed: number; settings: MatchSettings; type: TimelineEventType.MatchStarted }
   | { type: TimelineEventType.MatchFinished; winner: MatchPlayer | null };
 
-export type TurnComputedCells = { cells: ReadonlyArray<BoardCell> };
+export type TurnComputedCells = { cells: ReadonlyArray<PlayfieldCell> };
 
-export type TurnComputedPlacements = { placements: ReadonlyArray<BoardPlacement> };
+export type TurnComputedPlacements = { placements: ReadonlyArray<PlayfieldPlacement> };
 
 export type TurnComputedScore = { score: number };
 
@@ -135,12 +135,12 @@ export type TurnGenerationContext = {
   dictionary: DictionaryGraph;
 } & TurnGenerationContextData;
 
-export type TurnGenerationContextData = { readonly board: Board; readonly inventory: Inventory; readonly match: Match };
+export type TurnGenerationContextData = { readonly inventory: Inventory; readonly match: Match; readonly playfield: Playfield };
 
 export type TurnGenerationPartition = { length: number; offset: number };
 
 export type TurnGenerationResult = {
-  cells: ReadonlyArray<BoardCell>;
+  cells: ReadonlyArray<PlayfieldCell>;
   tiles: ReadonlyArray<InventoryTile>;
   validationResult: TurnValidationValidResult;
 };

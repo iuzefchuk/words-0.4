@@ -1,11 +1,11 @@
-import LayoutService from '@/domain/services/LayoutService.ts';
+import PlayfieldLayoutService from '@/domain/services/PlayfieldLayoutService.ts';
 import ShuffleService from '@/domain/services/ShuffleService.ts';
-import { BoardBonus, BoardType } from '@/domain/value-objects/enums.ts';
-import type { BoardBonusDistribution, BoardCell } from '@/domain/value-objects/types.ts';
+import { PlayfieldBonus, PlayfieldType } from '@/domain/value-objects/enums.ts';
+import type { PlayfieldBonusDistribution, PlayfieldCell } from '@/domain/value-objects/types.ts';
 
 type OctantLocation = readonly [row: number, col: number];
 
-// Octant is an upper-left slice of the board depicted on illustration below. The 8 D4 symmetries (4 rotations + 4 reflections) expand it to the full layout:
+// Octant is an upper-left slice of the playfield depicted on illustration below. The 8 D4 symmetries (4 rotations + 4 reflections) expand it to the full layout:
 
 // [0,0] .     .     .     .     .     .     .     .     .     .     .     .     .     .
 // [1,0] [1,1] .     .     .     .     .     .     .     .     .     .     .     .     .
@@ -23,14 +23,14 @@ type OctantLocation = readonly [row: number, col: number];
 // .     .     .     .     .     .     .     .     .     .     .     .     .     .     .
 // .     .     .     .     .     .     .     .     .     .     .     .     .     .     .
 
-export default class BonusService {
-  private static readonly NON_CENTER_CELLS: ReadonlyArray<BoardCell> = LayoutService.CELLS.filter(
-    cell => cell !== LayoutService.CENTER_CELL,
+export default class PlayfieldBonusService {
+  private static readonly NON_CENTER_CELLS: ReadonlyArray<PlayfieldCell> = PlayfieldLayoutService.CELLS.filter(
+    cell => cell !== PlayfieldLayoutService.CENTER_CELL,
   );
 
-  private static readonly PRESET_OCTANT_LOCATIONS_BY_BONUS: ReadonlyMap<BoardBonus, ReadonlyArray<OctantLocation>> = new Map([
+  private static readonly PRESET_OCTANT_LOCATIONS_BY_BONUS: ReadonlyMap<PlayfieldBonus, ReadonlyArray<OctantLocation>> = new Map([
     [
-      BoardBonus.DoubleLetter,
+      PlayfieldBonus.DoubleLetter,
       [
         [3, 0],
         [6, 2],
@@ -39,7 +39,7 @@ export default class BonusService {
       ],
     ],
     [
-      BoardBonus.DoubleWord,
+      PlayfieldBonus.DoubleWord,
       [
         [1, 1],
         [2, 2],
@@ -48,14 +48,14 @@ export default class BonusService {
       ],
     ],
     [
-      BoardBonus.TripleLetter,
+      PlayfieldBonus.TripleLetter,
       [
         [5, 1],
         [5, 5],
       ],
     ],
     [
-      BoardBonus.TripleWord,
+      PlayfieldBonus.TripleWord,
       [
         [0, 0],
         [7, 0],
@@ -63,8 +63,8 @@ export default class BonusService {
     ],
   ]);
 
-  private static readonly PRESET_DISTRIBUTION: BoardBonusDistribution = (() => {
-    const result = new Map<BoardCell, BoardBonus>();
+  private static readonly PRESET_DISTRIBUTION: PlayfieldBonusDistribution = (() => {
+    const result = new Map<PlayfieldCell, PlayfieldBonus>();
     for (const [bonus, locations] of this.PRESET_OCTANT_LOCATIONS_BY_BONUS) {
       for (const location of locations) {
         for (const cell of this.getSymmetricCells(location)) result.set(cell, bonus);
@@ -73,22 +73,22 @@ export default class BonusService {
     return result;
   })();
 
-  static createDistribution(type: BoardType, randomizerFunction?: () => number): BoardBonusDistribution {
+  static createDistribution(type: PlayfieldType, randomizerFunction?: () => number): PlayfieldBonusDistribution {
     switch (type) {
-      case BoardType.Preset:
+      case PlayfieldType.Preset:
         return this.PRESET_DISTRIBUTION;
-      case BoardType.Random:
+      case PlayfieldType.Random:
         return this.createRandomDistribution(randomizerFunction);
       default:
-        throw new ReferenceError(`unexpected board type: ${String(type)}`);
+        throw new ReferenceError(`unexpected playfield type: ${String(type)}`);
     }
   }
 
-  private static createRandomDistribution(randomizerFunction: () => number = Math.random): BoardBonusDistribution {
+  private static createRandomDistribution(randomizerFunction: () => number = Math.random): PlayfieldBonusDistribution {
     const cells = [...this.NON_CENTER_CELLS];
     ShuffleService.shuffle({ array: cells, randomizerFunction });
     const bonuses = [...this.PRESET_DISTRIBUTION.values()];
-    const result = new Map<BoardCell, BoardBonus>();
+    const result = new Map<PlayfieldCell, PlayfieldBonus>();
     for (let idx = 0; idx < bonuses.length; idx++) {
       const cell = cells[idx];
       const bonus = bonuses[idx];
@@ -98,8 +98,8 @@ export default class BonusService {
     return result;
   }
 
-  private static getSymmetricCells([row, col]: OctantLocation): ReadonlySet<BoardCell> {
-    const size = LayoutService.CELLS_PER_AXIS;
+  private static getSymmetricCells([row, col]: OctantLocation): ReadonlySet<PlayfieldCell> {
+    const size = PlayfieldLayoutService.CELLS_PER_AXIS;
     const last = size - 1;
     const reflections: ReadonlyArray<OctantLocation> = [
       [row, col],
@@ -111,8 +111,8 @@ export default class BonusService {
       [last - col, row],
       [last - col, last - row],
     ];
-    const cells = new Set<BoardCell>();
-    for (const [rowIdx, colIdx] of reflections) cells.add((rowIdx * size + colIdx) as BoardCell);
+    const cells = new Set<PlayfieldCell>();
+    for (const [rowIdx, colIdx] of reflections) cells.add((rowIdx * size + colIdx) as PlayfieldCell);
     return cells;
   }
 }

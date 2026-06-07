@@ -1,20 +1,3 @@
-export enum BoardAxis {
-  X = 'X',
-  Y = 'Y',
-}
-
-export enum BoardBonus {
-  DoubleLetter = 'DoubleLetter',
-  DoubleWord = 'DoubleWord',
-  TripleLetter = 'TripleLetter',
-  TripleWord = 'TripleWord',
-}
-
-export enum BoardType {
-  Preset = 'Preset',
-  Random = 'Random',
-}
-
 export enum InventoryLetter {
   A = 'A',
   B = 'B',
@@ -64,6 +47,23 @@ export enum MatchResult {
 
 export enum MatchType {
   Classic = 'Classic',
+  Random = 'Random',
+}
+
+export enum PlayfieldAxis {
+  X = 'X',
+  Y = 'Y',
+}
+
+export enum PlayfieldBonus {
+  DoubleLetter = 'DoubleLetter',
+  DoubleWord = 'DoubleWord',
+  TripleLetter = 'TripleLetter',
+  TripleWord = 'TripleWord',
+}
+
+export enum PlayfieldType {
+  Preset = 'Preset',
   Random = 'Random',
 }
 

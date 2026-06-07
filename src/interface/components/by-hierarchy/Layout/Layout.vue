@@ -35,7 +35,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
 <template>
   <div
     v-if="isMounted"
-    :style="{ '--grid-items-per-axis': mainStore.boardCellsPerAxis }"
+    :style="{ '--grid-items-per-axis': mainStore.playfieldCellsPerAxis }"
     :class="{ layout: true, 'layout--blurred': matchIsFinished }"
     @click="userStore.deselectTile()"
   >

@@ -1,33 +1,33 @@
 import CrossCheckTable from '@/domain/value-objects/classes/CrossCheckTable.ts';
-import { BoardAxis } from '@/domain/value-objects/enums.ts';
-import type Board from '@/domain/entities/Board.ts';
+import { PlayfieldAxis } from '@/domain/value-objects/enums.ts';
 import type Inventory from '@/domain/entities/Inventory.ts';
-import type { BoardAnchorCoordinates, BoardCell, DictionaryGraph } from '@/domain/value-objects/types.ts';
+import type Playfield from '@/domain/entities/Playfield.ts';
+import type { DictionaryGraph, PlayfieldAnchorCoordinates, PlayfieldCell } from '@/domain/value-objects/types.ts';
 
 export default class CrossCheckService {
   private constructor(
-    private readonly board: Board,
+    private readonly playfield: Playfield,
     private readonly dictionary: DictionaryGraph,
     private readonly inventory: Inventory,
   ) {}
 
-  static precompute(board: Board, dictionary: DictionaryGraph, inventory: Inventory): CrossCheckTable {
-    const service = new CrossCheckService(board, dictionary, inventory);
-    const table = CrossCheckTable.create(board.cells.length);
-    for (const axis of Object.values(BoardAxis)) {
-      for (const cell of board.cells) {
+  static precompute(playfield: Playfield, dictionary: DictionaryGraph, inventory: Inventory): CrossCheckTable {
+    const service = new CrossCheckService(playfield, dictionary, inventory);
+    const table = CrossCheckTable.create(playfield.cells.length);
+    for (const axis of Object.values(PlayfieldAxis)) {
+      for (const cell of playfield.cells) {
         table.setMask(axis, cell, service.computeFor({ axis, cell }));
       }
     }
     return table;
   }
 
-  private collectAdjacentTileLetters(axisCells: ReadonlyArray<BoardCell>, startPosition: number, direction: -1 | 1): string {
+  private collectAdjacentTileLetters(axisCells: ReadonlyArray<PlayfieldCell>, startPosition: number, direction: -1 | 1): string {
     let result = '';
     for (let idx = startPosition + direction; idx >= 0 && idx < axisCells.length; idx += direction) {
       const cell = axisCells[idx];
       if (cell === undefined) throw new ReferenceError(`expected cell at index ${String(idx)}, got undefined`);
-      const tile = this.board.findTileByCell(cell);
+      const tile = this.playfield.findTileByCell(cell);
       if (tile === undefined) break;
       const letter = this.inventory.getTileLetter(tile);
       result = direction === -1 ? letter + result : result + letter;
@@ -35,12 +35,12 @@ export default class CrossCheckService {
     return result;
   }
 
-  private computeFor(coords: BoardAnchorCoordinates): number {
-    const axisCells = this.board.getAxisCells(coords);
+  private computeFor(coords: PlayfieldAnchorCoordinates): number {
+    const axisCells = this.playfield.getAxisCells(coords);
     const position =
-      coords.axis === BoardAxis.X
-        ? this.board.getCellPositionInColumn(coords.cell)
-        : this.board.getCellPositionInRow(coords.cell);
+      coords.axis === PlayfieldAxis.X
+        ? this.playfield.getCellPositionInColumn(coords.cell)
+        : this.playfield.getCellPositionInRow(coords.cell);
     const prefix = this.collectAdjacentTileLetters(axisCells, position, -1);
     const suffix = this.collectAdjacentTileLetters(axisCells, position, 1);
     if (prefix === '' && suffix === '') return CrossCheckTable.ALL_LETTERS_MASK;

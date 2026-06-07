@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-import type { DomainBoardCell, DomainInventoryTile } from '@/app/types/index.ts';
+import type { DomainInventoryTile, DomainPlayfieldCell } from '@/app/types/index.ts';
 
 type Bounds = { col: number; colSpan: number; row: number; rowSpan: number };
 
@@ -19,7 +19,7 @@ export default class UseOutline {
   private static computeBounds(tiles: ReadonlyArray<DomainInventoryTile>): ReadonlyArray<Bounds> {
     const cells = UseOutline.findCellsFor(tiles);
     if (cells.size === 0) return [];
-    const visited = new Set<DomainBoardCell>();
+    const visited = new Set<DomainPlayfieldCell>();
     const bounds: Array<Bounds> = [];
     for (const cell of cells) {
       if (visited.has(cell)) continue;
@@ -28,9 +28,9 @@ export default class UseOutline {
     return bounds;
   }
 
-  private static findCellsFor(tiles: ReadonlyArray<DomainInventoryTile>): Set<DomainBoardCell> {
+  private static findCellsFor(tiles: ReadonlyArray<DomainInventoryTile>): Set<DomainPlayfieldCell> {
     const mainStore = MainStore.INSTANCE();
-    const cells = new Set<DomainBoardCell>();
+    const cells = new Set<DomainPlayfieldCell>();
     for (const tile of tiles) {
       const cell = mainStore.findCellWithTile(tile);
       if (cell !== undefined) cells.add(cell);
@@ -39,12 +39,12 @@ export default class UseOutline {
   }
 
   private static floodFillBounds(
-    start: DomainBoardCell,
-    cells: ReadonlySet<DomainBoardCell>,
-    visited: Set<DomainBoardCell>,
+    start: DomainPlayfieldCell,
+    cells: ReadonlySet<DomainPlayfieldCell>,
+    visited: Set<DomainPlayfieldCell>,
   ): Bounds {
     const mainStore = MainStore.INSTANCE();
-    const stack: Array<DomainBoardCell> = [start];
+    const stack: Array<DomainPlayfieldCell> = [start];
     visited.add(start);
     let minRow = Infinity;
     let maxRow = -Infinity;
@@ -95,6 +95,6 @@ export default class UseOutline {
   readonly isOnRightmostColumnAt = (idx: number): boolean => {
     const group = this.bounds.value[idx];
     if (group === undefined) return false;
-    return group.col + group.colSpan >= this.mainStore.boardCellsPerAxis;
+    return group.col + group.colSpan >= this.mainStore.playfieldCellsPerAxis;
   };
 }

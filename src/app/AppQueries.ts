@@ -1,8 +1,8 @@
 import { DomainMatchPlayer } from '@/app/enums/index.ts';
-import type { DomainBoardBonus, DomainInventoryLetter, DomainMatchDifficulty, DomainMatchResult, DomainMatchType } from '@/app/enums/index.ts';
+import type { DomainPlayfieldBonus, DomainInventoryLetter, DomainMatchDifficulty, DomainMatchResult, DomainMatchType } from '@/app/enums/index.ts';
 import type {
-  DomainBoardCell,
-  DomainBoardProjection,
+  DomainPlayfieldCell,
+  DomainPlayfieldProjection,
   DomainInventoryProjection,
   DomainInventoryTile,
   DomainMatchProjection,
@@ -11,12 +11,12 @@ import type {
 import type { default as DomainGame } from '@/domain/aggregates/Game.ts';
 
 export default class AppQueries {
-  get boardCells(): ReadonlyArray<DomainBoardCell> {
-    return this.boardView.cells;
+  get playfieldCells(): ReadonlyArray<DomainPlayfieldCell> {
+    return this.playfieldView.cells;
   }
 
-  get boardCellsPerAxis(): number {
-    return this.boardView.cellsPerAxis;
+  get playfieldCellsPerAxis(): number {
+    return this.playfieldView.cellsPerAxis;
   }
 
   get currentPlayerIsUser(): boolean {
@@ -83,8 +83,8 @@ export default class AppQueries {
     return this.inventoryView.getTilesFor(DomainMatchPlayer.User);
   }
 
-  private get boardView(): Readonly<DomainBoardProjection> {
-    return this.game.boardView;
+  private get playfieldView(): Readonly<DomainPlayfieldProjection> {
+    return this.game.playfieldView;
   }
 
   private get inventoryView(): Readonly<DomainInventoryProjection> {
@@ -101,28 +101,28 @@ export default class AppQueries {
     return this.inventoryView.areTilesEqual(first, second);
   }
 
-  findCellWithTile(tile: DomainInventoryTile): DomainBoardCell | undefined {
-    return this.boardView.findCellByTile(tile);
+  findCellWithTile(tile: DomainInventoryTile): DomainPlayfieldCell | undefined {
+    return this.playfieldView.findCellByTile(tile);
   }
 
-  findTileOnCell(cell: DomainBoardCell): DomainInventoryTile | undefined {
-    return this.boardView.findTileByCell(cell);
+  findTileOnCell(cell: DomainPlayfieldCell): DomainInventoryTile | undefined {
+    return this.playfieldView.findTileByCell(cell);
   }
 
-  getAdjacentCells(cell: DomainBoardCell): ReadonlyArray<DomainBoardCell> {
-    return this.boardView.getAdjacentCells(cell);
+  getAdjacentCells(cell: DomainPlayfieldCell): ReadonlyArray<DomainPlayfieldCell> {
+    return this.playfieldView.getAdjacentCells(cell);
   }
 
-  getCellBonus(cell: DomainBoardCell): DomainBoardBonus | null {
-    return this.boardView.getBonus(cell);
+  getCellBonus(cell: DomainPlayfieldCell): DomainPlayfieldBonus | null {
+    return this.playfieldView.getBonus(cell);
   }
 
-  getCellColumnIndex(cell: DomainBoardCell): number {
-    return this.boardView.getCellPositionInColumn(cell);
+  getCellColumnIndex(cell: DomainPlayfieldCell): number {
+    return this.playfieldView.getCellPositionInColumn(cell);
   }
 
-  getCellRowIndex(cell: DomainBoardCell): number {
-    return this.boardView.getCellPositionInRow(cell);
+  getCellRowIndex(cell: DomainPlayfieldCell): number {
+    return this.playfieldView.getCellPositionInRow(cell);
   }
 
   getLetterPoints(letter: DomainInventoryLetter): number {
@@ -133,12 +133,12 @@ export default class AppQueries {
     return this.inventoryView.getTileLetter(tile);
   }
 
-  isCellCenter(cell: DomainBoardCell): boolean {
-    return this.boardView.isCellCenter(cell);
+  isCellCenter(cell: DomainPlayfieldCell): boolean {
+    return this.playfieldView.isCellCenter(cell);
   }
 
   isTilePlaced(tile: DomainInventoryTile): boolean {
-    return this.boardView.isTilePlaced(tile);
+    return this.playfieldView.isTilePlaced(tile);
   }
 
   wasTileUsedInPreviousTurn(tile: DomainInventoryTile): boolean {

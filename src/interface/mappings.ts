@@ -1,24 +1,24 @@
-import { DomainBoardBonus, DomainMatchPlayer, DomainMatchResult, DomainTimelineEventType } from '@/app/enums/index.ts';
+import { DomainMatchPlayer, DomainMatchResult, DomainPlayfieldBonus, DomainTimelineEventType } from '@/app/enums/index.ts';
 import { Accent } from '@/interface/enums.ts';
 import { Sound } from '@/interface/services/SoundPlayer.ts';
 import type { DomainTimelineEvent } from '@/app/types/index.ts';
 
-export function getBonusAccent(bonus: DomainBoardBonus): Accent {
+export function getBonusAccent(bonus: DomainPlayfieldBonus): Accent {
   return {
-    [DomainBoardBonus.DoubleLetter]: Accent.Quaternary,
-    [DomainBoardBonus.DoubleWord]: Accent.Secondary,
-    [DomainBoardBonus.TripleLetter]: Accent.Tertiary,
-    [DomainBoardBonus.TripleWord]: Accent.Primary,
+    [DomainPlayfieldBonus.DoubleLetter]: Accent.Quaternary,
+    [DomainPlayfieldBonus.DoubleWord]: Accent.Secondary,
+    [DomainPlayfieldBonus.TripleLetter]: Accent.Tertiary,
+    [DomainPlayfieldBonus.TripleWord]: Accent.Primary,
   }[bonus];
 }
 
-export function getBonusName(bonus: DomainBoardBonus): string {
+export function getBonusName(bonus: DomainPlayfieldBonus): string {
   return window.text(
     {
-      [DomainBoardBonus.DoubleLetter]: 'general.bonus_dl',
-      [DomainBoardBonus.DoubleWord]: 'general.bonus_dw',
-      [DomainBoardBonus.TripleLetter]: 'general.bonus_tl',
-      [DomainBoardBonus.TripleWord]: 'general.bonus_tw',
+      [DomainPlayfieldBonus.DoubleLetter]: 'general.bonus_dl',
+      [DomainPlayfieldBonus.DoubleWord]: 'general.bonus_dw',
+      [DomainPlayfieldBonus.TripleLetter]: 'general.bonus_tl',
+      [DomainPlayfieldBonus.TripleWord]: 'general.bonus_tw',
     }[bonus],
   );
 }

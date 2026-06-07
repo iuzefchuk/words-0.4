@@ -1,9 +1,9 @@
 import { TurnValidationError } from '@/domain/value-objects/enums.ts';
-import type { BoardPlacement, InventoryTile } from '@/domain/value-objects/types.ts';
+import type { InventoryTile, PlayfieldPlacement } from '@/domain/value-objects/types.ts';
 
 export default class WordsValidationService {
   static execute(
-    placements: ReadonlyArray<BoardPlacement>,
+    placements: ReadonlyArray<PlayfieldPlacement>,
     getTileLetter: (tile: InventoryTile) => string,
     containsAllWords: (words: ReadonlyArray<string>) => boolean,
   ): ReadonlyArray<string> | TurnValidationError {

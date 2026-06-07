@@ -1,5 +1,5 @@
-import { BoardAxis as Axis, InventoryLetter as Letter } from '@/domain/value-objects/enums.ts';
-import type { BoardCell as Cell } from '@/domain/value-objects/types.ts';
+import { PlayfieldAxis as Axis, InventoryLetter as Letter } from '@/domain/value-objects/enums.ts';
+import type { PlayfieldCell as Cell } from '@/domain/value-objects/types.ts';
 
 export default class CrossCheckTable {
   static readonly ALL_LETTERS_MASK = (1 << Object.values(Letter).length) - 1;

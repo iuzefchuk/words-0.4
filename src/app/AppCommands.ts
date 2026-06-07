@@ -3,7 +3,7 @@ import type { AppGateways } from '@/app/types/gateways.ts';
 import type { DomainMatchDifficulty, DomainMatchType } from '@/app/enums/index.ts';
 import type {
   AppTurnResponse,
-  DomainBoardCell,
+  DomainPlayfieldCell,
   DomainDictionary,
   DomainInventoryTile,
   DomainMatchSettings,
@@ -58,7 +58,7 @@ export default class AppCommands {
     };
   }
 
-  placeTile({ cell, tile }: { cell: DomainBoardCell; tile: DomainInventoryTile }): void {
+  placeTile({ cell, tile }: { cell: DomainPlayfieldCell; tile: DomainInventoryTile }): void {
     this.game.placeTile({ cell, tile });
     this.game.invalidateTurnForCurrentPlayer();
   }

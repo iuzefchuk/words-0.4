@@ -2,10 +2,10 @@ import Turn from '@/domain/entities/Turn.ts';
 import { MatchPlayer, MatchResult } from '@/domain/value-objects/enums.ts';
 import type { MatchDifficulty, MatchType, TurnValidationError } from '@/domain/value-objects/enums.ts';
 import type {
-  BoardCell,
   IdentifierGateway,
   InventoryTile,
   MatchSettings,
+  PlayfieldCell,
   TurnValidationResult,
 } from '@/domain/value-objects/types.ts';
 
@@ -16,7 +16,7 @@ export default class Match {
     return this.currentTurn.player;
   }
 
-  get currentTurnCells(): ReadonlyArray<BoardCell> | undefined {
+  get currentTurnCells(): ReadonlyArray<PlayfieldCell> | undefined {
     return this.currentTurn.cells;
   }
 
@@ -88,7 +88,7 @@ export default class Match {
     private readonly identifier: IdentifierGateway | null,
     private readonly results: Map<MatchPlayer, MatchResult>,
     private readonly scores: Map<MatchPlayer, number>,
-    private readonly _settings: MatchSettings,
+    private _settings: MatchSettings,
     private readonly history: Array<Turn>,
   ) {}
 
@@ -114,7 +114,7 @@ export default class Match {
 
   applyDifficultyChange(difficulty: MatchDifficulty): void {
     this.ensureMutability();
-    this._settings.difficulty = difficulty;
+    this._settings = { ...this._settings, difficulty };
   }
 
   getResultFor(player: MatchPlayer): MatchResult {

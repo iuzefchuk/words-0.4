@@ -3,9 +3,9 @@ import PlacementsValidationService from '@/domain/services/PlacementsValidationS
 import ScoringService from '@/domain/services/ScoringService.ts';
 import WordsValidationService from '@/domain/services/WordsValidationService.ts';
 import { TurnValidationStatus } from '@/domain/value-objects/enums.ts';
-import type Board from '@/domain/entities/Board.ts';
 import type Inventory from '@/domain/entities/Inventory.ts';
 import type Match from '@/domain/entities/Match.ts';
+import type Playfield from '@/domain/entities/Playfield.ts';
 import type { TurnValidationError } from '@/domain/value-objects/enums.ts';
 import type {
   Dictionary,
@@ -36,10 +36,10 @@ type ScoreOutput = TurnComputedScore & WordsOutput;
 type SequencesOutput = TurnComputedCells;
 
 type ValidatorContext = {
-  board: Readonly<Board>;
   dictionary: Dictionary;
   inventory: Readonly<Inventory>;
   match: Readonly<Match>;
+  playfield: Readonly<Playfield>;
 };
 
 type WordsOutput = ComputedTilesOutput & TurnComputedWords;
@@ -86,14 +86,14 @@ export default class TurnValidationService {
   }
 
   private static computeScore(state: PipelineState<WordsOutput>): PipelineThroughput<PipelineState<ScoreOutput>> {
-    const { board, inventory } = state.context;
+    const { inventory, playfield } = state.context;
     const newCells = new Set(state.cells);
     const score = ScoringService.execute(
       state.placements,
       newCells,
       tile => inventory.getTilePoints(tile),
-      cell => board.getMultiplierForLetter(cell),
-      cell => board.getMultiplierForWord(cell),
+      cell => playfield.getMultiplierForLetter(cell),
+      cell => playfield.getMultiplierForWord(cell),
     );
     return Pipeline.pass(state, { score });
   }
@@ -103,14 +103,14 @@ export default class TurnValidationService {
   }
 
   private static validateCells(state: PipelineInput): PipelineThroughput<PipelineState<SequencesOutput>> {
-    const { board, match } = state.context;
+    const { match, playfield } = state.context;
     const result = CellsValidationService.execute(
       match.currentTurnTiles,
       match.historyHasPriorTurns,
-      tiles => board.resolvePlacement(tiles),
-      cell => board.isCellCenter(cell),
-      cell => board.getAdjacentCells(cell),
-      cell => board.isCellOccupied(cell),
+      tiles => playfield.resolvePlacement(tiles),
+      cell => playfield.isCellCenter(cell),
+      cell => playfield.getAdjacentCells(cell),
+      cell => playfield.isCellOccupied(cell),
     );
     if (this.isError(result)) return Pipeline.fail(result);
     return Pipeline.pass(state, { cells: result });
@@ -119,14 +119,14 @@ export default class TurnValidationService {
   private static validatePlacements(
     state: PipelineState<SequencesOutput>,
   ): PipelineThroughput<PipelineState<ComputedTilesOutput>> {
-    const { board, match } = state.context;
+    const { match, playfield } = state.context;
     const result = PlacementsValidationService.execute(
       match.currentTurnTiles,
       state.cells,
-      cells => board.calculateAxis(cells),
-      (coords, tiles) => board.buildPlacement(coords, tiles),
-      axis => board.getOppositeAxis(axis),
-      cell => board.findTileByCell(cell),
+      cells => playfield.calculateAxis(cells),
+      (coords, tiles) => playfield.buildPlacement(coords, tiles),
+      axis => playfield.getOppositeAxis(axis),
+      cell => playfield.findTileByCell(cell),
     );
     if (this.isError(result)) return Pipeline.fail(result);
     return Pipeline.pass(state, { placements: result });
