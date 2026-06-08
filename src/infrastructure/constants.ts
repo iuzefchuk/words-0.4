@@ -1,1 +1,1 @@
-export const eventsSchemaVersion = 1;
+export const eventsSchemaVersion = 5;

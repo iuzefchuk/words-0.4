@@ -2,6 +2,11 @@ import { default as DomainTurnGenerator } from '@/domain/services/TurnGeneration
 import { default as DomainDictionary } from '@/domain/value-objects/classes/Dictionary.ts';
 
 export type {
+  TimelineEvent as DomainTimelineEvent,
+  TimelineProjection as DomainTimelineProjection,
+} from '@/domain/events/types.ts';
+
+export type {
   DictionaryGraph as DomainDictionaryGraph,
   Gateways as DomainGateways,
   IdentifierGateway as DomainIdentifierGateway,
@@ -12,7 +17,6 @@ export type {
   PlayfieldCell as DomainPlayfieldCell,
   PlayfieldProjection as DomainPlayfieldProjection,
   RandomizerGateway as DomainRandomizerGateway,
-  TimelineEvent as DomainTimelineEvent,
   TurnGenerationContext as DomainTurnGenerationContext,
   TurnGenerationContextData as DomainTurnGenerationContextData,
   TurnGenerationPartition as DomainTurnGenerationPartition,

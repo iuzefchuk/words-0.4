@@ -1,3 +1,5 @@
+export { TimelineEventType as DomainTimelineEventType } from '@/domain/events/enums.ts';
+
 export {
   InventoryLetter as DomainInventoryLetter,
   MatchDifficulty as DomainMatchDifficulty,
@@ -5,5 +7,4 @@ export {
   MatchResult as DomainMatchResult,
   MatchType as DomainMatchType,
   PlayfieldBonus as DomainPlayfieldBonus,
-  TimelineEventType as DomainTimelineEventType,
 } from '@/domain/value-objects/enums.ts';

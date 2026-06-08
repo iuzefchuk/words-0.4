@@ -10,7 +10,6 @@ import type {
   MatchType,
   PlayfieldAxis,
   PlayfieldBonus,
-  TimelineEventType,
   TurnValidationError,
   TurnValidationStatus,
 } from '@/domain/value-objects/enums.ts';
@@ -62,7 +61,6 @@ export type MatchProjection = {
   readonly currentTurnScore: number | undefined;
   readonly currentTurnTiles: ReadonlyArray<InventoryTile>;
   readonly currentTurnWords: ReadonlyArray<string> | undefined;
-  readonly difficulty: MatchDifficulty;
   getResultFor(player: MatchPlayer): MatchResult;
   getScoreFor(player: MatchPlayer): number;
   readonly historyHasPriorTurns: boolean;
@@ -70,7 +68,6 @@ export type MatchProjection = {
   readonly nextPlayer: MatchPlayer;
   readonly previousTurnTiles: ReadonlyArray<InventoryTile> | undefined;
   readonly settings: Readonly<MatchSettings>;
-  readonly type: MatchType;
   willPlayerPassBeResign(player: MatchPlayer): boolean;
 };
 
@@ -108,17 +105,6 @@ export type RandomizerGateway = {
   createFunctionFromSeed(seed: number): () => number;
   createNewSeed(): number;
 };
-
-export type TimelineEvent =
-  | { cell: PlayfieldCell; tile: InventoryTile; type: TimelineEventType.TilePlaced }
-  | { cell: PlayfieldCell; tile: InventoryTile; type: TimelineEventType.TileUndoPlaced }
-  | { difficulty: MatchDifficulty; type: TimelineEventType.MatchDifficultyChanged }
-  | { matchType: MatchType; seed: number; type: TimelineEventType.MatchTypeChanged }
-  | { player: MatchPlayer; score: number; type: TimelineEventType.TurnSaved; words: ReadonlyArray<string> }
-  | { player: MatchPlayer; type: TimelineEventType.TurnPassed }
-  | { result: TurnValidationResult; type: TimelineEventType.TurnValidationSet }
-  | { seed: number; settings: MatchSettings; type: TimelineEventType.MatchStarted }
-  | { type: TimelineEventType.MatchFinished; winner: MatchPlayer | null };
 
 export type TurnComputedCells = { cells: ReadonlyArray<PlayfieldCell> };
 

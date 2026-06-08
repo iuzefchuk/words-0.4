@@ -67,18 +67,6 @@ export enum PlayfieldType {
   Random = 'Random',
 }
 
-export enum TimelineEventType {
-  MatchDifficultyChanged = 'MatchDifficultyChanged',
-  MatchFinished = 'MatchFinished',
-  MatchStarted = 'MatchStarted',
-  MatchTypeChanged = 'MatchTypeChanged',
-  TilePlaced = 'TilePlaced',
-  TileUndoPlaced = 'TileUndoPlaced',
-  TurnPassed = 'TurnPassed',
-  TurnSaved = 'TurnSaved',
-  TurnValidationSet = 'TurnValidationSet',
-}
-
 export enum TurnGenerationCommandType {
   ContinueExecute = 'ContinueExecute',
   ReturnResult = 'ReturnResult',

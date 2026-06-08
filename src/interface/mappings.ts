@@ -25,17 +25,15 @@ export function getBonusName(bonus: DomainPlayfieldBonus): string {
 
 export function getEventSound(event: DomainTimelineEvent): null | Sound {
   switch (event.type) {
-    case DomainTimelineEventType.MatchDifficultyChanged:
-    case DomainTimelineEventType.MatchStarted:
-    case DomainTimelineEventType.MatchTypeChanged:
-    case DomainTimelineEventType.TurnValidationSet:
-      return null;
     case DomainTimelineEventType.MatchFinished:
       return event.winner === null
         ? Sound.GameLongNeutral
         : event.winner === DomainMatchPlayer.User
           ? Sound.GameLongGood
           : Sound.GameLongBad;
+    case DomainTimelineEventType.MatchStarted:
+    case DomainTimelineEventType.TurnValidationSet:
+      return null;
     case DomainTimelineEventType.TilePlaced:
       return Sound.GameShortNeutral;
     case DomainTimelineEventType.TileUndoPlaced:
@@ -49,7 +47,7 @@ export function getEventSound(event: DomainTimelineEvent): null | Sound {
 
 export function getMatchResultText(result: DomainMatchResult, scoreDiff: number): string {
   if (result === DomainMatchResult.Undecided) {
-    throw new Error(`cannot render match result text: result is ${String(DomainMatchResult.Undecided)}`);
+    throw new Error(`cannot render match result text: result is ${DomainMatchResult.Undecided}`);
   }
   return window.text(
     {

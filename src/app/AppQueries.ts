@@ -1,24 +1,23 @@
 import { DomainMatchPlayer } from '@/app/enums/index.ts';
-import type { DomainPlayfieldBonus, DomainInventoryLetter, DomainMatchDifficulty, DomainMatchResult, DomainMatchType } from '@/app/enums/index.ts';
 import type {
-  DomainPlayfieldCell,
-  DomainPlayfieldProjection,
+  DomainInventoryLetter,
+  DomainMatchDifficulty,
+  DomainMatchResult,
+  DomainMatchType,
+  DomainPlayfieldBonus,
+} from '@/app/enums/index.ts';
+import type {
   DomainInventoryProjection,
   DomainInventoryTile,
   DomainMatchProjection,
+  DomainPlayfieldCell,
+  DomainPlayfieldProjection,
   DomainTimelineEvent,
+  DomainTimelineProjection,
 } from '@/app/types/index.ts';
 import type { default as DomainGame } from '@/domain/aggregates/Game.ts';
 
 export default class AppQueries {
-  get playfieldCells(): ReadonlyArray<DomainPlayfieldCell> {
-    return this.playfieldView.cells;
-  }
-
-  get playfieldCellsPerAxis(): number {
-    return this.playfieldView.cellsPerAxis;
-  }
-
   get currentPlayerIsUser(): boolean {
     return this.matchView.currentPlayer === DomainMatchPlayer.User;
   }
@@ -32,11 +31,11 @@ export default class AppQueries {
   }
 
   get eventsView(): ReadonlyArray<DomainTimelineEvent> {
-    return this.game.eventsView;
+    return this.timelineView.eventList;
   }
 
   get matchDifficulty(): DomainMatchDifficulty {
-    return this.matchView.difficulty;
+    return this.matchView.settings.difficulty;
   }
 
   get matchIsFinished(): boolean {
@@ -48,11 +47,19 @@ export default class AppQueries {
   }
 
   get matchType(): DomainMatchType {
-    return this.matchView.type;
+    return this.matchView.settings.type;
   }
 
   get opponentScore(): number {
     return this.matchView.getScoreFor(DomainMatchPlayer.Opponent);
+  }
+
+  get playfieldCells(): ReadonlyArray<DomainPlayfieldCell> {
+    return this.playfieldView.cells;
+  }
+
+  get playfieldCellsPerAxis(): number {
+    return this.playfieldView.cellsPerAxis;
   }
 
   get settingsChangeIsAllowed(): boolean {
@@ -83,16 +90,20 @@ export default class AppQueries {
     return this.inventoryView.getTilesFor(DomainMatchPlayer.User);
   }
 
-  private get playfieldView(): Readonly<DomainPlayfieldProjection> {
-    return this.game.playfieldView;
-  }
-
   private get inventoryView(): Readonly<DomainInventoryProjection> {
-    return this.game.inventoryView;
+    return this.game.inventoryProjection;
   }
 
   private get matchView(): Readonly<DomainMatchProjection> {
-    return this.game.matchView;
+    return this.game.matchProjection;
+  }
+
+  private get playfieldView(): Readonly<DomainPlayfieldProjection> {
+    return this.game.playfieldProjection;
+  }
+
+  private get timelineView(): Readonly<DomainTimelineProjection> {
+    return this.game.timelineProjection;
   }
 
   constructor(private readonly game: DomainGame) {}

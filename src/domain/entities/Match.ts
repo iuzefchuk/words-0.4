@@ -1,6 +1,6 @@
 import Turn from '@/domain/entities/Turn.ts';
 import { MatchPlayer, MatchResult } from '@/domain/value-objects/enums.ts';
-import type { MatchDifficulty, MatchType, TurnValidationError } from '@/domain/value-objects/enums.ts';
+import type { TurnValidationError } from '@/domain/value-objects/enums.ts';
 import type {
   IdentifierGateway,
   InventoryTile,
@@ -40,10 +40,6 @@ export default class Match {
     return this.currentTurn.words;
   }
 
-  get difficulty(): MatchDifficulty {
-    return this._settings.difficulty;
-  }
-
   get historyHasPriorTurns(): boolean {
     return this.history.length > 1;
   }
@@ -66,14 +62,6 @@ export default class Match {
     return this.history.at(-2)?.tilesView;
   }
 
-  get settings(): Readonly<MatchSettings> {
-    return this._settings;
-  }
-
-  get type(): MatchType {
-    return this._settings.type;
-  }
-
   get userScore(): number {
     return this.getScoreFor(MatchPlayer.User);
   }
@@ -88,7 +76,7 @@ export default class Match {
     private readonly identifier: IdentifierGateway | null,
     private readonly results: Map<MatchPlayer, MatchResult>,
     private readonly scores: Map<MatchPlayer, number>,
-    private _settings: MatchSettings,
+    readonly settings: MatchSettings,
     private readonly history: Array<Turn>,
   ) {}
 
@@ -97,7 +85,7 @@ export default class Match {
       identifier,
       new Map(source.results),
       new Map(source.scores),
-      { ...source._settings },
+      { ...source.settings },
       source.history.map(turn => Turn.clone(turn)),
     );
   }
@@ -110,11 +98,6 @@ export default class Match {
 
   addPlacedTile(tile: InventoryTile): void {
     this.currentTurn.addTile(tile);
-  }
-
-  applyDifficultyChange(difficulty: MatchDifficulty): void {
-    this.ensureMutability();
-    this._settings = { ...this._settings, difficulty };
   }
 
   getResultFor(player: MatchPlayer): MatchResult {

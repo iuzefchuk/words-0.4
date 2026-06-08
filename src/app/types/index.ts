@@ -19,8 +19,6 @@ export type AppTurnResponse =
   | { readonly ok: true; readonly value: { words: ReadonlyArray<string> } };
 
 export type {
-  DomainPlayfieldCell,
-  DomainPlayfieldProjection,
   DomainDictionaryGraph,
   DomainGateways,
   DomainIdentifierGateway,
@@ -28,8 +26,11 @@ export type {
   DomainInventoryTile,
   DomainMatchProjection,
   DomainMatchSettings,
+  DomainPlayfieldCell,
+  DomainPlayfieldProjection,
   DomainRandomizerGateway,
   DomainTimelineEvent,
+  DomainTimelineProjection,
   DomainTurnGenerationContext,
   DomainTurnGenerationContextData,
   DomainTurnGenerationPartition,

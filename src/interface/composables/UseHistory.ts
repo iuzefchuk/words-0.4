@@ -42,10 +42,8 @@ export default class UseHistory {
 
   private createEventHtml(event: DomainTimelineEvent): string {
     switch (event.type) {
-      case DomainTimelineEventType.MatchDifficultyChanged:
       case DomainTimelineEventType.MatchFinished:
       case DomainTimelineEventType.MatchStarted:
-      case DomainTimelineEventType.MatchTypeChanged:
       case DomainTimelineEventType.TilePlaced:
       case DomainTimelineEventType.TileUndoPlaced:
       case DomainTimelineEventType.TurnValidationSet:

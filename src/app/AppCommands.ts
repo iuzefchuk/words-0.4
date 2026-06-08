@@ -1,12 +1,12 @@
 import { DomainMatchPlayer } from '@/app/enums/index.ts';
-import type { AppGateways } from '@/app/types/gateways.ts';
 import type { DomainMatchDifficulty, DomainMatchType } from '@/app/enums/index.ts';
+import type { AppGateways } from '@/app/types/gateways.ts';
 import type {
   AppTurnResponse,
-  DomainPlayfieldCell,
   DomainDictionary,
   DomainInventoryTile,
   DomainMatchSettings,
+  DomainPlayfieldCell,
   DomainTurnGenerationContext,
 } from '@/app/types/index.ts';
 import type { AppEventsRepository, AppRepositories, AppSettingsRepository } from '@/app/types/repositories.ts';
@@ -48,13 +48,13 @@ export default class AppCommands {
   passTurn(): { opponentTurn: Promise<AppTurnResponse> | undefined } {
     this.clearUserTiles();
     this.game.passTurnForCurrentPlayer();
-    if (this.game.matchView.isFinished) {
+    if (this.game.matchProjection.isFinished) {
       this.clearEventsPersistence();
       return { opponentTurn: undefined };
     }
     this.persistEvents();
     return {
-      opponentTurn: this.game.matchView.currentPlayer === DomainMatchPlayer.Opponent ? this.createOpponentTurn() : undefined,
+      opponentTurn: this.game.matchProjection.currentPlayer === DomainMatchPlayer.Opponent ? this.createOpponentTurn() : undefined,
     };
   }
 
@@ -79,13 +79,13 @@ export default class AppCommands {
     if (!userResponse.ok) {
       return { opponentTurn: undefined, userResponse };
     }
-    if (this.game.matchView.isFinished) {
+    if (this.game.matchProjection.isFinished) {
       this.clearEventsPersistence();
       return { opponentTurn: undefined, userResponse };
     }
     this.persistEvents();
     return {
-      opponentTurn: this.game.matchView.currentPlayer === DomainMatchPlayer.Opponent ? this.createOpponentTurn() : undefined,
+      opponentTurn: this.game.matchProjection.currentPlayer === DomainMatchPlayer.Opponent ? this.createOpponentTurn() : undefined,
       userResponse,
     };
   }
@@ -112,7 +112,7 @@ export default class AppCommands {
     const response = await this.gateways.scheduler.padTo(AppCommands.OPPONENT_RESPONSE_MIN_TIME_MS, () =>
       this.executeOpponentTurn(),
     );
-    if (this.game.matchView.isFinished) {
+    if (this.game.matchProjection.isFinished) {
       this.clearEventsPersistence();
     } else {
       this.persistEvents();
@@ -139,7 +139,7 @@ export default class AppCommands {
   }
 
   private persistEvents(): void {
-    void this.eventsRepo.save(this.game.eventsView);
+    void this.eventsRepo.save(this.game.timelineProjection.eventList);
   }
 
   private persistSettings(settings: Partial<DomainMatchSettings>): void {
@@ -147,7 +147,7 @@ export default class AppCommands {
   }
 
   private saveTurnForCurrentPlayer(): AppTurnResponse {
-    const { currentTurnError } = this.game.matchView;
+    const { currentTurnError } = this.game.matchProjection;
     if (currentTurnError !== undefined) return { error: currentTurnError, ok: false };
     const { words } = this.game.saveTurnForCurrentPlayer();
     return { ok: true, value: { words } };
