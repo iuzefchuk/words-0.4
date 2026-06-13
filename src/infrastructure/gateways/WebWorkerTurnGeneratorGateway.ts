@@ -31,7 +31,7 @@ export default class WebWorkerTurnGeneratorGateway {
     const workerInput = this.createWorkerInput(input);
     const inputs =
       input.attemptsLimit === Infinity
-        ? this.partitionWorkerInput(workerInput, input.context.playfield.anchorCells.size)
+        ? this.partitionWorkerInput(workerInput, input.context.match.anchorCells.size)
         : [workerInput];
     return this.findBestResult(await this.generateResults(inputs));
   }
@@ -69,15 +69,13 @@ export default class WebWorkerTurnGeneratorGateway {
     context: DomainTurnGenerationContext;
     player: DomainMatchPlayer;
   }): TurnGenerationWorkerInput {
-    const { crossCheckTable, inventory, match, playfield } = context;
+    const { crossCheckTable, match } = context;
     return {
       attemptsLimit,
       buffer: this.getDictionaryBuffer(),
       crossCheckBuffer: crossCheckTable.buffer,
-      inventory,
       match,
       player,
-      playfield,
     };
   }
 
@@ -90,9 +88,9 @@ export default class WebWorkerTurnGeneratorGateway {
     let bestResult: DomainTurnGenerationResult | null = null;
     let bestScore = -1;
     for (const result of results) {
-      if (result.validationResult.score > bestScore) {
+      if (result.evaluation.computation.score > bestScore) {
         bestResult = result;
-        bestScore = result.validationResult.score;
+        bestScore = result.evaluation.computation.score;
       }
     }
     return bestResult;

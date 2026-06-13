@@ -1,23 +1,34 @@
+import Inventory from '@/domain/entities/Inventory.ts';
+import Playfield from '@/domain/entities/Playfield.ts';
 import Turn from '@/domain/entities/Turn.ts';
-import { MatchPlayer, MatchResult } from '@/domain/value-objects/enums.ts';
-import type { TurnValidationError } from '@/domain/value-objects/enums.ts';
+import TurnEvaluationService from '@/domain/services/TurnEvaluationService.ts';
+import TurnGenerationService from '@/domain/services/TurnGenerationService.ts';
+import { MatchPlayer, MatchResult, MatchType, PlayfieldType } from '@/domain/value-objects/enums.ts';
+import type { InventoryLetter, PlayfieldBonus, TurnValidationError } from '@/domain/value-objects/enums.ts';
 import type {
+  Dictionary,
+  DictionaryGraph,
   IdentifierGateway,
   InventoryTile,
+  InventoryTileCollection,
   MatchSettings,
+  PlayfieldAnchorCoordinates,
   PlayfieldCell,
-  TurnValidationResult,
+  TurnEvaluation,
+  TurnGenerationContext,
+  TurnLink,
+  TurnPlacement,
 } from '@/domain/value-objects/types.ts';
 
 export default class Match {
   private static readonly FIRST_PLAYER: MatchPlayer = MatchPlayer.User;
 
-  get currentPlayer(): MatchPlayer {
-    return this.currentTurn.player;
+  get anchorCells(): ReadonlySet<PlayfieldCell> {
+    return this.playfield.anchorCells;
   }
 
-  get currentTurnCells(): ReadonlyArray<PlayfieldCell> | undefined {
-    return this.currentTurn.cells;
+  get currentPlayer(): MatchPlayer {
+    return this.currentTurn.player;
   }
 
   get currentTurnError(): TurnValidationError | undefined {
@@ -33,7 +44,7 @@ export default class Match {
   }
 
   get currentTurnTiles(): ReadonlyArray<InventoryTile> {
-    return this.currentTurn.tilesView;
+    return this.currentTurn.references.map(id => this.playfield.getLinkTile(id));
   }
 
   get currentTurnWords(): ReadonlyArray<string> | undefined {
@@ -49,21 +60,31 @@ export default class Match {
     return false;
   }
 
+  get playfieldCells(): ReadonlyArray<PlayfieldCell> {
+    return this.playfield.cells;
+  }
+
+  get playfieldCellsPerAxis(): number {
+    return this.playfield.cellsPerAxis;
+  }
+
   get nextPlayer(): MatchPlayer {
     if (this.history.length === 0) return Match.FIRST_PLAYER;
     return this.currentPlayer === MatchPlayer.User ? MatchPlayer.Opponent : MatchPlayer.User;
   }
 
-  get opponentScore(): number {
-    return this.getScoreFor(MatchPlayer.Opponent);
-  }
-
   get previousTurnTiles(): ReadonlyArray<InventoryTile> | undefined {
-    return this.history.at(-2)?.tilesView;
+    const previousTurn = this.history.at(-2);
+    if (previousTurn === undefined) return undefined;
+    return previousTurn.references.map(id => this.playfield.getLinkTile(id));
   }
 
-  get userScore(): number {
-    return this.getScoreFor(MatchPlayer.User);
+  get tilesPerPlayer(): number {
+    return this.inventory.tilesPerPlayer;
+  }
+
+  get unusedTilesCount(): number {
+    return this.inventory.unusedTilesCount;
   }
 
   private get currentTurn(): Turn {
@@ -74,8 +95,9 @@ export default class Match {
 
   private constructor(
     private readonly identifier: IdentifierGateway | null,
+    private readonly inventory: Inventory,
+    private readonly playfield: Playfield,
     private readonly results: Map<MatchPlayer, MatchResult>,
-    private readonly scores: Map<MatchPlayer, number>,
     readonly settings: MatchSettings,
     private readonly history: Array<Turn>,
   ) {}
@@ -83,21 +105,76 @@ export default class Match {
   static clone(source: Match, identifier: IdentifierGateway | null = null): Match {
     return new Match(
       identifier,
+      Inventory.clone(source.inventory),
+      Playfield.clone(source.playfield, identifier),
       new Map(source.results),
-      new Map(source.scores),
       { ...source.settings },
-      source.history.map(turn => Turn.clone(turn)),
+      [...source.history.slice(0, -1), Turn.clone(source.currentTurn)],
     );
   }
 
-  static create(players: ReadonlyArray<MatchPlayer>, settings: MatchSettings, identifier: IdentifierGateway): Match {
+  static create(
+    players: ReadonlyArray<MatchPlayer>,
+    settings: MatchSettings,
+    identifier: IdentifierGateway,
+    randomizerFunction: () => number,
+  ): Match {
+    const inventory = Inventory.create(players, randomizerFunction);
+    const playfieldType = Match.mapMatchTypeToPlayfieldType(settings.type);
+    const playfield = Playfield.create(playfieldType, identifier, randomizerFunction);
     const results = new Map(players.map(player => [player, MatchResult.Undecided]));
-    const scores = new Map(players.map(player => [player, 0]));
-    return new Match(identifier, results, scores, { ...settings }, []);
+    return new Match(identifier, inventory, playfield, results, { ...settings }, []);
   }
 
-  addPlacedTile(tile: InventoryTile): void {
-    this.currentTurn.addTile(tile);
+  private static mapMatchTypeToPlayfieldType(matchType: MatchType): PlayfieldType {
+    return {
+      [MatchType.Classic]: PlayfieldType.Preset,
+      [MatchType.Random]: PlayfieldType.Random,
+    }[matchType];
+  }
+
+  areTilesEqual(firstTile: InventoryTile, secondTile: InventoryTile): boolean {
+    return this.inventory.areTilesEqual(firstTile, secondTile);
+  }
+
+  buildPlacement(coords: PlayfieldAnchorCoordinates, tiles: ReadonlyArray<InventoryTile>): TurnPlacement {
+    return this.playfield.buildPlacement(coords, tiles);
+  }
+
+  createTurnGenerationContext(dictionary: DictionaryGraph): TurnGenerationContext {
+    return TurnGenerationService.createContext(this, dictionary);
+  }
+
+  discardTile(player: MatchPlayer, tile: InventoryTile): void {
+    this.inventory.discardTile({ player, tile });
+  }
+
+  evaluateTurn(dictionary: Dictionary): TurnEvaluation {
+    return TurnEvaluationService.execute({ dictionary, match: this });
+  }
+
+  findCellByTile(tile: InventoryTile): PlayfieldCell | undefined {
+    return this.playfield.findCellByTile(tile);
+  }
+
+  findTileByCell(cell: PlayfieldCell): InventoryTile | undefined {
+    return this.playfield.findTileByCell(cell);
+  }
+
+  getCellBonus(cell: PlayfieldCell): null | PlayfieldBonus {
+    return this.playfield.getBonus(cell);
+  }
+
+  getLetterPoints(letter: InventoryLetter): number {
+    return this.inventory.getLetterPoints(letter);
+  }
+
+  getMultiplierForLetter(cell: PlayfieldCell): number {
+    return this.playfield.getMultiplierForLetter(cell);
+  }
+
+  getMultiplierForWord(cell: PlayfieldCell): number {
+    return this.playfield.getMultiplierForWord(cell);
   }
 
   getResultFor(player: MatchPlayer): MatchResult {
@@ -107,22 +184,54 @@ export default class Match {
   }
 
   getScoreFor(player: MatchPlayer): number {
-    const score = this.scores.get(player);
-    if (score === undefined) throw new ReferenceError(`expected score for player ${player}, got undefined`);
-    return score;
+    let total = 0;
+    for (const turn of this.history) {
+      if (turn.player === player && turn.score !== undefined) total += turn.score;
+    }
+    return total;
   }
 
-  incrementScore(player: MatchPlayer, incrementation: number): void {
-    if (incrementation < 0) throw new Error(`expected non-negative increment, got ${String(incrementation)}`);
-    const currentScore = this.getScoreFor(player);
-    const newScore = currentScore + incrementation;
-    this.scores.set(player, newScore);
+  getTileCollectionFor(player: MatchPlayer): InventoryTileCollection {
+    return this.inventory.getTileCollectionFor(player);
+  }
+
+  getTileLetter(tile: InventoryTile): InventoryLetter {
+    return this.inventory.getTileLetter(tile);
+  }
+
+  getTilePoints(tile: InventoryTile): number {
+    return this.inventory.getTilePoints(tile);
+  }
+
+  getTilesFor(player: MatchPlayer): ReadonlyArray<InventoryTile> {
+    return this.inventory.getTilesFor(player);
+  }
+
+  hasTilesFor(player: MatchPlayer): boolean {
+    return this.inventory.hasTilesFor(player);
+  }
+
+  isCellOccupied(cell: PlayfieldCell): boolean {
+    return this.playfield.isCellOccupied(cell);
+  }
+
+  isTilePlaced(tile: InventoryTile): boolean {
+    return this.playfield.isTilePlaced(tile);
   }
 
   passCurrentTurn(player: MatchPlayer): void {
     this.ensureMutability();
     this.ensureCurrentPlayer(player);
-    this.currentTurn.pass();
+    this.currentTurn.setStatusPass();
+  }
+
+  placeTile(cell: PlayfieldCell, tile: InventoryTile): void {
+    const linkId = this.playfield.placeTile(cell, tile);
+    this.currentTurn.addReference(linkId);
+  }
+
+  resolvePlacement(tiles: ReadonlyArray<InventoryTile>): ReadonlyArray<TurnLink> {
+    return this.playfield.resolvePlacement(tiles);
   }
 
   recordCompletion(winner: MatchPlayer, loser: MatchPlayer): void {
@@ -137,38 +246,53 @@ export default class Match {
     this.recordResult(secondPlayer, MatchResult.Tie);
   }
 
-  recordValidationResult(result: TurnValidationResult): void {
-    this.currentTurn.setValidationResult(result);
+  recordValidationResult(result: TurnEvaluation): void {
+    this.currentTurn.setEvaluation(result);
   }
 
-  removePlacedTile(tile: InventoryTile): void {
-    this.currentTurn.removeTile(tile);
+  replenishTilesFor(player: MatchPlayer): void {
+    this.inventory.replenishTilesFor(player);
   }
 
   resetCurrentTurn(): void {
-    this.currentTurn.reset();
+    for (const linkId of this.currentTurn.references) {
+      this.playfield.undoPlaceTile(this.playfield.getLinkTile(linkId));
+    }
+    this.replaceTurn(this.currentTurn.player);
   }
 
   saveCurrentTurn(player: MatchPlayer): void {
     this.ensureMutability();
     this.ensureCurrentPlayer(player);
-    this.currentTurn.save();
+    this.currentTurn.setStatusSave();
+  }
+
+  shuffleTilesFor(player: MatchPlayer): void {
+    this.inventory.shuffleTilesFor(player);
   }
 
   startTurnFor(player: MatchPlayer): void {
-    if (this.identifier === null) throw new Error('cannot start turn: identifier is null');
     if (player !== this.nextPlayer) throw new Error(`expected next player to be ${this.nextPlayer}, got ${player}`);
-    const newTurn = Turn.create({ identifier: this.identifier, player });
-    this.history.push(newTurn);
+    this.history.push(this.createTurn(player));
+  }
+
+  undoPlaceTile(tile: InventoryTile): void {
+    const linkId = this.playfield.undoPlaceTile(tile);
+    this.currentTurn.removeReference(linkId);
   }
 
   willPlayerPassBeResign(player: MatchPlayer): boolean {
     for (let idx = this.history.length - 2; idx >= 0; idx--) {
       const turn = this.history[idx];
       if (turn === undefined) throw new ReferenceError(`expected turn at index ${String(idx)}, got undefined`);
-      if (turn.player === player) return turn.wasPassed;
+      if (turn.player === player) return turn.hasStatusPass;
     }
     return false;
+  }
+
+  private createTurn(player: MatchPlayer): Turn {
+    if (this.identifier === null) throw new Error('cannot create turn: identifier is null');
+    return Turn.create({ identifier: this.identifier, player });
   }
 
   private ensureCurrentPlayer(player: MatchPlayer): void {
@@ -181,5 +305,10 @@ export default class Match {
 
   private recordResult(player: MatchPlayer, result: MatchResult): void {
     this.results.set(player, result);
+  }
+
+  private replaceTurn(player: MatchPlayer): void {
+    this.history.pop();
+    this.history.push(this.createTurn(player));
   }
 }

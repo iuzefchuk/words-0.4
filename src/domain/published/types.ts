@@ -6,16 +6,16 @@ export type {
   TimelineProjection as DomainTimelineProjection,
 } from '@/domain/events/types.ts';
 
+export { default as DomainPlayfield } from '@/domain/entities/Playfield.ts';
+
 export type {
   DictionaryGraph as DomainDictionaryGraph,
   Gateways as DomainGateways,
   IdentifierGateway as DomainIdentifierGateway,
-  InventoryProjection as DomainInventoryProjection,
   InventoryTile as DomainInventoryTile,
   MatchProjection as DomainMatchProjection,
   MatchSettings as DomainMatchSettings,
   PlayfieldCell as DomainPlayfieldCell,
-  PlayfieldProjection as DomainPlayfieldProjection,
   RandomizerGateway as DomainRandomizerGateway,
   TurnGenerationContext as DomainTurnGenerationContext,
   TurnGenerationContextData as DomainTurnGenerationContextData,

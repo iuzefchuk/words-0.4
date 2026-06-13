@@ -6,11 +6,11 @@ export enum AppBootProgress {
 }
 
 export {
-  DomainPlayfieldBonus,
   DomainInventoryLetter,
   DomainMatchDifficulty,
   DomainMatchPlayer,
   DomainMatchResult,
   DomainMatchType,
+  DomainPlayfieldBonus,
   DomainTimelineEventType,
 } from '@/domain/published/enums.ts';

@@ -1,4 +1,4 @@
-// knows about Match, Timeline
+// encapsulates Match, Timeline
 
 describe('Game', () => {
   describe('owns players', () => {

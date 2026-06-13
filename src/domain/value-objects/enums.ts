@@ -87,9 +87,9 @@ export enum TurnGenerationTask {
   ValidateTraversal = 'ValidateTraversal',
 }
 
-export enum TurnOutcome {
+export enum TurnStatus {
+  Current = 'Current',
   Passed = 'Passed',
-  Pending = 'Pending',
   Saved = 'Saved',
 }
 
@@ -100,9 +100,8 @@ export enum TurnValidationError {
   WordNotInDictionary = 'WordNotInDictionary',
 }
 
-export enum TurnValidationStatus {
+export enum TurnValidity {
   Invalid = 'Invalid',
-  Pending = 'Pending',
-  Unvalidated = 'Unvalidated',
+  Unknown = 'Unknown',
   Valid = 'Valid',
 }

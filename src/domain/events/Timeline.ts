@@ -45,11 +45,6 @@ export default class Timeline {
         throw new Error(`cannot add ${event.type} after ${TimelineEventType.MatchFinished}`);
       }
     }
-    if (event.type === TimelineEventType.TilePlaced || event.type === TimelineEventType.TileUndoPlaced) {
-      if (length < 1) {
-        throw new Error(`cannot add ${event.type} before game setup is complete`);
-      }
-    }
     if (Timeline.isTurnEndEvent(event)) {
       const lastTurnEnd = this.findLastTurnEndEvent();
       if (lastTurnEnd?.player === event.player) {

@@ -34,10 +34,6 @@ export function getEventSound(event: DomainTimelineEvent): null | Sound {
     case DomainTimelineEventType.MatchStarted:
     case DomainTimelineEventType.TurnValidationSet:
       return null;
-    case DomainTimelineEventType.TilePlaced:
-      return Sound.GameShortNeutral;
-    case DomainTimelineEventType.TileUndoPlaced:
-      return Sound.GameShortNeutralReverse;
     case DomainTimelineEventType.TurnPassed:
       return event.player === DomainMatchPlayer.User ? Sound.GameShortBad : Sound.GameShortAltBad;
     case DomainTimelineEventType.TurnSaved:

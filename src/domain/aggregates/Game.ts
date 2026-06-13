@@ -1,31 +1,23 @@
-import Inventory from '@/domain/entities/Inventory.ts';
 import Match from '@/domain/entities/Match.ts';
-import Playfield from '@/domain/entities/Playfield.ts';
 import { TimelineEventType } from '@/domain/events/enums.ts';
 import Timeline from '@/domain/events/Timeline.ts';
 import GenerationDifficultyPolicy from '@/domain/policies/GenerationDifficultyPolicy.ts';
 import MatchTerminationPolicy from '@/domain/policies/MatchTerminationPolicy.ts';
 import WinnerDerivationPolicy from '@/domain/policies/WinnerDerivationPolicy.ts';
-import TurnGenerationService from '@/domain/services/TurnGenerationService.ts';
-import TurnValidationService from '@/domain/services/TurnValidationService.ts';
-import { MatchDifficulty, MatchPlayer, MatchType, PlayfieldType, TurnValidationStatus } from '@/domain/value-objects/enums.ts';
+import { MatchDifficulty, MatchPlayer, MatchType, TurnValidity } from '@/domain/value-objects/enums.ts';
 import type { TimelineEvent, TimelineProjection } from '@/domain/events/types.ts';
 import type {
   Dictionary,
   DictionaryGraph,
   Gateways,
-  InventoryProjection,
   InventoryTile,
   MatchProjection,
   MatchSettings,
   PlayfieldCell,
-  PlayfieldProjection,
+  TurnEvaluation,
   TurnGenerationContext,
   TurnGenerationResult,
-  TurnValidationResult,
 } from '@/domain/value-objects/types.ts';
-
-type GameInitialState = { inventory: Inventory; match: Match; playfield: Playfield };
 
 export default class Game {
   private static readonly DEFAULT_SETTINGS: MatchSettings = {
@@ -37,42 +29,30 @@ export default class Game {
     return GenerationDifficultyPolicy.attemptsFor(this.match.settings.difficulty);
   }
 
-  get inventoryProjection(): InventoryProjection {
-    return this.inventory;
-  }
-
   get matchProjection(): MatchProjection {
     return this.match;
-  }
-
-  get playfieldProjection(): PlayfieldProjection {
-    return this.playfield;
   }
 
   get timelineProjection(): TimelineProjection {
     return this.timeline;
   }
 
-  private inventory!: Inventory;
-
-  private match!: Match;
-
-  private playfield!: Playfield;
-
   private constructor(
+    private readonly players: MatchPlayer[],
     private timeline: Timeline,
     private readonly gateways: Gateways,
-    initialState: GameInitialState,
+    private match: Match,
   ) {
-    this.initialize(initialState);
+    this.match.startTurnFor(this.match.nextPlayer);
   }
 
   static create(gateways: Gateways, settings: null | Partial<MatchSettings>): Game {
     const resolvedSettings = Game.resolveSettings(settings);
     const seed = gateways.randomizer.createNewSeed();
     const timeline = Timeline.create();
+    const players = Object.values(MatchPlayer);
     timeline.record({ seed, settings: resolvedSettings, type: TimelineEventType.MatchStarted });
-    return new Game(timeline, gateways, Game.createInitialState(seed, resolvedSettings, gateways));
+    return new Game(players, timeline, gateways, Game.createMatch(seed, resolvedSettings, players, gateways));
   }
 
   static createFromEvents(initialEvents: ReadonlyArray<TimelineEvent>, gateways: Gateways): Game {
@@ -85,7 +65,8 @@ export default class Game {
     if (first?.type !== TimelineEventType.MatchStarted) {
       throw new Error(`first event must be ${TimelineEventType.MatchStarted}, got ${String(first?.type)}`);
     }
-    const game = new Game(timeline, gateways, Game.createInitialState(first.seed, first.settings, gateways));
+    const players = Object.values(MatchPlayer);
+    const game = new Game(players, timeline, gateways, Game.createMatch(first.seed, first.settings, players, gateways));
     for (let idx = 1; idx < initialEvents.length; idx++) {
       const event = initialEvents[idx];
       if (event === undefined) throw new ReferenceError(`expected event at index ${String(idx)}, got undefined`);
@@ -94,21 +75,14 @@ export default class Game {
     return game;
   }
 
-  private static createInitialState(seed: number, settings: MatchSettings, gateways: Gateways): GameInitialState {
-    const players = Object.values(MatchPlayer);
+  private static createMatch(
+    seed: number,
+    settings: MatchSettings,
+    players: ReadonlyArray<MatchPlayer>,
+    gateways: Gateways,
+  ): Match {
     const randomizerFunction = gateways.randomizer.createFunctionFromSeed(seed);
-    return {
-      inventory: Inventory.create(players, randomizerFunction),
-      match: Match.create(players, settings, gateways.identifier),
-      playfield: Playfield.create(Game.mapMatchTypeToPlayfieldType(settings.type), randomizerFunction),
-    };
-  }
-
-  private static mapMatchTypeToPlayfieldType(matchType: MatchType): PlayfieldType {
-    return {
-      [MatchType.Classic]: PlayfieldType.Preset,
-      [MatchType.Random]: PlayfieldType.Random,
-    }[matchType];
+    return Match.create(players, settings, gateways.identifier, randomizerFunction);
   }
 
   private static resolveSettings(settings: null | Partial<MatchSettings>): MatchSettings {
@@ -119,31 +93,22 @@ export default class Game {
   }
 
   applyGeneratedTurn(result: TurnGenerationResult): { score: number; words: ReadonlyArray<string> } {
-    for (let idx = 0; idx < result.tiles.length; idx++) {
-      const cell = result.cells[idx];
-      if (cell === undefined) throw new ReferenceError(`expected cell at index ${String(idx)}, got undefined`);
-      const tile = result.tiles[idx];
-      if (tile === undefined) throw new ReferenceError(`expected tile at index ${String(idx)}, got undefined`);
-      this.recordEvent({ cell, tile, type: TimelineEventType.TilePlaced });
+    for (const { cell, tile } of result.placement) {
+      this.match.placeTile(cell, tile);
     }
-    this.recordTurnValidation(result.validationResult);
-    const { score } = result.validationResult;
+    this.recordTurnValidation(result.evaluation);
+    const { score } = result.evaluation.computation;
     const { words } = this.saveTurnForCurrentPlayer();
     return { score, words };
   }
 
   clearUserTiles(): void {
-    const tiles = [...this.match.currentTurnTiles];
-    for (const tile of tiles) {
-      const cell = this.playfield.findCellByTile(tile);
-      if (cell === undefined) throw new Error(`tile ${String(tile)} is not on the playfield`);
-      this.recordEvent({ cell, tile, type: TimelineEventType.TileUndoPlaced });
-    }
-    this.recordEvent({ type: TimelineEventType.TurnValidationSet, value: { status: TurnValidationStatus.Unvalidated } });
+    this.match.resetCurrentTurn();
+    this.recordEvent({ type: TimelineEventType.TurnValidationSet, value: { status: TurnValidity.Unknown } });
   }
 
   createTurnGenerationContext(dictionary: DictionaryGraph): TurnGenerationContext {
-    return TurnGenerationService.createContext(this.playfield, dictionary, this.inventory, this.match);
+    return this.match.createTurnGenerationContext(dictionary);
   }
 
   finishMatchByScore(): void {
@@ -152,7 +117,7 @@ export default class Game {
   }
 
   invalidateTurnForCurrentPlayer(): void {
-    this.recordTurnValidation({ status: TurnValidationStatus.Unvalidated });
+    this.recordTurnValidation({ status: TurnValidity.Unknown });
   }
 
   passTurnForCurrentPlayer(): void {
@@ -166,7 +131,7 @@ export default class Game {
   }
 
   placeTile(input: { cell: PlayfieldCell; tile: InventoryTile }): void {
-    this.recordEvent({ cell: input.cell, tile: input.tile, type: TimelineEventType.TilePlaced });
+    this.match.placeTile(input.cell, input.tile);
   }
 
   resignMatchForCurrentPlayer(): void {
@@ -187,7 +152,6 @@ export default class Game {
     this.recordEvent({ player, score, tiles, type: TimelineEventType.TurnSaved, words });
     const decision = MatchTerminationPolicy.afterTurnSaved({
       currentPlayer: player,
-      inventory: this.inventory,
       match: this.match,
     });
     if (decision.terminate) this.recordEvent({ type: TimelineEventType.MatchFinished, winner: decision.winner });
@@ -203,22 +167,15 @@ export default class Game {
   }
 
   shuffleTilesFor(player: MatchPlayer): void {
-    this.inventory.shuffleTilesFor(player);
+    this.match.shuffleTilesFor(player);
   }
 
   undoPlaceTile(input: { tile: InventoryTile }): void {
-    const cell = this.playfield.findCellByTile(input.tile);
-    if (cell === undefined) throw new Error(`tile ${input.tile} is not on the playfield`);
-    this.recordEvent({ cell, tile: input.tile, type: TimelineEventType.TileUndoPlaced });
+    this.match.undoPlaceTile(input.tile);
   }
 
   validateTurn(dictionary: Dictionary): void {
-    const result = TurnValidationService.execute({
-      dictionary,
-      inventory: this.inventory,
-      match: this.match,
-      playfield: this.playfield,
-    });
+    const result = this.match.evaluateTurn(dictionary);
     this.recordTurnValidation(result);
   }
 
@@ -228,14 +185,6 @@ export default class Game {
         throw new Error(`${TimelineEventType.MatchStarted} is not replayable`);
       case TimelineEventType.MatchFinished:
         this.applyMatchFinished(event.winner);
-        break;
-      case TimelineEventType.TilePlaced:
-        this.playfield.placeTile(event.cell, event.tile);
-        this.match.addPlacedTile(event.tile);
-        break;
-      case TimelineEventType.TileUndoPlaced:
-        this.match.removePlacedTile(event.tile);
-        this.playfield.undoPlaceTile(event.tile);
         break;
       case TimelineEventType.TurnPassed:
         this.match.passCurrentTurn(event.player);
@@ -264,18 +213,10 @@ export default class Game {
 
   private applyTurnSaved(event: Extract<TimelineEvent, { type: TimelineEventType.TurnSaved }>): void {
     for (const tile of event.tiles) {
-      this.inventory.discardTile({ player: event.player, tile });
+      this.match.discardTile(event.player, tile);
     }
-    this.inventory.replenishTilesFor(event.player);
+    this.match.replenishTilesFor(event.player);
     this.match.saveCurrentTurn(event.player);
-    this.match.incrementScore(event.player, event.score);
-    this.match.startTurnFor(this.match.nextPlayer);
-  }
-
-  private initialize(params: GameInitialState): void {
-    this.playfield = params.playfield;
-    this.inventory = params.inventory;
-    this.match = params.match;
     this.match.startTurnFor(this.match.nextPlayer);
   }
 
@@ -284,7 +225,7 @@ export default class Game {
     this.applyEventToState(event);
   }
 
-  private recordTurnValidation(result: TurnValidationResult): void {
+  private recordTurnValidation(result: TurnEvaluation): void {
     this.recordEvent({ type: TimelineEventType.TurnValidationSet, value: result });
   }
 
@@ -292,6 +233,7 @@ export default class Game {
     const seed = this.gateways.randomizer.createNewSeed();
     this.timeline = Timeline.create();
     this.timeline.record({ seed, settings, type: TimelineEventType.MatchStarted });
-    this.initialize(Game.createInitialState(seed, settings, this.gateways));
+    this.match = Game.createMatch(seed, settings, this.players, this.gateways);
+    this.match.startTurnFor(this.match.nextPlayer);
   }
 }

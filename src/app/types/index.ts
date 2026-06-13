@@ -22,12 +22,10 @@ export type {
   DomainDictionaryGraph,
   DomainGateways,
   DomainIdentifierGateway,
-  DomainInventoryProjection,
   DomainInventoryTile,
   DomainMatchProjection,
   DomainMatchSettings,
   DomainPlayfieldCell,
-  DomainPlayfieldProjection,
   DomainRandomizerGateway,
   DomainTimelineEvent,
   DomainTimelineProjection,
@@ -38,4 +36,4 @@ export type {
   DomainWordDictionary,
 } from '@/domain/published/types.ts';
 
-export { DomainDictionary, DomainTurnGenerator } from '@/domain/published/types.ts';
+export { DomainDictionary, DomainPlayfield, DomainTurnGenerator } from '@/domain/published/types.ts';

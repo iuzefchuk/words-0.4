@@ -1,16 +1,14 @@
-import Inventory from '@/domain/entities/Inventory.ts';
 import Match from '@/domain/entities/Match.ts';
 import Playfield from '@/domain/entities/Playfield.ts';
-import CrossCheckService from '@/domain/services/CrossCheckService.ts';
 import ShuffleService from '@/domain/services/ShuffleService.ts';
-import TurnValidationService from '@/domain/services/TurnValidationService.ts';
+import TurnEvaluationService from '@/domain/services/TurnEvaluationService.ts';
 import CrossCheckTable from '@/domain/value-objects/classes/CrossCheckTable.ts';
 import {
   PlayfieldAxis,
   TurnGenerationCommandType,
   TurnGenerationDirection,
   TurnGenerationTask,
-  TurnValidationStatus,
+  TurnValidity,
 } from '@/domain/value-objects/enums.ts';
 import type { InventoryLetter, MatchPlayer } from '@/domain/value-objects/enums.ts';
 import type {
@@ -20,10 +18,10 @@ import type {
   InventoryTileCollection,
   PlayfieldAnchorCoordinates,
   PlayfieldCell,
-  PlayfieldLink,
   TurnGenerationContext,
   TurnGenerationPartition,
   TurnGenerationResult,
+  TurnLink,
 } from '@/domain/value-objects/types.ts';
 
 type ApplyTask = {
@@ -42,7 +40,7 @@ type ContinueTaskCommand = { newTasks: Array<Task>; type: TurnGenerationCommandT
 
 type DispatcherComputeds = { axisCells: ReadonlyArray<PlayfieldCell>; oppositeAxis: PlayfieldAxis };
 
-type DispatcherState = { placement: Array<PlayfieldLink>; tiles: MutableTileCollection };
+type DispatcherState = { placement: Array<TurnLink>; tiles: MutableTileCollection };
 
 type EvaluateTask = { traversal: Traversal; type: TurnGenerationTask.EvaluateTraversal };
 
@@ -78,6 +76,60 @@ type TaskCommand = ContinueTaskCommand | ReturnTaskCommand | StopTaskCommand;
 type Traversal = { direction: TurnGenerationDirection; node: DictionaryNode; position: number };
 
 type ValidateTask = { traversal: Traversal; type: TurnGenerationTask.ValidateTraversal };
+
+class CrossChecker {
+  private constructor(
+    private readonly match: Match,
+    private readonly dictionary: DictionaryGraph,
+  ) {}
+
+  static precompute(match: Match, dictionary: DictionaryGraph): CrossCheckTable {
+    const service = new CrossChecker(match, dictionary);
+    const table = CrossCheckTable.create(Playfield.CELLS.length);
+    for (const axis of Object.values(PlayfieldAxis)) {
+      for (const cell of Playfield.CELLS) {
+        table.setMask(axis, cell, service.computeFor({ axis, cell }));
+      }
+    }
+    return table;
+  }
+
+  private collectAdjacentTileLetters(axisCells: ReadonlyArray<PlayfieldCell>, startPosition: number, direction: -1 | 1): string {
+    let result = '';
+    for (let idx = startPosition + direction; idx >= 0 && idx < axisCells.length; idx += direction) {
+      const cell = axisCells[idx];
+      if (cell === undefined) throw new ReferenceError(`expected cell at index ${String(idx)}, got undefined`);
+      const tile = this.match.findTileByCell(cell);
+      if (tile === undefined) break;
+      const letter = this.match.getTileLetter(tile);
+      result = direction === -1 ? letter + result : result + letter;
+    }
+    return result;
+  }
+
+  private computeFor(coords: PlayfieldAnchorCoordinates): number {
+    const axisCells = Playfield.getAxisCells(coords);
+    const position =
+      coords.axis === PlayfieldAxis.X
+        ? Playfield.getCellPositionInColumn(coords.cell)
+        : Playfield.getCellPositionInRow(coords.cell);
+    const prefix = this.collectAdjacentTileLetters(axisCells, position, -1);
+    const suffix = this.collectAdjacentTileLetters(axisCells, position, 1);
+    if (prefix === '' && suffix === '') return CrossCheckTable.ALL_LETTERS_MASK;
+    const prefixNode = prefix !== '' ? this.dictionary.getNode(prefix) : this.dictionary.rootNode;
+    if (prefixNode === null) return 0;
+    let mask = 0;
+    this.dictionary.forEachNodeChild(prefixNode, (_letter, nodeWithPossibleNextLetter, letterIndex) => {
+      if (suffix === '') {
+        mask |= 1 << letterIndex;
+        return;
+      }
+      const suffixNode = this.dictionary.getNode(suffix, nodeWithPossibleNextLetter);
+      if (suffixNode !== null && this.dictionary.isNodeFinal(suffixNode)) mask |= 1 << letterIndex;
+    });
+    return mask;
+  }
+}
 
 class TaskCommandResolver {
   private constructor(private readonly stack: Array<Task>) {}
@@ -124,20 +176,12 @@ class TaskCommandResolver {
 }
 
 class TaskDispatcher {
-  private get dictionary(): DictionaryGraph {
-    return this.context.dictionary;
+  private get match(): Match {
+    return this.context.match;
   }
 
-  private get inventory(): Inventory {
-    return this.context.inventory;
-  }
-
-  private get placement(): Array<PlayfieldLink> {
+  private get placement(): Array<TurnLink> {
     return this.state.placement;
-  }
-
-  private get playfield(): Playfield {
-    return this.context.playfield;
   }
 
   private get tiles(): MutableTileCollection {
@@ -155,8 +199,8 @@ class TaskDispatcher {
     for (const [letter, tileIds] of playerTileCollection) tiles.set(letter, [...tileIds]);
     const state: DispatcherState = { placement: [], tiles };
     const computeds: DispatcherComputeds = {
-      axisCells: context.playfield.getAxisCells(coords),
-      oppositeAxis: context.playfield.getOppositeAxis(coords.axis),
+      axisCells: Playfield.getAxisCells(coords),
+      oppositeAxis: Playfield.getOppositeAxis(coords.axis),
     };
     return new TaskDispatcher(context, state, computeds);
   }
@@ -184,7 +228,7 @@ class TaskDispatcher {
     const { letterTiles } = task.resolutionComputeds;
     letterTiles.pop();
     this.placement.push({ cell, tile });
-    this.playfield.placeTile(cell, tile);
+    this.match.placeTile(cell, tile);
     return this.emitContinue();
   }
 
@@ -192,7 +236,7 @@ class TaskDispatcher {
     const { cell, position } = candidate;
     const anchorMask = this.context.crossCheckTable.getMask(this.computeds.oppositeAxis, cell);
     const newTasks: Array<Task> = [];
-    this.dictionary.forEachNodeChild(traversal.node, (possibleNextLetter, nodeWithPossibleNextLetter, letterIndex) => {
+    this.context.dictionary.forEachNodeChild(traversal.node, (possibleNextLetter, nodeWithPossibleNextLetter, letterIndex) => {
       if (((anchorMask >>> letterIndex) & 1) === 0) return;
       const letterTiles = this.tiles.get(possibleNextLetter);
       if (letterTiles === undefined) return;
@@ -229,7 +273,7 @@ class TaskDispatcher {
     const position = traversal.position + traversal.direction;
     const cell = this.computeds.axisCells[position];
     if (cell === undefined) throw new ReferenceError(`expected cell at position ${String(position)}, got undefined`);
-    const tile = this.playfield.findTileByCell(cell);
+    const tile = this.match.findTileByCell(cell);
     const resolution: Resolution | undefined = tile !== undefined ? { tile } : undefined;
     const candidate: Candidate = { cell, position, resolution };
     return this.emitContinue([{ ...task, candidate, type: TurnGenerationTask.ResolveCandidate }]);
@@ -238,7 +282,7 @@ class TaskDispatcher {
   private createTraversalFromCandidate(traversal: Traversal, candidate: Candidate): ContinueTaskCommand | StopTaskCommand {
     const { position, resolution } = candidate;
     if (resolution === undefined) throw new ReferenceError('expected candidate resolution, got undefined');
-    const nextNode = this.dictionary.getNode(this.inventory.getTileLetter(resolution.tile), traversal.node);
+    const nextNode = this.context.dictionary.getNode(this.match.getTileLetter(resolution.tile), traversal.node);
     if (nextNode === null) return this.emitStop();
     const traversalFromCandidate: Traversal = { ...traversal, node: nextNode, position };
     return this.emitContinue([{ traversal: traversalFromCandidate, type: TurnGenerationTask.EvaluateTraversal }]);
@@ -258,18 +302,17 @@ class TaskDispatcher {
 
   private evaluateTraversal(task: EvaluateTask): ContinueTaskCommand | ReturnTaskCommand {
     const { traversal } = task;
-    const placementIsUsable = this.placement.length > 0 && this.dictionary.isNodeFinal(traversal.node);
+    const placementIsUsable = this.placement.length > 0 && this.context.dictionary.isNodeFinal(traversal.node);
     if (traversal.direction === TurnGenerationDirection.Right && placementIsUsable) {
       const tiles: Array<InventoryTile> = [];
       for (const link of this.placement) {
         tiles.push(link.tile);
-        this.context.match.addPlacedTile(link.tile);
+        this.match.placeTile(link.cell, link.tile);
       }
-      const validationResult = TurnValidationService.execute(this.context);
-      for (const tile of tiles) this.context.match.removePlacedTile(tile);
-      if (validationResult.status === TurnValidationStatus.Valid) {
-        const cells = this.placement.map(link => link.cell);
-        return this.emitReturn({ cells, tiles, validationResult });
+      const evaluation = TurnEvaluationService.execute({ dictionary: this.context.dictionary, match: this.match });
+      for (const tile of tiles) this.match.undoPlaceTile(tile);
+      if (evaluation.status === TurnValidity.Valid) {
+        return this.emitReturn({ evaluation, placement: [...this.placement] });
       }
     }
     const nextTasks: Array<Task> = [];
@@ -296,7 +339,7 @@ class TaskDispatcher {
     const { letterTiles } = task.resolutionComputeds;
     letterTiles.push(tile);
     this.placement.pop();
-    this.playfield.undoPlaceTile(tile);
+    this.match.undoPlaceTile(tile);
     return this.emitContinue();
   }
 
@@ -304,27 +347,20 @@ class TaskDispatcher {
     const { traversal } = task;
     const isEdge =
       traversal.direction === TurnGenerationDirection.Left
-        ? this.playfield.isCellPositionAtAxisStart(traversal.position)
-        : this.playfield.isCellPositionAtAxisEnd(traversal.position);
+        ? Playfield.isCellPositionAtAxisStart(traversal.position)
+        : Playfield.isCellPositionAtAxisEnd(traversal.position);
     if (isEdge) return this.emitStop();
     return this.emitContinue([{ ...task, type: TurnGenerationTask.CalculateCandidate }]);
   }
 }
 
 export default class TurnGenerationService {
-  static createContext(
-    playfield: Playfield,
-    dictionary: DictionaryGraph,
-    inventory: Inventory,
-    match: Match,
-  ): TurnGenerationContext {
-    const clonedPlayfield = Playfield.clone(playfield);
+  static createContext(match: Match, dictionary: DictionaryGraph): TurnGenerationContext {
+    const clonedMatch = Match.clone(match);
     return {
-      crossCheckTable: CrossCheckService.precompute(clonedPlayfield, dictionary, inventory),
+      crossCheckTable: CrossChecker.precompute(clonedMatch, dictionary),
       dictionary,
-      inventory,
-      match: Match.clone(match),
-      playfield: clonedPlayfield,
+      match: clonedMatch,
     };
   }
 
@@ -333,10 +369,10 @@ export default class TurnGenerationService {
     player: MatchPlayer,
     partition?: TurnGenerationPartition,
   ): Generator<TurnGenerationResult> {
-    const { inventory, playfield } = context;
-    const playerTileCollection = inventory.getTileCollectionFor(player);
+    const { match } = context;
+    const playerTileCollection = match.getTileCollectionFor(player);
     if (playerTileCollection.size === 0) return;
-    const { anchorCells } = playfield;
+    const { anchorCells } = match;
     if (anchorCells.size === 0) return;
     const allAnchors = Array.from(anchorCells);
     const anchors =
@@ -355,14 +391,12 @@ export default class TurnGenerationService {
     dictionary: DictionaryGraph,
     crossCheckBuffer: ArrayBuffer | SharedArrayBuffer,
   ): TurnGenerationContext {
-    const source = data as { inventory: Inventory; match: Match; playfield: Playfield };
-    const playfield = Playfield.clone(source.playfield);
+    const source = data as { match: Match };
+    const clonedMatch = Match.clone(source.match);
     return {
-      crossCheckTable: CrossCheckTable.createFromBuffer(crossCheckBuffer, playfield.cells.length),
+      crossCheckTable: CrossCheckTable.createFromBuffer(crossCheckBuffer, Playfield.CELLS.length),
       dictionary,
-      inventory: Inventory.clone(source.inventory),
-      match: Match.clone(source.match),
-      playfield,
+      match: clonedMatch,
     };
   }
 

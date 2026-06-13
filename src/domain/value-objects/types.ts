@@ -1,6 +1,4 @@
-import type Inventory from '@/domain/entities/Inventory.ts';
 import type Match from '@/domain/entities/Match.ts';
-import type Playfield from '@/domain/entities/Playfield.ts';
 import type CrossCheckTable from '@/domain/value-objects/classes/CrossCheckTable.ts';
 import type {
   InventoryLetter,
@@ -11,7 +9,7 @@ import type {
   PlayfieldAxis,
   PlayfieldBonus,
   TurnValidationError,
-  TurnValidationStatus,
+  TurnValidity,
 } from '@/domain/value-objects/enums.ts';
 
 export type Dictionary = {
@@ -39,35 +37,37 @@ export type IdentifierGateway = {
   create(): string;
 };
 
-export type InventoryProjection = {
-  areTilesEqual(firstTile: InventoryTile, secondTile: InventoryTile): boolean;
-  getLetterPoints(letter: InventoryLetter): number;
-  getTileLetter(tile: InventoryTile): InventoryLetter;
-  getTilesFor(player: MatchPlayer): ReadonlyArray<InventoryTile>;
-  hasTilesFor(player: MatchPlayer): boolean;
-  readonly tilesPerPlayer: number;
-  readonly unusedTilesCount: number;
-};
-
 export type InventoryTile = Brand<string, 'Tile'>;
 
 export type InventoryTileCollection = ReadonlyMap<InventoryLetter, ReadonlyArray<InventoryTile>>;
 
 export type MatchProjection = {
+  areTilesEqual(firstTile: InventoryTile, secondTile: InventoryTile): boolean;
   readonly currentPlayer: MatchPlayer;
-  readonly currentTurnCells: ReadonlyArray<PlayfieldCell> | undefined;
   readonly currentTurnError: TurnValidationError | undefined;
   readonly currentTurnIsValid: boolean;
   readonly currentTurnScore: number | undefined;
   readonly currentTurnTiles: ReadonlyArray<InventoryTile>;
   readonly currentTurnWords: ReadonlyArray<string> | undefined;
+  findCellByTile(tile: InventoryTile): PlayfieldCell | undefined;
+  findTileByCell(cell: PlayfieldCell): InventoryTile | undefined;
+  getCellBonus(cell: PlayfieldCell): null | PlayfieldBonus;
+  getLetterPoints(letter: InventoryLetter): number;
   getResultFor(player: MatchPlayer): MatchResult;
   getScoreFor(player: MatchPlayer): number;
+  getTileLetter(tile: InventoryTile): InventoryLetter;
+  getTilesFor(player: MatchPlayer): ReadonlyArray<InventoryTile>;
+  hasTilesFor(player: MatchPlayer): boolean;
   readonly historyHasPriorTurns: boolean;
   readonly isFinished: boolean;
+  isTilePlaced(tile: InventoryTile): boolean;
   readonly nextPlayer: MatchPlayer;
+  readonly playfieldCells: ReadonlyArray<PlayfieldCell>;
+  readonly playfieldCellsPerAxis: number;
   readonly previousTurnTiles: ReadonlyArray<InventoryTile> | undefined;
   readonly settings: Readonly<MatchSettings>;
+  readonly tilesPerPlayer: number;
+  readonly unusedTilesCount: number;
   willPlayerPassBeResign(player: MatchPlayer): boolean;
 };
 
@@ -84,60 +84,44 @@ export type PlayfieldBonusDistribution = ReadonlyMap<PlayfieldCell, PlayfieldBon
 
 export type PlayfieldCell = Brand<number, 'Cell'>;
 
-export type PlayfieldLink = { readonly cell: PlayfieldCell; readonly tile: InventoryTile };
+export type PlayfieldLinkId = Brand<string, 'PlayfieldLinkId'>;
 
-export type PlayfieldPlacement = ReadonlyArray<PlayfieldLink>;
-
-export type PlayfieldProjection = {
-  readonly cells: ReadonlyArray<PlayfieldCell>;
-  readonly cellsPerAxis: number;
-  findCellByTile(tile: InventoryTile): PlayfieldCell | undefined;
-  findTileByCell(cell: PlayfieldCell): InventoryTile | undefined;
-  getAdjacentCells(cell: PlayfieldCell): ReadonlyArray<PlayfieldCell>;
-  getBonus(cell: PlayfieldCell): null | PlayfieldBonus;
-  getCellPositionInColumn(cell: PlayfieldCell): number;
-  getCellPositionInRow(cell: PlayfieldCell): number;
-  isCellCenter(cell: PlayfieldCell): boolean;
-  isTilePlaced(tile: InventoryTile): boolean;
-};
 
 export type RandomizerGateway = {
   createFunctionFromSeed(seed: number): () => number;
   createNewSeed(): number;
 };
 
-export type TurnComputedCells = { cells: ReadonlyArray<PlayfieldCell> };
+export type TurnCells = { cells: ReadonlyArray<PlayfieldCell> };
 
-export type TurnComputedPlacements = { placements: ReadonlyArray<PlayfieldPlacement> };
+export type TurnComputation = TurnPlacements & TurnScore & TurnWords;
 
-export type TurnComputedScore = { score: number };
+export type TurnEvaluation = { status: TurnValidity.Unknown } | TurnEvaluationInvalid | TurnEvaluationValid;
 
-export type TurnComputedValue = TurnComputedCells | TurnComputedPlacements | TurnComputedScore | TurnComputedWords;
+export type TurnEvaluationInvalid = { error: TurnValidationError; status: TurnValidity.Invalid };
 
-export type TurnComputedWords = { words: ReadonlyArray<string> };
+export type TurnEvaluationValid = { computation: TurnComputation; status: TurnValidity.Valid };
 
 export type TurnGenerationContext = {
   crossCheckTable: CrossCheckTable;
   dictionary: DictionaryGraph;
 } & TurnGenerationContextData;
 
-export type TurnGenerationContextData = { readonly inventory: Inventory; readonly match: Match; readonly playfield: Playfield };
+export type TurnGenerationContextData = { readonly match: Match };
 
 export type TurnGenerationPartition = { length: number; offset: number };
 
 export type TurnGenerationResult = {
-  cells: ReadonlyArray<PlayfieldCell>;
-  tiles: ReadonlyArray<InventoryTile>;
-  validationResult: TurnValidationValidResult;
+  evaluation: TurnEvaluationValid;
+  placement: TurnPlacement;
 };
 
-export type TurnValidationInvalidResult = { error: TurnValidationError; status: TurnValidationStatus.Invalid };
+export type TurnLink = { readonly cell: PlayfieldCell; readonly tile: InventoryTile };
 
-export type TurnValidationResult = TurnValidationInvalidResult | TurnValidationUnvalidatedResult | TurnValidationValidResult;
+export type TurnPlacement = ReadonlyArray<TurnLink>;
 
-export type TurnValidationUnvalidatedResult = { status: TurnValidationStatus.Unvalidated };
+export type TurnPlacements = { placements: ReadonlyArray<TurnPlacement> };
 
-export type TurnValidationValidResult = { status: TurnValidationStatus.Valid } & TurnComputedCells &
-  TurnComputedPlacements &
-  TurnComputedScore &
-  TurnComputedWords;
+export type TurnScore = { score: number };
+
+export type TurnWords = { words: ReadonlyArray<string> };

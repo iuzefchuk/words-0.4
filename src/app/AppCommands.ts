@@ -54,7 +54,8 @@ export default class AppCommands {
     }
     this.persistEvents();
     return {
-      opponentTurn: this.game.matchProjection.currentPlayer === DomainMatchPlayer.Opponent ? this.createOpponentTurn() : undefined,
+      opponentTurn:
+        this.game.matchProjection.currentPlayer === DomainMatchPlayer.Opponent ? this.createOpponentTurn() : undefined,
     };
   }
 
@@ -85,7 +86,8 @@ export default class AppCommands {
     }
     this.persistEvents();
     return {
-      opponentTurn: this.game.matchProjection.currentPlayer === DomainMatchPlayer.Opponent ? this.createOpponentTurn() : undefined,
+      opponentTurn:
+        this.game.matchProjection.currentPlayer === DomainMatchPlayer.Opponent ? this.createOpponentTurn() : undefined,
       userResponse,
     };
   }

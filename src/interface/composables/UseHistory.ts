@@ -44,8 +44,6 @@ export default class UseHistory {
     switch (event.type) {
       case DomainTimelineEventType.MatchFinished:
       case DomainTimelineEventType.MatchStarted:
-      case DomainTimelineEventType.TilePlaced:
-      case DomainTimelineEventType.TileUndoPlaced:
       case DomainTimelineEventType.TurnValidationSet:
         return '';
       case DomainTimelineEventType.TurnPassed:

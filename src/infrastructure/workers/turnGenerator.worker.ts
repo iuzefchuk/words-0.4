@@ -25,9 +25,9 @@ class TurnGeneratorWorker {
     let bestScore = -1;
     let count = 0;
     for (const result of DomainTurnGenerator.execute(context, input.player, input.partition)) {
-      if (result.validationResult.score > bestScore) {
+      if (result.evaluation.computation.score > bestScore) {
         bestResult = result;
-        bestScore = result.validationResult.score;
+        bestScore = result.evaluation.computation.score;
       }
       if (++count >= input.attemptsLimit) break;
     }

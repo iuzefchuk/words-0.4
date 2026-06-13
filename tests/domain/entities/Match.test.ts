@@ -1,4 +1,4 @@
-// uses Inventory, Playfield, Turn
+// encapsulates inventory, playfield, turns
 
 describe('Match', () => {
   describe('owns inventory', () => {
