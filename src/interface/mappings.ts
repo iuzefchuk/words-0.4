@@ -15,10 +15,10 @@ export function getBonusAccent(bonus: GameBonus): Accent {
 export function getBonusName(bonus: GameBonus): string {
   return window.text(
     {
-      [GameBonus.DoubleLetter]: 'general.bonus_dl',
-      [GameBonus.DoubleWord]: 'general.bonus_dw',
-      [GameBonus.TripleLetter]: 'general.bonus_tl',
-      [GameBonus.TripleWord]: 'general.bonus_tw',
+      [GameBonus.DoubleLetter]: 'game.bonus_dl',
+      [GameBonus.DoubleWord]: 'game.bonus_dw',
+      [GameBonus.TripleLetter]: 'game.bonus_tl',
+      [GameBonus.TripleWord]: 'game.bonus_tw',
     }[bonus],
   );
 }
@@ -53,9 +53,9 @@ export function getMatchResultText(result: GameMatchResult, scoreDiff: number): 
   }
   return window.text(
     {
-      [GameMatchResult.Lose]: scoreDiff < 0 ? 'general.end_lose_by' : 'general.end_lose',
-      [GameMatchResult.Tie]: 'general.end_tie',
-      [GameMatchResult.Win]: scoreDiff > 0 ? 'general.end_win_by' : 'general.end_win',
+      [GameMatchResult.Lose]: scoreDiff < 0 ? 'end.lose_by' : 'end.lose',
+      [GameMatchResult.Tie]: 'end.tie',
+      [GameMatchResult.Win]: scoreDiff > 0 ? 'end.win_by' : 'end.win',
     }[result],
     { points: Math.abs(scoreDiff) },
   );

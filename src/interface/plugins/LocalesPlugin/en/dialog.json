@@ -1,0 +1,8 @@
+{
+  "cancel": "No",
+  "confirm": "Yes",
+  "html_pass": "You will lose if you pass twice in a row.",
+  "html_resign": "Your opponent will automatically win.",
+  "title_pass": "Pass?",
+  "title_resign": "Resign?"
+}

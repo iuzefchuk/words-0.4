@@ -10,7 +10,7 @@ const { tilesRemaining } = storeToRefs(mainStore);
     <p v-if="tilesRemaining > 0" role="note" class="stats app__make-secondary">
       <span class="app__make-sr-only">{{ tilesRemaining }}</span>
       <span v-animate-number="{ number: tilesRemaining }" aria-hidden="true" class="stats__number" />
-      <span>{{ text('general.unassigned_count') }}</span>
+      <span>{{ text('game.unassigned_count') }}</span>
     </p>
   </Transition>
 </template>

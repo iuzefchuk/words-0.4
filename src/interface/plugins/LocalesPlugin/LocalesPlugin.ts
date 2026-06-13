@@ -1,5 +1,8 @@
 import { ref, shallowRef, watch } from 'vue';
-import defaultGeneral from '@/interface/plugins/LocalesPlugin/en/general.json';
+import defaultDialog from '@/interface/plugins/LocalesPlugin/en/dialog.json';
+import defaultEnd from '@/interface/plugins/LocalesPlugin/en/end.json';
+import defaultGame from '@/interface/plugins/LocalesPlugin/en/game.json';
+import defaultSettings from '@/interface/plugins/LocalesPlugin/en/settings.json';
 import type { App, Ref, ShallowRef } from 'vue';
 
 export enum LocaleType {
@@ -17,7 +20,10 @@ export type LocaleNumberGetter = (number: number) => string;
 export type LocaleTextGetter = (string: string, props?: Record<string, number | string>) => string;
 
 const DEFAULTS: Record<string, Record<string, string>> = {
-  general: defaultGeneral,
+  dialog: defaultDialog,
+  end: defaultEnd,
+  game: defaultGame,
+  settings: defaultSettings,
 };
 
 export default class LocalesPlugin {
@@ -45,7 +51,7 @@ export default class LocalesPlugin {
   }
 
   install(app: App): void {
-    this.loadNamespace('general');
+    this.loadNamespace('game');
     watch(this.type, () => {
       this.cachedFormatter = LocalesPlugin.createFormatter(this.type.value);
       this.reloadNamespaces();

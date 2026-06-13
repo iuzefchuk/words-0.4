@@ -1,0 +1,8 @@
+{
+  "lose": "You lost 🦨",
+  "lose_by": "You lost by {points} pts 🦨",
+  "new_match": "Tap twice to start new match",
+  "tie": "It's a tie 👔",
+  "win": "You won 🏆",
+  "win_by": "You won by {points} pts 🏆"
+}

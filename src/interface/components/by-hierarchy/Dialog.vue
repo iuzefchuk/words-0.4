@@ -64,12 +64,12 @@ watch(html, async newValue => {
           {
             accent: isDestructive ? Accent.Primary : Accent.Secondary,
             status: DialogStatus.Canceled,
-            text: text('general.dialog_cancel'),
+            text: text('dialog.cancel'),
           },
           {
             accent: isDestructive ? Accent.Secondary : Accent.Primary,
             status: DialogStatus.Confirmed,
-            text: text('general.dialog_confirm'),
+            text: text('dialog.confirm'),
           },
         ]"
         :key="button.status"

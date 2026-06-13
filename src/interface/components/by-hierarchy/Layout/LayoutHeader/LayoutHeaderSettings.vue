@@ -13,11 +13,11 @@ const mainStore = MainStore.INSTANCE();
       v-for="{ items, legend, modelValue, onChange } in [
         {
           items: [
-            { text: text('general.difficulty_low'), value: GameMatchDifficulty.Low },
-            { text: text('general.difficulty_medium'), value: GameMatchDifficulty.Medium },
-            { text: text('general.difficulty_high'), value: GameMatchDifficulty.High },
+            { text: text('settings.difficulty_low'), value: GameMatchDifficulty.Low },
+            { text: text('settings.difficulty_medium'), value: GameMatchDifficulty.Medium },
+            { text: text('settings.difficulty_high'), value: GameMatchDifficulty.High },
           ],
-          legend: text('general.settings_difficulty'),
+          legend: text('settings.difficulty'),
           modelValue: () => mainStore.matchDifficulty,
           onChange: (value: OptionValue) => {
             handleChangeMatchDifficulty(value as GameMatchDifficulty);
@@ -25,10 +25,10 @@ const mainStore = MainStore.INSTANCE();
         },
         {
           items: [
-            { text: text('general.bonus_distribution_classic'), value: GameMatchType.Classic },
-            { text: text('general.bonus_distribution_random'), value: GameMatchType.Random },
+            { text: text('settings.bonus_distribution_classic'), value: GameMatchType.Classic },
+            { text: text('settings.bonus_distribution_random'), value: GameMatchType.Random },
           ],
-          legend: text('general.settings_bonuses'),
+          legend: text('settings.bonuses'),
           modelValue: () => mainStore.matchType,
           onChange: (value: OptionValue) => {
             handleChangeMatchType(value as GameMatchType);

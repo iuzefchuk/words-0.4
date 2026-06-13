@@ -10,7 +10,7 @@ import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
 import DialogStore from '@/interface/stores/DialogStore.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-const { ready: localeReady } = useNamespace('general');
+const { ready: localeReady } = useNamespace('game');
 await MainStore.initiate();
 const mainStore = MainStore.INSTANCE();
 const { matchIsFinished } = storeToRefs(mainStore);

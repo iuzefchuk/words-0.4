@@ -20,7 +20,7 @@ function restart(): void {
   <section role="alertdialog" aria-modal="true" :aria-labelledby="ID_RESULT" class="restart">
     <p :id="ID_RESULT" role="status">{{ result }}</p>
     <button class="restart__button app__make-secondary" @dblclick.stop="restart" @keydown.space.prevent.stop="restart">
-      {{ text('general.action_new_match') }}
+      {{ text('end.new_match') }}
     </button>
   </section>
 </template>

@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-const { t } = useNamespace('general');
+const { t } = useNamespace('game');
 const mainStore = MainStore.INSTANCE();
 const players = computed(() => [
   {

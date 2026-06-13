@@ -31,16 +31,16 @@ export function handleSave(): void {
 async function triggerPassDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
   const { trigger } = DialogStore.INSTANCE();
   return await trigger({
-    html: window.text('general.dialog_html_pass'),
-    title: window.text('general.dialog_title_pass'),
+    html: window.text('dialog.html_pass'),
+    title: window.text('dialog.title_pass'),
   });
 }
 
 async function triggerResignDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
   const { trigger } = DialogStore.INSTANCE();
   return await trigger({
-    html: window.text('general.dialog_html_resign'),
+    html: window.text('dialog.html_resign'),
     isDestructive: true,
-    title: window.text('general.dialog_title_resign'),
+    title: window.text('dialog.title_resign'),
   });
 }

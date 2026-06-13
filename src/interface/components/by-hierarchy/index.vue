@@ -9,7 +9,7 @@ const { bootError } = storeToRefs(MainStore.INSTANCE());
 </script>
 
 <template>
-  <Alert v-if="bootError" :html="text('general.boot_error', { error: bootError })" />
+  <Alert v-if="bootError" :html="text('game.boot_error', { error: bootError })" />
   <Suspense v-else>
     <Layout />
     <template #fallback><Progress /></template>

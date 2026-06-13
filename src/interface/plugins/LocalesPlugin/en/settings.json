@@ -1,0 +1,9 @@
+{
+  "bonus_distribution_classic": "Classic",
+  "bonus_distribution_random": "Random",
+  "bonuses": "Bonus distribution",
+  "difficulty": "Difficulty",
+  "difficulty_high": "Challenging",
+  "difficulty_low": "Beginner",
+  "difficulty_medium": "Average"
+}

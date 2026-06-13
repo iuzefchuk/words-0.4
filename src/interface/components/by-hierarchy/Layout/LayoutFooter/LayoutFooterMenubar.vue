@@ -6,7 +6,7 @@ import { Accent, Key } from '@/interface/enums.ts';
 import { handlePass, handleResign, handleSave } from '@/interface/handlers/menubar.ts';
 import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-const { t } = useNamespace('general');
+const { t } = useNamespace('game');
 const mainStore = MainStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
 const buttons = computed(() => [

@@ -1,0 +1,17 @@
+{
+  "action_pass": "Pass",
+  "action_play": "Play",
+  "action_resign": "Resign",
+  "bonus_dl": "DL",
+  "bonus_dw": "DW",
+  "bonus_tl": "TL",
+  "bonus_tw": "TW",
+  "boot_error": "Something went wrong: <em>{error}</em>. Try reloading the page or using different browser.",
+  "event_pass_opponent": "Opponent passed",
+  "event_pass_user": "You passed",
+  "event_save_opponent": "Opponent played <em>{words}</em> for {score} pts",
+  "event_save_user": "You played <em>{words}</em> for {score} pts",
+  "player_opponent": "Opponent",
+  "player_user": "You",
+  "unassigned_count": "left"
+}
