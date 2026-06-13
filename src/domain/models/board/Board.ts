@@ -96,6 +96,10 @@ export default class Board {
     return LayoutService.getAxisCells(coords);
   }
 
+  getAxisPosition(coords: AnchorCoordinates): number {
+    return LayoutService.getAxisPosition(coords);
+  }
+
   getBonus(cell: Cell): Bonus | null {
     return this.bonusByCell.get(cell) ?? null;
   }

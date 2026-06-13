@@ -65,6 +65,11 @@ export default class LayoutService {
     return cells;
   }
 
+  static getAxisPosition(coords: AnchorCoordinates): number {
+    const { axis, cell } = coords;
+    return axis === Axis.X ? this.getCellPositionInColumn(cell) : this.getCellPositionInRow(cell);
+  }
+
   static getCellPositionInColumn(cell: Cell): number {
     return cell % this.CELLS_PER_AXIS;
   }

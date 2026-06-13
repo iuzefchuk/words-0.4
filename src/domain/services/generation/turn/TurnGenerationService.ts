@@ -36,9 +36,17 @@ import type {
 import type { GameAnchorCoordinates, GameLink, GameNode, GameTile } from '@/domain/types/index.ts';
 
 class TaskCommandResolver {
+  private static readonly EMPTY_CONTINUE_COMMAND: ContinueTaskCommand = {
+    newTasks: [],
+    type: GenerationCommandType.ContinueExecute,
+  };
+
+  private static readonly STOP_COMMAND: StopTaskCommand = { type: GenerationCommandType.StopExecute };
+
   private constructor(private readonly stack: Array<Task>) {}
 
   static continueExecute(newTasks: Array<Task>): ContinueTaskCommand {
+    if (newTasks.length === 0) return TaskCommandResolver.EMPTY_CONTINUE_COMMAND;
     return { newTasks, type: GenerationCommandType.ContinueExecute };
   }
 
@@ -52,7 +60,7 @@ class TaskCommandResolver {
   }
 
   static stopExecute(): StopTaskCommand {
-    return { type: GenerationCommandType.StopExecute };
+    return TaskCommandResolver.STOP_COMMAND;
   }
 
   *execute(dispatcher: (task: Task) => TaskCommand): Generator<GeneratorResult> {
@@ -134,7 +142,7 @@ class TaskDispatcher {
     }
   }
 
-  *generateForAnchor(anchorPos: number): Generator<GeneratorResult> {
+  *dispatchTraversal(anchorPos: number): Generator<GeneratorResult> {
     const axisCells = this.computeds.axisCells;
     const leftCell = anchorPos > 0 ? axisCells[anchorPos - 1] : undefined;
     const leftOccupied = leftCell !== undefined && this.board.findTileByCell(leftCell) !== undefined;
@@ -155,7 +163,7 @@ class TaskDispatcher {
         node = this.dictionary.getNode(this.inventory.getTileLetter(tile), node);
         if (node === null) return;
       }
-      yield* this.extendRight(node, anchorPos);
+      yield* this.traverseRight(node, anchorPos);
     } else {
       let leftLimit = 0;
       for (let pos = anchorPos - 1; pos >= 0; pos--) {
@@ -163,7 +171,7 @@ class TaskDispatcher {
         if (cell === undefined || this.board.findTileByCell(cell) !== undefined) break;
         leftLimit++;
       }
-      yield* this.generateLeftPart(this.dictionary.rootNode, anchorPos, leftLimit, 0);
+      yield* this.traverseLeft(this.dictionary.rootNode, anchorPos, leftLimit, 0);
     }
   }
 
@@ -264,7 +272,7 @@ class TaskDispatcher {
     return this.emitContinue([{ ...task, type: GenerationTask.ValidateTraversal }]);
   }
 
-  private *extendRight(node: GameNode, anchorPos: number): Generator<GeneratorResult> {
+  private *traverseRight(node: GameNode, anchorPos: number): Generator<GeneratorResult> {
     const firstTask: EvaluateTask = {
       traversal: {
         direction: GenerationDirection.Right,
@@ -277,13 +285,13 @@ class TaskDispatcher {
     yield* resolver.execute(task => this.execute(task));
   }
 
-  private *generateLeftPart(
+  private *traverseLeft(
     node: GameNode,
     anchorPos: number,
     limit: number,
     depth: number,
   ): Generator<GeneratorResult> {
-    yield* this.extendRight(node, anchorPos);
+    yield* this.traverseRight(node, anchorPos);
 
     if (limit <= 0) return;
 
@@ -291,18 +299,17 @@ class TaskDispatcher {
     const cell = this.computeds.axisCells[pos];
     if (cell === undefined) return;
 
-    type ChildInfo = { childNode: GameNode; letter: GameLetter; letterIndex: number };
+    const mask = this.context.crossCheckTable.getMask(this.computeds.oppositeAxis, cell);
+
+    type ChildInfo = { childNode: GameNode; letter: GameLetter };
     const children: Array<ChildInfo> = [];
     this.dictionary.forEachNodeChild(node, (letter, childNode, letterIndex) => {
-      children.push({ childNode, letter, letterIndex });
+      if (((mask >>> letterIndex) & 1) === 0) return;
+      children.push({ childNode, letter });
     });
     ShuffleService.shuffle({ array: children });
 
-    const mask = this.context.crossCheckTable.getMask(this.computeds.oppositeAxis, cell);
-
-    for (const { childNode, letter, letterIndex } of children) {
-      if (((mask >>> letterIndex) & 1) === 0) continue;
-
+    for (const { childNode, letter } of children) {
       const letterTiles = this.tiles.get(letter);
       if (letterTiles === undefined || letterTiles.length === 0) continue;
 
@@ -312,7 +319,7 @@ class TaskDispatcher {
       this.placement.unshift({ cell, tile });
       this.board.placeTile(cell, tile);
 
-      yield* this.generateLeftPart(childNode, anchorPos, limit - 1, depth + 1);
+      yield* this.traverseLeft(childNode, anchorPos, limit - 1, depth + 1);
 
       this.placement.shift();
       this.board.undoPlaceTile(tile);
@@ -390,9 +397,9 @@ export default class TurnGenerationService {
   }
 
   private static *generate(args: GeneratorArguments): Generator<GeneratorResult> {
-    const { coords } = args;
+    const { context, coords } = args;
     const dispatcher = TaskDispatcher.create(args);
-    const anchorPos = dispatcher.computeds.axisCells.indexOf(coords.cell);
-    yield* dispatcher.generateForAnchor(anchorPos);
+    const anchorPos = context.board.getAxisPosition(coords);
+    yield* dispatcher.dispatchTraversal(anchorPos);
   }
 }
