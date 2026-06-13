@@ -43,9 +43,20 @@ const { currentTurnScore } = storeToRefs(mainStore);
     box-shadow: var(--shadow-2xl);
 
     &--shimmer {
-      background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet, red);
-      background-size: 300% 100%;
-      animation: shimmer 3s linear infinite;
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        width: 400%;
+        background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet, red, orange, yellow, green, cyan, blue, violet, red);
+        background-size: 25% 100%;
+        animation: shimmer 3s linear infinite;
+        will-change: transform;
+      }
     }
   }
 }

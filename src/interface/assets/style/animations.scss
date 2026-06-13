@@ -22,11 +22,11 @@
 
 @keyframes shimmer {
   0% {
-    background-position: 0% 50%;
+    transform: translateX(0);
   }
 
   100% {
-    background-position: 300% 50%;
+    transform: translateX(-75%);
   }
 }
 

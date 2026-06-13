@@ -7,7 +7,7 @@ import CrossCheckTable from '@/domain/services/cross-check/CrossCheckTable.ts';
 import { GenerationCommandType, GenerationDirection, GenerationTask } from '@/domain/services/generation/turn/enums.ts';
 import ShuffleService from '@/domain/services/ShuffleService.ts';
 import TurnValidationService from '@/domain/services/validation/turn/TurnValidationService.ts';
-import type { GamePlayer } from '@/domain/enums.ts';
+import type { GameLetter, GamePlayer } from '@/domain/enums.ts';
 import type Dictionary from '@/domain/models/dictionary/Dictionary.ts';
 import type {
   ApplyTask,
@@ -33,7 +33,7 @@ import type {
   Traversal,
   ValidateTask,
 } from '@/domain/services/generation/turn/types.ts';
-import type { GameAnchorCoordinates, GameLink, GameTile } from '@/domain/types/index.ts';
+import type { GameAnchorCoordinates, GameLink, GameNode, GameTile } from '@/domain/types/index.ts';
 
 class TaskCommandResolver {
   private constructor(private readonly stack: Array<Task>) {}
@@ -134,6 +134,39 @@ class TaskDispatcher {
     }
   }
 
+  *generateForAnchor(anchorPos: number): Generator<GeneratorResult> {
+    const axisCells = this.computeds.axisCells;
+    const leftCell = anchorPos > 0 ? axisCells[anchorPos - 1] : undefined;
+    const leftOccupied = leftCell !== undefined && this.board.findTileByCell(leftCell) !== undefined;
+
+    if (leftOccupied) {
+      let startPos = anchorPos - 1;
+      while (startPos > 0) {
+        const cell = axisCells[startPos - 1];
+        if (cell === undefined || this.board.findTileByCell(cell) === undefined) break;
+        startPos--;
+      }
+      let node: GameNode | null = this.dictionary.rootNode;
+      for (let pos = startPos; pos < anchorPos; pos++) {
+        const cell = axisCells[pos];
+        if (cell === undefined) return;
+        const tile = this.board.findTileByCell(cell);
+        if (tile === undefined) return;
+        node = this.dictionary.getNode(this.inventory.getTileLetter(tile), node);
+        if (node === null) return;
+      }
+      yield* this.extendRight(node, anchorPos);
+    } else {
+      let leftLimit = 0;
+      for (let pos = anchorPos - 1; pos >= 0; pos--) {
+        const cell = axisCells[pos];
+        if (cell === undefined || this.board.findTileByCell(cell) !== undefined) break;
+        leftLimit++;
+      }
+      yield* this.generateLeftPart(this.dictionary.rootNode, anchorPos, leftLimit, 0);
+    }
+  }
+
   private applyResolution(task: ApplyTask): ContinueTaskCommand {
     const { cell } = task.candidate;
     const { tile } = task.resolution;
@@ -215,7 +248,7 @@ class TaskDispatcher {
   private evaluateTraversal(task: EvaluateTask): ContinueTaskCommand | ReturnTaskCommand {
     const { traversal } = task;
     const placementIsUsable = this.placement.length > 0 && this.dictionary.isNodeFinal(traversal.node);
-    if (traversal.direction === GenerationDirection.Right && placementIsUsable) {
+    if (placementIsUsable) {
       const tiles: Array<GameTile> = [];
       for (const link of this.placement) {
         tiles.push(link.tile);
@@ -228,16 +261,63 @@ class TaskDispatcher {
         return this.emitReturn({ cells, tiles, validationResult });
       }
     }
-    const nextTasks: Array<Task> = [];
-    if (traversal.direction === GenerationDirection.Left) {
-      const oppositeDirectionEvaluationTask: EvaluateTask = {
-        traversal: { ...traversal, direction: GenerationDirection.Right },
-        type: GenerationTask.EvaluateTraversal,
-      };
-      nextTasks.push(oppositeDirectionEvaluationTask);
+    return this.emitContinue([{ ...task, type: GenerationTask.ValidateTraversal }]);
+  }
+
+  private *extendRight(node: GameNode, anchorPos: number): Generator<GeneratorResult> {
+    const firstTask: EvaluateTask = {
+      traversal: {
+        direction: GenerationDirection.Right,
+        node,
+        position: anchorPos - 1,
+      },
+      type: GenerationTask.EvaluateTraversal,
+    };
+    const resolver = TaskCommandResolver.create(firstTask);
+    yield* resolver.execute(task => this.execute(task));
+  }
+
+  private *generateLeftPart(
+    node: GameNode,
+    anchorPos: number,
+    limit: number,
+    depth: number,
+  ): Generator<GeneratorResult> {
+    yield* this.extendRight(node, anchorPos);
+
+    if (limit <= 0) return;
+
+    const pos = anchorPos - depth - 1;
+    const cell = this.computeds.axisCells[pos];
+    if (cell === undefined) return;
+
+    type ChildInfo = { childNode: GameNode; letter: GameLetter; letterIndex: number };
+    const children: Array<ChildInfo> = [];
+    this.dictionary.forEachNodeChild(node, (letter, childNode, letterIndex) => {
+      children.push({ childNode, letter, letterIndex });
+    });
+    ShuffleService.shuffle({ array: children });
+
+    const mask = this.context.crossCheckTable.getMask(this.computeds.oppositeAxis, cell);
+
+    for (const { childNode, letter, letterIndex } of children) {
+      if (((mask >>> letterIndex) & 1) === 0) continue;
+
+      const letterTiles = this.tiles.get(letter);
+      if (letterTiles === undefined || letterTiles.length === 0) continue;
+
+      const tile = letterTiles.pop();
+      if (tile === undefined) continue;
+
+      this.placement.unshift({ cell, tile });
+      this.board.placeTile(cell, tile);
+
+      yield* this.generateLeftPart(childNode, anchorPos, limit - 1, depth + 1);
+
+      this.placement.shift();
+      this.board.undoPlaceTile(tile);
+      letterTiles.push(tile);
     }
-    nextTasks.push({ ...task, type: GenerationTask.ValidateTraversal });
-    return this.emitContinue(nextTasks);
   }
 
   private resolveCandidate(task: ResolveTask): ContinueTaskCommand | StopTaskCommand {
@@ -258,11 +338,7 @@ class TaskDispatcher {
 
   private validateTraversal(task: ValidateTask): ContinueTaskCommand | StopTaskCommand {
     const { traversal } = task;
-    const isEdge =
-      traversal.direction === GenerationDirection.Left
-        ? this.board.isCellPositionAtAxisStart(traversal.position)
-        : this.board.isCellPositionAtAxisEnd(traversal.position);
-    if (isEdge) return this.emitStop();
+    if (this.board.isCellPositionAtAxisEnd(traversal.position)) return this.emitStop();
     return this.emitContinue([{ ...task, type: GenerationTask.CalculateCandidate }]);
   }
 }
@@ -314,18 +390,9 @@ export default class TurnGenerationService {
   }
 
   private static *generate(args: GeneratorArguments): Generator<GeneratorResult> {
-    const { context, coords } = args;
-    const { dictionary } = context;
+    const { coords } = args;
     const dispatcher = TaskDispatcher.create(args);
-    const firstTask: EvaluateTask = {
-      traversal: {
-        direction: GenerationDirection.Left,
-        node: dictionary.rootNode,
-        position: dispatcher.computeds.axisCells.indexOf(coords.cell),
-      },
-      type: GenerationTask.EvaluateTraversal,
-    };
-    const resolver = TaskCommandResolver.create(firstTask);
-    yield* resolver.execute(task => dispatcher.execute(task));
+    const anchorPos = dispatcher.computeds.axisCells.indexOf(coords.cell);
+    yield* dispatcher.generateForAnchor(anchorPos);
   }
 }

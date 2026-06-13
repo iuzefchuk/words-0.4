@@ -124,7 +124,6 @@ export default class CommandsService {
     const { crossCheckTable, dictionary, ...data } = this.game.createTurnGenerationContext();
     const workerInput = {
       attemptsLimit,
-      buffer: dictionary.buffer,
       crossCheckBuffer: crossCheckTable.buffer,
       ...data,
       player,

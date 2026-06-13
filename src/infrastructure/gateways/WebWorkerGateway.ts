@@ -3,20 +3,52 @@ import WorkerPoolGateway from '@/infrastructure/gateways/WorkerPoolGateway.ts';
 import type { WorkerGateway, WorkerRequest, WorkerResponse } from '@/application/types/gateways.ts';
 
 export default class WebWorkerGateway implements WorkerGateway {
+  private readonly initData = new Map<string, unknown>();
+  private readonly initPromises = new Map<string, Promise<void>>();
+
   constructor(private readonly workers: Record<string, new () => Worker>) {}
 
   getPoolSize(taskId: string): number {
     return WorkerPoolGateway.getPoolSize(taskId);
   }
 
-  async init(taskId: string, data: unknown): Promise<void> {
+  init(taskId: string, data: unknown): Promise<void> {
+    this.initData.set(taskId, data);
+    const count = WorkerPoolGateway.computePoolSize();
+    const workers: Array<Worker> = [];
+    for (let i = 0; i < count; i++) {
+      workers.push(WorkerPoolGateway.takeFromPool(taskId) ?? this.createWorker(taskId));
+    }
+    const promise = Promise.all(workers.map(worker => this.initWorker(worker, data))).then(() => {
+      for (const worker of workers) WorkerPoolGateway.returnToPool(taskId, worker);
+    });
+    this.initPromises.set(taskId, promise);
+    return promise;
+  }
+
+  spawnPool(taskId: string): void {
     const workers = Array.from({ length: WorkerPoolGateway.computePoolSize() }, () => this.createWorker(taskId));
-    await Promise.all(workers.map(worker => this.initWorker(worker, data)));
     for (const worker of workers) WorkerPoolGateway.returnToPool(taskId, worker);
   }
 
   async *stream<O>(taskId: string, inputs: ReadonlyArray<unknown>): AsyncGenerator<O> {
-    const workers: Array<Worker> = inputs.map(() => WorkerPoolGateway.takeFromPool(taskId) ?? this.createWorker(taskId));
+    const pending = this.initPromises.get(taskId);
+    if (pending !== undefined) {
+      await pending;
+      this.initPromises.delete(taskId);
+    }
+    const workers: Array<Worker> = [];
+    for (const _ of inputs) {
+      const pooled = WorkerPoolGateway.takeFromPool(taskId);
+      if (pooled !== undefined) {
+        workers.push(pooled);
+      } else {
+        const fresh = this.createWorker(taskId);
+        const data = this.initData.get(taskId);
+        if (data !== undefined) await this.initWorker(fresh, data);
+        workers.push(fresh);
+      }
+    }
     const state = WorkerPoolGateway.createStreamState<WorkerResponse>();
     const totalWorkers = workers.length;
     for (let idx = 0; idx < workers.length; idx++) {

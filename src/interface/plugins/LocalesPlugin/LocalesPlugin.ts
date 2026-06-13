@@ -1,4 +1,5 @@
 import { ref, watch } from 'vue';
+import defaultGeneral from '@/interface/plugins/LocalesPlugin/en/general.json';
 import type { App, Ref } from 'vue';
 
 export enum LocaleType {
@@ -26,10 +27,14 @@ export default class LocalesPlugin {
     [LocaleType.En]: NumberSeparatorType.Dot,
   };
 
+  private cachedFormatter: Intl.NumberFormat;
+
   private constructor(
     private readonly type: Ref<LocaleType>,
     private readonly content: Ref<LocaleFileContent>,
-  ) {}
+  ) {
+    this.cachedFormatter = LocalesPlugin.createFormatter(type.value);
+  }
 
   static create(): LocalesPlugin {
     const type = ref(document.documentElement.getAttribute('lang') as LocaleType);
@@ -37,10 +42,23 @@ export default class LocalesPlugin {
     return new LocalesPlugin(type, content);
   }
 
-  async install(app: App): Promise<void> {
-    await this.fetchContent();
-    watch(this.type, () => this.fetchContent());
+  install(app: App): void {
+    this.loadDefaultContent();
+    watch(this.type, () => {
+      this.cachedFormatter = LocalesPlugin.createFormatter(this.type.value);
+      void this.fetchContent();
+    });
     this.setGlobals(app);
+  }
+
+  private loadDefaultContent(): void {
+    this.content.value[LocaleFile.General] = defaultGeneral;
+  }
+
+  private static createFormatter(locale: LocaleType): Intl.NumberFormat {
+    return new Intl.NumberFormat(LocalesPlugin.NUMBER_SEPARATOR_TYPE_FOR_LOCALE[locale], {
+      maximumFractionDigits: 2,
+    });
   }
 
   private async fetchContent(): Promise<void> {
@@ -52,9 +70,7 @@ export default class LocalesPlugin {
   }
 
   private readonly getLocalizedNumber: LocaleNumberGetter = (number: number) => {
-    return new Intl.NumberFormat(LocalesPlugin.NUMBER_SEPARATOR_TYPE_FOR_LOCALE[this.type.value], {
-      maximumFractionDigits: 2,
-    }).format(number);
+    return this.cachedFormatter.format(number);
   };
 
   private readonly getLocalizedText: LocaleTextGetter = (string: string, props?: object) => {

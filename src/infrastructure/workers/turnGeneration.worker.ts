@@ -10,7 +10,6 @@ import type {
 
 type StreamInput = {
   attemptsLimit: number;
-  buffer: GameDictionaryBuffer;
   crossCheckBuffer: ArrayBuffer | SharedArrayBuffer;
   partition?: GameGeneratorPartition;
   player: GamePlayer;
@@ -28,7 +27,8 @@ class TurnGenerationHandler {
   }
 
   private findBestResult(input: StreamInput): GameGeneratorResult | null {
-    const dictionary = this.dictionary ?? GameDictionary.createFromBuffer(input.buffer);
+    if (this.dictionary === null) throw new Error('worker not initialized: dictionary is null');
+    const dictionary = this.dictionary;
     const context = GameTurnGenerator.hydrateContext(input, dictionary, input.crossCheckBuffer);
     let bestResult: GameGeneratorResult | null = null;
     let bestScore = -1;

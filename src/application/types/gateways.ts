@@ -24,6 +24,7 @@ export type SchedulerGateway = {
 export type WorkerGateway = {
   getPoolSize(taskId: string): number;
   init(taskId: string, data: unknown): Promise<void>;
+  spawnPool(taskId: string): void;
   stream<O>(taskId: string, inputs: ReadonlyArray<unknown>): AsyncGenerator<O>;
 };
 

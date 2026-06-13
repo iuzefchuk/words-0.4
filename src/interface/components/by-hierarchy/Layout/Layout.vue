@@ -53,7 +53,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
 @use '@style/breakpoints.scss' as *;
 
 .layout {
-  transition-property: filter, opacity;
+  transition-property: opacity;
   transition-duration: var(--transition-duration);
   transition-timing-function: var(--transition-timing-function);
   width: 100%;
@@ -79,7 +79,6 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   }
 
   &--blurred {
-    filter: blur(1rem);
     opacity: 0.5;
   }
 }

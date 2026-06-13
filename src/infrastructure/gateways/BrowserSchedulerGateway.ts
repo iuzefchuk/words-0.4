@@ -11,8 +11,13 @@ export default class BrowserSchedulerGateway {
   }
 
   static yield(): Promise<void> {
+    if ('scheduler' in globalThis && 'yield' in (globalThis as { scheduler: { yield: () => Promise<void> } }).scheduler) {
+      return (globalThis as { scheduler: { yield: () => Promise<void> } }).scheduler.yield();
+    }
     return new Promise(resolve => {
-      queueMicrotask(resolve);
+      const channel = new MessageChannel();
+      channel.port1.onmessage = () => resolve();
+      channel.port2.postMessage(undefined);
     });
   }
 
