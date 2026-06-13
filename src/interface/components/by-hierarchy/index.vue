@@ -4,9 +4,9 @@ import Alert from '@/interface/components/by-hierarchy/Alert.vue';
 import Dialog from '@/interface/components/by-hierarchy/Dialog.vue';
 import Layout from '@/interface/components/by-hierarchy/Layout/Layout.vue';
 import Progress from '@/interface/components/by-hierarchy/Progress.vue';
-import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
+import useLocalesNamespace from '@/interface/composables/UseLocalesNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-const { t } = useNamespace('game');
+const { t } = useLocalesNamespace('game');
 const { bootError } = storeToRefs(MainStore.INSTANCE());
 </script>
 

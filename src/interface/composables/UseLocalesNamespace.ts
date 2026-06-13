@@ -6,7 +6,7 @@ type Namespace = {
   t: (key: string, props?: Record<string, number | string>) => string;
 };
 
-export default function useNamespace(file: string): Namespace {
+export default function useLocalesNamespace(file: string): Namespace {
   const content = LocalesPlugin.instance.loadNamespace(file);
 
   const ready = computed(() => content.value !== null);

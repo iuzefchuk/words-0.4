@@ -2,9 +2,9 @@
 import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
 import AppRadioGroup from '@/interface/components/app/AppRadioGroup.vue';
 import { handleChangeMatchDifficulty, handleChangeMatchType } from '@/interface/handlers/setup.ts';
-import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
+import useLocalesNamespace from '@/interface/composables/UseLocalesNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-const { t } = useNamespace('settings');
+const { t } = useLocalesNamespace('settings');
 type OptionValue = GameMatchDifficulty | GameMatchType;
 const mainStore = MainStore.INSTANCE();
 </script>

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
+import useLocalesNamespace from '@/interface/composables/UseLocalesNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-const { t } = useNamespace('game');
+const { t } = useLocalesNamespace('game');
 const mainStore = MainStore.INSTANCE();
 const players = computed(() => [
   {

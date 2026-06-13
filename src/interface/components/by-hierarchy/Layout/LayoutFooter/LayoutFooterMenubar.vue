@@ -4,9 +4,9 @@ import { computed } from 'vue';
 import AppButton from '@/interface/components/app/AppButton.vue';
 import { Accent, Key } from '@/interface/enums.ts';
 import { handlePass, handleResign, handleSave } from '@/interface/handlers/menubar.ts';
-import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
+import useLocalesNamespace from '@/interface/composables/UseLocalesNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
-const { t } = useNamespace('game');
+const { t } = useLocalesNamespace('game');
 const mainStore = MainStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
 const buttons = computed(() => [

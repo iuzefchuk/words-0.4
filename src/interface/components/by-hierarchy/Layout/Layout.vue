@@ -6,11 +6,11 @@ import LayoutHeader from '@/interface/components/by-hierarchy/Layout/LayoutHeade
 import LayoutMain from '@/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMain.vue';
 import LayoutRestart from '@/interface/components/by-hierarchy/Layout/LayoutRestart.vue';
 import { Key } from '@/interface/enums.ts';
-import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
+import useLocalesNamespace from '@/interface/composables/UseLocalesNamespace.ts';
 import DialogStore from '@/interface/stores/DialogStore.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
-const { ready: localeReady } = useNamespace('game');
+const { ready: localeReady } = useLocalesNamespace('game');
 await MainStore.initiate();
 const mainStore = MainStore.INSTANCE();
 const { matchIsFinished } = storeToRefs(mainStore);
