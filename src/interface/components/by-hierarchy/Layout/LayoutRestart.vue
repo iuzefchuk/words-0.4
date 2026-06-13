@@ -3,7 +3,9 @@ import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { handleRestartGame } from '@/interface/handlers/restart.ts';
 import { getMatchResultText } from '@/interface/mappings.ts';
+import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+const { t } = useNamespace('end');
 const ID_RESULT = 'result';
 const mainStore = MainStore.INSTANCE();
 const { matchResult, opponentScore, userScore } = storeToRefs(mainStore);
@@ -20,7 +22,7 @@ function restart(): void {
   <section role="alertdialog" aria-modal="true" :aria-labelledby="ID_RESULT" class="restart">
     <p :id="ID_RESULT" role="status">{{ result }}</p>
     <button class="restart__button app__make-secondary" @dblclick.stop="restart" @keydown.space.prevent.stop="restart">
-      {{ text('end.new_match') }}
+      {{ t('new_match') }}
     </button>
   </section>
 </template>

@@ -4,12 +4,14 @@ import Alert from '@/interface/components/by-hierarchy/Alert.vue';
 import Dialog from '@/interface/components/by-hierarchy/Dialog.vue';
 import Layout from '@/interface/components/by-hierarchy/Layout/Layout.vue';
 import Progress from '@/interface/components/by-hierarchy/Progress.vue';
+import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+const { t } = useNamespace('game');
 const { bootError } = storeToRefs(MainStore.INSTANCE());
 </script>
 
 <template>
-  <Alert v-if="bootError" :html="text('game.boot_error', { error: bootError })" />
+  <Alert v-if="bootError" :html="t('boot_error', { error: bootError })" />
   <Suspense v-else>
     <Layout />
     <template #fallback><Progress /></template>

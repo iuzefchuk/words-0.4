@@ -1,3 +1,4 @@
+import { getText } from '@/interface/plugins/LocalesPlugin/LocalesPlugin.ts';
 import DialogStore from '@/interface/stores/DialogStore.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import UserStore from '@/interface/stores/UserStore.ts';
@@ -31,16 +32,16 @@ export function handleSave(): void {
 async function triggerPassDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
   const { trigger } = DialogStore.INSTANCE();
   return await trigger({
-    html: window.text('dialog.html_pass'),
-    title: window.text('dialog.title_pass'),
+    html: getText('dialog.html_pass'),
+    title: getText('dialog.title_pass'),
   });
 }
 
 async function triggerResignDialog(): Promise<{ isCanceled: boolean; isConfirmed: boolean; isDismissed: boolean }> {
   const { trigger } = DialogStore.INSTANCE();
   return await trigger({
-    html: window.text('dialog.html_resign'),
+    html: getText('dialog.html_resign'),
     isDestructive: true,
-    title: window.text('dialog.title_resign'),
+    title: getText('dialog.title_resign'),
   });
 }

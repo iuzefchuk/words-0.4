@@ -1,5 +1,6 @@
 import { computed } from 'vue';
 import { GameEventType, GamePlayer } from '@/application/types/index.ts';
+import { getText } from '@/interface/plugins/LocalesPlugin/LocalesPlugin.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
 import type { GameEvent } from '@/application/types/index.ts';
 
@@ -28,14 +29,14 @@ export default class UseHistory {
   }
 
   private static getPassText(player: GamePlayer): string {
-    return player === GamePlayer.User ? window.text('game.event_pass_user') : window.text('game.event_pass_opponent');
+    return player === GamePlayer.User ? getText('game.event_pass_user') : getText('game.event_pass_opponent');
   }
 
   private static getSaveText(player: GamePlayer, score: number, words: ReadonlyArray<string>): string {
     const joinedWords = words.join(', ');
     return player === GamePlayer.User
-      ? window.text('game.event_save_user', { score, words: joinedWords })
-      : window.text('game.event_save_opponent', { score, words: joinedWords });
+      ? getText('game.event_save_user', { score, words: joinedWords })
+      : getText('game.event_save_opponent', { score, words: joinedWords });
   }
 
   private createEventHtml(event: GameEvent): string {

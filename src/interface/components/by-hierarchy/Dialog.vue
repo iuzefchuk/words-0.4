@@ -3,7 +3,9 @@ import { storeToRefs } from 'pinia';
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import AppButton from '@/interface/components/app/AppButton.vue';
 import { Accent } from '@/interface/enums.ts';
+import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
 import DialogStore, { DialogStatus } from '@/interface/stores/DialogStore.ts';
+const { t } = useNamespace('dialog');
 const ID_TITLE = 'title';
 const ID_HTML = 'html';
 const REF_KEY_BUTTONS = 'buttons';
@@ -64,12 +66,12 @@ watch(html, async newValue => {
           {
             accent: isDestructive ? Accent.Primary : Accent.Secondary,
             status: DialogStatus.Canceled,
-            text: text('dialog.cancel'),
+            text: t('cancel'),
           },
           {
             accent: isDestructive ? Accent.Secondary : Accent.Primary,
             status: DialogStatus.Confirmed,
-            text: text('dialog.confirm'),
+            text: t('confirm'),
           },
         ]"
         :key="button.status"

@@ -2,7 +2,9 @@
 import { GameMatchDifficulty, GameMatchType } from '@/application/types/index.ts';
 import AppRadioGroup from '@/interface/components/app/AppRadioGroup.vue';
 import { handleChangeMatchDifficulty, handleChangeMatchType } from '@/interface/handlers/setup.ts';
+import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+const { t } = useNamespace('settings');
 type OptionValue = GameMatchDifficulty | GameMatchType;
 const mainStore = MainStore.INSTANCE();
 </script>
@@ -13,11 +15,11 @@ const mainStore = MainStore.INSTANCE();
       v-for="{ items, legend, modelValue, onChange } in [
         {
           items: [
-            { text: text('settings.difficulty_low'), value: GameMatchDifficulty.Low },
-            { text: text('settings.difficulty_medium'), value: GameMatchDifficulty.Medium },
-            { text: text('settings.difficulty_high'), value: GameMatchDifficulty.High },
+            { text: t('difficulty_low'), value: GameMatchDifficulty.Low },
+            { text: t('difficulty_medium'), value: GameMatchDifficulty.Medium },
+            { text: t('difficulty_high'), value: GameMatchDifficulty.High },
           ],
-          legend: text('settings.difficulty'),
+          legend: t('difficulty'),
           modelValue: () => mainStore.matchDifficulty,
           onChange: (value: OptionValue) => {
             handleChangeMatchDifficulty(value as GameMatchDifficulty);
@@ -25,10 +27,10 @@ const mainStore = MainStore.INSTANCE();
         },
         {
           items: [
-            { text: text('settings.bonus_distribution_classic'), value: GameMatchType.Classic },
-            { text: text('settings.bonus_distribution_random'), value: GameMatchType.Random },
+            { text: t('bonus_distribution_classic'), value: GameMatchType.Classic },
+            { text: t('bonus_distribution_random'), value: GameMatchType.Random },
           ],
-          legend: text('settings.bonuses'),
+          legend: t('bonuses'),
           modelValue: () => mainStore.matchType,
           onChange: (value: OptionValue) => {
             handleChangeMatchType(value as GameMatchType);

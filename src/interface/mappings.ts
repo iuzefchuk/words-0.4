@@ -1,4 +1,5 @@
 import { GameBonus, GameEventType, GameMatchResult, GamePlayer } from '@/application/types/index.ts';
+import { getText } from '@/interface/plugins/LocalesPlugin/LocalesPlugin.ts';
 import { Accent } from '@/interface/enums.ts';
 import { Sound } from '@/interface/services/SoundPlayer.ts';
 import type { GameEvent } from '@/application/types/index.ts';
@@ -13,7 +14,7 @@ export function getBonusAccent(bonus: GameBonus): Accent {
 }
 
 export function getBonusName(bonus: GameBonus): string {
-  return window.text(
+  return getText(
     {
       [GameBonus.DoubleLetter]: 'game.bonus_dl',
       [GameBonus.DoubleWord]: 'game.bonus_dw',
@@ -51,7 +52,7 @@ export function getMatchResultText(result: GameMatchResult, scoreDiff: number): 
   if (result === GameMatchResult.Undecided) {
     throw new Error(`cannot render match result text: result is ${GameMatchResult.Undecided}`);
   }
-  return window.text(
+  return getText(
     {
       [GameMatchResult.Lose]: scoreDiff < 0 ? 'end.lose_by' : 'end.lose',
       [GameMatchResult.Tie]: 'end.tie',

@@ -1,3 +1,4 @@
+import { getNumber } from '@/interface/plugins/LocalesPlugin/LocalesPlugin.ts';
 import Directive from './DirectiveClass.ts';
 import type { DirectiveBinding } from 'vue';
 
@@ -38,7 +39,7 @@ class Animator {
     const nextValue = animationIsUnfinished
       ? Math.floor(this.startValue + (this.endValue - this.startValue) * progress)
       : this.endValue;
-    this.element.textContent = window.number(nextValue);
+    this.element.textContent = getNumber(nextValue);
     if (animationIsUnfinished) this.handleNextFrame();
   }
 

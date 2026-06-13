@@ -15,10 +15,6 @@ enum NumberSeparatorType {
   Space = 'fr-FR',
 }
 
-export type LocaleNumberGetter = (number: number) => string;
-
-export type LocaleTextGetter = (string: string, props?: Record<string, number | string>) => string;
-
 const DEFAULTS: Record<string, Record<string, string>> = {
   dialog: defaultDialog,
   end: defaultEnd,
@@ -50,13 +46,12 @@ export default class LocalesPlugin {
     return LocalesPlugin.pluginInstance;
   }
 
-  install(app: App): void {
+  install(_app: App): void {
     this.loadNamespace('game');
     watch(this.type, () => {
       this.cachedFormatter = LocalesPlugin.createFormatter(this.type.value);
       this.reloadNamespaces();
     });
-    this.setGlobals(app);
   }
 
   loadNamespace(file: string): ShallowRef<Record<string, string> | null> {
@@ -71,6 +66,32 @@ export default class LocalesPlugin {
     if (!isDefault) void this.fetchNamespace(file, content);
 
     return content;
+  }
+
+  getText(string: string, props?: Record<string, number | string>): string {
+    const [file, key] = string.split('.');
+    if (file === undefined || key === undefined) {
+      throw new ReferenceError(`expected locale key in "file.key" format, got "${string}"`);
+    }
+    const namespace = this.namespaces.get(file);
+    if (namespace === undefined || namespace.value === null) {
+      throw new ReferenceError(`namespace "${file}" not loaded`);
+    }
+    const localizedText = namespace.value[key];
+    if (localizedText === undefined || localizedText === '') {
+      throw new ReferenceError(`locale not found for "${file}.${key}"`);
+    }
+    let result = localizedText;
+    if (props !== undefined) {
+      for (const [propKey, value] of Object.entries(props)) {
+        result = result.replaceAll(`{${propKey}}`, String(value));
+      }
+    }
+    return result;
+  }
+
+  getNumber(number: number): string {
+    return this.cachedFormatter.format(number);
   }
 
   private static createFormatter(locale: LocaleType): Intl.NumberFormat {
@@ -94,37 +115,12 @@ export default class LocalesPlugin {
       }
     }
   }
+}
 
-  private readonly getLocalizedNumber: LocaleNumberGetter = (number: number) => {
-    return this.cachedFormatter.format(number);
-  };
+export function getText(string: string, props?: Record<string, number | string>): string {
+  return LocalesPlugin.instance.getText(string, props);
+}
 
-  private readonly getLocalizedText: LocaleTextGetter = (string: string, props?: object) => {
-    const [file, key] = string.split('.');
-    if (file === undefined || key === undefined) {
-      throw new ReferenceError(`expected locale key in "file.key" format, got "${string}"`);
-    }
-    const namespace = this.namespaces.get(file);
-    if (namespace === undefined || namespace.value === null) {
-      throw new ReferenceError(`namespace "${file}" not loaded`);
-    }
-    const localizedText = namespace.value[key];
-    if (localizedText === undefined || localizedText === '') {
-      throw new ReferenceError(`locale not found for "${file}.${key}"`);
-    }
-    let result = localizedText;
-    if (props !== undefined) {
-      for (const [propKey, value] of Object.entries(props)) {
-        result = result.replaceAll(`{${propKey}}`, String(value));
-      }
-    }
-    return result;
-  };
-
-  private setGlobals(app: App): void {
-    const globals = app.config.globalProperties;
-    window.localeType = globals.localeType = this.type;
-    window.text = globals.text = this.getLocalizedText.bind(this);
-    window.number = globals.number = this.getLocalizedNumber.bind(this);
-  }
+export function getNumber(number: number): string {
+  return LocalesPlugin.instance.getNumber(number);
 }

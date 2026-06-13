@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
+import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+const { t } = useNamespace('game');
 const mainStore = MainStore.INSTANCE();
 const { tilesRemaining } = storeToRefs(mainStore);
 </script>
@@ -10,7 +12,7 @@ const { tilesRemaining } = storeToRefs(mainStore);
     <p v-if="tilesRemaining > 0" role="note" class="stats app__make-secondary">
       <span class="app__make-sr-only">{{ tilesRemaining }}</span>
       <span v-animate-number="{ number: tilesRemaining }" aria-hidden="true" class="stats__number" />
-      <span>{{ text('game.unassigned_count') }}</span>
+      <span>{{ t('unassigned_count') }}</span>
     </p>
   </Transition>
 </template>
