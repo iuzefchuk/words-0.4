@@ -1,13 +1,15 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { reactive } from 'vue';
+import { computed } from 'vue';
 import AppButton from '@/interface/components/app/AppButton.vue';
 import { Accent, Key } from '@/interface/enums.ts';
 import { handlePass, handleResign, handleSave } from '@/interface/handlers/menubar.ts';
+import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+const { t } = useNamespace('general');
 const mainStore = MainStore.INSTANCE();
 const { allActionsAreDisabled } = storeToRefs(mainStore);
-const buttons = reactive([
+const buttons = computed(() => [
   {
     accent: Accent.Primary,
     action: () => {
@@ -15,7 +17,7 @@ const buttons = reactive([
     },
     isDisabled: () => allActionsAreDisabled.value || !mainStore.currentTurnIsValid,
     keys: [Key.Enter],
-    name: window.text('general.action_play'),
+    name: t('action_play'),
   },
   {
     accent: Accent.Secondary,
@@ -24,7 +26,7 @@ const buttons = reactive([
     },
     isDisabled: () => allActionsAreDisabled.value,
     keys: [Key.P],
-    name: window.text('general.action_pass'),
+    name: t('action_pass'),
   },
   {
     accent: Accent.Secondary,
@@ -34,7 +36,7 @@ const buttons = reactive([
     isDisabled: () => allActionsAreDisabled.value,
     // TODO disable key controls on endscreen
     keys: [Key.R],
-    name: window.text('general.action_resign'),
+    name: t('action_resign'),
   },
 ]);
 </script>

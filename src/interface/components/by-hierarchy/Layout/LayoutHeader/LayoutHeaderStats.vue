@@ -1,14 +1,16 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
+import useNamespace from '@/interface/plugins/LocalesPlugin/useNamespace.ts';
 import MainStore from '@/interface/stores/MainStore.ts';
+const { t } = useNamespace('general');
 const mainStore = MainStore.INSTANCE();
 const players = computed(() => [
   {
-    name: window.text('general.player_user'),
+    name: t('player_user'),
     score: mainStore.userScore,
   },
   {
-    name: window.text('general.player_opponent'),
+    name: t('player_opponent'),
     score: mainStore.opponentScore,
   },
 ]);
