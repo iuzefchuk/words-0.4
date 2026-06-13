@@ -1,11 +1,11 @@
-// does not know about or reference any other entity
+// does not use other entities
 
 describe('Inventory', () => {
   describe('owns tiles', () => {
     // TODO
   });
 
-  describe('orchestrates tiles` lifecycle', () => {
+  describe('orchestrates tiles', () => {
     // TODO
   });
 });

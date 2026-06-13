@@ -13,6 +13,18 @@ describe('Match', () => {
     // TODO
   });
 
+  describe('owns results', () => {
+    // TODO
+  });
+
+  describe('owns scores', () => {
+    // TODO
+  });
+
+  describe('owns settings', () => {
+    // TODO
+  });
+
   describe('orchestrates inventory', () => {
     // TODO
   });
@@ -21,19 +33,7 @@ describe('Match', () => {
     // TODO
   });
 
-  describe('orchestrates turns` lifecycle', () => {
-    // TODO
-  });
-
-  describe('derives own results', () => {
-    // TODO
-  });
-
-  describe('derives own scores', () => {
-    // TODO
-  });
-
-  describe('derives own settings', () => {
+  describe('orchestrates turns', () => {
     // TODO
   });
 });

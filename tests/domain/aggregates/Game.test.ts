@@ -1,7 +1,11 @@
 // knows about Match, Timeline
 
 describe('Game', () => {
-  describe('owns matches', () => {
+  describe('owns players', () => {
+    // TODO
+  });
+
+  describe('owns match', () => {
     // TODO
   });
 
@@ -9,11 +13,11 @@ describe('Game', () => {
     // TODO
   });
 
-  describe('orchestrates matches` lifecycle', () => {
+  describe('orchestrates match', () => {
     // TODO
   });
 
-  describe('manages timeline', () => {
+  describe('orchestrates timeline', () => {
     // TODO
   });
 });
