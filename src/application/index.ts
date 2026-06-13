@@ -61,7 +61,7 @@ export default class Application {
     publishers.bootProgress.publish(BootProgress.DictionaryFetched);
     this.game.setDictionary(GameDictionary.createFromBuffer(buffer));
     publishers.bootProgress.publish(BootProgress.DictionaryParsed);
-    gateways.worker.init(tasks.turnGeneration, buffer);
+    void gateways.worker.init(tasks.turnGeneration, buffer);
     publishers.bootProgress.publish(BootProgress.Finished);
   }
 }

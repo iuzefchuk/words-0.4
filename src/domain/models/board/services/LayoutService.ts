@@ -89,8 +89,4 @@ export default class LayoutService {
   static isCellPositionAtAxisEnd(position: number): boolean {
     return position === this.LAST_CELL_POSITION;
   }
-
-  static isCellPositionAtAxisStart(position: number): boolean {
-    return position === this.FIRST_CELL_POSITION;
-  }
 }

@@ -38,7 +38,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
   <div
     v-if="isMounted && localeReady"
     :style="{ '--grid-items-per-axis': mainStore.boardCellsPerAxis }"
-    :class="{ layout: true, 'layout--blurred': matchIsFinished }"
+    :class="{ layout: true, 'layout--inactive': matchIsFinished }"
     @click="userStore.deselectTile()"
   >
     <h1 class="app__make-sr-only">Words</h1>
@@ -80,7 +80,7 @@ onMounted(() => nextTick(() => (isMounted.value = true)));
     place-self: stretch center;
   }
 
-  &--blurred {
+  &--inactive {
     opacity: 0.5;
   }
 }

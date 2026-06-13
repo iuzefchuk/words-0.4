@@ -44,6 +44,7 @@ const { currentTurnScore } = storeToRefs(mainStore);
 
     &--shimmer {
       position: relative;
+      isolation: isolate;
       overflow: hidden;
 
       &::before {

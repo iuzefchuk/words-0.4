@@ -142,10 +142,6 @@ export default class Board {
     return LayoutService.isCellPositionAtAxisEnd(position);
   }
 
-  isCellPositionAtAxisStart(position: number): boolean {
-    return LayoutService.isCellPositionAtAxisStart(position);
-  }
-
   isTilePlaced(tile: GameTile): boolean {
     return this.cellByTile.has(tile);
   }

@@ -157,16 +157,6 @@ Three serial materializations: (1) `response.arrayBuffer()` buffers the full 1.8
 
 ---
 
-### 12. No event-log compaction
-
-**File:** [Game.ts:251](src/domain/Game.ts:251), [Events.ts:16](src/domain/events/Events.ts:16)
-
-Every tile placement records 3+ events (TilePlaced, Unvalidated marker, full ValidationResult). Undos add more. All are replayed at boot via `Game.createFromEvents`. A long fidgety match accumulates 500-1500 events; boot replay is ~5-30 ms on low-end mobile.
-
-**Fix:** Compact on `TurnSaved`: drop cancelled place/undo pairs and intermediate validation results. **Effort: medium.**
-
----
-
 ### 13. CSS shimmer forces infinite main-thread paint loop
 
 **File:** [LayoutMainGridOutlineTooltip.vue:48](src/interface/components/by-hierarchy/Layout/LayoutMain/LayoutMainGrid/LayoutMainGridOutline/LayoutMainGridOutlineTooltip.vue:48)

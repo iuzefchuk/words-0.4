@@ -5,7 +5,6 @@ export enum GenerationCommandType {
 }
 
 export enum GenerationDirection {
-  Left = -1,
   Right = 1,
 }
 

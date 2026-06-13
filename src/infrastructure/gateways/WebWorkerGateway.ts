@@ -16,13 +16,16 @@ export default class WebWorkerGateway implements WorkerGateway {
     this.initData.set(taskId, data);
     const count = WorkerPoolGateway.computePoolSize();
     const workers: Array<Worker> = [];
-    for (let i = 0; i < count; i++) {
+    for (let idx = 0; idx < count; idx++) {
       workers.push(WorkerPoolGateway.takeFromPool(taskId) ?? this.createWorker(taskId));
     }
     const promise = Promise.all(workers.map(worker => this.initWorker(worker, data))).then(() => {
       for (const worker of workers) WorkerPoolGateway.returnToPool(taskId, worker);
     });
     this.initPromises.set(taskId, promise);
+    // Avoid an unhandled rejection in the window before stream() awaits this promise; the
+    // real failure still surfaces when stream() awaits the stored promise on the first turn.
+    void promise.catch(() => undefined);
     return promise;
   }
 

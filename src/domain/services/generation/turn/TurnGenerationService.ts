@@ -143,35 +143,39 @@ class TaskDispatcher {
   }
 
   *dispatchTraversal(anchorPos: number): Generator<GeneratorResult> {
-    const axisCells = this.computeds.axisCells;
-    const leftCell = anchorPos > 0 ? axisCells[anchorPos - 1] : undefined;
-    const leftOccupied = leftCell !== undefined && this.board.findTileByCell(leftCell) !== undefined;
+    try {
+      const axisCells = this.computeds.axisCells;
+      const leftCell = anchorPos > 0 ? axisCells[anchorPos - 1] : undefined;
+      const leftOccupied = leftCell !== undefined && this.board.findTileByCell(leftCell) !== undefined;
 
-    if (leftOccupied) {
-      let startPos = anchorPos - 1;
-      while (startPos > 0) {
-        const cell = axisCells[startPos - 1];
-        if (cell === undefined || this.board.findTileByCell(cell) === undefined) break;
-        startPos--;
+      if (leftOccupied) {
+        let startPos = anchorPos - 1;
+        while (startPos > 0) {
+          const cell = axisCells[startPos - 1];
+          if (cell === undefined || this.board.findTileByCell(cell) === undefined) break;
+          startPos--;
+        }
+        let node: GameNode | null = this.dictionary.rootNode;
+        for (let pos = startPos; pos < anchorPos; pos++) {
+          const cell = axisCells[pos];
+          if (cell === undefined) return;
+          const tile = this.board.findTileByCell(cell);
+          if (tile === undefined) return;
+          node = this.dictionary.getNode(this.inventory.getTileLetter(tile), node);
+          if (node === null) return;
+        }
+        yield* this.traverseRight(node, anchorPos);
+      } else {
+        let leftLimit = 0;
+        for (let pos = anchorPos - 1; pos >= 0; pos--) {
+          const cell = axisCells[pos];
+          if (cell === undefined || this.board.findTileByCell(cell) !== undefined) break;
+          leftLimit++;
+        }
+        yield* this.traverseLeft(anchorPos, leftLimit);
       }
-      let node: GameNode | null = this.dictionary.rootNode;
-      for (let pos = startPos; pos < anchorPos; pos++) {
-        const cell = axisCells[pos];
-        if (cell === undefined) return;
-        const tile = this.board.findTileByCell(cell);
-        if (tile === undefined) return;
-        node = this.dictionary.getNode(this.inventory.getTileLetter(tile), node);
-        if (node === null) return;
-      }
-      yield* this.traverseRight(node, anchorPos);
-    } else {
-      let leftLimit = 0;
-      for (let pos = anchorPos - 1; pos >= 0; pos--) {
-        const cell = axisCells[pos];
-        if (cell === undefined || this.board.findTileByCell(cell) !== undefined) break;
-        leftLimit++;
-      }
-      yield* this.traverseLeft(this.dictionary.rootNode, anchorPos, leftLimit, 0);
+    } finally {
+      this.restorePlacements();
     }
   }
 
@@ -285,18 +289,23 @@ class TaskDispatcher {
     yield* resolver.execute(task => this.execute(task));
   }
 
-  private *traverseLeft(
-    node: GameNode,
-    anchorPos: number,
-    limit: number,
-    depth: number,
-  ): Generator<GeneratorResult> {
-    yield* this.traverseRight(node, anchorPos);
+  private *traverseLeft(anchorPos: number, leftLimit: number): Generator<GeneratorResult> {
+    // A forward trie cannot be extended leftward incrementally — descending root -> child while
+    // moving left lays the prefix out reversed. So enumerate each left-part length separately:
+    // once `length` is fixed, the squares are too (first trie letter on the leftmost cell
+    // anchorPos - length, last left letter adjacent to the anchor), and the board reads forward.
+    for (let length = 0; length <= leftLimit; length++) {
+      yield* this.extendLeftPart(this.dictionary.rootNode, anchorPos, length, 0);
+    }
+  }
 
-    if (limit <= 0) return;
+  private *extendLeftPart(node: GameNode, anchorPos: number, length: number, depth: number): Generator<GeneratorResult> {
+    if (depth === length) {
+      yield* this.traverseRight(node, anchorPos);
+      return;
+    }
 
-    const pos = anchorPos - depth - 1;
-    const cell = this.computeds.axisCells[pos];
+    const cell = this.computeds.axisCells[anchorPos - length + depth];
     if (cell === undefined) return;
 
     const mask = this.context.crossCheckTable.getMask(this.computeds.oppositeAxis, cell);
@@ -316,14 +325,27 @@ class TaskDispatcher {
       const tile = letterTiles.pop();
       if (tile === undefined) continue;
 
-      this.placement.unshift({ cell, tile });
+      this.placement.push({ cell, tile });
       this.board.placeTile(cell, tile);
 
-      yield* this.traverseLeft(childNode, anchorPos, limit - 1, depth + 1);
+      yield* this.extendLeftPart(childNode, anchorPos, length, depth + 1);
 
-      this.placement.shift();
       this.board.undoPlaceTile(tile);
+      this.placement.pop();
       letterTiles.push(tile);
+    }
+  }
+
+  private restorePlacements(): void {
+    // Undo any tiles still on the cloned board if the consumer abandons the generator early
+    // (e.g. the worker hits attemptsLimit and breaks mid-traversal). The normal place/undo
+    // pairing after each `yield*` is skipped on generator return, so without this the cloned
+    // board and rack would keep leaked tiles, corrupting any later reuse of the same context.
+    while (this.placement.length > 0) {
+      const link = this.placement.pop();
+      if (link === undefined) break;
+      this.board.undoPlaceTile(link.tile);
+      this.tiles.get(this.inventory.getTileLetter(link.tile))?.push(link.tile);
     }
   }
 

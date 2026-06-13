@@ -121,12 +121,14 @@ export default class CommandsService {
     const player = GamePlayer.Opponent;
     const attemptsLimit = this.game.turnGenerationAttempts;
     const anchorCount = this.game.anchorCellsCount;
-    const { crossCheckTable, dictionary, ...data } = this.game.createTurnGenerationContext();
+    const context = this.game.createTurnGenerationContext();
     const workerInput = {
       attemptsLimit,
-      crossCheckBuffer: crossCheckTable.buffer,
-      ...data,
+      board: context.board,
+      crossCheckBuffer: context.crossCheckTable.buffer,
+      inventory: context.inventory,
       player,
+      turns: context.turns,
     };
     const inputs = attemptsLimit === Infinity ? this.buildPartitionedInputs(workerInput, anchorCount) : [workerInput];
     const results = this.worker.stream<GameGeneratorResult>(this.turnGenerationTaskId, inputs);
