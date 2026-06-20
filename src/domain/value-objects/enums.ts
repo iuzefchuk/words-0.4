@@ -27,6 +27,12 @@ export enum InventoryLetter {
   Z = 'Z',
 }
 
+export enum InventoryStockStage {
+  Owned = 'Owned',
+  Unused = 'Unused',
+  Used = 'Used',
+}
+
 export enum MatchDifficulty {
   High = 'High',
   Low = 'Low',

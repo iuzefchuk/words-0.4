@@ -37,6 +37,11 @@ export type IdentifierGateway = {
   create(): string;
 };
 
+export type InventoryStockPoolKey<Stage, Owner> = {
+  owner: Owner;
+  stage: Stage;
+};
+
 export type InventoryTile = Brand<string, 'Tile'>;
 
 export type InventoryTileCollection = ReadonlyMap<InventoryLetter, ReadonlyArray<InventoryTile>>;
@@ -85,7 +90,6 @@ export type PlayfieldBonusDistribution = ReadonlyMap<PlayfieldCell, PlayfieldBon
 export type PlayfieldCell = Brand<number, 'Cell'>;
 
 export type PlayfieldLinkId = Brand<string, 'PlayfieldLinkId'>;
-
 
 export type RandomizerGateway = {
   createFunctionFromSeed(seed: number): () => number;

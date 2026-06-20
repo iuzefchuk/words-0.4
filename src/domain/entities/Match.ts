@@ -103,13 +103,15 @@ export default class Match {
   ) {}
 
   static clone(source: Match, identifier: IdentifierGateway | null = null): Match {
+    const currentTurn = source.history.at(-1);
+    if (currentTurn === undefined) throw new ReferenceError('expected current turn, got undefined');
     return new Match(
       identifier,
       Inventory.clone(source.inventory),
       Playfield.clone(source.playfield, identifier),
       new Map(source.results),
       { ...source.settings },
-      [...source.history.slice(0, -1), Turn.clone(source.currentTurn)],
+      [...source.history.slice(0, -1), Turn.clone(currentTurn)],
     );
   }
 

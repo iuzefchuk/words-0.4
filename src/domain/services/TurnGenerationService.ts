@@ -14,6 +14,7 @@ import type { InventoryLetter, MatchPlayer } from '@/domain/value-objects/enums.
 import type {
   DictionaryGraph,
   DictionaryNode,
+  IdentifierGateway,
   InventoryTile,
   InventoryTileCollection,
   PlayfieldAnchorCoordinates,
@@ -390,9 +391,10 @@ export default class TurnGenerationService {
     data: unknown,
     dictionary: DictionaryGraph,
     crossCheckBuffer: ArrayBuffer | SharedArrayBuffer,
+    identifier: IdentifierGateway,
   ): TurnGenerationContext {
     const source = data as { match: Match };
-    const clonedMatch = Match.clone(source.match);
+    const clonedMatch = Match.clone(source.match, identifier);
     return {
       crossCheckTable: CrossCheckTable.createFromBuffer(crossCheckBuffer, Playfield.CELLS.length),
       dictionary,

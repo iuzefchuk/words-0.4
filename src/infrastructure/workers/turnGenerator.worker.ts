@@ -1,5 +1,6 @@
 import { DomainTurnGenerator } from '@/app/types/index.ts';
 import { DomainDictionary } from '@/app/types/index.ts';
+import CryptoIdentifierGateway from '@/infrastructure/gateways/CryptoIdentifierGateway.ts';
 import {
   TurnGenerationWorkerRequestType,
   TurnGenerationWorkerResponseType,
@@ -20,7 +21,7 @@ class TurnGeneratorWorker {
 
   private findBestResult(input: TurnGenerationWorkerInput): DomainTurnGenerationResult | null {
     const dictionary = this.dictionary ?? DomainDictionary.create(new Int32Array(input.buffer));
-    const context = DomainTurnGenerator.hydrateContext(input, dictionary, input.crossCheckBuffer);
+    const context = DomainTurnGenerator.hydrateContext(input, dictionary, input.crossCheckBuffer, CryptoIdentifierGateway);
     let bestResult: DomainTurnGenerationResult | null = null;
     let bestScore = -1;
     let count = 0;
