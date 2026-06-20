@@ -148,8 +148,8 @@ export default class Game {
     const { currentPlayer: player, currentTurnScore: score, currentTurnWords: words } = this.matchProjection;
     if (words === undefined) throw new ReferenceError('expected current turn words, got undefined');
     if (score === undefined) throw new ReferenceError('expected current turn score, got undefined');
-    const tiles = [...this.match.currentTurnTiles];
-    this.recordEvent({ player, score, tiles, type: TimelineEventType.TurnSaved, words });
+    const placement = this.match.resolvePlacement(this.match.currentTurnTiles);
+    this.recordEvent({ placement, player, score, type: TimelineEventType.TurnSaved, words });
     const decision = MatchTerminationPolicy.afterTurnSaved({
       currentPlayer: player,
       match: this.match,
@@ -212,7 +212,10 @@ export default class Game {
   }
 
   private applyTurnSaved(event: Extract<TimelineEvent, { type: TimelineEventType.TurnSaved }>): void {
-    for (const tile of event.tiles) {
+    for (const { cell, tile } of event.placement) {
+      if (!this.match.isTilePlaced(tile)) this.match.placeTile(cell, tile);
+    }
+    for (const { tile } of event.placement) {
       this.match.discardTile(event.player, tile);
     }
     this.match.replenishTilesFor(event.player);
