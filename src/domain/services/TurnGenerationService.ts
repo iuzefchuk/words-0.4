@@ -305,13 +305,7 @@ class TaskDispatcher {
     const { traversal } = task;
     const placementIsUsable = this.placement.length > 0 && this.context.dictionary.isNodeFinal(traversal.node);
     if (traversal.direction === TurnGenerationDirection.Right && placementIsUsable) {
-      const tiles: Array<InventoryTile> = [];
-      for (const link of this.placement) {
-        tiles.push(link.tile);
-        this.match.placeTile(link.cell, link.tile);
-      }
       const evaluation = TurnEvaluationService.execute({ dictionary: this.context.dictionary, match: this.match });
-      for (const tile of tiles) this.match.undoPlaceTile(tile);
       if (evaluation.status === TurnValidity.Valid) {
         return this.emitReturn({ evaluation, placement: [...this.placement] });
       }
